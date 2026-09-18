@@ -69,5 +69,6 @@
       "sha256": "8b9118b2b09dae133dd8ec02b9a058f667c4efd8b8bd74d90be8c5e380f8af3d"
     }
   ],
-  "upload_performed": false
+  "upload_performed": true,
+  "publication_record": "../publication.json"
 }

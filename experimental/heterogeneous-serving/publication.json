@@ -1,0 +1,18 @@
+{
+  "repository": "taooceros/llm-d",
+  "branch": "research/heterogeneous-tpu-20260918",
+  "release_tag": "research-evidence-20260918",
+  "release_id": 391686845,
+  "release_url": "https://github.com/taooceros/llm-d/releases/tag/research-evidence-20260918",
+  "published": true,
+  "prerelease": true,
+  "asset_manifest": "research/release-assets.json",
+  "asset_index_sha256": "320391b12e514db7d35618c38da2ccca65dffd8e93ea02fe786b43348533d8de",
+  "uploaded_assets": 11,
+  "github_reported_sha256_digests_matched": 11,
+  "github_reported_sizes_matched": 11,
+  "unexpected_release_assets": 0,
+  "pull_requests_created": 0,
+  "default_branches_changed": false,
+  "publication_policy": "Uploaded only the exact final manifest, never a directory wildcard. Superseded unsafe local archives/index were not uploaded. Historical input/request omissions and screening limits are recorded in research/publication-audit.json and the asset index."
+}
