@@ -18,6 +18,61 @@ llm-d is a high-performance distributed inference serving stack optimized for pr
 
 llm-d is a [Cloud Native Computing Foundation (CNCF)](https://www.cncf.io/) sandbox project, founded by Red Hat, Google Cloud, IBM Research, CoreWeave, and NVIDIA.
 
+## Experimental heterogeneous TPU research (fork only)
+
+This branch preserves the static TP8 + TP8 + TP16 Gemma serving experiment,
+split across five forks. It is not an upstream-supported production feature.
+The original research history was not replayed: files were copied with SHA256
+provenance from source commit `20c83c18189b18d7898b615814bec0479eb981d4`.
+
+| Fork | Research ownership |
+|---|---|
+| `taooceros/vllm` | Native cache configuration, scheduler fencing/continuation, engine actors and KV transport |
+| `taooceros/tpu-inference` | Native Gemma FP32-state changes, TPU worker, topology and placement utilities |
+| `taooceros/llm-d-router` | Python Envoy ExtProc gateway, policy, ownership journal and discovery; separate from the Go EPP |
+| `taooceros/llm-d-async` | Bulk workloads, manifests, experiments and earlier scheduling research; separate from the production queue processor |
+| `taooceros/llm-d` | Deployment, qualification, RCM execution, assembly, analysis and evidence |
+
+Use branch `research/heterogeneous-tpu-20260918` in all five checkouts.
+Place the checkouts in sibling directories named after their repositories.
+The [assembly command](experimental/heterogeneous-serving/assemble.py) validates
+the per-fork `migration.json` manifests, rejects collisions and modified files,
+and copies one flat workspace so the existing imports and relative paths remain
+unchanged. It never overwrites an existing output directory. From this checkout:
+
+```bash
+python3 experimental/heterogeneous-serving/assemble.py --check
+python3 experimental/heterogeneous-serving/assemble.py --output /tmp/hetero-research
+cd /tmp/hetero-research
+python3 -m hetero.cli --help
+```
+
+Use Python 3.12 or newer. Local control-plane dependencies are listed in
+`experimental/heterogeneous-serving/requirements-control.txt`; native serving
+additionally requires the matching vLLM/TPU forks, their accelerator dependencies,
+model weights and an explicitly node-pinned Ray TPU deployment. See each native
+fork's provenance and the copied [operator guide](experimental/heterogeneous-serving/README.md).
+Initialize a new Jujutsu repository in an assembled workspace before creating a
+new prospective source freeze. Do not relabel historical qualification evidence
+as proof of a different build or a new deployment. No benchmark was rerun for
+this source migration.
+
+Compact evidence and restore tooling live in
+[`experimental/heterogeneous-serving/research`](experimental/heterogeneous-serving/research).
+Bulky traces, original aggregate JSON, archival inputs and earlier experimental
+results are release assets, not Git blobs:
+[research-evidence-20260918](https://github.com/taooceros/llm-d/releases/tag/research-evidence-20260918).
+The historical report records 102/102 eligible runs and18 mechanism trials.
+All24 migration-enabled performance runs made zero proposals; the mixed policy
+lost to the strongest homogeneous baseline. Host-KV handoff worked but was
+slower than recompute in the separate mechanism measurements. These negative
+results are preserved, not replaced with claims of a speedup.
+
+Legacy simulator code is retained as research history only. It was not run for
+this migration and must not be used as hardware benchmark evidence. Source
+provenance permits later path-filtered history recovery if wanted, without
+making that a prerequisite for these fresh fork commits.
+
 ## What does llm-d offer to production inference?
 
 Model servers like [vLLM](https://docs.vllm.ai) and [SGLang](https://github.com/sgl-project/sglang) handle efficiently running large language models on accelerators. llm-d provides state-of-the-art orchestration and optimizations above model servers to serve high-scale real-world traffic efficiently and reliably. Our offerings are organized into four core themes:

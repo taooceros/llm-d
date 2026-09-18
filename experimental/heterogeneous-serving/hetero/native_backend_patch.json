@@ -1,0 +1,53 @@
+{
+  "format": 1,
+  "files": [
+    {
+      "name": "cache",
+      "path": "/workspace/vllm/vllm/config/cache.py",
+      "original_sha256": "c11985dd15e01051959e7dfcbb45435530e38d2991b0766966a7eceaa71df579",
+      "patched_sha256": "0a41c137dc70c8fdc835062e65ca86a094c9c3d515008eb7bdac1163d0dc3cb4",
+      "replacements": [
+        {
+          "old": "CacheDType = Literal[\n    \"auto\",\n",
+          "new": "CacheDType = Literal[\n    \"auto\",\n    \"float32\",\n"
+        }
+      ]
+    },
+    {
+      "name": "gemma4",
+      "path": "/workspace/tpu_inference/tpu_inference/models/jax/gemma4.py",
+      "original_sha256": "5b93b3b3dd5d42374c0115a4523661ed584191fb0cb9fc9639ae2248b3896fbd",
+      "patched_sha256": "12cc23c006277164a2c665d818bcf343149dbd77e75298951c48a9b1a9122e7f",
+      "replacements": [
+        {
+          "old": "                 quant_config: VllmQuantConfig,\n                 prefix: str = \"\"):\n        text_config: Gemma4TextConfig = config.hf_config.text_config\n",
+          "new": "                 quant_config: VllmQuantConfig,\n                 prefix: str = \"\",\n                 activation_dtype: Optional[jnp.dtype] = None):\n        text_config: Gemma4TextConfig = config.hf_config.text_config\n"
+        },
+        {
+          "old": "        self.post_attention_layernorm = JaxRmsNorm(\n            hidden_size,\n            epsilon=rms_norm_eps,\n            dtype=dtype,\n",
+          "new": "        self.post_attention_layernorm = JaxRmsNorm(\n            hidden_size,\n            epsilon=rms_norm_eps,\n            dtype=activation_dtype if activation_dtype is not None else dtype,\n"
+        },
+        {
+          "old": "        self.pre_feedforward_layernorm = JaxRmsNorm(\n            hidden_size,\n            epsilon=rms_norm_eps,\n            dtype=dtype,\n",
+          "new": "        self.pre_feedforward_layernorm = JaxRmsNorm(\n            hidden_size,\n            epsilon=rms_norm_eps,\n            dtype=activation_dtype if activation_dtype is not None else dtype,\n"
+        },
+        {
+          "old": "        self.post_feedforward_layernorm = JaxRmsNorm(\n            hidden_size,\n            epsilon=rms_norm_eps,\n            dtype=dtype,\n",
+          "new": "        self.post_feedforward_layernorm = JaxRmsNorm(\n            hidden_size,\n            epsilon=rms_norm_eps,\n            dtype=activation_dtype if activation_dtype is not None else dtype,\n"
+        },
+        {
+          "old": "        text_config = hf_config.text_config\n        vocab_size = model_config.get_vocab_size()\n",
+          "new": "        text_config = hf_config.text_config\n        activation_dtype = (vllm_config.additional_config or {}).get(\n            \"activation_dtype\")\n        if activation_dtype not in (None, \"float32\"):\n            raise ValueError(\"Gemma4 activation_dtype must be 'float32' or unset\")\n        if activation_dtype is not None:\n            if getattr(text_config, \"enable_moe_block\", False):\n                raise ValueError(\"Gemma4 FP32 activation state does not support MoE\")\n            if getattr(text_config, \"hidden_size_per_layer_input\", 0) > 0:\n                raise ValueError(\"Gemma4 FP32 activation state does not support PLE\")\n            if vllm_config.parallel_config.pipeline_parallel_size != 1:\n                raise ValueError(\"Gemma4 FP32 activation state requires PP=1\")\n        self.activation_dtype = (jnp.float32\n                                 if activation_dtype == \"float32\" else None)\n        vocab_size = model_config.get_vocab_size()\n"
+        },
+        {
+          "old": "                prefix=f\"{prefix}.layers.{layer_index}\",\n            ))\n",
+          "new": "                prefix=f\"{prefix}.layers.{layer_index}\",\n                activation_dtype=self.activation_dtype,\n            ))\n"
+        },
+        {
+          "old": "        if inputs_embeds is not None:\n            x = inputs_embeds\n        else:\n            x = self.embed_tokens(input_ids)\n            # Gemma4: Apply embedding scaling\n            x = x * self.embedding_scale\n",
+          "new": "        if inputs_embeds is not None:\n            x = inputs_embeds\n            if self.activation_dtype is not None:\n                x = x.astype(self.activation_dtype)\n        else:\n            x = self.embed_tokens(input_ids)\n            if self.activation_dtype is not None:\n                x = x.astype(self.activation_dtype)\n            # Gemma4: Apply embedding scaling after promoting gathered rows.\n            x = x * self.embedding_scale\n"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 950 580" width="950" height="580">
+<style>
+  text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  .title { font-size: 17px; font-weight: bold; fill: #202124; text-anchor: middle; }
+  .subtitle { font-size: 13px; fill: #5f6368; text-anchor: middle; }
+  .axis-label { font-size: 13px; font-weight: bold; fill: #3c4043; }
+  .tick-label { font-size: 11.5px; fill: #5f6368; }
+  .grid { stroke: #e0e0e0; stroke-dasharray: 4,4; stroke-width: 1; }
+  .axis { stroke: #70757a; stroke-width: 1.5; }
+  .legend-text { font-size: 12px; fill: #3c4043; font-weight: 500; }
+  .callout { font-size: 11px; fill: #3c4043; font-weight: 500; }
+</style>
+<rect width="950" height="580" fill="#ffffff"/>
+<text x="475.0" y="34" class="title">Gemma-4 31B (BF16, ~62GB Weights) on TPU v5e</text>
+<text x="475.0" y="55" class="subtitle">Minimum &amp; Recommended TPU Count vs. Maximum Context Window (max_model_len)</text>
+<rect x="110" y="430.0" width="780" height="70.0" fill="#fce8e6" opacity="0.6"/>
+<text x="125" y="469.0" fill="#c5221f" font-size="12" font-weight="bold">OOM Zone: Weights alone (62GB) exceed total HBM for &lt; 4 chips (16GB/chip)</text>
+<line x1="110" y1="500.0" x2="890" y2="500.0" class="grid"/>
+<text x="98" y="504.0" class="tick-label" text-anchor="end">2 (OOM)</text>
+<line x1="105" y1="500.0" x2="110" y2="500.0" class="axis"/>
+<line x1="110" y1="430.0" x2="890" y2="430.0" class="grid"/>
+<text x="98" y="434.0" class="tick-label" text-anchor="end">4</text>
+<line x1="105" y1="430.0" x2="110" y2="430.0" class="axis"/>
+<line x1="110" y1="360.00000000000006" x2="890" y2="360.00000000000006" class="grid"/>
+<text x="98" y="364.00000000000006" class="tick-label" text-anchor="end">8</text>
+<line x1="105" y1="360.00000000000006" x2="110" y2="360.00000000000006" class="axis"/>
+<line x1="110" y1="290.0" x2="890" y2="290.0" class="grid"/>
+<text x="98" y="294.0" class="tick-label" text-anchor="end">16</text>
+<line x1="105" y1="290.0" x2="110" y2="290.0" class="axis"/>
+<line x1="110" y1="220.00000000000003" x2="890" y2="220.00000000000003" class="grid"/>
+<text x="98" y="224.00000000000003" class="tick-label" text-anchor="end">32</text>
+<line x1="105" y1="220.00000000000003" x2="110" y2="220.00000000000003" class="axis"/>
+<line x1="110" y1="150.0" x2="890" y2="150.0" class="grid"/>
+<text x="98" y="154.0" class="tick-label" text-anchor="end">64</text>
+<line x1="105" y1="150.0" x2="110" y2="150.0" class="axis"/>
+<line x1="110" y1="80.0" x2="890" y2="80.0" class="grid"/>
+<text x="98" y="84.0" class="tick-label" text-anchor="end">128</text>
+<line x1="105" y1="80.0" x2="110" y2="80.0" class="axis"/>
+<line x1="110.0" y1="80" x2="110.0" y2="500" class="grid"/>
+<text x="110.0" y="522" class="tick-label" text-anchor="middle" font-weight="bold">4K</text>
+<line x1="110.0" y1="500" x2="110.0" y2="505" class="axis"/>
+<line x1="207.5" y1="80" x2="207.5" y2="500" class="grid"/>
+<text x="207.5" y="522" class="tick-label" text-anchor="middle" font-weight="bold">8K</text>
+<line x1="207.5" y1="500" x2="207.5" y2="505" class="axis"/>
+<line x1="305.0" y1="80" x2="305.0" y2="500" class="grid"/>
+<text x="305.0" y="522" class="tick-label" text-anchor="middle" font-weight="bold">16K</text>
+<line x1="305.0" y1="500" x2="305.0" y2="505" class="axis"/>
+<line x1="402.5" y1="80" x2="402.5" y2="500" class="grid"/>
+<text x="402.5" y="522" class="tick-label" text-anchor="middle" font-weight="bold">32K</text>
+<line x1="402.5" y1="500" x2="402.5" y2="505" class="axis"/>
+<line x1="500.0" y1="80" x2="500.0" y2="500" class="grid"/>
+<text x="500.0" y="522" class="tick-label" text-anchor="middle" font-weight="bold">64K</text>
+<line x1="500.0" y1="500" x2="500.0" y2="505" class="axis"/>
+<line x1="597.5" y1="80" x2="597.5" y2="500" class="grid"/>
+<text x="597.5" y="522" class="tick-label" text-anchor="middle" font-weight="bold">128K</text>
+<line x1="597.5" y1="500" x2="597.5" y2="505" class="axis"/>
+<line x1="695.0" y1="80" x2="695.0" y2="500" class="grid"/>
+<text x="695.0" y="522" class="tick-label" text-anchor="middle" font-weight="bold">256K</text>
+<line x1="695.0" y1="500" x2="695.0" y2="505" class="axis"/>
+<line x1="792.5" y1="80" x2="792.5" y2="500" class="grid"/>
+<text x="792.5" y="522" class="tick-label" text-anchor="middle" font-weight="bold">512K</text>
+<line x1="792.5" y1="500" x2="792.5" y2="505" class="axis"/>
+<line x1="890.0" y1="80" x2="890.0" y2="500" class="grid"/>
+<text x="890.0" y="522" class="tick-label" text-anchor="middle" font-weight="bold">1M</text>
+<line x1="890.0" y1="500" x2="890.0" y2="505" class="axis"/>
+<line x1="110" y1="80" x2="110" y2="500" class="axis"/>
+<line x1="110" y1="500" x2="890" y2="500" class="axis"/>
+<text x="500.0" y="555" class="axis-label" text-anchor="middle">Maximum Context Window (max_model_len in tokens)</text>
+<text x="28" y="290.0" class="axis-label" text-anchor="middle" transform="rotate(-90 28 290.0)">Number of TPU v5e Chips (16GB HBM / chip)</text>
+<path d="M 110.0 360.0 L 158.8 360.0 L 158.8 360.0 L 207.5 360.0 L 256.2 360.0 L 256.2 360.0 L 305.0 360.0 L 353.8 360.0 L 353.8 290.0 L 402.5 290.0 L 451.2 290.0 L 451.2 290.0 L 500.0 290.0 L 548.8 290.0 L 548.8 220.0 L 597.5 220.0 L 646.2 220.0 L 646.2 220.0 L 695.0 220.0 L 743.8 220.0 L 743.8 150.0 L 792.5 150.0 L 841.2 150.0 L 841.2 150.0 L 890.0 150.0" fill="none" stroke="#1a73e8" stroke-width="3" stroke-dasharray="6,4"/>
+<rect x="105.5" y="355.50000000000006" width="9" height="9" fill="#1a73e8"/>
+<rect x="203.0" y="355.50000000000006" width="9" height="9" fill="#1a73e8"/>
+<rect x="300.5" y="355.50000000000006" width="9" height="9" fill="#1a73e8"/>
+<rect x="398.0" y="285.5" width="9" height="9" fill="#1a73e8"/>
+<rect x="495.5" y="285.5" width="9" height="9" fill="#1a73e8"/>
+<rect x="593.0" y="215.50000000000003" width="9" height="9" fill="#1a73e8"/>
+<rect x="690.5" y="215.50000000000003" width="9" height="9" fill="#1a73e8"/>
+<rect x="788.0" y="145.5" width="9" height="9" fill="#1a73e8"/>
+<rect x="885.5" y="145.5" width="9" height="9" fill="#1a73e8"/>
+<path d="M 110.0 430.0 L 158.8 430.0 L 158.8 360.0 L 207.5 360.0 L 256.2 360.0 L 256.2 360.0 L 305.0 360.0 L 353.8 360.0 L 353.8 360.0 L 402.5 360.0 L 451.2 360.0 L 451.2 360.0 L 500.0 360.0 L 548.8 360.0 L 548.8 290.0 L 597.5 290.0 L 646.2 290.0 L 646.2 290.0 L 695.0 290.0 L 743.8 290.0 L 743.8 220.0 L 792.5 220.0 L 841.2 220.0 L 841.2 150.0 L 890.0 150.0" fill="none" stroke="#d93025" stroke-width="3.5"/>
+<circle cx="110.0" cy="430.0" r="5.5" fill="#d93025"/>
+<circle cx="207.5" cy="360.00000000000006" r="5.5" fill="#d93025"/>
+<circle cx="305.0" cy="360.00000000000006" r="5.5" fill="#d93025"/>
+<circle cx="402.5" cy="360.00000000000006" r="5.5" fill="#d93025"/>
+<circle cx="500.0" cy="360.00000000000006" r="5.5" fill="#d93025"/>
+<circle cx="597.5" cy="290.0" r="5.5" fill="#d93025"/>
+<circle cx="695.0" cy="290.0" r="5.5" fill="#d93025"/>
+<circle cx="792.5" cy="220.00000000000003" r="5.5" fill="#d93025"/>
+<circle cx="890.0" cy="150.0" r="5.5" fill="#d93025"/>
+<text x="122.0" y="422.0" class="callout" fill="#b06000">4 chips: ~0GB KV pool (barely passes ≤4K)</text>
+<text x="217.5" y="378.00000000000006" class="callout" fill="#3c4043">8 chips: 42GB KV pool (handles ≤64K)</text>
+<text x="607.5" y="308.0" class="callout" fill="#3c4043">16 chips: 150GB KV pool (handles ≤256K)</text>
+<text x="717.5" y="210.00000000000003" class="callout" fill="#3c4043">32 chips: 368GB KV pool</text>
+<text x="760.0" y="140.0" class="callout" fill="#3c4043">64 chips: 800GB KV pool (1M context)</text>
+<rect x="125" y="95" width="400" height="75" fill="#ffffff" stroke="#dadce0" stroke-width="1.2" rx="4" filter="drop-shadow(0 1px 3px rgba(0,0,0,0.1))"/>
+<circle cx="145" cy="119" r="5" fill="#d93025"/>
+<line x1="133" y1="119" x2="157" y2="119" stroke="#d93025" stroke-width="3"/>
+<text x="167" y="123" class="legend-text">Minimum TPUs to Pass Engine Admission (_check_enough_kv_cache)</text>
+<rect x="141" y="140" width="8" height="8" fill="#1a73e8"/>
+<line x1="133" y1="144" x2="157" y2="144" stroke="#1a73e8" stroke-width="2.5" stroke-dasharray="4,3"/>
+<text x="167" y="148" class="legend-text">Recommended TPUs for Production Serving (Concurrency ≥ 4)</text>
+</svg>

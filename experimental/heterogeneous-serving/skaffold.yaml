@@ -1,0 +1,25 @@
+apiVersion: skaffold/v4beta7
+kind: Config
+metadata:
+  name: admission-control-vllm
+build:
+  artifacts:
+    - image: tpu-inference-image
+      docker:
+        dockerfile: Dockerfile.dev
+      sync:
+        manual:
+          # Sync vLLM python files
+          - src: "vllm/vllm/**/*.py"
+            dest: "/workspace/vllm"
+          # Sync tpu-inference python files
+          - src: "tpu-inference/tpu_inference/**/*.py"
+            dest: "/workspace/tpu_inference"
+          # Sync examples
+          - src: "tpu-inference/examples/**/*.py"
+            dest: "/workspace/tpu_inference"
+manifests:
+  rawYaml:
+    - tpu-inference/examples/offload/gke/pod_tpu_commons_cpu_offload.yaml
+deploy:
+  kubectl: {}

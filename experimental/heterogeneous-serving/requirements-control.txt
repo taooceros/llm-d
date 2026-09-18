@@ -1,0 +1,15 @@
+# CPU-side orchestration, reports and gateway contract checks; Python >=3.12.
+# Install accelerator/model dependencies from the pinned native fork revisions.
+ray>=2.10.0
+numpy>=1.24.0
+matplotlib>=3.7.0
+fastapi
+httpx
+grpcio
+xds-protos==1.84.0
+uvicorn
+uvloop
+PyYAML>=6
+# Optional earlier research plotting/optimization commands.
+Markdown
+ortools

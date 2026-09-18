@@ -1,0 +1,18 @@
+#!/usr/bin/env python3
+"""
+rcm_exec: Unified CLI Entry Point for Oh My Pi (OMP) Reverse Control Mechanism.
+"""
+
+import os
+import pathlib
+import sys
+
+# Ensure repository root is on sys.path
+REPO_ROOT = pathlib.Path(__file__).resolve().parent
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from omp_rcm.cli import main
+
+if __name__ == "__main__":
+    sys.exit(main())

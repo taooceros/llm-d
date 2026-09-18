@@ -1,0 +1,76 @@
+# Use same base image as standard Dockerfile
+ARG BASE_IMAGE="python:3.12-slim-bookworm"
+FROM $BASE_IMAGE
+
+ARG IS_TEST="false"
+ARG BM_INFRA="false"
+
+# Update pip
+RUN pip install --upgrade pip
+
+# Install basic utilities
+RUN apt-get update && apt-get install -y \
+    git \
+    libopenmpi-dev \
+    libomp-dev \
+    procps \
+    curl \
+    netcat-openbsd \
+    rclone \
+    wget \
+    bc \
+    ca-certificates \
+    unzip \
+    build-essential \
+    cmake \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+# Conditionally install google-cloud-cli for benchmarking infrastructure
+RUN if [ "$BM_INFRA" = "true" ]; then \
+        apt-get update && apt-get install -y gnupg curl \
+        && echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list \
+        && curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg \
+        && apt-get update && apt-get install -y google-cloud-cli \
+        && rm -rf /var/lib/apt/lists/*; \
+    fi
+
+# Build vLLM using local source directory
+WORKDIR /workspace/vllm
+COPY vllm/ .
+
+RUN --mount=type=cache,target=/root/.cache/pip pip install --extra-index-url https://download.pytorch.org/whl/cpu -r requirements/tpu.txt --retries 3
+RUN --mount=type=cache,target=/root/.cache/pip pip install setuptools-rust>=1.9.0
+RUN --mount=type=cache,target=/root/.cache/pip VLLM_TARGET_DEVICE="tpu" pip install --no-build-isolation -e .
+
+# Install test dependencies
+RUN --mount=type=cache,target=/root/.cache/pip python3 -m pip install -e tests/vllm_test_utils
+RUN --mount=type=cache,target=/root/.cache/pip python3 -m pip install \
+    git+https://github.com/thuml/depyf.git \
+    pytest-asyncio \
+    "lm-eval[api,math]==0.4.12" \
+    pytest-cov \
+    tblib
+
+# Install tpu_inference using local source directory
+WORKDIR /workspace/tpu_inference
+COPY tpu-inference/requirements.txt .
+RUN --mount=type=cache,target=/root/.cache/pip pip install --extra-index-url https://download.pytorch.org/whl/cpu -r requirements.txt --retries 3
+
+COPY tpu-inference/requirements_benchmarking.txt .
+RUN --mount=type=cache,target=/root/.cache/pip pip install -r requirements_benchmarking.txt --retries 3
+
+COPY tpu-inference/requirements_test.txt .
+RUN --mount=type=cache,target=/root/.cache/pip if [ "$IS_TEST" = "true" ]; then \
+        pip install -r requirements_test.txt --retries 3; \
+    fi
+
+# Copy the rest of the tpu-inference code
+COPY tpu-inference/ .
+RUN --mount=type=cache,target=/root/.cache/pip pip install -e .
+
+COPY tpu-inference/docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD []
