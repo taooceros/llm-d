@@ -1,0 +1,1825 @@
+{
+  "goal_document": "HETEROGENEOUS_LLMD_GATEWAY_GOAL.md",
+  "predeclaration_sha256": "0f5e4c095b0e9ba137f2a07b7ed517a23388a70b5aa794897cab37745eae2159",
+  "goal_complete": true,
+  "blocking_reason": null,
+  "acceptance_gates": [
+    {
+      "gate": "1. Contiguous subslice allocation and TPU runtime bring-up",
+      "status": "passed",
+      "evidence": [
+        "results/hetero/20260918/permanent_fp32_v2_gate_H.json",
+        "results/hetero/20260918/permanent_fp32_v2_gate_S.json",
+        "results/hetero/20260918/permanent_fp32_v2_gate_M.json"
+      ],
+      "checks": {
+        "gate_H": {
+          "status": "passed",
+          "artifact": "results/hetero/20260918/permanent_fp32_v2_gate_H.json"
+        },
+        "gate_S": {
+          "status": "passed",
+          "artifact": "results/hetero/20260918/permanent_fp32_v2_gate_S.json"
+        },
+        "gate_M": {
+          "status": "passed",
+          "artifact": "results/hetero/20260918/permanent_fp32_v2_gate_M.json"
+        }
+      },
+      "note": "All three layouts require hash-bound raw gates, native precision, concurrent serving and frozen source checks."
+    },
+    {
+      "gate": "2. Repeatable deployment and Ray serving-instance discovery",
+      "status": "passed",
+      "evidence": [
+        "results/hetero/20260918/permanent_fp32_v2_lifecycle_M.json"
+      ],
+      "checks": {
+        "lifecycle": {
+          "status": "passed",
+          "artifact": "results/hetero/20260918/permanent_fp32_v2_lifecycle_M.json"
+        }
+      },
+      "note": "Full-fabric ExtProc probes, scoped restart, peer preservation and fresh-generation readmission must pass."
+    },
+    {
+      "gate": "3. Continuation and ownership qualified with recompute",
+      "status": "passed",
+      "evidence": [
+        "results/hetero/20260918/permanent_fp32_v2_continuation.json",
+        "results/hetero/20260918/permanent_fp32_v2_lifecycle_M.json",
+        "results/hetero/20260918/permanent_fp32_v2_recompute.json"
+      ],
+      "checks": {
+        "continuation": {
+          "status": "passed",
+          "artifact": "results/hetero/20260918/permanent_fp32_v2_continuation.json"
+        },
+        "lifecycle": {
+          "status": "passed",
+          "artifact": "results/hetero/20260918/permanent_fp32_v2_lifecycle_M.json"
+        },
+        "recompute": {
+          "status": "passed",
+          "artifact": "results/hetero/20260918/permanent_fp32_v2_recompute.json"
+        }
+      },
+      "note": "Unchanged numerical criteria and actual gateway recompute handoffs; earlier diagnostics do not authorize this cohort."
+    },
+    {
+      "gate": "4. Host-staged KV transfer qualified; ICI optional",
+      "status": "passed",
+      "evidence": [
+        "results/hetero/20260918/permanent_fp32_v2_continuation.json",
+        "results/hetero/20260918/permanent_fp32_v2_kv_host.json"
+      ],
+      "checks": {
+        "continuation": {
+          "status": "passed",
+          "artifact": "results/hetero/20260918/permanent_fp32_v2_continuation.json"
+        },
+        "kv_host": {
+          "status": "passed",
+          "artifact": "results/hetero/20260918/permanent_fp32_v2_kv_host.json"
+        }
+      },
+      "note": "Actual released host-KV migrations, positive payload bytes, exact output accounting and ownership ordering; no ICI claim."
+    },
+    {
+      "gate": "5. Predeclared research comparisons",
+      "status": "passed",
+      "evidence": [
+        "results/hetero/evaluation_fp32_state_20260918_v2_source_frozen.json",
+        "results/hetero/20260918/permanent_fp32_v2_mechanism_cost.json"
+      ],
+      "checks": {
+        "passed": true,
+        "declared_runs": 102,
+        "eligible_declared_runs": 102,
+        "missing_or_ineligible": [],
+        "duplicate_eligible": [],
+        "required_criteria": {
+          "W0": [
+            "S_vs_H",
+            "H1_instance_mix",
+            "H2_migration",
+            "H4_system",
+            "H3_transport"
+          ],
+          "W1": [
+            "S_vs_H",
+            "H1_instance_mix",
+            "H2_migration",
+            "H4_system"
+          ],
+          "W2": [
+            "S_vs_H",
+            "H1_instance_mix",
+            "H2_migration",
+            "H4_system"
+          ],
+          "E_SHORT": [
+            "S_vs_H"
+          ],
+          "E_LONG": [
+            "S_vs_H"
+          ]
+        },
+        "unresolved_criteria": [],
+        "mechanism_cost_errors": []
+      },
+      "note": "102/102 exact scheduled tuples eligible. Every scheduled contrast and the matched 18-trial mechanism-cost group are required; a positive speedup is not required."
+    },
+    {
+      "gate": "6. Conclude and restore owned state",
+      "status": "passed",
+      "evidence": [
+        "results/hetero/20260918/permanent_fp32_final_inspect_H.json",
+        "results/hetero/20260918/permanent_fp32_final_inspect_S.json",
+        "results/hetero/20260918/permanent_fp32_final_inspect_M.json"
+      ],
+      "note": "Residual owned state per layout: {'H': {'registered_instances': 0, 'live_engine_actors': 0, 'created_owned_placement_groups': 0, 'pending_owned_placement_groups': 0}, 'S': {'registered_instances': 0, 'live_engine_actors': 0, 'created_owned_placement_groups': 0, 'pending_owned_placement_groups': 0}, 'M': {'registered_instances': 0, 'live_engine_actors': 0, 'created_owned_placement_groups': 0, 'pending_owned_placement_groups': 0}}."
+    }
+  ],
+  "usefulness_criteria": [
+    {
+      "criterion": "Instance-mix benefit",
+      "verdict": {
+        "W0": "not_supported",
+        "W1": "not_supported",
+        "W2": "not_supported"
+      },
+      "measured_effect": {
+        "W0": {
+          "baseline": "S",
+          "treatment": "M0",
+          "pairs": 6,
+          "per_repetition": [
+            {
+              "repetition": 1,
+              "baseline_s": 351.35,
+              "treatment_s": 402.56,
+              "makespan_reduction": -0.1458,
+              "throughput_increase": -0.1272
+            },
+            {
+              "repetition": 2,
+              "baseline_s": 346.75,
+              "treatment_s": 403.03,
+              "makespan_reduction": -0.1623,
+              "throughput_increase": -0.1396
+            },
+            {
+              "repetition": 3,
+              "baseline_s": 348.71,
+              "treatment_s": 407.55,
+              "makespan_reduction": -0.1687,
+              "throughput_increase": -0.1444
+            },
+            {
+              "repetition": 4,
+              "baseline_s": 346.53,
+              "treatment_s": 403.44,
+              "makespan_reduction": -0.1642,
+              "throughput_increase": -0.1411
+            },
+            {
+              "repetition": 5,
+              "baseline_s": 347.48,
+              "treatment_s": 404.86,
+              "makespan_reduction": -0.1651,
+              "throughput_increase": -0.1417
+            },
+            {
+              "repetition": 6,
+              "baseline_s": 350.2,
+              "treatment_s": 397.24,
+              "makespan_reduction": -0.1343,
+              "throughput_increase": -0.1184
+            }
+          ],
+          "progress_pairs": [
+            {
+              "repetition": 1,
+              "native_throughput_increase": -0.23615787037526192,
+              "baseline_terminal_drain_s": 166.6730613708496,
+              "treatment_terminal_drain_s": 134.35150265693665
+            },
+            {
+              "repetition": 2,
+              "native_throughput_increase": -0.2417914389419803,
+              "baseline_terminal_drain_s": 163.4153537750244,
+              "treatment_terminal_drain_s": 134.93072319030762
+            },
+            {
+              "repetition": 3,
+              "native_throughput_increase": -0.24142865238155686,
+              "baseline_terminal_drain_s": 162.47516632080078,
+              "treatment_terminal_drain_s": 147.17591285705566
+            },
+            {
+              "repetition": 4,
+              "native_throughput_increase": -0.23851218814504815,
+              "baseline_terminal_drain_s": 161.52995085716248,
+              "treatment_terminal_drain_s": 141.19626331329346
+            },
+            {
+              "repetition": 5,
+              "native_throughput_increase": -0.22826872816824217,
+              "baseline_terminal_drain_s": 164.25100016593933,
+              "treatment_terminal_drain_s": 150.63330125808716
+            },
+            {
+              "repetition": 6,
+              "native_throughput_increase": -0.22883670789401656,
+              "baseline_terminal_drain_s": 164.4279282093048,
+              "treatment_terminal_drain_s": 138.8349711894989
+            }
+          ],
+          "sustained_progress_status": "measured_common_interval",
+          "makespan_reduction_median": -0.1633,
+          "makespan_reduction_range": [
+            -0.1687,
+            -0.1343
+          ],
+          "all_same_sign": true
+        },
+        "W1": {
+          "baseline": "H",
+          "treatment": "M0",
+          "pairs": 6,
+          "per_repetition": [
+            {
+              "repetition": 1,
+              "baseline_s": 488.87,
+              "treatment_s": 510.07,
+              "makespan_reduction": -0.0434,
+              "throughput_increase": -0.0416
+            },
+            {
+              "repetition": 2,
+              "baseline_s": 492.09,
+              "treatment_s": 507.36,
+              "makespan_reduction": -0.031,
+              "throughput_increase": -0.0301
+            },
+            {
+              "repetition": 3,
+              "baseline_s": 494.33,
+              "treatment_s": 505.61,
+              "makespan_reduction": -0.0228,
+              "throughput_increase": -0.0223
+            },
+            {
+              "repetition": 4,
+              "baseline_s": 491.74,
+              "treatment_s": 511.0,
+              "makespan_reduction": -0.0392,
+              "throughput_increase": -0.0377
+            },
+            {
+              "repetition": 5,
+              "baseline_s": 489.76,
+              "treatment_s": 523.39,
+              "makespan_reduction": -0.0687,
+              "throughput_increase": -0.0643
+            },
+            {
+              "repetition": 6,
+              "baseline_s": 494.24,
+              "treatment_s": 515.5,
+              "makespan_reduction": -0.043,
+              "throughput_increase": -0.0412
+            }
+          ],
+          "progress_pairs": [
+            {
+              "repetition": 1,
+              "native_throughput_increase": -0.07219811385822905,
+              "baseline_terminal_drain_s": 369.32444882392883,
+              "treatment_terminal_drain_s": 396.0840561389923
+            },
+            {
+              "repetition": 2,
+              "native_throughput_increase": -0.03347351948394395,
+              "baseline_terminal_drain_s": 378.8133544921875,
+              "treatment_terminal_drain_s": 391.1001343727112
+            },
+            {
+              "repetition": 3,
+              "native_throughput_increase": -0.020408091396050487,
+              "baseline_terminal_drain_s": 377.50712418556213,
+              "treatment_terminal_drain_s": 390.11543107032776
+            },
+            {
+              "repetition": 4,
+              "native_throughput_increase": -0.03283851009588501,
+              "baseline_terminal_drain_s": 375.4804232120514,
+              "treatment_terminal_drain_s": 397.44418382644653
+            },
+            {
+              "repetition": 5,
+              "native_throughput_increase": -0.010204456350751734,
+              "baseline_terminal_drain_s": 370.55923652648926,
+              "treatment_terminal_drain_s": 405.1335971355438
+            },
+            {
+              "repetition": 6,
+              "native_throughput_increase": -0.006678647130320958,
+              "baseline_terminal_drain_s": 373.540864944458,
+              "treatment_terminal_drain_s": 405.50921154022217
+            }
+          ],
+          "sustained_progress_status": "measured_common_interval",
+          "makespan_reduction_median": -0.0411,
+          "makespan_reduction_range": [
+            -0.0687,
+            -0.0228
+          ],
+          "all_same_sign": true
+        },
+        "W2": {
+          "baseline": "S",
+          "treatment": "M0",
+          "pairs": 6,
+          "per_repetition": [
+            {
+              "repetition": 1,
+              "baseline_s": 48.41,
+              "treatment_s": 79.35,
+              "makespan_reduction": -0.6393,
+              "throughput_increase": -0.39
+            },
+            {
+              "repetition": 2,
+              "baseline_s": 48.29,
+              "treatment_s": 78.91,
+              "makespan_reduction": -0.6339,
+              "throughput_increase": -0.388
+            },
+            {
+              "repetition": 3,
+              "baseline_s": 48.59,
+              "treatment_s": 77.79,
+              "makespan_reduction": -0.6009,
+              "throughput_increase": -0.3754
+            },
+            {
+              "repetition": 4,
+              "baseline_s": 48.91,
+              "treatment_s": 79.54,
+              "makespan_reduction": -0.6263,
+              "throughput_increase": -0.3851
+            },
+            {
+              "repetition": 5,
+              "baseline_s": 48.5,
+              "treatment_s": 77.71,
+              "makespan_reduction": -0.6022,
+              "throughput_increase": -0.3758
+            },
+            {
+              "repetition": 6,
+              "baseline_s": 49.76,
+              "treatment_s": 78.69,
+              "makespan_reduction": -0.5814,
+              "throughput_increase": -0.3676
+            }
+          ],
+          "progress_pairs": [
+            {
+              "repetition": 1,
+              "native_throughput_increase": -0.39492567758919106,
+              "baseline_terminal_drain_s": 11.163480281829834,
+              "treatment_terminal_drain_s": 23.571074962615967
+            },
+            {
+              "repetition": 2,
+              "native_throughput_increase": -0.39038880927523356,
+              "baseline_terminal_drain_s": 10.732319116592407,
+              "treatment_terminal_drain_s": 22.398500680923462
+            },
+            {
+              "repetition": 3,
+              "native_throughput_increase": -0.36275111739349875,
+              "baseline_terminal_drain_s": 11.18716812133789,
+              "treatment_terminal_drain_s": 19.907897472381592
+            },
+            {
+              "repetition": 4,
+              "native_throughput_increase": -0.3888166902012403,
+              "baseline_terminal_drain_s": 11.279603481292725,
+              "treatment_terminal_drain_s": 24.23516845703125
+            },
+            {
+              "repetition": 5,
+              "native_throughput_increase": -0.3837160611270932,
+              "baseline_terminal_drain_s": 11.481897592544556,
+              "treatment_terminal_drain_s": 23.092439889907837
+            },
+            {
+              "repetition": 6,
+              "native_throughput_increase": -0.38445306599970963,
+              "baseline_terminal_drain_s": 12.743185997009277,
+              "treatment_terminal_drain_s": 20.52732825279236
+            }
+          ],
+          "sustained_progress_status": "measured_common_interval",
+          "makespan_reduction_median": -0.6142,
+          "makespan_reduction_range": [
+            -0.6393,
+            -0.5814
+          ],
+          "all_same_sign": true
+        }
+      },
+      "conclusion": "W0: not_supported; W1: not_supported; W2: not_supported"
+    },
+    {
+      "criterion": "Incremental migration benefit",
+      "verdict": {
+        "W0": "not_exercised_no_migrations",
+        "W1": "not_exercised_no_migrations",
+        "W2": "not_exercised_no_migrations"
+      },
+      "measured_effect": {
+        "W0": {
+          "baseline": "M0",
+          "treatment": "MR",
+          "pairs": 6,
+          "per_repetition": [
+            {
+              "repetition": 1,
+              "baseline_s": 402.56,
+              "treatment_s": 401.97,
+              "makespan_reduction": 0.0015,
+              "throughput_increase": 0.0015
+            },
+            {
+              "repetition": 2,
+              "baseline_s": 403.03,
+              "treatment_s": 400.86,
+              "makespan_reduction": 0.0054,
+              "throughput_increase": 0.0054
+            },
+            {
+              "repetition": 3,
+              "baseline_s": 407.55,
+              "treatment_s": 401.9,
+              "makespan_reduction": 0.0139,
+              "throughput_increase": 0.0141
+            },
+            {
+              "repetition": 4,
+              "baseline_s": 403.44,
+              "treatment_s": 406.54,
+              "makespan_reduction": -0.0077,
+              "throughput_increase": -0.0076
+            },
+            {
+              "repetition": 5,
+              "baseline_s": 404.86,
+              "treatment_s": 403.73,
+              "makespan_reduction": 0.0028,
+              "throughput_increase": 0.0028
+            },
+            {
+              "repetition": 6,
+              "baseline_s": 397.24,
+              "treatment_s": 400.83,
+              "makespan_reduction": -0.009,
+              "throughput_increase": -0.009
+            }
+          ],
+          "progress_pairs": [
+            {
+              "repetition": 1,
+              "native_throughput_increase": 0.024219726652511264,
+              "baseline_terminal_drain_s": 134.35150265693665,
+              "treatment_terminal_drain_s": 149.4742419719696
+            },
+            {
+              "repetition": 2,
+              "native_throughput_increase": 0.01814278565891314,
+              "baseline_terminal_drain_s": 134.93072319030762,
+              "treatment_terminal_drain_s": 144.92462253570557
+            },
+            {
+              "repetition": 3,
+              "native_throughput_increase": 0.011488424179067147,
+              "baseline_terminal_drain_s": 147.17591285705566,
+              "treatment_terminal_drain_s": 141.28046703338623
+            },
+            {
+              "repetition": 4,
+              "native_throughput_increase": 0.00254730111734891,
+              "baseline_terminal_drain_s": 141.19626331329346,
+              "treatment_terminal_drain_s": 143.60325574874878
+            },
+            {
+              "repetition": 5,
+              "native_throughput_increase": -0.005650330917252089,
+              "baseline_terminal_drain_s": 150.63330125808716,
+              "treatment_terminal_drain_s": 142.91165614128113
+            },
+            {
+              "repetition": 6,
+              "native_throughput_increase": -0.011150103794460464,
+              "baseline_terminal_drain_s": 138.8349711894989,
+              "treatment_terminal_drain_s": 139.95244646072388
+            }
+          ],
+          "sustained_progress_status": "measured_common_interval",
+          "makespan_reduction_median": 0.0022,
+          "makespan_reduction_range": [
+            -0.009,
+            0.0139
+          ],
+          "all_same_sign": false
+        },
+        "W1": {
+          "baseline": "M0",
+          "treatment": "MR",
+          "pairs": 6,
+          "per_repetition": [
+            {
+              "repetition": 1,
+              "baseline_s": 510.07,
+              "treatment_s": 508.17,
+              "makespan_reduction": 0.0037,
+              "throughput_increase": 0.0037
+            },
+            {
+              "repetition": 2,
+              "baseline_s": 507.36,
+              "treatment_s": 507.12,
+              "makespan_reduction": 0.0005,
+              "throughput_increase": 0.0005
+            },
+            {
+              "repetition": 3,
+              "baseline_s": 505.61,
+              "treatment_s": 511.59,
+              "makespan_reduction": -0.0118,
+              "throughput_increase": -0.0117
+            },
+            {
+              "repetition": 4,
+              "baseline_s": 511.0,
+              "treatment_s": 510.3,
+              "makespan_reduction": 0.0014,
+              "throughput_increase": 0.0014
+            },
+            {
+              "repetition": 5,
+              "baseline_s": 523.39,
+              "treatment_s": 512.32,
+              "makespan_reduction": 0.0212,
+              "throughput_increase": 0.0216
+            },
+            {
+              "repetition": 6,
+              "baseline_s": 515.5,
+              "treatment_s": 505.82,
+              "makespan_reduction": 0.0188,
+              "throughput_increase": 0.0191
+            }
+          ],
+          "progress_pairs": [
+            {
+              "repetition": 1,
+              "native_throughput_increase": 0.08304217824307392,
+              "baseline_terminal_drain_s": 396.0840561389923,
+              "treatment_terminal_drain_s": 395.03443670272827
+            },
+            {
+              "repetition": 2,
+              "native_throughput_increase": -0.01104777756025277,
+              "baseline_terminal_drain_s": 391.1001343727112,
+              "treatment_terminal_drain_s": 392.63214468955994
+            },
+            {
+              "repetition": 3,
+              "native_throughput_increase": -0.020003079465639728,
+              "baseline_terminal_drain_s": 390.11543107032776,
+              "treatment_terminal_drain_s": 398.77194261550903
+            },
+            {
+              "repetition": 4,
+              "native_throughput_increase": -0.011900735003609553,
+              "baseline_terminal_drain_s": 397.44418382644653,
+              "treatment_terminal_drain_s": 398.8902380466461
+            },
+            {
+              "repetition": 5,
+              "native_throughput_increase": 0.00790891413656003,
+              "baseline_terminal_drain_s": 405.1335971355438,
+              "treatment_terminal_drain_s": 400.2944085597992
+            },
+            {
+              "repetition": 6,
+              "native_throughput_increase": -0.02216828606617438,
+              "baseline_terminal_drain_s": 405.50921154022217,
+              "treatment_terminal_drain_s": 392.4313244819641
+            }
+          ],
+          "sustained_progress_status": "measured_common_interval",
+          "makespan_reduction_median": 0.0026,
+          "makespan_reduction_range": [
+            -0.0118,
+            0.0212
+          ],
+          "all_same_sign": false
+        },
+        "W2": {
+          "baseline": "M0",
+          "treatment": "MR",
+          "pairs": 6,
+          "per_repetition": [
+            {
+              "repetition": 1,
+              "baseline_s": 79.35,
+              "treatment_s": 78.35,
+              "makespan_reduction": 0.0126,
+              "throughput_increase": 0.0128
+            },
+            {
+              "repetition": 2,
+              "baseline_s": 78.91,
+              "treatment_s": 79.56,
+              "makespan_reduction": -0.0083,
+              "throughput_increase": -0.0082
+            },
+            {
+              "repetition": 3,
+              "baseline_s": 77.79,
+              "treatment_s": 77.69,
+              "makespan_reduction": 0.0013,
+              "throughput_increase": 0.0013
+            },
+            {
+              "repetition": 4,
+              "baseline_s": 79.54,
+              "treatment_s": 78.44,
+              "makespan_reduction": 0.0139,
+              "throughput_increase": 0.014
+            },
+            {
+              "repetition": 5,
+              "baseline_s": 77.71,
+              "treatment_s": 79.16,
+              "makespan_reduction": -0.0186,
+              "throughput_increase": -0.0183
+            },
+            {
+              "repetition": 6,
+              "baseline_s": 78.69,
+              "treatment_s": 77.15,
+              "makespan_reduction": 0.0195,
+              "throughput_increase": 0.0199
+            }
+          ],
+          "progress_pairs": [
+            {
+              "repetition": 1,
+              "native_throughput_increase": 0.03486030497667825,
+              "baseline_terminal_drain_s": 23.571074962615967,
+              "treatment_terminal_drain_s": 24.167928218841553
+            },
+            {
+              "repetition": 2,
+              "native_throughput_increase": 0.007556162330625726,
+              "baseline_terminal_drain_s": 22.398500680923462,
+              "treatment_terminal_drain_s": 22.67033338546753
+            },
+            {
+              "repetition": 3,
+              "native_throughput_increase": -0.013751878169506071,
+              "baseline_terminal_drain_s": 19.907897472381592,
+              "treatment_terminal_drain_s": 24.468911170959473
+            },
+            {
+              "repetition": 4,
+              "native_throughput_increase": 0.0016267832577290253,
+              "baseline_terminal_drain_s": 24.23516845703125,
+              "treatment_terminal_drain_s": 22.090837478637695
+            },
+            {
+              "repetition": 5,
+              "native_throughput_increase": -0.003593138811287866,
+              "baseline_terminal_drain_s": 23.092439889907837,
+              "treatment_terminal_drain_s": 23.33281707763672
+            },
+            {
+              "repetition": 6,
+              "native_throughput_increase": 0.027638970089803427,
+              "baseline_terminal_drain_s": 20.52732825279236,
+              "treatment_terminal_drain_s": 23.076807737350464
+            }
+          ],
+          "sustained_progress_status": "measured_common_interval",
+          "makespan_reduction_median": 0.0069,
+          "makespan_reduction_range": [
+            -0.0186,
+            0.0195
+          ],
+          "all_same_sign": false
+        }
+      },
+      "conclusion": "W0: not_exercised_no_migrations; W1: not_exercised_no_migrations; W2: not_exercised_no_migrations"
+    },
+    {
+      "criterion": "System benefit",
+      "verdict": {
+        "W0": "not_supported",
+        "W1": "not_supported",
+        "W2": "not_supported"
+      },
+      "measured_effect": {
+        "W0": {
+          "baseline": "S",
+          "treatment": "MR",
+          "pairs": 6,
+          "per_repetition": [
+            {
+              "repetition": 1,
+              "baseline_s": 351.35,
+              "treatment_s": 401.97,
+              "makespan_reduction": -0.1441,
+              "throughput_increase": -0.1259
+            },
+            {
+              "repetition": 2,
+              "baseline_s": 346.75,
+              "treatment_s": 400.86,
+              "makespan_reduction": -0.156,
+              "throughput_increase": -0.135
+            },
+            {
+              "repetition": 3,
+              "baseline_s": 348.71,
+              "treatment_s": 401.9,
+              "makespan_reduction": -0.1525,
+              "throughput_increase": -0.1323
+            },
+            {
+              "repetition": 4,
+              "baseline_s": 346.53,
+              "treatment_s": 406.54,
+              "makespan_reduction": -0.1732,
+              "throughput_increase": -0.1476
+            },
+            {
+              "repetition": 5,
+              "baseline_s": 347.48,
+              "treatment_s": 403.73,
+              "makespan_reduction": -0.1619,
+              "throughput_increase": -0.1393
+            },
+            {
+              "repetition": 6,
+              "baseline_s": 350.2,
+              "treatment_s": 400.83,
+              "makespan_reduction": -0.1446,
+              "throughput_increase": -0.1263
+            }
+          ],
+          "progress_pairs": [
+            {
+              "repetition": 1,
+              "native_throughput_increase": -0.21765782279007873,
+              "baseline_terminal_drain_s": 166.6730613708496,
+              "treatment_terminal_drain_s": 149.4742419719696
+            },
+            {
+              "repetition": 2,
+              "native_throughput_increase": -0.22803542353395168,
+              "baseline_terminal_drain_s": 163.4153537750244,
+              "treatment_terminal_drain_s": 144.92462253570557
+            },
+            {
+              "repetition": 3,
+              "native_throughput_increase": -0.2327138629700296,
+              "baseline_terminal_drain_s": 162.47516632080078,
+              "treatment_terminal_drain_s": 141.28046703338623
+            },
+            {
+              "repetition": 4,
+              "native_throughput_increase": -0.23657244939106237,
+              "baseline_terminal_drain_s": 161.52995085716248,
+              "treatment_terminal_drain_s": 143.60325574874878
+            },
+            {
+              "repetition": 5,
+              "native_throughput_increase": -0.2326292652332833,
+              "baseline_terminal_drain_s": 164.25100016593933,
+              "treatment_terminal_drain_s": 142.91165614128113
+            },
+            {
+              "repetition": 6,
+              "native_throughput_increase": -0.23743525864347614,
+              "baseline_terminal_drain_s": 164.4279282093048,
+              "treatment_terminal_drain_s": 139.95244646072388
+            }
+          ],
+          "sustained_progress_status": "measured_common_interval",
+          "makespan_reduction_median": -0.1542,
+          "makespan_reduction_range": [
+            -0.1732,
+            -0.1441
+          ],
+          "all_same_sign": true
+        },
+        "W1": {
+          "baseline": "H",
+          "treatment": "MR",
+          "pairs": 6,
+          "per_repetition": [
+            {
+              "repetition": 1,
+              "baseline_s": 488.87,
+              "treatment_s": 508.17,
+              "makespan_reduction": -0.0395,
+              "throughput_increase": -0.038
+            },
+            {
+              "repetition": 2,
+              "baseline_s": 492.09,
+              "treatment_s": 507.12,
+              "makespan_reduction": -0.0305,
+              "throughput_increase": -0.0296
+            },
+            {
+              "repetition": 3,
+              "baseline_s": 494.33,
+              "treatment_s": 511.59,
+              "makespan_reduction": -0.0349,
+              "throughput_increase": -0.0337
+            },
+            {
+              "repetition": 4,
+              "baseline_s": 491.74,
+              "treatment_s": 510.3,
+              "makespan_reduction": -0.0377,
+              "throughput_increase": -0.0364
+            },
+            {
+              "repetition": 5,
+              "baseline_s": 489.76,
+              "treatment_s": 512.32,
+              "makespan_reduction": -0.0461,
+              "throughput_increase": -0.044
+            },
+            {
+              "repetition": 6,
+              "baseline_s": 494.24,
+              "treatment_s": 505.82,
+              "makespan_reduction": -0.0234,
+              "throughput_increase": -0.0229
+            }
+          ],
+          "progress_pairs": [
+            {
+              "repetition": 1,
+              "native_throughput_increase": 0.0048485757450160705,
+              "baseline_terminal_drain_s": 369.32444882392883,
+              "treatment_terminal_drain_s": 395.03443670272827
+            },
+            {
+              "repetition": 2,
+              "native_throughput_increase": -0.044151489046779346,
+              "baseline_terminal_drain_s": 378.8133544921875,
+              "treatment_terminal_drain_s": 392.63214468955994
+            },
+            {
+              "repetition": 3,
+              "native_throughput_increase": -0.04000294618775291,
+              "baseline_terminal_drain_s": 377.50712418556213,
+              "treatment_terminal_drain_s": 398.77194261550903
+            },
+            {
+              "repetition": 4,
+              "native_throughput_increase": -0.044348442692930146,
+              "baseline_terminal_drain_s": 375.4804232120514,
+              "treatment_terminal_drain_s": 398.8902380466461
+            },
+            {
+              "repetition": 5,
+              "native_throughput_increase": -0.0023762483832800996,
+              "baseline_terminal_drain_s": 370.55923652648926,
+              "treatment_terminal_drain_s": 400.2944085597992
+            },
+            {
+              "repetition": 6,
+              "native_throughput_increase": -0.028698879036375247,
+              "baseline_terminal_drain_s": 373.540864944458,
+              "treatment_terminal_drain_s": 392.4313244819641
+            }
+          ],
+          "sustained_progress_status": "measured_common_interval",
+          "makespan_reduction_median": -0.0363,
+          "makespan_reduction_range": [
+            -0.0461,
+            -0.0234
+          ],
+          "all_same_sign": true
+        },
+        "W2": {
+          "baseline": "S",
+          "treatment": "MR",
+          "pairs": 6,
+          "per_repetition": [
+            {
+              "repetition": 1,
+              "baseline_s": 48.41,
+              "treatment_s": 78.35,
+              "makespan_reduction": -0.6186,
+              "throughput_increase": -0.3822
+            },
+            {
+              "repetition": 2,
+              "baseline_s": 48.29,
+              "treatment_s": 79.56,
+              "makespan_reduction": -0.6474,
+              "throughput_increase": -0.393
+            },
+            {
+              "repetition": 3,
+              "baseline_s": 48.59,
+              "treatment_s": 77.69,
+              "makespan_reduction": -0.5989,
+              "throughput_increase": -0.3746
+            },
+            {
+              "repetition": 4,
+              "baseline_s": 48.91,
+              "treatment_s": 78.44,
+              "makespan_reduction": -0.6038,
+              "throughput_increase": -0.3765
+            },
+            {
+              "repetition": 5,
+              "baseline_s": 48.5,
+              "treatment_s": 79.16,
+              "makespan_reduction": -0.632,
+              "throughput_increase": -0.3873
+            },
+            {
+              "repetition": 6,
+              "baseline_s": 49.76,
+              "treatment_s": 77.15,
+              "makespan_reduction": -0.5505,
+              "throughput_increase": -0.355
+            }
+          ],
+          "progress_pairs": [
+            {
+              "repetition": 1,
+              "native_throughput_increase": -0.37383260217639336,
+              "baseline_terminal_drain_s": 11.163480281829834,
+              "treatment_terminal_drain_s": 24.167928218841553
+            },
+            {
+              "repetition": 2,
+              "native_throughput_increase": -0.3857824881595512,
+              "baseline_terminal_drain_s": 10.732319116592407,
+              "treatment_terminal_drain_s": 22.67033338546753
+            },
+            {
+              "repetition": 3,
+              "native_throughput_increase": -0.37151448639075724,
+              "baseline_terminal_drain_s": 11.18716812133789,
+              "treatment_terminal_drain_s": 24.468911170959473
+            },
+            {
+              "repetition": 4,
+              "native_throughput_increase": -0.38782242742545625,
+              "baseline_terminal_drain_s": 11.279603481292725,
+              "treatment_terminal_drain_s": 22.090837478637695
+            },
+            {
+              "repetition": 5,
+              "native_throughput_increase": -0.3859304548666308,
+              "baseline_terminal_drain_s": 11.481897592544556,
+              "treatment_terminal_drain_s": 23.33281707763672
+            },
+            {
+              "repetition": 6,
+              "native_throughput_increase": -0.3674399827020053,
+              "baseline_terminal_drain_s": 12.743185997009277,
+              "treatment_terminal_drain_s": 23.076807737350464
+            }
+          ],
+          "sustained_progress_status": "measured_common_interval",
+          "makespan_reduction_median": -0.6112,
+          "makespan_reduction_range": [
+            -0.6474,
+            -0.5505
+          ],
+          "all_same_sign": true
+        }
+      },
+      "conclusion": "W0: not_supported; W1: not_supported; W2: not_supported"
+    },
+    {
+      "criterion": "Transport benefit",
+      "verdict": {
+        "W0": "not_exercised_no_transferred_KV"
+      },
+      "measured_effect": {
+        "W0": {
+          "baseline": "MR",
+          "treatment": "MK-H",
+          "pairs": 6,
+          "per_repetition": [
+            {
+              "repetition": 1,
+              "baseline_s": 401.97,
+              "treatment_s": 401.29,
+              "makespan_reduction": 0.0017,
+              "throughput_increase": 0.0017
+            },
+            {
+              "repetition": 2,
+              "baseline_s": 400.86,
+              "treatment_s": 402.44,
+              "makespan_reduction": -0.0039,
+              "throughput_increase": -0.0039
+            },
+            {
+              "repetition": 3,
+              "baseline_s": 401.9,
+              "treatment_s": 401.73,
+              "makespan_reduction": 0.0004,
+              "throughput_increase": 0.0004
+            },
+            {
+              "repetition": 4,
+              "baseline_s": 406.54,
+              "treatment_s": 402.98,
+              "makespan_reduction": 0.0088,
+              "throughput_increase": 0.0088
+            },
+            {
+              "repetition": 5,
+              "baseline_s": 403.73,
+              "treatment_s": 405.55,
+              "makespan_reduction": -0.0045,
+              "throughput_increase": -0.0045
+            },
+            {
+              "repetition": 6,
+              "baseline_s": 400.83,
+              "treatment_s": 408.81,
+              "makespan_reduction": -0.0199,
+              "throughput_increase": -0.0195
+            }
+          ],
+          "progress_pairs": [
+            {
+              "repetition": 1,
+              "native_throughput_increase": -0.02903543061734637,
+              "baseline_terminal_drain_s": 149.4742419719696,
+              "treatment_terminal_drain_s": 137.58174443244934
+            },
+            {
+              "repetition": 2,
+              "native_throughput_increase": -0.011762598291534032,
+              "baseline_terminal_drain_s": 144.92462253570557,
+              "treatment_terminal_drain_s": 141.82898879051208
+            },
+            {
+              "repetition": 3,
+              "native_throughput_increase": -0.007147335668177157,
+              "baseline_terminal_drain_s": 141.28046703338623,
+              "treatment_terminal_drain_s": 142.527578830719
+            },
+            {
+              "repetition": 4,
+              "native_throughput_increase": 0.0028937706494427395,
+              "baseline_terminal_drain_s": 143.60325574874878,
+              "treatment_terminal_drain_s": 143.81787657737732
+            },
+            {
+              "repetition": 5,
+              "native_throughput_increase": -0.004826950504729255,
+              "baseline_terminal_drain_s": 142.91165614128113,
+              "treatment_terminal_drain_s": 141.589684009552
+            },
+            {
+              "repetition": 6,
+              "native_throughput_increase": -0.009702075699786206,
+              "baseline_terminal_drain_s": 139.95244646072388,
+              "treatment_terminal_drain_s": 136.68333435058594
+            }
+          ],
+          "sustained_progress_status": "measured_common_interval",
+          "makespan_reduction_median": -0.0017,
+          "makespan_reduction_range": [
+            -0.0199,
+            0.0088
+          ],
+          "all_same_sign": false
+        }
+      },
+      "conclusion": "W0: not_exercised_no_transferred_KV"
+    },
+    {
+      "criterion": "Equal-resource homogeneous comparison",
+      "verdict": {
+        "W0": "supported",
+        "W1": "not_supported",
+        "W2": "supported",
+        "E_SHORT": "supported",
+        "E_LONG": "measured_but_below_threshold"
+      },
+      "measured_effect": {
+        "W0": {
+          "baseline": "H",
+          "treatment": "S",
+          "pairs": 6,
+          "per_repetition": [
+            {
+              "repetition": 1,
+              "baseline_s": 467.98,
+              "treatment_s": 351.35,
+              "makespan_reduction": 0.2492,
+              "throughput_increase": 0.332
+            },
+            {
+              "repetition": 2,
+              "baseline_s": 468.1,
+              "treatment_s": 346.75,
+              "makespan_reduction": 0.2592,
+              "throughput_increase": 0.35
+            },
+            {
+              "repetition": 3,
+              "baseline_s": 471.23,
+              "treatment_s": 348.71,
+              "makespan_reduction": 0.26,
+              "throughput_increase": 0.3513
+            },
+            {
+              "repetition": 4,
+              "baseline_s": 470.21,
+              "treatment_s": 346.53,
+              "makespan_reduction": 0.263,
+              "throughput_increase": 0.3569
+            },
+            {
+              "repetition": 5,
+              "baseline_s": 472.2,
+              "treatment_s": 347.48,
+              "makespan_reduction": 0.2641,
+              "throughput_increase": 0.3589
+            },
+            {
+              "repetition": 6,
+              "baseline_s": 473.32,
+              "treatment_s": 350.2,
+              "makespan_reduction": 0.2601,
+              "throughput_increase": 0.3516
+            }
+          ],
+          "progress_pairs": [
+            {
+              "repetition": 1,
+              "native_throughput_increase": 0.6011984286359482,
+              "baseline_terminal_drain_s": 164.02525115013123,
+              "treatment_terminal_drain_s": 166.6730613708496
+            },
+            {
+              "repetition": 2,
+              "native_throughput_increase": 0.6099022084720653,
+              "baseline_terminal_drain_s": 161.95419573783875,
+              "treatment_terminal_drain_s": 163.4153537750244
+            },
+            {
+              "repetition": 3,
+              "native_throughput_increase": 0.6287857730257733,
+              "baseline_terminal_drain_s": 164.25262260437012,
+              "treatment_terminal_drain_s": 162.47516632080078
+            },
+            {
+              "repetition": 4,
+              "native_throughput_increase": 0.614909566698056,
+              "baseline_terminal_drain_s": 163.12935090065002,
+              "treatment_terminal_drain_s": 161.52995085716248
+            },
+            {
+              "repetition": 5,
+              "native_throughput_increase": 0.6208736735886193,
+              "baseline_terminal_drain_s": 166.40247559547424,
+              "treatment_terminal_drain_s": 164.25100016593933
+            },
+            {
+              "repetition": 6,
+              "native_throughput_increase": 0.6054825124527698,
+              "baseline_terminal_drain_s": 163.36755657196045,
+              "treatment_terminal_drain_s": 164.4279282093048
+            }
+          ],
+          "sustained_progress_status": "measured_common_interval",
+          "makespan_reduction_median": 0.2601,
+          "makespan_reduction_range": [
+            0.2492,
+            0.2641
+          ],
+          "all_same_sign": true
+        },
+        "W1": {
+          "baseline": "H",
+          "treatment": "S",
+          "pairs": 6,
+          "per_repetition": [
+            {
+              "repetition": 1,
+              "baseline_s": 488.87,
+              "treatment_s": 500.94,
+              "makespan_reduction": -0.0247,
+              "throughput_increase": -0.0241
+            },
+            {
+              "repetition": 2,
+              "baseline_s": 492.09,
+              "treatment_s": 500.86,
+              "makespan_reduction": -0.0178,
+              "throughput_increase": -0.0175
+            },
+            {
+              "repetition": 3,
+              "baseline_s": 494.33,
+              "treatment_s": 499.55,
+              "makespan_reduction": -0.0105,
+              "throughput_increase": -0.0104
+            },
+            {
+              "repetition": 4,
+              "baseline_s": 491.74,
+              "treatment_s": 502.66,
+              "makespan_reduction": -0.0222,
+              "throughput_increase": -0.0217
+            },
+            {
+              "repetition": 5,
+              "baseline_s": 489.76,
+              "treatment_s": 501.9,
+              "makespan_reduction": -0.0248,
+              "throughput_increase": -0.0242
+            },
+            {
+              "repetition": 6,
+              "baseline_s": 494.24,
+              "treatment_s": 502.32,
+              "makespan_reduction": -0.0163,
+              "throughput_increase": -0.0161
+            }
+          ],
+          "progress_pairs": [
+            {
+              "repetition": 1,
+              "native_throughput_increase": 0.09474257985830192,
+              "baseline_terminal_drain_s": 369.32444882392883,
+              "treatment_terminal_drain_s": 404.0343713760376
+            },
+            {
+              "repetition": 2,
+              "native_throughput_increase": 0.07440474197898306,
+              "baseline_terminal_drain_s": 378.8133544921875,
+              "treatment_terminal_drain_s": 393.55296564102173
+            },
+            {
+              "repetition": 3,
+              "native_throughput_increase": 0.08431927388682348,
+              "baseline_terminal_drain_s": 377.50712418556213,
+              "treatment_terminal_drain_s": 398.7017116546631
+            },
+            {
+              "repetition": 4,
+              "native_throughput_increase": 0.10128860491271552,
+              "baseline_terminal_drain_s": 375.4804232120514,
+              "treatment_terminal_drain_s": 407.15079641342163
+            },
+            {
+              "repetition": 5,
+              "native_throughput_increase": 0.16127167061441772,
+              "baseline_terminal_drain_s": 370.55923652648926,
+              "treatment_terminal_drain_s": 407.844957113266
+            },
+            {
+              "repetition": 6,
+              "native_throughput_increase": 0.09976865145299985,
+              "baseline_terminal_drain_s": 373.540864944458,
+              "treatment_terminal_drain_s": 398.8396894931793
+            }
+          ],
+          "sustained_progress_status": "measured_common_interval",
+          "makespan_reduction_median": -0.02,
+          "makespan_reduction_range": [
+            -0.0248,
+            -0.0105
+          ],
+          "all_same_sign": true
+        },
+        "W2": {
+          "baseline": "H",
+          "treatment": "S",
+          "pairs": 6,
+          "per_repetition": [
+            {
+              "repetition": 1,
+              "baseline_s": 82.93,
+              "treatment_s": 48.41,
+              "makespan_reduction": 0.4163,
+              "throughput_increase": 0.7133
+            },
+            {
+              "repetition": 2,
+              "baseline_s": 83.68,
+              "treatment_s": 48.29,
+              "makespan_reduction": 0.4229,
+              "throughput_increase": 0.7327
+            },
+            {
+              "repetition": 3,
+              "baseline_s": 81.7,
+              "treatment_s": 48.59,
+              "makespan_reduction": 0.4053,
+              "throughput_increase": 0.6815
+            },
+            {
+              "repetition": 4,
+              "baseline_s": 80.6,
+              "treatment_s": 48.91,
+              "makespan_reduction": 0.3931,
+              "throughput_increase": 0.6478
+            },
+            {
+              "repetition": 5,
+              "baseline_s": 81.62,
+              "treatment_s": 48.5,
+              "makespan_reduction": 0.4058,
+              "throughput_increase": 0.6829
+            },
+            {
+              "repetition": 6,
+              "baseline_s": 79.9,
+              "treatment_s": 49.76,
+              "makespan_reduction": 0.3772,
+              "throughput_increase": 0.6057
+            }
+          ],
+          "progress_pairs": [
+            {
+              "repetition": 1,
+              "native_throughput_increase": 0.7358988518743217,
+              "baseline_terminal_drain_s": 16.067153215408325,
+              "treatment_terminal_drain_s": 11.163480281829834
+            },
+            {
+              "repetition": 2,
+              "native_throughput_increase": 0.7104280031331576,
+              "baseline_terminal_drain_s": 17.92340350151062,
+              "treatment_terminal_drain_s": 10.732319116592407
+            },
+            {
+              "repetition": 3,
+              "native_throughput_increase": 0.7139897034462952,
+              "baseline_terminal_drain_s": 16.826637268066406,
+              "treatment_terminal_drain_s": 11.18716812133789
+            },
+            {
+              "repetition": 4,
+              "native_throughput_increase": 0.686796875780014,
+              "baseline_terminal_drain_s": 15.313381671905518,
+              "treatment_terminal_drain_s": 11.279603481292725
+            },
+            {
+              "repetition": 5,
+              "native_throughput_increase": 0.68679766791737,
+              "baseline_terminal_drain_s": 15.174132585525513,
+              "treatment_terminal_drain_s": 11.481897592544556
+            },
+            {
+              "repetition": 6,
+              "native_throughput_increase": 0.6883829717119476,
+              "baseline_terminal_drain_s": 14.615211963653564,
+              "treatment_terminal_drain_s": 12.743185997009277
+            }
+          ],
+          "sustained_progress_status": "measured_common_interval",
+          "makespan_reduction_median": 0.4055,
+          "makespan_reduction_range": [
+            0.3772,
+            0.4229
+          ],
+          "all_same_sign": true
+        },
+        "E_SHORT": {
+          "baseline": "H",
+          "treatment": "S",
+          "pairs": 6,
+          "per_repetition": [
+            {
+              "repetition": 1,
+              "baseline_s": 51.47,
+              "treatment_s": 36.66,
+              "makespan_reduction": 0.2878,
+              "throughput_increase": 0.404
+            },
+            {
+              "repetition": 2,
+              "baseline_s": 51.07,
+              "treatment_s": 36.19,
+              "makespan_reduction": 0.2914,
+              "throughput_increase": 0.4112
+            },
+            {
+              "repetition": 3,
+              "baseline_s": 51.09,
+              "treatment_s": 33.74,
+              "makespan_reduction": 0.3395,
+              "throughput_increase": 0.5141
+            },
+            {
+              "repetition": 4,
+              "baseline_s": 51.45,
+              "treatment_s": 35.76,
+              "makespan_reduction": 0.3049,
+              "throughput_increase": 0.4386
+            },
+            {
+              "repetition": 5,
+              "baseline_s": 51.44,
+              "treatment_s": 35.84,
+              "makespan_reduction": 0.3033,
+              "throughput_increase": 0.4353
+            },
+            {
+              "repetition": 6,
+              "baseline_s": 51.5,
+              "treatment_s": 37.01,
+              "makespan_reduction": 0.2814,
+              "throughput_increase": 0.3916
+            }
+          ],
+          "progress_pairs": [],
+          "sustained_progress_status": "missing_common_interval_no_sustained_claim",
+          "makespan_reduction_median": 0.2974,
+          "makespan_reduction_range": [
+            0.2814,
+            0.3395
+          ],
+          "all_same_sign": true
+        },
+        "E_LONG": {
+          "baseline": "H",
+          "treatment": "S",
+          "pairs": 6,
+          "per_repetition": [
+            {
+              "repetition": 1,
+              "baseline_s": 25.05,
+              "treatment_s": 23.94,
+              "makespan_reduction": 0.0445,
+              "throughput_increase": 0.0466
+            },
+            {
+              "repetition": 2,
+              "baseline_s": 25.09,
+              "treatment_s": 23.91,
+              "makespan_reduction": 0.047,
+              "throughput_increase": 0.0493
+            },
+            {
+              "repetition": 3,
+              "baseline_s": 25.07,
+              "treatment_s": 23.97,
+              "makespan_reduction": 0.044,
+              "throughput_increase": 0.046
+            },
+            {
+              "repetition": 4,
+              "baseline_s": 25.07,
+              "treatment_s": 23.92,
+              "makespan_reduction": 0.0459,
+              "throughput_increase": 0.0481
+            },
+            {
+              "repetition": 5,
+              "baseline_s": 25.05,
+              "treatment_s": 23.92,
+              "makespan_reduction": 0.0452,
+              "throughput_increase": 0.0474
+            },
+            {
+              "repetition": 6,
+              "baseline_s": 25.06,
+              "treatment_s": 23.94,
+              "makespan_reduction": 0.0448,
+              "throughput_increase": 0.0469
+            }
+          ],
+          "progress_pairs": [],
+          "sustained_progress_status": "missing_common_interval_no_sustained_claim",
+          "makespan_reduction_median": 0.045,
+          "makespan_reduction_range": [
+            0.044,
+            0.047
+          ],
+          "all_same_sign": true
+        }
+      },
+      "conclusion": "W0: supported; W1: not_supported; W2: supported; E_SHORT: supported; E_LONG: measured_but_below_threshold"
+    }
+  ],
+  "historical_diagnostics": {
+    "original_bf16_state": {
+      "artifact": "results/hetero/20260916/continuation_fidelity_M_dispatch_repaired.json",
+      "passed": false
+    },
+    "first_passing_fp32_state": {
+      "artifact": "results/hetero/20260918/minimal_fp32_state_continuation.json",
+      "passed": true
+    }
+  },
+  "efficiency_contrasts": {
+    "E_SHORT": {
+      "workload": "E_SHORT",
+      "expected_repetitions": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "paired_repetitions": 6,
+      "missing_repetitions": [],
+      "status": "complete",
+      "effect": {
+        "baseline": "H",
+        "treatment": "S",
+        "pairs": 6,
+        "per_repetition": [
+          {
+            "repetition": 1,
+            "baseline_s": 51.47,
+            "treatment_s": 36.66,
+            "makespan_reduction": 0.2878,
+            "throughput_increase": 0.404
+          },
+          {
+            "repetition": 2,
+            "baseline_s": 51.07,
+            "treatment_s": 36.19,
+            "makespan_reduction": 0.2914,
+            "throughput_increase": 0.4112
+          },
+          {
+            "repetition": 3,
+            "baseline_s": 51.09,
+            "treatment_s": 33.74,
+            "makespan_reduction": 0.3395,
+            "throughput_increase": 0.5141
+          },
+          {
+            "repetition": 4,
+            "baseline_s": 51.45,
+            "treatment_s": 35.76,
+            "makespan_reduction": 0.3049,
+            "throughput_increase": 0.4386
+          },
+          {
+            "repetition": 5,
+            "baseline_s": 51.44,
+            "treatment_s": 35.84,
+            "makespan_reduction": 0.3033,
+            "throughput_increase": 0.4353
+          },
+          {
+            "repetition": 6,
+            "baseline_s": 51.5,
+            "treatment_s": 37.01,
+            "makespan_reduction": 0.2814,
+            "throughput_increase": 0.3916
+          }
+        ],
+        "progress_pairs": [],
+        "sustained_progress_status": "missing_common_interval_no_sustained_claim",
+        "makespan_reduction_median": 0.2974,
+        "makespan_reduction_range": [
+          0.2814,
+          0.3395
+        ],
+        "all_same_sign": true
+      },
+      "per_repetition": [
+        {
+          "repetition": 1,
+          "baseline_s": 51.47,
+          "treatment_s": 36.66,
+          "makespan_reduction": 0.2878,
+          "throughput_increase": 0.404
+        },
+        {
+          "repetition": 2,
+          "baseline_s": 51.07,
+          "treatment_s": 36.19,
+          "makespan_reduction": 0.2914,
+          "throughput_increase": 0.4112
+        },
+        {
+          "repetition": 3,
+          "baseline_s": 51.09,
+          "treatment_s": 33.74,
+          "makespan_reduction": 0.3395,
+          "throughput_increase": 0.5141
+        },
+        {
+          "repetition": 4,
+          "baseline_s": 51.45,
+          "treatment_s": 35.76,
+          "makespan_reduction": 0.3049,
+          "throughput_increase": 0.4386
+        },
+        {
+          "repetition": 5,
+          "baseline_s": 51.44,
+          "treatment_s": 35.84,
+          "makespan_reduction": 0.3033,
+          "throughput_increase": 0.4353
+        },
+        {
+          "repetition": 6,
+          "baseline_s": 51.5,
+          "treatment_s": 37.01,
+          "makespan_reduction": 0.2814,
+          "throughput_increase": 0.3916
+        }
+      ],
+      "H": {
+        "runs": 6,
+        "makespan_median_s": 51.441050000000004,
+        "makespan_min_s": 51.069,
+        "makespan_max_s": 51.4957,
+        "makespan_stdev_s": 0.1992797129664722,
+        "tokens_per_s_per_chip_median": 39.81255
+      },
+      "S": {
+        "runs": 6,
+        "makespan_median_s": 36.013000000000005,
+        "makespan_min_s": 33.7427,
+        "makespan_max_s": 37.0055,
+        "makespan_stdev_s": 1.145024956933254,
+        "tokens_per_s_per_chip_median": 56.869699999999995
+      },
+      "makespan_reduction_S_vs_H": {
+        "median": 0.2974,
+        "min": 0.2814,
+        "max": 0.3395,
+        "direction": "S faster",
+        "consistent_sign": true
+      }
+    },
+    "E_LONG": {
+      "workload": "E_LONG",
+      "expected_repetitions": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "paired_repetitions": 6,
+      "missing_repetitions": [],
+      "status": "complete",
+      "effect": {
+        "baseline": "H",
+        "treatment": "S",
+        "pairs": 6,
+        "per_repetition": [
+          {
+            "repetition": 1,
+            "baseline_s": 25.05,
+            "treatment_s": 23.94,
+            "makespan_reduction": 0.0445,
+            "throughput_increase": 0.0466
+          },
+          {
+            "repetition": 2,
+            "baseline_s": 25.09,
+            "treatment_s": 23.91,
+            "makespan_reduction": 0.047,
+            "throughput_increase": 0.0493
+          },
+          {
+            "repetition": 3,
+            "baseline_s": 25.07,
+            "treatment_s": 23.97,
+            "makespan_reduction": 0.044,
+            "throughput_increase": 0.046
+          },
+          {
+            "repetition": 4,
+            "baseline_s": 25.07,
+            "treatment_s": 23.92,
+            "makespan_reduction": 0.0459,
+            "throughput_increase": 0.0481
+          },
+          {
+            "repetition": 5,
+            "baseline_s": 25.05,
+            "treatment_s": 23.92,
+            "makespan_reduction": 0.0452,
+            "throughput_increase": 0.0474
+          },
+          {
+            "repetition": 6,
+            "baseline_s": 25.06,
+            "treatment_s": 23.94,
+            "makespan_reduction": 0.0448,
+            "throughput_increase": 0.0469
+          }
+        ],
+        "progress_pairs": [],
+        "sustained_progress_status": "missing_common_interval_no_sustained_claim",
+        "makespan_reduction_median": 0.045,
+        "makespan_reduction_range": [
+          0.044,
+          0.047
+        ],
+        "all_same_sign": true
+      },
+      "per_repetition": [
+        {
+          "repetition": 1,
+          "baseline_s": 25.05,
+          "treatment_s": 23.94,
+          "makespan_reduction": 0.0445,
+          "throughput_increase": 0.0466
+        },
+        {
+          "repetition": 2,
+          "baseline_s": 25.09,
+          "treatment_s": 23.91,
+          "makespan_reduction": 0.047,
+          "throughput_increase": 0.0493
+        },
+        {
+          "repetition": 3,
+          "baseline_s": 25.07,
+          "treatment_s": 23.97,
+          "makespan_reduction": 0.044,
+          "throughput_increase": 0.046
+        },
+        {
+          "repetition": 4,
+          "baseline_s": 25.07,
+          "treatment_s": 23.92,
+          "makespan_reduction": 0.0459,
+          "throughput_increase": 0.0481
+        },
+        {
+          "repetition": 5,
+          "baseline_s": 25.05,
+          "treatment_s": 23.92,
+          "makespan_reduction": 0.0452,
+          "throughput_increase": 0.0474
+        },
+        {
+          "repetition": 6,
+          "baseline_s": 25.06,
+          "treatment_s": 23.94,
+          "makespan_reduction": 0.0448,
+          "throughput_increase": 0.0469
+        }
+      ],
+      "H": {
+        "runs": 6,
+        "makespan_median_s": 25.064999999999998,
+        "makespan_min_s": 25.0489,
+        "makespan_max_s": 25.0922,
+        "makespan_stdev_s": 0.015804261028806412,
+        "tokens_per_s_per_chip_median": 15.3202
+      },
+      "S": {
+        "runs": 6,
+        "makespan_median_s": 23.9284,
+        "makespan_min_s": 23.9129,
+        "makespan_max_s": 23.9724,
+        "makespan_stdev_s": 0.022269029315771086,
+        "tokens_per_s_per_chip_median": 16.047849999999997
+      },
+      "makespan_reduction_S_vs_H": {
+        "median": 0.045,
+        "min": 0.044,
+        "max": 0.047,
+        "direction": "S faster",
+        "consistent_sign": true
+      }
+    }
+  }
+}

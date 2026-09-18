@@ -1,0 +1,27 @@
+{
+  "format": 1,
+  "asset_index_sha256": "320391b12e514db7d35618c38da2ccca65dffd8e93ea02fe786b43348533d8de",
+  "restore": {
+    "verified": true,
+    "extracted": true,
+    "files": 3616,
+    "bytes": 4290141192,
+    "archives": 8,
+    "merge_without_overwrite": true
+  },
+  "assembled_source_files": 245,
+  "renderer": {"selected_runs": 102, "eligible_runs": 102, "expected_runs": 102, "historical_runs": 61},
+  "efficiency": {"admitted": 24, "expected": 24, "excluded": 0},
+  "scope": "Actual report CLIs ran from an exact-copy fork assembly restored exclusively from the final public archive. They consume retained aggregate wrappers and iteration records. This is not independent validation or replay of the withheld W1 input/request records.",
+  "publication_omissions": {
+    "research_files": 76,
+    "raw_corpus": 1,
+    "affected_W1_manifests": 3,
+    "affected_token_or_text_request_files": 72,
+    "local_context_and_tool_files": 3,
+    "original_files_modified": false,
+    "historical_hashes_rewritten": false
+  },
+  "screening_limit": "Known affected content is withheld. Unmapped generated token arrays were not individually tokenizer-decoded; publication-audit.json reports this coverage limit explicitly.",
+  "hardware_workloads_launched": false
+}

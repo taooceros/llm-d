@@ -1,0 +1,10 @@
+{
+  "verified": true,
+  "extracted": false,
+  "files": 3616,
+  "bytes": 4290141192,
+  "assets": 8,
+  "index_sha256": "320391b12e514db7d35618c38da2ccca65dffd8e93ea02fe786b43348533d8de",
+  "destination": null,
+  "merge_without_overwrite": false
+}

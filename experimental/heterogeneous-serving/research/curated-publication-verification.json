@@ -1,0 +1,10 @@
+{
+  "curated_files_assessed": 18,
+  "exclusions": [],
+  "totals": {
+    "files_assessed": 18,
+    "token_arrays": 10,
+    "token_arrays_without_source_mapping": 10
+  },
+  "scope": "Decoded text signatures, known affected source/request IDs and prompt-token prefixes; not a blanket assertion about undecoded generated token arrays."
+}

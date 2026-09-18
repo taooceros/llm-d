@@ -1,0 +1,14 @@
+{
+  "checks": {
+    "safe_overlay": true,
+    "existing_file_rejected": true,
+    "absolute_rejected": true,
+    "traversal_rejected": true,
+    "symlink_rejected": true,
+    "hardlink_rejected": true,
+    "member_sha256_rejected": true,
+    "asset_sha256_rejected": true,
+    "symlink_ancestor_rejected": true
+  },
+  "suite": "throwaway CLI-function smoke; no benchmarks"
+}

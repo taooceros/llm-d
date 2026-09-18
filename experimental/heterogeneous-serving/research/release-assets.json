@@ -1,0 +1,73 @@
+{
+  "repository": "taooceros/llm-d",
+  "tag": "research-evidence-20260918",
+  "assets": [
+    {
+      "path": "/tmp/hetero-research-release/hetero-001.tar.gz",
+      "name": "hetero-001.tar.gz",
+      "size": 696845424,
+      "sha256": "7f4951e74f70c8dc6eaf88a11cb18f7b968b47af68d08a50be6b5e56228c73de"
+    },
+    {
+      "path": "/tmp/hetero-research-release/hetero-002.tar.gz",
+      "name": "hetero-002.tar.gz",
+      "size": 153456653,
+      "sha256": "9bc27c56695d8be21c63358282527bfae91988e8d9ac8b23c1a6a8c5d0897fbf"
+    },
+    {
+      "path": "/tmp/hetero-research-release/native-provenance-001.tar.gz",
+      "name": "native-provenance-001.tar.gz",
+      "size": 15795,
+      "sha256": "8cff674763879fc11ff23ef0498265d057e4dc7e77adad913b45756d24f611c6"
+    },
+    {
+      "path": "/tmp/hetero-research-release/prior-results-001.tar.gz",
+      "name": "prior-results-001.tar.gz",
+      "size": 59008419,
+      "sha256": "0c387043b4e1cf0e1795cfd2422066233a1965ec8a22d51e134a6207df1289ea"
+    },
+    {
+      "path": "/tmp/hetero-research-release/prior-results-002.tar.gz",
+      "name": "prior-results-002.tar.gz",
+      "size": 31578318,
+      "sha256": "a7ca0a5bb996ef11c09ced68263d78187b381684a1f683aa48c2b5fd8c6c82ae"
+    },
+    {
+      "path": "/tmp/hetero-research-release/prior-results-003.tar.gz",
+      "name": "prior-results-003.tar.gz",
+      "size": 41108574,
+      "sha256": "c7c507ec7f2e1542cf571855c210212cd1bffb7e2229ddbd07741ee7097085bc"
+    },
+    {
+      "path": "/tmp/hetero-research-release/prior-results-004.tar.gz",
+      "name": "prior-results-004.tar.gz",
+      "size": 36007458,
+      "sha256": "774ae777c01bf865c2cefd45c3bb5cb2aa6a1739da46988681376f7f28dfab3f"
+    },
+    {
+      "path": "/tmp/hetero-research-release/research-inputs-001.tar.gz",
+      "name": "research-inputs-001.tar.gz",
+      "size": 6788621,
+      "sha256": "b6bc04428d1c8f9772985d9a1ff9b3724646c891b9fd99c83169193c51e7fad5"
+    },
+    {
+      "path": "/tmp/hetero-research-release/archive-inventory-001.json",
+      "name": "archive-inventory-001.json",
+      "size": 764561,
+      "sha256": "a868080e86a6c9e6c80f1593faf3aff4b4a5f2319462e2bdac448d1a4fd437cf"
+    },
+    {
+      "path": "/tmp/hetero-research-release/asset-index.json",
+      "name": "asset-index.json",
+      "size": 25561,
+      "sha256": "320391b12e514db7d35618c38da2ccca65dffd8e93ea02fe786b43348533d8de"
+    },
+    {
+      "path": "/tmp/hetero-research-release/publication-audit.json",
+      "name": "publication-audit.json",
+      "size": 204980,
+      "sha256": "8b9118b2b09dae133dd8ec02b9a058f667c4efd8b8bd74d90be8c5e380f8af3d"
+    }
+  ],
+  "upload_performed": false
+}

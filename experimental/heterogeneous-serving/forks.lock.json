@@ -1,0 +1,33 @@
+{
+  "format": 1,
+  "branch": "research/heterogeneous-tpu-20260918",
+  "original_source_commit": "20c83c18189b18d7898b615814bec0479eb981d4",
+  "research_runtime_revision": "27c198dd51d9df1ffe681288039cbb6f038e62a8b235b08a39b06a21d3041d4f",
+  "native_patch_revision": "148b4295bf83c0eaa473b11fff5c7c643092f1873200cef1f52b07a2265861ed",
+  "repositories": {
+    "vllm": {
+      "url": "https://github.com/taooceros/vllm",
+      "commit": "5c33479c0987a40ff50b1c235955a382ee705315",
+      "native_base": "0ba2aa35a81dcc3246b26291368b53fa2389c7d7"
+    },
+    "tpu-inference": {
+      "url": "https://github.com/taooceros/tpu-inference",
+      "commit": "31f723ea0e736c65620908a5328c7889590ba764",
+      "native_base": "8d31f0866147d394dafce923c7cce090a862ad70"
+    },
+    "llm-d-router": {
+      "url": "https://github.com/taooceros/llm-d-router",
+      "commit": "e40820f1e961ff415f44e1b9d2e439827dfc15b8"
+    },
+    "llm-d-async": {
+      "url": "https://github.com/taooceros/llm-d-async",
+      "commit": "d350e64a74eb48431a1e086b43d6b3c1e13aac83"
+    },
+    "llm-d": {
+      "url": "https://github.com/taooceros/llm-d",
+      "orchestration_source_commit": "7b2429c07b825e755bb44f16d58d7f797aebb2e4",
+      "note": "The containing evidence-publication commit adds this lock and compact results; it does not change the copied runtime sources."
+    }
+  },
+  "qualification_scope": "Native files and research runtime match the historical measured source hashes. No accelerator workload or new distributed qualification was run for this source-copy migration."
+}

@@ -62,8 +62,37 @@ Compact evidence and restore tooling live in
 Bulky traces, original aggregate JSON, archival inputs and earlier experimental
 results are release assets, not Git blobs:
 [research-evidence-20260918](https://github.com/taooceros/llm-d/releases/tag/research-evidence-20260918).
-The historical report records 102/102 eligible runs and18 mechanism trials.
-All24 migration-enabled performance runs made zero proposals; the mixed policy
+Download and restore published evidence from this checkout:
+
+```bash
+gh release download research-evidence-20260918 -R taooceros/llm-d -D /tmp/hetero-evidence
+python3 experimental/heterogeneous-serving/research/restore_evidence.py \
+  --assets /tmp/hetero-evidence --destination /tmp/hetero-research --merge
+```
+
+Restoration verifies the checked-in inventory, archive and member SHA256 hashes,
+rejects unsafe paths and links, and never overwrites an existing file. Selected
+ShareGPT-derived inputs are intentionally withheld because they contain
+credential-shaped content, including encoded prompt copies. See the publication
+audit and exclusion records in `research/` before attempting full raw-input
+replay. The original private files remain untouched; historical hashes are not
+rewritten to disguise omissions. Compact summaries preserve every selected run.
+The final public archive restores 3,616 files. Its retained aggregate wrappers
+and iteration records regenerate the 102-run report and 24-run efficiency table;
+that is **not** independent raw-audit validation of the 76 withheld research
+files (one corpus, three W1 manifests and 72 token/text-bearing request files).
+Known affected content is withheld; other generated token arrays are not all
+individually decoded. The publication audit reports coverage, not a blanket
+credential-free certification.
+
+`forks.lock.json` records the four component commit pins and the orchestration
+source commit. Both native forks use the recovered measured upstream bases,
+not a speculative port to modern main. `migration.json` files are the initial
+copy-integrity locks; future research edits require an explicit reviewed update
+and must not inherit historical qualification automatically.
+
+The historical report records 102/102 eligible runs and 18 mechanism trials.
+All 24 migration-enabled performance runs made zero proposals; the mixed policy
 lost to the strongest homogeneous baseline. Host-KV handoff worked but was
 slower than recompute in the separate mechanism measurements. These negative
 results are preserved, not replaced with claims of a speedup.

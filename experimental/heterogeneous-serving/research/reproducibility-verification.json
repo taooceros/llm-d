@@ -1,0 +1,12 @@
+{
+  "byte_identical_repeat_export": true,
+  "scope": "Two current-exporter runs with real final report, original corpus, five final manifests and native provenance; raw corpus and affected W1 manifest excluded by current assessment",
+  "files": {
+    "publication-audit.json": "cee7d6ee651a0a857a52ef136643ae25c4cc5fae5c93d8b1f601c2bb2e572422",
+    "asset-index.json": "4e881cc60396cc394bf3c06cf324623498a0f3d8970f51b47e85c3462b4dc215",
+    "archive-inventory-001.json": "2d475b6f658c68448c4e8fc392200321630d75e11bee08bc43b8f77d050e9924",
+    "research-inputs-001.tar.gz": "b086be4446c36eadb85960b8e6ebf5144cf0d123f8c4f66b4fe2b9664014a324",
+    "prior-results-001.tar.gz": "1f57bb57a49248975f9c652d0717c7a6e48c12567694b551b6ec8b17e4ddc005",
+    "native-provenance-001.tar.gz": "8cff674763879fc11ff23ef0498265d057e4dc7e77adad913b45756d24f611c6"
+  }
+}

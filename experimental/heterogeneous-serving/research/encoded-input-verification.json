@@ -1,0 +1,5 @@
+{
+  "scalar_only_metrics_retained": true,
+  "nested_affected_output_withheld": true,
+  "encoded_affected_manifest_withheld": true
+}

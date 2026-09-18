@@ -1,0 +1,38 @@
+{
+  "scope": "Source-copy migration verification, not a new hardware qualification",
+  "source_files_verified": 245,
+  "original_source_commit": "20c83c18189b18d7898b615814bec0479eb981d4",
+  "historical_runtime_revision_match": true,
+  "runtime_revision": "27c198dd51d9df1ffe681288039cbb6f038e62a8b235b08a39b06a21d3041d4f",
+  "native_patch_revision": "148b4295bf83c0eaa473b11fff5c7c643092f1873200cef1f52b07a2265861ed",
+  "assembly_smoke": {
+    "copied_content_verified": true,
+    "existing_output_preserved": true,
+    "modified_source_rejected": true,
+    "path_traversal_rejected": true
+  },
+  "control_entry_points": ["python3 -m hetero.cli --help", "python3 -m admission_control.cli --help"],
+  "targeted_contract_tests": {"gateway": 25, "mechanism_ownership_and_fidelity": 2, "goal_audit": 7, "frozen_cohort_with_private_inputs": 6},
+  "complete_local_evidence_smoke": {
+    "scope": "Initial private archive including inputs later withheld from public release",
+    "restored_files": 3691,
+    "restored_bytes": 4320461302,
+    "archives": 8,
+    "selected_runs": 102,
+    "eligible_runs": 102,
+    "expected_runs": 102,
+    "historical_runs": 61,
+    "efficiency_admitted": 24,
+    "efficiency_expected": 24,
+    "efficiency_excluded": 0,
+    "source_imports": "Assembled fork source only; no original /workspace code fallback"
+  },
+  "source_credential_scan": {
+    "files": 245,
+    "provider_credential_signature_matches": 0,
+    "reviewed_generic_assignment_fixture": "reverse_control_lab/tests/test_tier1_ergonomics.py:119, test_b1_b2_b3_b4_vendored_frame_blame_selection_and_banner; deliberate source-redaction sentinel"
+  },
+  "hardware_workloads_launched": false,
+  "legacy_simulators_executed": false,
+  "publication_scope": "Consult research/publication audit and exclusion records for the separately verified public archive; private smoke completeness is not a claim that sensitive inputs are published."
+}
