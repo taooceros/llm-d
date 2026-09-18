@@ -1,0 +1,54 @@
+{
+  "dry_run_entrypoints": [
+    {
+      "entrypoint": "setup_network.py",
+      "exit_code": 0,
+      "offline_plan": true,
+      "cloud_executables_invoked": 0
+    },
+    {
+      "entrypoint": "cluster_setup.py",
+      "exit_code": 0,
+      "offline_plan": true,
+      "cloud_executables_invoked": 0
+    },
+    {
+      "entrypoint": "setup_gcs_cache.py",
+      "exit_code": 0,
+      "offline_plan": true,
+      "cloud_executables_invoked": 0
+    },
+    {
+      "entrypoint": "deploy_ray_cluster.py",
+      "exit_code": 0,
+      "offline_plan": true,
+      "cloud_executables_invoked": 0
+    },
+    {
+      "entrypoint": "port_forward_ray.py",
+      "exit_code": 0,
+      "offline_plan": true,
+      "cloud_executables_invoked": 0
+    }
+  ],
+  "cwd_independent": true,
+  "live_infrastructure_changed": false,
+  "helm_lint": "1 chart, 0 failures",
+  "actual_render": {
+    "resources": [
+      "RayCluster"
+    ],
+    "worker_hosts": 8,
+    "chips_per_host": 4,
+    "total_chips": 32,
+    "original_resource_name_preserved": true,
+    "webhook_labels_and_host_network": true,
+    "head_and_worker_model_mounts": true,
+    "existing_secret_only": true,
+    "tpus_runtime_environment_preserved": true,
+    "model_http_readiness_dependency": false
+  },
+  "invalid_chart_inputs_rejected": 8,
+  "pool_drift_regression_tests_passed": 1,
+  "scope": "Offline CLI/render and controlled executable-fixture verification; no cloud provision, Kubernetes apply, model execution, or new hardware qualification."
+}

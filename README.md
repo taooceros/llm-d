@@ -102,6 +102,69 @@ this migration and must not be used as hardware benchmark evidence. Source
 provenance permits later path-filtered history recovery if wanted, without
 making that a prerequisite for these fresh fork commits.
 
+### TPU infrastructure bootstrap tools
+
+[`experimental/tpu-infrastructure`](experimental/tpu-infrastructure) contains
+the reusable infrastructure pieces selected from `llmd-bulk-inference`:
+
+| Entry point under `scripts/py/` | Purpose |
+|---|---|
+| `setup_network.py` | Custom VPC, explicitly configured subnet and internal TPU firewall |
+| `cluster_setup.py` | GKE CPU cluster and configured TPU pools; refuses destructive pool replacement |
+| `setup_gcs_cache.py` | Model bucket, zonal Anywhere Cache, optional explicit-principal read permission |
+| `deploy_ray_cluster.py` | Persistent CPU-head/TPU-worker KubeRay chart; does not launch a model or Ray job |
+| `port_forward_ray.py` | Localhost dashboard forwarding to an explicitly named Ray cluster head Service |
+
+These tools are separate from the hash-frozen research workspace. The chart
+defaults to one 4x8 TPU v5e slice: eight hosts, four chips each. It retains the
+original Helm resource naming: release `tpu-ray-cluster` produces RayCluster
+`tpu-ray-cluster-vllm-tpu`. KubeRay owns its head Service and Ray health probes;
+workers do not need a model listening on port8000 to become infrastructure-ready.
+
+The inherited image/Ray-version defaults are configurable, not a compatibility
+guarantee: use a TPU image containing the declared Ray version and verify native
+sources through the existing research preflight before serving.
+
+From this fork checkout, install the Python CLI dependencies and configure your
+own project/bucket. Provisioning additionally needs authenticated `gcloud`,
+`kubectl` and Helm, GKE TPU quota, and the GKE Ray operator/GCS Fuse add-ons.
+No personal cloud configuration, tokens, data, results or binaries were copied.
+
+```bash
+INFRA=experimental/tpu-infrastructure
+python3 -m venv "$INFRA/.venv"
+PY="$INFRA/.venv/bin/python"
+"$PY" -m pip install -r "$INFRA/requirements.txt"
+cp "$INFRA/config.example.yaml" "$INFRA/config.yaml"
+# Edit config.yaml: set project_id and gcs_bucket; review network, zone and pools.
+"$PY" "$INFRA/scripts/py/setup_network.py" --config="$INFRA/config.yaml" --dry_run
+"$PY" "$INFRA/scripts/py/cluster_setup.py" --config="$INFRA/config.yaml" --dry_run
+"$PY" "$INFRA/scripts/py/setup_gcs_cache.py" --config="$INFRA/config.yaml" --dry_run
+"$PY" "$INFRA/scripts/py/deploy_ray_cluster.py" --config="$INFRA/config.yaml" --dry_run
+"$PY" "$INFRA/scripts/py/port_forward_ray.py" \
+  --cluster_name=tpu-ray-cluster-vllm-tpu --dry_run
+```
+
+Dry runs perform no cloud, Kubernetes or Helm subprocess calls. They are
+offline plans, not claims about whether resources already exist. Cloud resource
+list permissions are required for fail-closed existence checks. Existing pool
+drift or a non-running pool requires operator reconciliation, not automatic
+replacement. Subnet names, `ip_range` and `mtu` are used exactly as configured.
+Review before removing `--dry_run`; provisioning requires confirmation or
+explicit `--yes`.
+The bucket helper does not download weights. Supply an exact
+`workload_identity_member` when it should grant model-read access; otherwise
+manage IAM separately. It never grants the whole workload pool object-admin
+access. Use an existing HF Secret if needed, not an inline token.
+
+Helm upgrades can restart pods: drain serving engines before changing a live
+cluster. This migration was checked offline, not deployed. Model serving,
+node-pinned placement groups and job supervision remain with the assembled
+`scripts/hetero_ctl.py` / RCM workflow, not the old Ray CLI job launchers.
+Use the existing [observability recipe](guides/recipes/observability) and
+llm-d serving guides instead of the older duplicate deployment scripts. The
+selection manifest records source hashes, adaptations and deliberate omissions.
+
 ## What does llm-d offer to production inference?
 
 Model servers like [vLLM](https://docs.vllm.ai) and [SGLang](https://github.com/sgl-project/sglang) handle efficiently running large language models on accelerators. llm-d provides state-of-the-art orchestration and optimizations above model servers to serve high-scale real-world traffic efficiently and reliably. Our offerings are organized into four core themes:

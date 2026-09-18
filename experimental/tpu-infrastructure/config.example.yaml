@@ -1,0 +1,37 @@
+# Copy to config.yaml and fill in project_id and gcs_bucket before use.
+# No tokens or credentials belong in this file.
+project_id: ""
+region: us-west1
+zone: us-west1-c
+cluster_name: "llm-d-tpu-{region}"
+network: llm-d-tpu-serving
+subnetwork: llm-d-tpu-serving-subnet-us-west1
+ip_range: 192.168.100.0/24
+mtu: 8896
+
+# Existing or operator-selected model bucket. Weights are not downloaded by these scripts.
+gcs_bucket: ""
+namespace: llm-d-optimized-baseline
+service_account: default
+
+# Optional exact IAM principal for model reads; never a workload-pool wildcard.
+# For direct GKE Workload Identity federation, supply the principal URI for
+# this namespace and service account. Leave empty to manage IAM separately.
+workload_identity_member: ""
+
+release_channel: rapid
+addons: GcsFuseCsiDriver,RayOperator
+enable_dataplane_v2: true
+gateway_api: standard
+enable_managed_prometheus: true
+cpu_machine_type: e2-standard-32
+cpu_num_nodes: 1
+
+# One contiguous 32-chip TPU v5e slice: eight hosts, four chips per host.
+node_pools:
+  - name: tpu-v5e-4x8
+    machine_type: ct5lp-hightpu-4t
+    topology: 4x8
+    num_nodes: 8
+    spot: false
+    reservation_affinity: none

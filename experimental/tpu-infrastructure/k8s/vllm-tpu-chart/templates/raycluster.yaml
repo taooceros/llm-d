@@ -1,0 +1,139 @@
+{{- include "vllm-tpu.validate" . }}
+apiVersion: ray.io/v1
+kind: RayCluster
+metadata:
+  name: {{ include "vllm-tpu.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "vllm-tpu.labels" . | nindent 4 }}
+spec:
+  rayVersion: {{ .Values.rayVersion | quote }}
+  headGroupSpec:
+    serviceType: ClusterIP
+    rayStartParams:
+      dashboard-host: "0.0.0.0"
+      num-gpus: "0"
+    template:
+      metadata:
+        labels:
+          {{- include "vllm-tpu.labels" . | nindent 10 }}
+          ray.io/node-type: head
+        {{- if eq .Values.storage.type "gcsFuse" }}
+        annotations:
+          gke-gcsfuse/volumes: "true"
+        {{- end }}
+      spec:
+        serviceAccountName: {{ .Values.serviceAccountName | quote }}
+        containers:
+          - name: ray-head
+            image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+            imagePullPolicy: {{ .Values.image.pullPolicy }}
+            resources:
+              limits:
+                cpu: "8"
+                memory: "16Gi"
+            {{- if .Values.hfSecretName }}
+            env:
+              - name: HF_TOKEN
+                valueFrom:
+                  secretKeyRef:
+                    name: {{ .Values.hfSecretName | quote }}
+                    key: HF_TOKEN
+            {{- end }}
+            {{- if eq .Values.storage.type "gcsFuse" }}
+            volumeMounts:
+              - mountPath: {{ .Values.storage.gcsMountPath | quote }}
+                name: gcs-storage
+            {{- end }}
+            ports:
+              - name: gcs-server
+                containerPort: 6379
+              - name: dashboard
+                containerPort: 8265
+              - name: client
+                containerPort: 10001
+              - name: metrics
+                containerPort: 8080
+        {{- if eq .Values.storage.type "gcsFuse" }}
+        volumes:
+          - name: gcs-storage
+            csi:
+              driver: gcsfuse.csi.storage.gke.io
+              volumeAttributes:
+                bucketName: {{ .Values.storage.gcsBucket | quote }}
+                mountOptions: {{ .Values.storage.gcsMountOptions | quote }}
+        {{- end }}
+  workerGroupSpecs:
+    - groupName: tpu-worker-group
+      replicas: 1
+      minReplicas: 1
+      maxReplicas: 1
+      numOfHosts: {{ .Values.tpu.nodeCount }}
+      rayStartParams: {}
+      template:
+        metadata:
+          labels:
+            {{- include "vllm-tpu.labels" . | nindent 12 }}
+            ray.io/node-type: worker
+          {{- if eq .Values.storage.type "gcsFuse" }}
+          annotations:
+            gke-gcsfuse/volumes: "true"
+          {{- end }}
+        spec:
+          serviceAccountName: {{ .Values.serviceAccountName | quote }}
+          hostNetwork: true
+          dnsPolicy: ClusterFirstWithHostNet
+          nodeSelector:
+            cloud.google.com/gke-tpu-accelerator: {{ include "vllm-tpu.acceleratorLabel" . | quote }}
+            cloud.google.com/gke-tpu-topology: {{ .Values.tpu.topology | quote }}
+          containers:
+            - name: ray-worker
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              resources:
+                limits:
+                  google.com/tpu: {{ .Values.tpu.chipsPerPod | quote }}
+                requests:
+                  google.com/tpu: {{ .Values.tpu.chipsPerPod | quote }}
+              # Preserve the source image's TPU worker runtime contract.
+              env:
+                - name: TPU_MULTIHOST_BACKEND
+                  value: ray
+                - name: VLLM_HOST_IP
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: status.hostIP
+                - name: NODE_IP
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: status.hostIP
+                - name: VBAR_CONTROL_SERVICE_URL
+                  value: $(NODE_IP):8353
+                - name: JAX_PLATFORMS
+                  value: tpu,cpu
+                - name: ENABLE_PJRT_COMPATIBILITY
+                  value: "true"
+                {{- if .Values.hfSecretName }}
+                - name: HF_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.hfSecretName | quote }}
+                      key: HF_TOKEN
+              {{- end }}
+              {{- if eq .Values.storage.type "gcsFuse" }}
+              volumeMounts:
+                - mountPath: {{ .Values.storage.gcsMountPath | quote }}
+                  name: gcs-storage
+              {{- end }}
+              ports:
+                - name: metrics
+                  containerPort: 8080
+          {{- if eq .Values.storage.type "gcsFuse" }}
+          volumes:
+            - name: gcs-storage
+              csi:
+                driver: gcsfuse.csi.storage.gke.io
+                volumeAttributes:
+                  bucketName: {{ .Values.storage.gcsBucket | quote }}
+                  mountOptions: {{ .Values.storage.gcsMountOptions | quote }}
+          {{- end }}

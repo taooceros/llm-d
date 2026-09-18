@@ -1,0 +1,92 @@
+{
+  "source_repository": "local llmd-bulk-inference",
+  "source_jj_working_copy_snapshot": "edf94b3dc15a77ead14f8eab9a3a23c2c3794abf",
+  "scope": "Standalone infrastructure bootstrap only; no serving job submission or live deployment during migration",
+  "files": [
+    {
+      "path": "scripts/py/utils.py",
+      "source_sha256": "8d8912a11ab42fd1b23325c1e10550b5c754ced49e7f88588af803d1d08afe18",
+      "ported_sha256": "3223847fbcfa308c4bc936b33b31c0b55ee5c8677980f7a63dd3eb50d32e06ba",
+      "bytes": 1869
+    },
+    {
+      "path": "scripts/py/setup_network.py",
+      "source_sha256": "4cd742da35db4073f71c4bfb53ae779d2430d6eee9e08c6a0c9fb5443360e24a",
+      "ported_sha256": "b2c17b1e6a72dcd93a1cc256b38b901ee4c234829e3a802077602c9b3f1f2580",
+      "bytes": 5791
+    },
+    {
+      "path": "scripts/py/cluster_setup.py",
+      "source_sha256": "a1e1a357e7ca62760c713582fd9aa7440c453dc263d2a27a1f32164db28830dc",
+      "ported_sha256": "586e715270d361ea121cda1528b8329ffeafe47b08c6e6c55c6b78dbe803ce73",
+      "bytes": 10021
+    },
+    {
+      "path": "scripts/py/setup_gcs_cache.py",
+      "source_sha256": "e3fdc4c50a53d985fa3f95b1bdc97ecc61ba482b76521855c82bbe0686be0061",
+      "ported_sha256": "f76e338a34c5d66cbfe1468e9270996b0c92998335efc1b30626c55782471ecb",
+      "bytes": 4805
+    },
+    {
+      "path": "scripts/py/deploy_ray_cluster.py",
+      "source_sha256": "8e54e93a0d90d8edbf3f8f2e1568e4256270daa5817d89ec074774e7d3082f4f",
+      "ported_sha256": "510fd9571682e0a510e554c172a79d09628f02c89871a5f94babca7c6f48383f",
+      "bytes": 6681
+    },
+    {
+      "path": "scripts/py/port_forward_ray.py",
+      "source_sha256": "6337085649f26a7adc930f944d3c675f4d706c7be9378243e22e2424397f99e8",
+      "ported_sha256": "deb83cc9196da1ea0d14ad78a8376119384a3e261c7be558d7702381c7a1333e",
+      "bytes": 2146
+    },
+    {
+      "path": "k8s/vllm-tpu-chart/Chart.yaml",
+      "source_sha256": "e0ad5a886a197ac795f05155cb5e52dddaf43084c6cee9e44747c8ab99bdc700",
+      "ported_sha256": "16704ff74bd5c2c36d3e6a99751dbe6309853a874d45157e6707e52ccc2c54f6",
+      "bytes": 154
+    },
+    {
+      "path": "k8s/vllm-tpu-chart/values.yaml",
+      "source_sha256": "c4b7261e6ae42ad2cb3348e3598c912f897e7d457462ec5961af72f17905dec5",
+      "ported_sha256": "6bbcfc795dc0731a74ab622b1d435f3b1d2e64a007fdccb6eee7fc2ba3c6a63b",
+      "bytes": 884
+    },
+    {
+      "path": "k8s/vllm-tpu-chart/templates/_helpers.tpl",
+      "source_sha256": "4ef10b7ad6604b7b2877db95391f65b4c0b36e32bfac3f9b5c586e55fed08783",
+      "ported_sha256": "7ea3332e363aa03ba675f96322199c1a76a67d59132d9015ba6b2e311d4bc4d7",
+      "bytes": 2432
+    },
+    {
+      "path": "k8s/vllm-tpu-chart/templates/raycluster.yaml",
+      "source_sha256": "d84e592a0a3ce1bffbdddb9d5c70a2858504d892731c6db1d30e6d1b9c934c12",
+      "ported_sha256": "4de86428b3ec983d9cac05d3ebe7b2f76f86ed93cf2e56ee4a5fd506cb6cbe6e",
+      "bytes": 5051
+    }
+  ],
+  "generated_support": [
+    "config.example.yaml",
+    "requirements.txt",
+    ".gitignore",
+    "scripts/__init__.py",
+    "scripts/py/__init__.py",
+    "tests/test_cluster_setup.py"
+  ],
+  "adaptations": [
+    "Offline dry-run plans; confirmation before mutation; fail-closed JSON existence probes",
+    "Existing pool/network drift is rejected, never implicitly deleted/recreated",
+    "Anywhere Cache create actually executes; opt-in exact-principal viewer IAM; no inline tokens",
+    "KubeRay-only chart; preserved Helm resource names and TPU worker environment; operator-owned head Service and Ray-native readiness",
+    "Explicit head-Service dashboard forwarding; no namespace-wide first-pod fallback",
+    "Personal configuration replaced by an ignored local config and portable example"
+  ],
+  "omitted": {
+    "deploy_all.py / deploy_modelserver.py / manage_ray_job.py / vllm_tpu_wrapper.py": "Use the existing RCM supervisor and node-pinned heterogeneous serving lifecycle instead of legacy launch/cleanup paths.",
+    "devenv_setup.py / py_inference_rl_setup.py": "Machine/internal-checkout setup is superseded by the five-fork assembly workflow.",
+    "deploy_router.py / setup_deps.py / deploy_batch_gateway.py": "Existing llm-d serving/batch guides and research gateway manifests own these paths; avoid old duplicate defaults.",
+    "deploy_observability.py": "Use guides/recipes/observability rather than hardcoded legacy pods/selectors and anonymous Grafana defaults.",
+    "Bash forwarding wrappers": "Python entry points are the single supported interface.",
+    "LWS/Deployment/model-job/downloader/inline-secret/generic-service chart templates": "Keep only standalone KubeRay infrastructure; the operator and research gateway own their respective services.",
+    "config.yaml / model_presets.yaml / data / experiments / local tooling": "Personal state, serving presets, workloads and results are outside this infrastructure migration."
+  }
+}

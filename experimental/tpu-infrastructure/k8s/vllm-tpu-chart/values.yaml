@@ -1,0 +1,29 @@
+# Persistent KubeRay infrastructure only; model loading belongs to hetero_ctl.
+# The image must contain the selected Ray version and the required TPU runtime.
+# These inherited defaults are not a compatibility guarantee for other images.
+image:
+  repository: vllm/vllm-tpu
+  tag: v0.26.0
+  pullPolicy: IfNotPresent
+rayVersion: "2.56.0"
+serviceAccountName: default
+nameOverride: ""
+fullnameOverride: ""
+
+# One multi-host TPU slice: 8 hosts * 4 chips = 32 chips.
+tpu:
+  generation: v5e
+  topology: 4x8
+  chipsPerPod: 4
+  nodeCount: 8
+
+# Optional existing Secret, containing key HF_TOKEN. No Secret is created.
+hfSecretName: ""
+
+# GCS Fuse mounts the same bucket on the head and every worker.
+# Requires the GKE CSI driver and bucket access for serviceAccountName.
+storage:
+  type: none # Supported: none, gcsFuse
+  gcsBucket: ""
+  gcsMountPath: /models
+  gcsMountOptions: implicit-dirs
