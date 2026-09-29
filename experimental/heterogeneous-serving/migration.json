@@ -191,8 +191,8 @@
     },
     {
       "path": "hetero/cli.py",
-      "sha256": "b9c234699da380c5b5097c92d7dd93fb436b8a794f39310af682d0c8991b3b16",
-      "bytes": 26341
+      "sha256": "056aac4eef032fcfc12cbfc29ea70d9c8aa99b9eaf816f2a64bd39b0c307bbb9",
+      "bytes": 26901
     },
     {
       "path": "hetero/deployment.py",
@@ -378,6 +378,16 @@
       "path": "scripts/render_report.py",
       "sha256": "0b89bf2922552e1aefd036e979e4381dab1fa073c52658fac1031148daafca4d",
       "bytes": 29912
+    },
+    {
+      "path": "scripts/run_pilot.sh",
+      "sha256": "d557f8eeb829ac08e8e0f68d43217a10cd9a259934682c2b35c332bae22df0f5",
+      "bytes": 983
+    },
+    {
+      "path": "scripts/summarize_mechanism_ab.py",
+      "sha256": "dfe427b648a206141749dac29182f8ea603542df66350a29268924900c6b35c5",
+      "bytes": 1978
     },
     {
       "path": "skaffold.yaml",

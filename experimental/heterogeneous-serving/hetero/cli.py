@@ -483,7 +483,7 @@ def cmd_mechanism_cost(args: argparse.Namespace) -> Dict[str, Any]:
     from hetero.mechanism_cost import FIDELITY_PROTOCOL_PATH, run_mechanism_cost
 
     protocol = _json_input_path("OMP_HETERO_PROTOCOL_JSON", "--protocol", "protocols")
-    evaluation = _json_input_path(
+    evaluation = None if args.unfrozen_diagnostic else _json_input_path(
         "OMP_HETERO_EVALUATION_PROTOCOL_JSON", "--evaluation-protocol", "protocols"
     )
     qualification = _json_input_path(
@@ -498,7 +498,8 @@ def cmd_mechanism_cost(args: argparse.Namespace) -> Dict[str, Any]:
     fidelity_path.write_bytes(fidelity.read_bytes())
     report = run_mechanism_cost(
         protocol_path=str(protocol), qualification_report_path=str(qualification),
-        evaluation_protocol_path=str(evaluation),
+        evaluation_protocol_path=str(evaluation) if evaluation else None,
+        unfrozen_diagnostic=args.unfrozen_diagnostic,
     )
     return {"action": "mechanism-cost", "mechanism_cost": report}
 
@@ -541,7 +542,10 @@ def cmd_run_arm(args: argparse.Namespace) -> Dict[str, Any]:
     """Runs one whole-workload arm repetition: the replication unit."""
     from hetero.experiment import run_arm
 
-    overrides = json.loads(args.policy) if args.policy else None
+    policy = json.loads(args.policy) if args.policy else None
+    pilot = args.unfrozen_diagnostic
+    if pilot and policy is None:
+        raise ValueError("an unfrozen pilot requires an explicit --policy amendment")
     return {
         "action": "run-arm",
         "result": run_arm(
@@ -550,8 +554,10 @@ def cmd_run_arm(args: argparse.Namespace) -> Dict[str, Any]:
             repetition=args.repetition,
             run_id=args.run_id,
             timeout_s=args.arm_timeout,
-            policy_overrides=overrides,
-            protocol_path=str(_json_input_path("OMP_HETERO_PROTOCOL_JSON", "--protocol", "protocols")),
+            policy_overrides=None if pilot else policy,
+            protocol_path=None if pilot else str(
+                _json_input_path("OMP_HETERO_PROTOCOL_JSON", "--protocol", "protocols")),
+            pilot_policy=policy if pilot else None,
         ),
     }
 
@@ -633,6 +639,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--arm", default="M0")
     parser.add_argument("--workload", default="W0")
     parser.add_argument("--repetition", type=int, default=1)
+    parser.add_argument("--unfrozen-diagnostic", action="store_true",
+                        help="mechanism-cost A/B or run-arm pilot without a frozen cohort; never headline evidence")
     parser.add_argument("--run-id", default="run")
     parser.add_argument("--arm-timeout", type=float, default=7200.0)
     parser.add_argument("--arms", default="M0,MR")
