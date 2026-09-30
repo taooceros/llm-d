@@ -23,6 +23,8 @@ code { background: #eff1f3; padding: .1em .3em; border-radius: 4px; font-size: .
 pre { background: #f6f8fa; padding: .8em 1em; border-radius: 6px; overflow-x: auto; }
 pre code { background: none; padding: 0; }
 figure { margin: 1.5em 0; }
+/* html.frame sets an inline em size; scale drawn figures to the column instead. */
+svg.typst-frame { width: 100% !important; height: auto !important; }
 figcaption { font-size: .9em; color: #59636e; margin-top: .5em; }
 .subtitle { color: #59636e; margin-top: -.5em; }
 .note { background: #f6f8fa; border-left: 4px solid #0969da; padding: .6em 1em; margin: 1em 0; }
@@ -48,7 +50,16 @@ figcaption { font-size: .9em; color: #59636e; margin-top: .5em; }
 
 #let good = rgb("#1a7f37")
 #let bad = rgb("#cf222e")
+#let tp16 = rgb("#0969da")
+#let orange = rgb("#e16f24")
 #let div(class, body) = html.elem("div", attrs: (class: class), body)
+// Drawn figures: inline SVG in HTML, native layout in PDF.
+#let diagram(body) = context {
+  let drawn = block(width: 16cm, align(left, { set par(justify: false); body }))
+  if is-html() { html.frame(drawn) } else { drawn }
+}
+#let node(body, stroke: luma(140), fill: white) = block(stroke: stroke, fill: fill, inset: 6pt,
+  radius: 3pt, width: 100%, text(size: 8.5pt, body))
 #let colored(colour, body) = context if is-html() {
   html.elem("span", attrs: (style: "color:" + colour.to-hex()), body)
 } else { text(fill: colour, body) }
@@ -158,10 +169,11 @@ order (indices 30, 70, 107, …, 876), so long work arrives throughout the backl
 workload is 948,975 prompt tokens, 727,303 of them (77%) from the 24 long documents. Manifest
 SHA-256 prefix `e380318ae33a`.
 
-== Routing policies
+== Routing policies <sec-policies>
 
-Both policies share the base settings (length-blind, migration off, 16 blocks of headroom on large
-engines). They differ in three fields:
+Every run uses the same router; the two policies differ in three settings. Both are blind to output
+length: the router knows each request's prompt length and every engine's free KV blocks, and
+charges a new request its prompt plus one KV block.
 
 #table(
   columns: (auto, auto, auto, 1fr),
@@ -170,13 +182,141 @@ engines). They differ in three fields:
   [`work_conserving_fallback`], [off], [on],
     [if the preferred pool has no admissible room, try the other pool instead of waiting],
   [`long_reserve_tokens`], [0], [36,864],
-    [short requests may not use the last 36,864 KV tokens on a large engine; long requests may],
+    [short requests may not use the last 36,864 KV tokens on a TP16 engine; long requests may],
   [`small_prompt_token_limit`], [4,096], [16,384], [prompts above this count as long for the reserve],
 )
 
-In M, both policies send 50% of new requests to the TP16 engine first
-(`large_fresh_traffic_share` 0.5); prompts that cannot fit a TP8 engine always go to TP16. In H,
-the share is irrelevant and only the reserve takes effect.
+The name "reserve" covers both changes. @fig-flow shows where they act in the routing decision,
+@fig-kv shows the admission check the reserve changes, and @fig-quota and @fig-starve show what
+each change fixes.
+
+#figure(
+  diagram({
+    let arrow(label) = align(center, text(size: 8pt, fill: luma(90))[#label])
+    let side(label) = align(center + horizon, text(size: 8pt, fill: luma(90))[#label])
+    grid(
+      columns: (7.4cm, 1.3cm, 6.3cm), row-gutter: 3pt, align: left + horizon,
+      node[*Request arrives.* Router knows prompt length _P_; output length is hidden.], [], [],
+      arrow[↓], [], [],
+      node[Charge _P_ + 1 KV block.], [], [],
+      arrow[↓], [], [],
+      node[Does it fit a TP8 engine (_P_ + 1 block ≤ 16,384)?], side[no →],
+        node(fill: tp16.lighten(85%))[TP16 pool only. Every long document takes this path.],
+      arrow[yes ↓], [], [],
+      node[Is TP16 owed this request? True while TP16 has taken fewer than 50% of all dispatched
+        requests (M only; H has no TP8 pool).], side[yes →], node[Try TP16 first, then TP8.],
+      arrow[no ↓ #h(4pt) try TP8 first, then TP16], [], [],
+      node[Does any engine in the first pool pass the admission check (@fig-kv)?], side[yes →],
+        node[Dispatch to the least-loaded engine that passed.],
+      arrow[no ↓], [], [],
+      grid.cell(colspan: 3, grid(columns: (1fr, 1fr), column-gutter: 8pt,
+        node(stroke: bad, fill: bad.lighten(90%))[*plain:* wait one poll (still holding a dispatch
+          slot), then retry from the top.],
+        node(stroke: good, fill: good.lighten(90%))[*reserve:* try the second pool; wait only if it
+          has no room either.],
+      )),
+    )
+  }),
+  caption: [Routing decision for one new request, as implemented in `select_initial`. The two
+    policies differ only in the last step and in the admission check.],
+) <fig-flow>
+
+#figure(
+  diagram({
+    // One TP16 engine: 282 blocks of 256 tokens. Snapshot: 90 blocks in use, 192 free.
+    let u = 0.053cm
+    let seg(n, fill, label, light: false) = box(width: n * u, height: 0.9cm, fill: fill,
+      stroke: 0.5pt + white, align(center + horizon,
+        text(size: 7.5pt, fill: if light { black } else { white }, label)))
+    let span(start, n, fill, label) = pad(left: start * u, stack(dir: ttb, spacing: 2pt,
+      box(width: n * u, height: 5pt, fill: fill), text(size: 8pt, label)))
+    set text(size: 8.5pt)
+    stack(dir: ttb, spacing: 6pt,
+      text(weight: "bold")[One TP16 engine: 282 blocks × 256 tokens (snapshot with 192 blocks free)],
+      stack(dir: ltr,
+        seg(90, luma(150), [in use: 90]),
+        seg(32, white, [32], light: true),
+        seg(144, orange, [long-request reserve: 144 blocks = 36,864 tok]),
+        seg(16, luma(60), [16]),
+      ),
+      span(90, 32, good, [short request may use: 192 − 144 − 16 = *32 blocks*]),
+      span(90, 176, tp16, [long request may use: 192 − 16 = *176 blocks*]),
+      v(8pt),
+      [The reserve is a threshold on the free-block count, not a fixed set of blocks. A 30,000-token
+        document needs ⌈30,256 / 256⌉ = 119 blocks and is admitted (119 ≤ 176). A 500-token chat
+        request needs 3 blocks and is admitted while at least 3 of the 32 remain. The dark 16
+        blocks are headroom that applies to every request on a TP16 engine in both policies. TP8
+        engines (412 blocks × 64 tokens) have neither headroom nor reserve.],
+    )
+  }),
+  caption: [Admission check on a TP16 engine under the reserve policy. Under plain, the orange
+    region does not exist and both request types may use 176 blocks.],
+) <fig-kv>
+
+#figure(
+  diagram({
+    let cell(fill, label, dark: true) = box(width: 0.95cm, height: 0.75cm, fill: fill,
+      stroke: 1pt + white, radius: 2pt, align(center + horizon,
+        text(size: 7pt, fill: if dark { white } else { black }, label)))
+    let d16(l) = cell(tp16, l)
+    let d8(l) = cell(good, l)
+    let w(l) = cell(luma(215), l, dark: false)
+    let row(label, ..cells) = grid(columns: (2.6cm, auto), align: left + horizon,
+      text(size: 8.5pt, label), stack(dir: ltr, ..cells.pos()))
+    set text(size: 8.5pt)
+    stack(dir: ttb, spacing: 8pt,
+      [Arrival order →. Scenario: the TP16 engine has no room for a short request.],
+      row([*plain*], d16[r1], d8[r2], w[r3 ⧗], w[r4 ⧗], w[r5 ⧗], w[r6 ⧗], w[r7 ⧗], w[r8 ⧗], w[r9 ⧗],
+        w[r10 ⧗], w[r11 ⧗]),
+      pad(left: 2.6cm)[r3 is owed to TP16 and waits. The quota counter only moves on dispatch, so r4,
+        r5, … are owed to TP16 too and wait behind it. TP8 gets one request per request TP16
+        accepts, however idle it is.],
+      row([*reserve*], d8[r1 ↪], d8[r2 ↪], d8[r3 ↪], d8[r4 ↪], d16[doc], d8[r5 ↪], d8[r6 ↪],
+        d8[r7 ↪], d8[r8 ↪], d8[r9 ↪], d8[r10 ↪]),
+      pad(left: 2.6cm)[Each short request is owed to TP16, finds no room outside the reserve, and
+        falls back (↪) to TP8. A long document ("doc") may use the reserve and goes to TP16.],
+      grid(columns: 6, column-gutter: 6pt, align: horizon,
+        cell(tp16, []), [to TP16], cell(good, []), [to TP8], cell(luma(215), [⧗], dark: false),
+        [waiting]),
+    )
+  }),
+  caption: [What work-conserving fallback fixes in M (schematic). Measured in the M runs: under
+    plain, 439 of 880 short requests went to TP16 (dispatch alternated almost exactly) and the TP8
+    engines went idle at 204 s and 218 s. Under reserve, 803 short requests were owed to TP16 and
+    fell back to TP8; only 56 ran on TP16.],
+) <fig-quota>
+
+#figure(
+  diagram({
+    let u = 0.053cm
+    let seg(n, fill, label, light: false) = box(width: n * u, height: 0.8cm, fill: fill,
+      stroke: 0.5pt + white, align(center + horizon,
+        text(size: 7.5pt, fill: if light { black } else { white }, label)))
+    let row(label, body, note) = grid(columns: (2.2cm, auto), row-gutter: 3pt, align: left + horizon,
+      text(size: 8.5pt, label), body, [], text(size: 8pt, note))
+    set text(size: 8.5pt)
+    stack(dir: ttb, spacing: 10pt,
+      [One H engine (TP16, 282 blocks) while a 30,000-token document (119 blocks) is waiting.],
+      row([*plain*], stack(dir: ltr, seg(254, luma(150), [short requests: 254 blocks]),
+        seg(12, white, [12], light: true), seg(16, luma(60), [])),
+        [Short requests finish a few blocks at a time and a waiting short request takes the freed
+          blocks at once, so 119 free blocks rarely appear together. Measured: median document
+          finished at 297.9 s, median short request at 113.9 s.]),
+      row([*reserve*], stack(dir: ltr, seg(122, luma(150), [short: 122 blocks]),
+        seg(144, orange, [kept free: 144 blocks]), seg(16, luma(60), [])),
+        [Short requests stop at 160 free blocks, so a document can start as soon as it arrives.
+          Measured: median document 148.1 s, but short requests now share about half the KV and
+          their median moved to 214.2 s.]),
+    )
+  }),
+  caption: [What the long-request reserve fixes, and what it costs, on the homogeneous layout
+    (schematic occupancy; measured times from H r1). H has no second pool, so only the reserve
+    acts there.],
+) <fig-starve>
+
+In short: the reserve makes room for long documents by taking room from short requests. On H that
+is a trade (makespan +7%); on M the short requests it displaces have somewhere else to go, the two
+TP8 engines, and fallback sends them there.
 
 = Results
 
