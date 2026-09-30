@@ -109,7 +109,17 @@ the long documents were starved. Two policy changes fix this: spill to whichever
 (_work-conserving fallback_), and keep one maximum-length request's worth of KV on each TP16 engine
 that short requests may not use (_long-request reserve_).
 
-The 4 × TP8 layout *S*, which beat H on every earlier chat workload, cannot serve W4 at all.
+The 4 × TP8 layout *S*, which beat H on the earlier chat workloads, cannot serve W4 at all.
+
+*The benefit is specific to this workload shape.* In W4 the TP16 engine does prefill-heavy work
+the TP8 engines cannot do, and the TP8 engines serve short chat requests faster per chip. The
+dedicated microbenchmarks put that edge at 1.3–1.5× at equal batch per engine; W4's ~2× is
+inflated because the TP16 engines it is compared against also prefill documents. For decode at
+long context, the same microbenchmarks favour TP16: below ~40 resident requests per 16 chips one
+TP16 engine beats two TP8 engines per chip, and at 4k-token contexts a TP8 pair cannot hold more
+than 24 requests. On the decode-bound reasoning workload W3, H beat both S (5.4%) and M (7.6%).
+W3's TP16 engines also ran at only half their microbenchmark rate, a discrepancy we cannot yet
+explain (@sec-decode).
 
 #note[
   *Status.* These are unfrozen pilots with 2 repetitions per main arm and 1 for the diagnostic arms.
@@ -483,7 +493,227 @@ TP8 engines stop at 204 s and 218 s.
 Per chip, each TP8 engine in M decoded about 69–74 tokens/s (both reserve runs) against about
 34–37 tokens/s per chip on an H engine. The H engines also carry about half of the long-document
 prefill each, so this ratio is an upper bound on the TP8 advantage, not a clean per-chip
-efficiency measurement.
+efficiency measurement. On the decode-bound W3 the gap disappears (@sec-decode).
+
+= Decode-bound workloads: less benefit from small engines <sec-decode>
+
+W4's gain rests on two facts: only TP16 can hold a long document, and TP8 engines serve short
+chat requests faster per chip. The second fact does not survive a workload where decode
+dominates. W3 from the earlier campaign (run `w3-c7edd5a-r1`) is such a workload: 160 reasoning
+traces, median prompt 279 tokens, median output 5,857 tokens (maximum 15,473), 1.08M output
+tokens against 48k prompt tokens. Every engine ran at `max_model_len` 16,384, the router was
+blind to output length, and there is one repetition per layout.
+
+#table(
+  columns: (auto, auto, auto, auto, auto),
+  align: (left, right, right, right, right),
+  table.header[Layout][Makespan][vs H][Evictions][Tokens recomputed after eviction],
+  [*H* (2 × TP16)], [*1284.5 s*], [best], [434], [0.92M],
+  [S (4 × TP8)], [1353.8 s], colored(bad)[+5.4%], [491], [1.09M],
+  [M (TP8 + TP8 + TP16)], [1382.0 s], colored(bad)[+7.6%], [445], [1.01M],
+)
+
+#figure(
+  svg-fig(```svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 262" font-family="Helvetica, Arial, 'DejaVu Sans', 'Libertinus Serif', sans-serif" font-size="13" fill="#1f2328">
+  <!-- 5.5 px per output token/s/chip, bars start at x = 190. -->
+  <text x="20" y="20" font-weight="bold">Output tokens per second per chip, by engine type</text>
+  <text x="20" y="48" font-weight="bold">W4 <tspan font-weight="normal" fill="#59636e">· chat on TP8, long-document prefill on TP16</tspan></text>
+  <text x="180" y="74" text-anchor="end" font-size="12">TP8 (M reserve)</text>
+  <rect x="190" y="58" width="389" height="22" rx="3" fill="#1a7f37"/>
+  <text x="587" y="74" font-size="12">70.8 (69.1–73.8)</text>
+  <text x="180" y="102" text-anchor="end" font-size="12">TP16 (H plain)</text>
+  <rect x="190" y="86" width="194" height="22" rx="3" fill="#0969da"/>
+  <text x="392" y="102" font-size="12">35.3 (34.1–36.6)</text>
+  <line x1="20" y1="124" x2="740" y2="124" stroke="#d0d7de"/>
+  <text x="20" y="150" font-weight="bold">W3 <tspan font-weight="normal" fill="#59636e">· reasoning, decode-bound, KV full</tspan></text>
+  <text x="180" y="176" text-anchor="end" font-size="12">TP8 (S, M)</text>
+  <rect x="190" y="160" width="145" height="22" rx="3" fill="#1a7f37"/>
+  <text x="343" y="176" font-size="12">26.3 (25.2–27.1)</text>
+  <text x="180" y="204" text-anchor="end" font-size="12">TP16 (H, M)</text>
+  <rect x="190" y="188" width="146" height="22" rx="3" fill="#0969da"/>
+  <text x="344" y="204" font-size="12">26.6 (26.4–26.8)</text>
+  <text x="20" y="236" font-size="12" fill="#59636e">Output tokens up to each engine's last step, divided by that time and by its chip count;</text>
+  <text x="20" y="253" font-size="12" fill="#59636e">mean over engines, range in parentheses. In W4 the TP16 engines also prefill the documents.</text>
+</svg>
+```),
+  caption: [TP8's per-chip advantage in W4 is not a property of the engine size. In W3 both
+    engine types run at the same per-chip rate, and the microbenchmarks (@fig-crossover) say TP16
+    should have been faster.],
+) <fig-perchip>
+
+Measured in W3's decode-only steps (steps with no prefill; step time is the gap between
+consecutive completions on one engine):
+
+#table(
+  columns: (auto, auto, auto, auto, auto, auto),
+  align: (left, right, right, right, right, right),
+  table.header[W3 engines][KV per chip][Batch p50][Resident KV p50][Step p50][Output tok/s per chip],
+  [TP16 (H ×2, M ×1)], [4,536 tok], [10–11], [~70k tok (97%)], [26.9–27.1 ms], [27.9–28.4],
+  [TP8 (S ×4, M ×2)], [3,296 tok], [3–4], [~24k tok (92%)], [19.7–20.8 ms], [26.2–28.6],
+)
+
+Steps that include prefill (new prompts or eviction replay) take only 4.7–6.8% of engine time, so
+the per-chip parity is a property of steady-state decode, not of replay overhead.
+
+== What the dedicated microbenchmarks say <sec-micro>
+
+Three earlier studies measured whole serving engines of this model on this hardware, TP16 against
+TP8:
+
+- the decode-only allocation study (`results/decode_allocation_20260913`, 2026-09-13; 131 cases,
+  forced prompt lengths 256–4,096, 256 output tokens, `max_model_len` 8,192);
+- the isolated-engine audit (`results/measurement_audit_20260911`);
+- the 1,024-request fleet backlog (`results/measurement_backlog_1024`).
+
+Kernel-only paged-attention timings and per-layer JAX microbenchmarks are not used here. They time
+one layer and multiply by 48, while the model has 60 layers (50 sliding-window, 10 full). The ×48
+attention time alone (16–18 ms at batch 1–32) exceeds the measured full TP16 step (9.2 ms at
+batch 4).
+
+*Equal batch per engine: TP8 wins by 1.3–1.5× per chip.* At 4 requests per engine the decode
+study measures 35.3 against 27.2 tok/s/chip (1.30×) at 256-token contexts and 1.27× at 4,096. Its
+fitted step model gives 1.28× at small batch rising to 1.42× at large batch. The audit measures
+1.21–1.48×. In the short-chat fleet backlog, two TP8 engines decode at 232.9 tok/s/chip against
+172.2 for one TP16 engine, and deliver 38% more throughput. This is the edge W4's chat traffic
+uses.
+
+*Equal total batch on 16 chips: TP16 wins below N\* ≈ 40.* One TP16 engine holding _N_ requests is
+faster per chip than two TP8 engines holding _N_/2 each, up to 38–40 total resident requests. It
+wins by 36% at _N_ = 8 and 12% at _N_ = 24; two TP8 engines win by 26% at _N_ = 128 (@fig-crossover).
+The fitted step model gives the reason: a TP16 step costs 8.1 ms + 0.30 ms per request, and a TP8
+step 12.7 ms + 0.42 ms per request. Two TP8 engines pay the larger fixed cost twice over 16 chips,
+which dominates at small batch; TP8's cheaper per-request cost wins at large batch. Where that
+cost difference comes from (collectives or otherwise) is not measured: the only operation trace is
+TP16's, with all-reduce at 13% of device time.
+
+*Long context acts through KV capacity.* At 4,096–4,352 tokens a TP8 pair can hold at most 24
+requests, below N\*, so TP16 wins at every reachable batch. With batch free, two TP8 engines win
+below about 1,280 tokens of end context (+29% at 512); one TP16 engine wins above about 2,304
+(+31% at 4,352).
+
+#figure(
+  svg-fig(```svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 320" font-family="Helvetica, Arial, 'DejaVu Sans', 'Libertinus Serif', sans-serif" font-size="12" fill="#1f2328">
+  <!-- x = 90 + 4.632 * N (N = total resident requests on 16 chips); y = 250 - tok/s/chip. -->
+  <g stroke="#d0d7de" stroke-width="1">
+    <line x1="90" y1="200" x2="720" y2="200"/>
+    <line x1="90" y1="150" x2="720" y2="150"/>
+    <line x1="90" y1="100" x2="720" y2="100"/>
+    <line x1="90" y1="50" x2="720" y2="50"/>
+  </g>
+  <line x1="90" y1="250" x2="720" y2="250" stroke="#59636e" stroke-width="1.2"/>
+  <line x1="90" y1="30" x2="90" y2="250" stroke="#59636e" stroke-width="1.2"/>
+  <g fill="#59636e" text-anchor="end">
+    <text x="84" y="254">0</text><text x="84" y="204">50</text><text x="84" y="154">100</text>
+    <text x="84" y="104">150</text><text x="84" y="54">200</text>
+  </g>
+  <g fill="#59636e" text-anchor="middle">
+    <text x="90" y="268">0</text><text x="238" y="268">32</text><text x="386" y="268">64</text>
+    <text x="535" y="268">96</text><text x="683" y="268">128</text>
+    <text x="405" y="292">total resident requests on 16 chips (N)</text>
+  </g>
+  <text x="20" y="140" fill="#59636e" transform="rotate(-90 20 140)" text-anchor="middle">decode tok/s per chip</text>
+  <line x1="275" y1="30" x2="275" y2="250" stroke="#8c959f" stroke-dasharray="4 3"/>
+  <text x="281" y="42" fill="#59636e">N* ≈ 40</text>
+  <!-- 512-768 token context band -->
+  <polyline fill="none" stroke="#0969da" stroke-width="2.2" points="127.1,202 164.1,171.9 201.2,153.8 238.2,138.7 312.3,124.5 386.4,110.4 534.7,102.9 682.9,90.9"/>
+  <polyline fill="none" stroke="#1a7f37" stroke-width="2.2" points="127.1,214.8 164.1,186.9 201.2,164.4 238.2,145.7 312.3,117.8 386.4,96.2 534.7,69.8 682.9,49.6"/>
+  <!-- 4096-4352 token context band (TP8 pair capped at N = 24) -->
+  <polyline fill="none" stroke="#0969da" stroke-width="2" stroke-dasharray="6 4" points="127.1,206.5 145.6,192.9 164.1,182.1 182.6,175.3 201.2,168.3"/>
+  <polyline fill="none" stroke="#1a7f37" stroke-width="2" stroke-dasharray="6 4" points="127.1,218 145.6,205.9 164.1,195.5 182.6,186.7 201.2,178.9"/>
+  <line x1="201.2" y1="168" x2="201.2" y2="250" stroke="#1a7f37" stroke-width="1" stroke-dasharray="2 3"/>
+  <text x="205" y="244" font-size="11" fill="#1a7f37">TP8 pair KV cap at 4k</text>
+  <!-- W3 decode-only operating points -->
+  <circle cx="141" cy="221.8" r="5" fill="#ffffff" stroke="#0969da" stroke-width="2"/>
+  <circle cx="127.1" cy="222.7" r="5" fill="#ffffff" stroke="#1a7f37" stroke-width="2"/>
+  <text x="96" y="238" font-size="11">W3</text>
+  <g font-size="12">
+    <line x1="440" y1="170" x2="470" y2="170" stroke="#0969da" stroke-width="2.2"/>
+    <text x="478" y="174">one TP16 engine, context 512–768</text>
+    <line x1="440" y1="190" x2="470" y2="190" stroke="#1a7f37" stroke-width="2.2"/>
+    <text x="478" y="194">two TP8 engines, context 512–768</text>
+    <line x1="440" y1="210" x2="470" y2="210" stroke="#8c959f" stroke-width="2" stroke-dasharray="6 4"/>
+    <text x="478" y="214">same, context 4,096–4,352</text>
+    <circle cx="455" cy="230" r="5" fill="#ffffff" stroke="#59636e" stroke-width="2"/>
+    <text x="478" y="234">W3 decode steps (~6k context per request)</text>
+  </g>
+</svg>
+```),
+  caption: [Decode throughput per chip at equal total resident requests on 16 chips, from the
+    decode-only allocation study (decode steps only, forced lengths, `max_model_len` 8,192). W3's
+    decode steps sit where the study says TP16 should win per chip: by 36% at equal total batch,
+    and by about 60% at W3's actual batches (11 on TP16, 4 per TP8 engine). Instead both engine
+    types ran at about 28.],
+) <fig-crossover>
+
+*So the microbenchmarks support the section's conclusion more strongly than W3 does.* For decode at
+long context, a small engine's per-chip edge disappears; by the study's numbers it reverses.
+
+== Contradiction: W3's TP16 engines ran at half the microbenchmark rate
+
+The decode study's fitted step model, evaluated at W3's operating points, predicts:
+
+#table(
+  columns: (auto, auto, auto, auto, auto),
+  align: (left, left, right, right, right),
+  table.header[Engine][W3 operating point][Predicted step][Measured step][Measured / predicted],
+  [TP16], [batch 11, 70k resident tokens], [13.4 ms (51 tok/s/chip)], [27.0 ms (28)], [2.0×],
+  [TP8], [batch 4, 24k resident tokens], [15.9 ms (31 tok/s/chip)], [20.3 ms (27)], [1.27×],
+)
+
+The prediction ignores the study's padding-bucket jumps, which cost up to 11%. TP8 runs close to
+its microbenchmark; TP16 runs at half. The W3 parity in @fig-perchip is therefore TP16
+underperforming, not an equilibrium between the two engine sizes. The step model fitted directly
+to W3's own iterations (`scripts/simulate_length_aware.py`) agrees: it charges TP16 more per
+request than TP8 (1.01 against 0.85 ms), the reverse of the decode study (0.30 against 0.42 ms).
+
+Candidate causes, none tested:
+
++ *KV block size.* W3 ran at `max_model_len` 16,384 with 64-token blocks; the study ran at 8,192
+  with 256-token blocks. A 6k-token sequence then spans about 100 pages instead of 25.
++ *Context beyond the fitted range.* W3 sequences grow to 16k tokens; the study stopped at 4,352.
++ *KV pool size.* The study's engines had twice the KV pool of every serving deployment (next
+  subsection), so it never ran as close to a full pool as W3 (92–97%).
+
+Rerunning the decode study at W3's configuration (`max_model_len` 16,384, contexts 4k–16k) would
+show whether W3's parity is a property of decode-bound work or of that deployment. Either way,
+neither W3 nor the microbenchmarks show small engines winning decode-bound long-context work.
+
+== Other inconsistencies in the data
+
+- *KV capacity at identical settings.* Two TP16 deployments at `max_model_len` 8,192, 256-token
+  blocks and `gpu_memory_utilization` 0.85 report 567 blocks (the decode study;
+  `results/hetero/20260916/e2e_deploy_H_r2.json`) and 283 blocks
+  (`results/hetero/campaign-0f5e4c095b0e/r1_H_deploy.json`). The W3 and W4 serving engines match
+  the smaller value (~72k tokens per TP16 engine). The TP16/TP8 capacity ratio per chip is
+  1.37–1.38 in every deployment, so ratio arguments hold, but absolute capacities do not carry
+  over between deployments.
+- *W4 per-chip rates depend on role and policy.* The 70.8 tok/s/chip for TP8 is under the reserve
+  policy; under plain the same engines produced about 26. The TP16 engine inside M produced only
+  2.9–8.4, because its work is long-document prefill. The 35.3 in @fig-perchip is from H.
+- *Topology metadata.* `results/padding_cost_topologies.json` records the TP8 (2×4) topology as 16
+  chips on 4 hosts; its setup document says 8 chips on 2 hosts. No number here uses that file.
+
+== What decides W3's makespan: balance
+
+With near-equal per-chip rates, layouts differ in how evenly a few long jobs spread across
+engines. W3 has only 160 requests, each running for minutes. More, smaller engines give coarser
+balance: the spread between the first and last engine to finish was 37 s on H, 124 s on S and
+182 s on M.
+
+*Eviction waste dwarfs layout differences.* Every layout recomputed 0.92–1.09M tokens after
+evictions, about as many as the 1.08M useful output tokens. Admission that sees only the prompt
+overcommits the KV pool as long outputs grow. In a decode-bound workload, output-length knowledge
+(or a predictor, or cheaper eviction by parking KV in host memory) likely matters more than engine
+sizes. It did not matter in W4, where prompt length alone separates the two request classes.
+
+*So heterogeneity pays when* the large engine does work the small engines cannot do (here: holding
+30k-token contexts), and the small engines have a per-chip advantage on the rest. The
+microbenchmarks say that advantage exists only for short-context decode at large total batch
+(above ~40 resident requests per 16 chips), which is chat traffic. A long-context workload with
+long outputs, for example multi-document synthesis, removes it. We expect a smaller gain or none
+there, but it has not been measured.
 
 = Threats to validity <sec-validity>
 
@@ -501,7 +731,8 @@ efficiency measurement.
   short-only workloads S was the best layout in earlier cohorts.
 - *Workload shape.* The benefit requires a mix in which a minority of requests needs a large engine
   and the majority can run on small ones. The share of long work (24 of 904 requests, 77% of prompt
-  tokens) was chosen, not swept.
+  tokens) was chosen, not swept, and the long work is prefill-heavy. On the decode-bound W3, M lost
+  to H (@sec-decode); the W3 numbers are one repetition each.
 
 = Remaining headroom and next steps
 
@@ -516,6 +747,18 @@ efficiency measurement.
   stops beating H.
 + *Timed cohort.* Freeze the source and repeat M reserve and H plain with ≥ 5 repetitions in
   randomised order.
++ *Value of output length on decode-bound work.* Rerun W3 on H, S and M with
+  `decode_length_blind: false`. The engine outputs exactly `max_tokens` (`ignore_eos`), so this
+  gives the ceiling on what knowing output length is worth: fewer evictions, and whether M then
+  overtakes H.
++ *Decode-heavy long-context mix.* Long documents with long outputs, to test whether M beats H
+  once TP16's share of the work is decode rather than prefill.
++ *Long-first with a dynamic reserve.* Order the backlog by prompt length, and keep KV free on
+  TP16 only while a long document is actually waiting, sized to that document (backfilling in the
+  style of EASY). The static reserve holds 51% of TP16's KV even when no document is queued.
++ *Resolve the W3 decode discrepancy.* Rerun the decode-only allocation study at W3's configuration
+  (`max_model_len` 16,384, 64-token blocks, contexts 4k–16k) on TP16 and TP8, to find out whether
+  TP16's half-rate decode in W3 comes from block size, context length or pool size.
 
 = Reproduction
 
@@ -532,6 +775,10 @@ flock /tmp/hetero-cluster.lock scripts/w4_campaign.sh 1 M H
 # tables in this report
 scripts/summarize_w4.py w4-45af2f1-plain-r1 w4-45af2f1-plain-r2 w4-45af2f1-resv-r1 \
     w4-45af2f1-resv-r2 w4-67a17c9-resv-r2 w4-8ff2585-plain-r1 w4-8ff2585-resv-r1
+# decode-bound comparison and W3 decode-step table (summarize_w3.py at 463a069)
+scripts/summarize_w3.py w3-c7edd5a-r1
+# microbenchmarks: results/decode_allocation_20260913/{REPORT.md,findings.json,step_cost_fit.json},
+#   results/measurement_audit_20260911/, results/measurement_backlog_1024/
 ```
 
 Deploy settings: M uses `--max-model-len 16384 --instance-engine-settings '{"large":{"max_model_len":36864}}'`;
