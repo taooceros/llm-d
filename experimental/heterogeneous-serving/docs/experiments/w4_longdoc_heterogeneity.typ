@@ -113,9 +113,9 @@ The 4 × TP8 layout *S*, which beat H on the earlier chat workloads, cannot serv
 
 *The benefit is specific to this workload shape.* In W4 the TP16 engine does prefill-heavy work
 the TP8 engines cannot do, and the TP8 engines serve short chat requests faster per chip. The
-dedicated microbenchmarks put that edge at 1.3–1.5× at equal batch per engine; W4's ~2× is
+dedicated microbenchmarks put that edge at 1.3–1.5× at equal batch per engine; W4's ≈2× is
 inflated because the TP16 engines it is compared against also prefill documents. For decode at
-long context, the same microbenchmarks favour TP16: below ~40 resident requests per 16 chips one
+long context, the same microbenchmarks favour TP16: below about 40 resident requests per 16 chips one
 TP16 engine beats two TP8 engines per chip, and at 4k-token contexts a TP8 pair cannot hold more
 than 24 requests. On the decode-bound reasoning workload W3, H beat both S (5.4%) and M (7.6%).
 W3's TP16 engines also ran at only half their microbenchmark rate, a discrepancy we cannot yet
@@ -549,8 +549,8 @@ consecutive completions on one engine):
   columns: (auto, auto, auto, auto, auto, auto),
   align: (left, right, right, right, right, right),
   table.header[W3 engines][KV per chip][Batch p50][Resident KV p50][Step p50][Output tok/s per chip],
-  [TP16 (H ×2, M ×1)], [4,536 tok], [10–11], [~70k tok (97%)], [26.9–27.1 ms], [27.9–28.4],
-  [TP8 (S ×4, M ×2)], [3,296 tok], [3–4], [~24k tok (92%)], [19.7–20.8 ms], [26.2–28.6],
+  [TP16 (H ×2, M ×1)], [4,536 tok], [10–11], [≈70k tok (97%)], [26.9–27.1 ms], [27.9–28.4],
+  [TP8 (S ×4, M ×2)], [3,296 tok], [3–4], [≈24k tok (92%)], [19.7–20.8 ms], [26.2–28.6],
 )
 
 Steps that include prefill (new prompts or eviction replay) take only 4.7–6.8% of engine time, so
@@ -686,7 +686,7 @@ neither W3 nor the microbenchmarks show small engines winning decode-bound long-
   blocks and `gpu_memory_utilization` 0.85 report 567 blocks (the decode study;
   `results/hetero/20260916/e2e_deploy_H_r2.json`) and 283 blocks
   (`results/hetero/campaign-0f5e4c095b0e/r1_H_deploy.json`). The W3 and W4 serving engines match
-  the smaller value (~72k tokens per TP16 engine). The TP16/TP8 capacity ratio per chip is
+  the smaller value (≈72k tokens per TP16 engine). The TP16/TP8 capacity ratio per chip is
   1.37–1.38 in every deployment, so ratio arguments hold, but absolute capacities do not carry
   over between deployments.
 - *W4 per-chip rates depend on role and policy.* The 70.8 tok/s/chip for TP8 is under the reserve
@@ -711,7 +711,7 @@ sizes. It did not matter in W4, where prompt length alone separates the two requ
 *So heterogeneity pays when* the large engine does work the small engines cannot do (here: holding
 30k-token contexts), and the small engines have a per-chip advantage on the rest. The
 microbenchmarks say that advantage exists only for short-context decode at large total batch
-(above ~40 resident requests per 16 chips), which is chat traffic. A long-context workload with
+(above about 40 resident requests per 16 chips), which is chat traffic. A long-context workload with
 long outputs, for example multi-document synthesis, removes it. We expect a smaller gain or none
 there, but it has not been measured.
 
