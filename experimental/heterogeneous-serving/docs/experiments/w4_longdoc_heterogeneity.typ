@@ -1,43 +1,105 @@
 // W4: heterogeneous vs homogeneous TPU layouts on a long-document + chat mix.
-// Compile: typst compile w4_longdoc_heterogeneity.typ
-#set document(title: "Heterogeneous TPU serving on a long-document + chat mix (W4)", author: "hetero-research")
-#set page(paper: "us-letter", margin: (x: 2.2cm, y: 2cm), numbering: "1")
-#set text(size: 10.5pt)
-#set par(justify: true)
+// Written for Typst HTML export first; the PDF is a secondary target.
+//   HTML: typst compile --features html --format html w4_longdoc_heterogeneity.typ
+//   PDF:  typst compile w4_longdoc_heterogeneity.typ
+// Styling that HTML export drops (text fill, block fill, box widths) goes
+// through the helpers below, which emit inline CSS in HTML and native
+// Typst styling in PDF.
+#let title = "Heterogeneous TPU serving on a long-document + chat mix (W4)"
+#set document(title: title, author: "hetero-research")
 #set heading(numbering: "1.")
-#show table: set text(size: 9pt)
 #show table.cell.where(y: 0): strong
+
+#let css = ```
+body { max-width: 60rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.55;
+       font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: #1f2328; }
+h1, h2, h3 { line-height: 1.25; margin-top: 1.8em; }
+h2 { border-bottom: 1px solid #d0d7de; padding-bottom: .25em; }
+table { border-collapse: collapse; margin: 1em 0; font-size: .92em; display: block; overflow-x: auto; }
+th, td { border: 1px solid #d0d7de; padding: .35em .7em; vertical-align: top; }
+th { background: #f6f8fa; text-align: left; }
+tr:nth-child(even) td { background: #fbfcfd; }
+code { background: #eff1f3; padding: .1em .3em; border-radius: 4px; font-size: .9em; }
+pre { background: #f6f8fa; padding: .8em 1em; border-radius: 6px; overflow-x: auto; }
+pre code { background: none; padding: 0; }
+figure { margin: 1.5em 0; }
+figcaption { font-size: .9em; color: #59636e; margin-top: .5em; }
+.subtitle { color: #59636e; margin-top: -.5em; }
+.note { background: #f6f8fa; border-left: 4px solid #0969da; padding: .6em 1em; margin: 1em 0; }
+.footnote { font-size: .88em; color: #59636e; }
+.bars { display: grid; grid-template-columns: max-content 1fr; gap: .4em .8em; align-items: center; }
+.bar { color: #fff; font-size: .82em; text-align: right; padding: .15em .5em; border-radius: 3px;
+       white-space: nowrap; box-sizing: border-box; }
+```.text
+
+// `target` exists only when the html feature is enabled; without it this is a PDF build.
+#let is-html() = "target" in dictionary(std) and std.target() == "html"
+
+#show: doc => context if is-html() {
+  html.elem("style", css)
+  doc
+} else {
+  set page(paper: "us-letter", margin: (x: 2.2cm, y: 2cm), numbering: "1")
+  set text(size: 10.5pt)
+  set par(justify: true)
+  show table: set text(size: 9pt)
+  doc
+}
 
 #let good = rgb("#1a7f37")
 #let bad = rgb("#cf222e")
-#let note(body) = block(fill: luma(245), inset: 8pt, radius: 3pt, width: 100%, body)
+#let div(class, body) = html.elem("div", attrs: (class: class), body)
+#let colored(colour, body) = context if is-html() {
+  html.elem("span", attrs: (style: "color:" + colour.to-hex()), body)
+} else { text(fill: colour, body) }
+#let note(body) = context if is-html() { div("note", body) } else {
+  block(fill: luma(245), inset: 8pt, radius: 3pt, width: 100%, body)
+}
+#let footnote-text(body) = context if is-html() { div("footnote", body) } else {
+  text(size: 8.5pt, body)
+}
 
 // Horizontal bar chart of makespans; each row: (label, seconds, colour).
-#let bars(rows, scale: 0.9pt) = grid(
-  columns: (auto, 1fr), column-gutter: 8pt, row-gutter: 5pt, align: (right + horizon, left + horizon),
-  ..rows.map(((label, value, colour)) => (
-    text(size: 9pt, label),
-    box(width: value * scale, height: 11pt, fill: colour, inset: (x: 4pt),
-        align(right + horizon, text(size: 8pt, fill: white, str(value) + " s"))),
-  )).flatten(),
-)
+#let bars(rows) = context if is-html() {
+  let longest = calc.max(..rows.map(r => r.at(1)))
+  div("bars", rows.map(((label, value, colour)) => (
+    html.elem("span", label),
+    html.elem("div", attrs: (class: "bar", style: "width:" + str(calc.round(value / longest * 100, digits: 1))
+      + "%;background:" + colour.to-hex()), str(value) + " s"),
+  )).flatten().join())
+} else {
+  grid(
+    columns: (auto, 1fr), column-gutter: 8pt, row-gutter: 5pt, align: (right + horizon, left + horizon),
+    ..rows.map(((label, value, colour)) => (
+      text(size: 9pt, label),
+      box(width: value * 0.9pt, height: 11pt, fill: colour, inset: (x: 4pt),
+          align(right + horizon, text(size: 8pt, fill: white, str(value) + " s"))),
+    )).flatten(),
+  )
+}
 
-#align(center)[
-  #text(size: 16pt, weight: "bold")[Heterogeneous TPU serving on a long-document + chat mix (W4)]
-  #v(2pt)
-  Gemma-4 31B on TPU v5e 4×8 (32 chips) · pilot runs of 2026-09-30 · branch `research/heterogeneous-tpu-20260918`
-]
+#context if is-html() {
+  html.elem("h1", title)
+  html.elem("p", attrs: (class: "subtitle"))[Gemma-4 31B on TPU v5e 4×8 (32 chips) · pilot runs of
+    2026-09-30 · branch `research/heterogeneous-tpu-20260918`]
+} else {
+  align(center)[
+    #text(size: 16pt, weight: "bold", title)
+    #v(2pt)
+    Gemma-4 31B on TPU v5e 4×8 (32 chips) · pilot runs of 2026-09-30 · branch `research/heterogeneous-tpu-20260918`
+  ]
+}
 
 = Summary
 
 On a bulk backlog of 880 ShareGPT chat requests mixed with 24 real government reports whose context
 is too long for a TP8 engine, the heterogeneous layout *M* (TP8 + TP8 + TP16) finished
-#text(fill: good)[*10.1% sooner*] than the best homogeneous layout *H* (2 × TP16): a mean makespan of
+#colored(good)[*10.1% sooner*] than the best homogeneous layout *H* (2 × TP16): a mean makespan of
 311.9 s against 347.1 s (7.9% and 12.4% in the two repetitions). Mean useful throughput rose from
 1118 to 1245 tokens/s on the same 32 chips.
 
 The gain depends on the router. Under the pre-existing routing policy, M was
-#text(fill: bad)[*30% slower*] than H (452.2 s): the router sends half of all new requests to the
+#colored(bad)[*30% slower*] than H (452.2 s): the router sends half of all new requests to the
 TP16 engine and waits for it when it is full, so the TP8 engines ran out of work at about 210 s and
 the long documents were starved. Two policy changes fix this: spill to whichever pool has room
 (_work-conserving fallback_), and keep one maximum-length request's worth of KV on each TP16 engine
@@ -76,7 +138,7 @@ At `max_model_len` 36,864 the TP16 engine allocates 256-token KV blocks, against
 
 == Workload W4
 
-W4 is a closed backlog: all 904 requests are queued at $t = 0$ and the gateway dispatches them in
+W4 is a closed backlog: all 904 requests are queued at time 0 and the gateway dispatches them in
 arrival order as KV capacity allows. Every request runs with `ignore_eos` and `max_tokens` fixed to
 its reference output length, so every arm produces exactly 387,975 useful output tokens.
 
@@ -91,7 +153,7 @@ its reference output length, so every arm produces exactly 387,975 useful output
 )
 
 Long documents need 27,069–36,511 tokens of context, all above the TP8 pool of 26,368 tokens.
-Long request $k$ sits at a seeded position inside the $k$-th of 24 equal slices of the arrival
+Long request _k_ sits at a seeded position inside the _k_-th of 24 equal slices of the arrival
 order (indices 30, 70, 107, …, 876), so long work arrives throughout the backlog. In total the
 workload is 948,975 prompt tokens, 727,303 of them (77%) from the 24 long documents. Manifest
 SHA-256 prefix `e380318ae33a`.
@@ -125,12 +187,12 @@ All 8 runs completed 904/904 requests with exact output budgets and one-to-one i
   align: (left, left, right, right, right, right),
   table.header[Layout][Policy][Makespan rep 1][Makespan rep 2][Throughput (mean)][vs best H],
   [H], [plain], [347.2 s], [346.9 s], [1118 tok/s], [baseline],
-  [H], [reserve], [370.0 s], [372.6 s], [1045 tok/s], text(fill: bad)[+7.0%],
-  [*M*], [*reserve*], [*304.1 s*], [*319.6 s*], [*1245 tok/s*], text(fill: good)[*−10.1%*],
-  [M], [large-dedicated#super[†]], [332.9 s], [–], [1166 tok/s], text(fill: good)[−4.1%],
-  [M], [plain], [452.2 s], [–], [858 tok/s], text(fill: bad)[+30.3%],
+  [H], [reserve], [370.0 s], [372.6 s], [1045 tok/s], colored(bad)[+7.0%],
+  [*M*], [*reserve*], [*304.1 s*], [*319.6 s*], [*1245 tok/s*], colored(good)[*−10.1%*],
+  [M], [large-dedicated#super[†]], [332.9 s], [–], [1166 tok/s], colored(good)[−4.1%],
+  [M], [plain], [452.2 s], [–], [858 tok/s], colored(bad)[+30.3%],
 )
-#text(size: 8.5pt)[† An earlier version of the reserve was counted in blocks; with 256-token blocks it
+#footnote-text[† An earlier version of the reserve was counted in blocks; with 256-token blocks it
 exceeded the TP16 pool, so no short request could use the TP16 engine. Kept as a diagnostic arm.]
 
 #figure(
