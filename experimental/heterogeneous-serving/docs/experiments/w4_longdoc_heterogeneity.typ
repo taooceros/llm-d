@@ -23,8 +23,7 @@ code { background: #eff1f3; padding: .1em .3em; border-radius: 4px; font-size: .
 pre { background: #f6f8fa; padding: .8em 1em; border-radius: 6px; overflow-x: auto; }
 pre code { background: none; padding: 0; }
 figure { margin: 1.5em 0; }
-/* html.frame sets an inline em size; scale drawn figures to the column instead. */
-svg.typst-frame { width: 100% !important; height: auto !important; }
+figure img { width: 100%; height: auto; }
 figcaption { font-size: .9em; color: #59636e; margin-top: .5em; }
 .subtitle { color: #59636e; margin-top: -.5em; }
 .note { background: #f6f8fa; border-left: 4px solid #0969da; padding: .6em 1em; margin: 1em 0; }
@@ -50,16 +49,10 @@ figcaption { font-size: .9em; color: #59636e; margin-top: .5em; }
 
 #let good = rgb("#1a7f37")
 #let bad = rgb("#cf222e")
-#let tp16 = rgb("#0969da")
-#let orange = rgb("#e16f24")
 #let div(class, body) = html.elem("div", attrs: (class: class), body)
-// Drawn figures: inline SVG in HTML, native layout in PDF.
-#let diagram(body) = context {
-  let drawn = block(width: 16cm, align(left, { set par(justify: false); body }))
-  if is-html() { html.frame(drawn) } else { drawn }
-}
-#let node(body, stroke: luma(140), fill: white) = block(stroke: stroke, fill: fill, inset: 6pt,
-  radius: 3pt, width: 100%, text(size: 8.5pt, body))
+// Hand-written SVG kept inline so the report stays one self-contained file.
+// Font list: browsers pick a system sans; Typst's PDF build falls back to its bundled fonts.
+#let svg-fig(source) = image(bytes(source.text), format: "svg", width: 100%)
 #let colored(colour, body) = context if is-html() {
   html.elem("span", attrs: (style: "color:" + colour.to-hex()), body)
 } else { text(fill: colour, body) }
@@ -191,127 +184,219 @@ The name "reserve" covers both changes. @fig-flow shows where they act in the ro
 each change fixes.
 
 #figure(
-  diagram({
-    let arrow(label) = align(center, text(size: 8pt, fill: luma(90))[#label])
-    let side(label) = align(center + horizon, text(size: 8pt, fill: luma(90))[#label])
-    grid(
-      columns: (7.4cm, 1.3cm, 6.3cm), row-gutter: 3pt, align: left + horizon,
-      node[*Request arrives.* Router knows prompt length _P_; output length is hidden.], [], [],
-      arrow[↓], [], [],
-      node[Charge _P_ + 1 KV block.], [], [],
-      arrow[↓], [], [],
-      node[Does it fit a TP8 engine (_P_ + 1 block ≤ 16,384)?], side[no →],
-        node(fill: tp16.lighten(85%))[TP16 pool only. Every long document takes this path.],
-      arrow[yes ↓], [], [],
-      node[Is TP16 owed this request? True while TP16 has taken fewer than 50% of all dispatched
-        requests (M only; H has no TP8 pool).], side[yes →], node[Try TP16 first, then TP8.],
-      arrow[no ↓ #h(4pt) try TP8 first, then TP16], [], [],
-      node[Does any engine in the first pool pass the admission check (@fig-kv)?], side[yes →],
-        node[Dispatch to the least-loaded engine that passed.],
-      arrow[no ↓], [], [],
-      grid.cell(colspan: 3, grid(columns: (1fr, 1fr), column-gutter: 8pt,
-        node(stroke: bad, fill: bad.lighten(90%))[*plain:* wait one poll (still holding a dispatch
-          slot), then retry from the top.],
-        node(stroke: good, fill: good.lighten(90%))[*reserve:* try the second pool; wait only if it
-          has no room either.],
-      )),
-    )
-  }),
-  caption: [Routing decision for one new request, as implemented in `select_initial`. The two
-    policies differ only in the last step and in the admission check.],
+  svg-fig(```svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 500" font-family="Helvetica, Arial, 'DejaVu Sans', 'Libertinus Serif', sans-serif" font-size="13" fill="#1f2328">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#59636e"/>
+    </marker>
+  </defs>
+  <g stroke="#8c959f" stroke-width="1.2">
+    <rect x="40" y="10" width="380" height="46" rx="6" fill="#ffffff"/>
+    <rect x="40" y="84" width="380" height="34" rx="6" fill="#ffffff"/>
+    <rect x="40" y="146" width="380" height="46" rx="6" fill="#f6f8fa"/>
+    <rect x="40" y="226" width="380" height="46" rx="6" fill="#f6f8fa"/>
+    <rect x="40" y="316" width="380" height="46" rx="6" fill="#f6f8fa"/>
+    <rect x="500" y="146" width="240" height="46" rx="6" fill="#ddf4ff" stroke="#0969da"/>
+    <rect x="500" y="226" width="240" height="46" rx="6" fill="#ffffff"/>
+    <rect x="500" y="316" width="240" height="46" rx="6" fill="#ffffff"/>
+    <rect x="40" y="410" width="330" height="70" rx="6" fill="#ffebe9" stroke="#cf222e" stroke-width="1.6"/>
+    <rect x="390" y="410" width="350" height="70" rx="6" fill="#dafbe1" stroke="#1a7f37" stroke-width="1.6"/>
+  </g>
+  <g stroke="#59636e" stroke-width="1.4" fill="none" marker-end="url(#a)">
+    <line x1="230" y1="56" x2="230" y2="82"/>
+    <line x1="230" y1="118" x2="230" y2="144"/>
+    <line x1="230" y1="192" x2="230" y2="224"/>
+    <line x1="230" y1="272" x2="230" y2="314"/>
+    <line x1="420" y1="169" x2="498" y2="169"/>
+    <line x1="420" y1="249" x2="498" y2="249"/>
+    <line x1="420" y1="339" x2="498" y2="339"/>
+    <path d="M620,272 V304 H330 V314"/>
+    <path d="M230,362 V386 H160 V408"/>
+    <path d="M230,386 H565 V408"/>
+    <path d="M40,445 H18 V33 H38" stroke-dasharray="5 4"/>
+  </g>
+  <g font-size="12" fill="#59636e">
+    <text x="459" y="163" text-anchor="middle">no</text>
+    <text x="238" y="213">yes</text>
+    <text x="459" y="243" text-anchor="middle">yes</text>
+    <text x="238" y="291">no: TP8 first, then TP16</text>
+    <text x="459" y="333" text-anchor="middle">yes</text>
+    <text x="238" y="380">no</text>
+    <text x="12" y="240" transform="rotate(-90 12 240)" text-anchor="middle">plain: retry</text>
+  </g>
+  <text x="56" y="30" font-weight="bold">Request arrives</text>
+  <text x="56" y="48" font-size="12" fill="#59636e">prompt length P is known · output length is hidden</text>
+  <text x="56" y="106">Charge P + 1 KV block</text>
+  <text x="56" y="166" font-weight="bold">Does it fit a TP8 engine?</text>
+  <text x="56" y="184" font-size="12" fill="#59636e">P + 1 block ≤ 16,384 tokens</text>
+  <text x="56" y="246" font-weight="bold">Is TP16 owed this request?</text>
+  <text x="56" y="264" font-size="12" fill="#59636e">TP16 has taken &lt; 50% of dispatched requests (M only)</text>
+  <text x="56" y="336" font-weight="bold">Does the first pool have an engine with room?</text>
+  <text x="56" y="354" font-size="12" fill="#59636e">admission check, Figure 2</text>
+  <text x="516" y="166" font-weight="bold">TP16 pool only</text>
+  <text x="516" y="184" font-size="12" fill="#59636e">all 24 long documents</text>
+  <text x="516" y="254">Try TP16 first, then TP8</text>
+  <text x="516" y="336">Dispatch to the least-loaded</text>
+  <text x="516" y="353">engine that passed</text>
+  <text x="56" y="432" font-weight="bold" fill="#cf222e">plain</text>
+  <text x="56" y="451">wait one poll, holding a dispatch slot,</text>
+  <text x="56" y="469">then retry from the top</text>
+  <text x="406" y="432" font-weight="bold" fill="#1a7f37">reserve (work-conserving fallback)</text>
+  <text x="406" y="451">try the second pool;</text>
+  <text x="406" y="469">wait only if it has no room either</text>
+</svg>
+```),
+  caption: [Routing decision for one new request, as implemented in `select_initial`. Requests
+    that only fit TP16 go through the same room check with TP16 as their only pool. The two
+    policies differ only in the last step (bottom) and in the admission check (@fig-kv).],
 ) <fig-flow>
 
 #figure(
-  diagram({
-    // One TP16 engine: 282 blocks of 256 tokens. Snapshot: 90 blocks in use, 192 free.
-    let u = 0.053cm
-    let seg(n, fill, label, light: false) = box(width: n * u, height: 0.9cm, fill: fill,
-      stroke: 0.5pt + white, align(center + horizon,
-        text(size: 7.5pt, fill: if light { black } else { white }, label)))
-    let span(start, n, fill, label) = pad(left: start * u, stack(dir: ttb, spacing: 2pt,
-      box(width: n * u, height: 5pt, fill: fill), text(size: 8pt, label)))
-    set text(size: 8.5pt)
-    stack(dir: ttb, spacing: 6pt,
-      text(weight: "bold")[One TP16 engine: 282 blocks × 256 tokens (snapshot with 192 blocks free)],
-      stack(dir: ltr,
-        seg(90, luma(150), [in use: 90]),
-        seg(32, white, [32], light: true),
-        seg(144, orange, [long-request reserve: 144 blocks = 36,864 tok]),
-        seg(16, luma(60), [16]),
-      ),
-      span(90, 32, good, [short request may use: 192 − 144 − 16 = *32 blocks*]),
-      span(90, 176, tp16, [long request may use: 192 − 16 = *176 blocks*]),
-      v(8pt),
-      [The reserve is a threshold on the free-block count, not a fixed set of blocks. A 30,000-token
-        document needs ⌈30,256 / 256⌉ = 119 blocks and is admitted (119 ≤ 176). A 500-token chat
-        request needs 3 blocks and is admitted while at least 3 of the 32 remain. The dark 16
-        blocks are headroom that applies to every request on a TP16 engine in both policies. TP8
-        engines (412 blocks × 64 tokens) have neither headroom nor reserve.],
-    )
-  }),
-  caption: [Admission check on a TP16 engine under the reserve policy. Under plain, the orange
-    region does not exist and both request types may use 176 blocks.],
+  svg-fig(```svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 270" font-family="Helvetica, Arial, 'DejaVu Sans', 'Libertinus Serif', sans-serif" font-size="13" fill="#1f2328">
+  <!-- 282 blocks over 720 px: 2.553 px per block. Snapshot: 90 used, 192 free. -->
+  <text x="20" y="22" font-weight="bold">One TP16 engine · 282 blocks × 256 tokens · snapshot with 192 blocks free</text>
+  <g stroke="#ffffff" stroke-width="1.5">
+    <rect x="20" y="36" width="230" height="46" fill="#8c959f"/>
+    <rect x="250" y="36" width="82" height="46" fill="#ffffff" stroke="#8c959f"/>
+    <rect x="332" y="36" width="368" height="46" fill="#e16f24"/>
+    <rect x="700" y="36" width="40" height="46" fill="#424a53"/>
+  </g>
+  <g text-anchor="middle" font-size="12">
+    <text x="135" y="64" fill="#ffffff">in use: 90 blocks</text>
+    <text x="291" y="64">32</text>
+    <text x="516" y="58" fill="#ffffff" font-weight="bold">long-request reserve: 144 blocks</text>
+    <text x="516" y="74" fill="#ffffff">= 36,864 tokens, the TP16 max_model_len</text>
+    <text x="720" y="64" fill="#ffffff">16</text>
+  </g>
+  <line x1="332" y1="30" x2="332" y2="88" stroke="#1f2328" stroke-width="1.2" stroke-dasharray="4 3"/>
+  <text x="336" y="98" font-size="11" fill="#59636e">threshold on the free count, not fixed blocks</text>
+  <rect x="250" y="110" width="82" height="9" rx="2" fill="#1a7f37"/>
+  <text x="250" y="137">short request may use 192 − 144 − 16 = <tspan font-weight="bold">32 blocks</tspan></text>
+  <rect x="250" y="152" width="450" height="9" rx="2" fill="#0969da"/>
+  <text x="250" y="179">long request (prompt &gt; 16,384) may use 192 − 16 = <tspan font-weight="bold">176 blocks</tspan></text>
+  <g font-size="12.5">
+    <text x="20" y="212">30,000-token document: ⌈30,256 / 256⌉ = 119 blocks ≤ 176 → admitted</text>
+    <text x="20" y="232">500-token chat request: 3 blocks ≤ 32 → admitted</text>
+    <text x="20" y="252" fill="#59636e">Dark: 16-block headroom, every request, both policies. TP8 engines (412 × 64 tokens): no headroom, no reserve.</text>
+  </g>
+</svg>
+```),
+  caption: [Admission check on a TP16 engine under the reserve policy. Under plain the orange
+    region does not exist, so both request types may use 176 blocks.],
 ) <fig-kv>
 
 #figure(
-  diagram({
-    let cell(fill, label, dark: true) = box(width: 0.95cm, height: 0.75cm, fill: fill,
-      stroke: 1pt + white, radius: 2pt, align(center + horizon,
-        text(size: 7pt, fill: if dark { white } else { black }, label)))
-    let d16(l) = cell(tp16, l)
-    let d8(l) = cell(good, l)
-    let w(l) = cell(luma(215), l, dark: false)
-    let row(label, ..cells) = grid(columns: (2.6cm, auto), align: left + horizon,
-      text(size: 8.5pt, label), stack(dir: ltr, ..cells.pos()))
-    set text(size: 8.5pt)
-    stack(dir: ttb, spacing: 8pt,
-      [Arrival order →. Scenario: the TP16 engine has no room for a short request.],
-      row([*plain*], d16[r1], d8[r2], w[r3 ⧗], w[r4 ⧗], w[r5 ⧗], w[r6 ⧗], w[r7 ⧗], w[r8 ⧗], w[r9 ⧗],
-        w[r10 ⧗], w[r11 ⧗]),
-      pad(left: 2.6cm)[r3 is owed to TP16 and waits. The quota counter only moves on dispatch, so r4,
-        r5, … are owed to TP16 too and wait behind it. TP8 gets one request per request TP16
-        accepts, however idle it is.],
-      row([*reserve*], d8[r1 ↪], d8[r2 ↪], d8[r3 ↪], d8[r4 ↪], d16[doc], d8[r5 ↪], d8[r6 ↪],
-        d8[r7 ↪], d8[r8 ↪], d8[r9 ↪], d8[r10 ↪]),
-      pad(left: 2.6cm)[Each short request is owed to TP16, finds no room outside the reserve, and
-        falls back (↪) to TP8. A long document ("doc") may use the reserve and goes to TP16.],
-      grid(columns: 6, column-gutter: 6pt, align: horizon,
-        cell(tp16, []), [to TP16], cell(good, []), [to TP8], cell(luma(215), [⧗], dark: false),
-        [waiting]),
-    )
-  }),
+  svg-fig(```svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 290" font-family="Helvetica, Arial, 'DejaVu Sans', 'Libertinus Serif', sans-serif" font-size="13" fill="#1f2328">
+  <!-- Cells 50 × 34, pitch 54, first cell at x = 110. -->
+  <text x="110" y="20" fill="#59636e">arrival order →   (scenario: TP16 has no room for another short request)</text>
+  <text x="20" y="57" font-weight="bold">plain</text>
+  <g stroke="#ffffff" stroke-width="1">
+    <rect x="110" y="36" width="50" height="34" rx="3" fill="#0969da"/>
+    <rect x="164" y="36" width="50" height="34" rx="3" fill="#1a7f37"/>
+    <rect x="218" y="36" width="50" height="34" rx="3" fill="#d0d7de"/>
+    <rect x="272" y="36" width="50" height="34" rx="3" fill="#d0d7de"/>
+    <rect x="326" y="36" width="50" height="34" rx="3" fill="#d0d7de"/>
+    <rect x="380" y="36" width="50" height="34" rx="3" fill="#d0d7de"/>
+    <rect x="434" y="36" width="50" height="34" rx="3" fill="#d0d7de"/>
+    <rect x="488" y="36" width="50" height="34" rx="3" fill="#d0d7de"/>
+    <rect x="542" y="36" width="50" height="34" rx="3" fill="#d0d7de"/>
+    <rect x="596" y="36" width="50" height="34" rx="3" fill="#d0d7de"/>
+    <rect x="650" y="36" width="50" height="34" rx="3" fill="#d0d7de"/>
+  </g>
+  <g text-anchor="middle" font-size="12">
+    <text x="135" y="58" fill="#ffffff">r1</text>
+    <text x="189" y="58" fill="#ffffff">r2</text>
+    <text x="243" y="58">r3</text>
+    <text x="297" y="58">r4</text>
+    <text x="351" y="58">r5</text>
+    <text x="405" y="58">r6</text>
+    <text x="459" y="58">r7</text>
+    <text x="513" y="58">r8</text>
+    <text x="567" y="58">r9</text>
+    <text x="621" y="58">r10</text>
+    <text x="675" y="58">r11</text>
+  </g>
+  <path d="M222,76 v6 h474 v-6" fill="none" stroke="#cf222e" stroke-width="1.4"/>
+  <text x="110" y="102" font-size="12.5">r3 is owed to TP16 and waits. The quota counter moves only on dispatch,</text>
+  <text x="110" y="119" font-size="12.5">so r4, r5, … are owed to TP16 too: TP8 gets one request per request TP16 accepts.</text>
+  <text x="20" y="163" font-weight="bold">reserve</text>
+  <g stroke="#ffffff" stroke-width="1">
+    <rect x="110" y="142" width="50" height="34" rx="3" fill="#1a7f37"/>
+    <rect x="164" y="142" width="50" height="34" rx="3" fill="#1a7f37"/>
+    <rect x="218" y="142" width="50" height="34" rx="3" fill="#1a7f37"/>
+    <rect x="272" y="142" width="50" height="34" rx="3" fill="#1a7f37"/>
+    <rect x="326" y="142" width="50" height="34" rx="3" fill="#0969da"/>
+    <rect x="380" y="142" width="50" height="34" rx="3" fill="#1a7f37"/>
+    <rect x="434" y="142" width="50" height="34" rx="3" fill="#1a7f37"/>
+    <rect x="488" y="142" width="50" height="34" rx="3" fill="#1a7f37"/>
+    <rect x="542" y="142" width="50" height="34" rx="3" fill="#1a7f37"/>
+    <rect x="596" y="142" width="50" height="34" rx="3" fill="#1a7f37"/>
+    <rect x="650" y="142" width="50" height="34" rx="3" fill="#1a7f37"/>
+  </g>
+  <g text-anchor="middle" font-size="12" fill="#ffffff">
+    <text x="135" y="164">r1 ↪</text>
+    <text x="189" y="164">r2 ↪</text>
+    <text x="243" y="164">r3 ↪</text>
+    <text x="297" y="164">r4 ↪</text>
+    <text x="351" y="164">doc</text>
+    <text x="405" y="164">r5 ↪</text>
+    <text x="459" y="164">r6 ↪</text>
+    <text x="513" y="164">r7 ↪</text>
+    <text x="567" y="164">r8 ↪</text>
+    <text x="621" y="164">r9 ↪</text>
+    <text x="675" y="164">r10 ↪</text>
+  </g>
+  <text x="110" y="202" font-size="12.5">Each short request is owed to TP16, finds no room outside the reserve and falls back (↪) to TP8.</text>
+  <text x="110" y="219" font-size="12.5">A long document ("doc") may use the reserve, so it goes to TP16.</text>
+  <g font-size="12">
+    <rect x="110" y="250" width="22" height="18" rx="3" fill="#0969da"/>
+    <text x="140" y="264">dispatched to TP16</text>
+    <rect x="280" y="250" width="22" height="18" rx="3" fill="#1a7f37"/>
+    <text x="310" y="264">dispatched to TP8</text>
+    <rect x="440" y="250" width="22" height="18" rx="3" fill="#d0d7de"/>
+    <text x="470" y="264">waiting (holds a dispatch slot)</text>
+  </g>
+</svg>
+```),
   caption: [What work-conserving fallback fixes in M (schematic). Measured in the M runs: under
-    plain, 439 of 880 short requests went to TP16 (dispatch alternated almost exactly) and the TP8
-    engines went idle at 204 s and 218 s. Under reserve, 803 short requests were owed to TP16 and
-    fell back to TP8; only 56 ran on TP16.],
+    plain, 439 of 880 short requests went to TP16, close to strict alternation, and the TP8 engines
+    went idle at 204 s and 218 s. Under reserve, 803 short requests were owed to TP16 and fell back
+    to TP8; only 56 ran on TP16.],
 ) <fig-quota>
 
 #figure(
-  diagram({
-    let u = 0.053cm
-    let seg(n, fill, label, light: false) = box(width: n * u, height: 0.8cm, fill: fill,
-      stroke: 0.5pt + white, align(center + horizon,
-        text(size: 7.5pt, fill: if light { black } else { white }, label)))
-    let row(label, body, note) = grid(columns: (2.2cm, auto), row-gutter: 3pt, align: left + horizon,
-      text(size: 8.5pt, label), body, [], text(size: 8pt, note))
-    set text(size: 8.5pt)
-    stack(dir: ttb, spacing: 10pt,
-      [One H engine (TP16, 282 blocks) while a 30,000-token document (119 blocks) is waiting.],
-      row([*plain*], stack(dir: ltr, seg(254, luma(150), [short requests: 254 blocks]),
-        seg(12, white, [12], light: true), seg(16, luma(60), [])),
-        [Short requests finish a few blocks at a time and a waiting short request takes the freed
-          blocks at once, so 119 free blocks rarely appear together. Measured: median document
-          finished at 297.9 s, median short request at 113.9 s.]),
-      row([*reserve*], stack(dir: ltr, seg(122, luma(150), [short: 122 blocks]),
-        seg(144, orange, [kept free: 144 blocks]), seg(16, luma(60), [])),
-        [Short requests stop at 160 free blocks, so a document can start as soon as it arrives.
-          Measured: median document 148.1 s, but short requests now share about half the KV and
-          their median moved to 214.2 s.]),
-    )
-  }),
+  svg-fig(```svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 240" font-family="Helvetica, Arial, 'DejaVu Sans', 'Libertinus Serif', sans-serif" font-size="13" fill="#1f2328">
+  <!-- 282 blocks over 630 px starting at x = 110: 2.234 px per block. -->
+  <text x="20" y="20" font-weight="bold">One H engine (TP16, 282 blocks) while a 30,000-token document (119 blocks) waits</text>
+  <text x="20" y="60" font-weight="bold">plain</text>
+  <g stroke="#ffffff" stroke-width="1.5">
+    <rect x="110" y="36" width="567" height="38" fill="#8c959f"/>
+    <rect x="677" y="36" width="27" height="38" fill="#ffffff" stroke="#8c959f"/>
+    <rect x="704" y="36" width="36" height="38" fill="#424a53"/>
+  </g>
+  <text x="393" y="60" text-anchor="middle" font-size="12" fill="#ffffff">short requests: 254 blocks</text>
+  <text x="690" y="60" text-anchor="middle" font-size="12">12</text>
+  <text x="110" y="94" font-size="12.5">Freed blocks go straight to the next waiting short request, so 119 free blocks rarely line up.</text>
+  <text x="110" y="111" font-size="12.5" fill="#59636e">Measured (H r1): median document 297.9 s · median short request 113.9 s</text>
+  <text x="20" y="156" font-weight="bold">reserve</text>
+  <g stroke="#ffffff" stroke-width="1.5">
+    <rect x="110" y="132" width="273" height="38" fill="#8c959f"/>
+    <rect x="383" y="132" width="321" height="38" fill="#e16f24"/>
+    <rect x="704" y="132" width="36" height="38" fill="#424a53"/>
+  </g>
+  <text x="246" y="156" text-anchor="middle" font-size="12" fill="#ffffff">short requests: 122 blocks</text>
+  <text x="543" y="156" text-anchor="middle" font-size="12" fill="#ffffff">kept free for long requests: 144 blocks</text>
+  <text x="110" y="190" font-size="12.5">Short requests stop at 160 free blocks, so the document starts on arrival,</text>
+  <text x="110" y="207" font-size="12.5">but short requests now share about half the KV.</text>
+  <text x="110" y="224" font-size="12.5" fill="#59636e">Measured (H r1): median document 148.1 s · median short request 214.2 s</text>
+</svg>
+```),
   caption: [What the long-request reserve fixes, and what it costs, on the homogeneous layout
-    (schematic occupancy; measured times from H r1). H has no second pool, so only the reserve
-    acts there.],
+    (schematic occupancy, measured times). H has no second pool, so only the reserve acts there.],
 ) <fig-starve>
 
 In short: the reserve makes room for long documents by taking room from short requests. On H that
