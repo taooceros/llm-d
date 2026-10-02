@@ -1,0 +1,54 @@
+[
+ {
+  "tag": "583f2da-reconf_M_W4_H_W5-232147",
+  "to": "H",
+  "teardown_start": 6.2,
+  "released": 25.9,
+  "deploy_start": 25.9,
+  "deploy_end": 388.6,
+  "first_dispatch": 402.9,
+  "load": 237.4,
+  "compile": 54.5,
+  "ramp": 4.6,
+  "cost": 407.5
+ },
+ {
+  "tag": "985594e-reconf_M_W4_S_W0x4-021606",
+  "to": "S",
+  "teardown_start": 5.7,
+  "released": 24.0,
+  "deploy_start": 24.0,
+  "deploy_end": 398.3,
+  "first_dispatch": 412.9,
+  "load": 236.6,
+  "compile": 62.3,
+  "ramp": 6.2,
+  "cost": 419.1
+ },
+ {
+  "tag": "b2458d2-reconf_M_W4_S_W0x4-212143",
+  "to": "S",
+  "teardown_start": 5.8,
+  "released": 25.4,
+  "deploy_start": 25.4,
+  "deploy_end": 398.0,
+  "first_dispatch": 413.6,
+  "load": 237.2,
+  "compile": 62.2,
+  "ramp": 5.6,
+  "cost": 419.2
+ },
+ {
+  "tag": "fe5325d-reconf_M_W4_H_W5-000704",
+  "to": "H",
+  "teardown_start": 6.2,
+  "released": 26.1,
+  "deploy_start": 26.1,
+  "deploy_end": 390.8,
+  "first_dispatch": 405.5,
+  "load": 237.9,
+  "compile": 54.4,
+  "ramp": 4.7,
+  "cost": 410.2
+ }
+]

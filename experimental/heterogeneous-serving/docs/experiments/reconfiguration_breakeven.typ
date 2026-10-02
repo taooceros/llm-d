@@ -102,8 +102,8 @@ figcaption { font-size: .9em; color: #59636e; margin-top: .5em; }
 
 = Summary
 
-- *A full reconfiguration costs 400–445 s of lost slice time* (six measured transitions, median
-  413 s). The engines' start-up is 355 s of it, and 237 s of that is loading weights.
+- *A full reconfiguration costs 407–445 s of lost slice time* (six measured transitions, median
+  419 s). The engines' start-up is 355 s of it, and 237 s of that is loading weights.
   Staging the checkpoint in host RAM changes nothing (load 234–239 s from tmpfs vs 234–237 s from
   gcsfuse): the time is spent processing weights on the host, not reading them. The XLA cache is
   already persistent, so compile is only 64 s.
@@ -216,15 +216,15 @@ on the new layout gives the ramp.
   table.header[Transition][Teardown#super[a]][Deploy][of which load weights][compile + warm-up][1st dispatch][Ramp][Cost C],
   [S→H], [27.0 s], [376.2 s], [237.8 s], [64.7 s], [14.5 s], [9.3 s], [*445.0 s*],
   [H→M], [24.0 s], [374.8 s], [236.7 s], [63.9 s], [14.1 s], [4.5 s], [*435.5 s*],
-  [M→S (in mix A, 2×)], table.cell(colspan: 5)[last W4 request → first W0 dispatch], [–], [*413.6, 412.9 s*],
-  [M→H (control, 2×)], table.cell(colspan: 5)[last W4 request → first W5 dispatch], [–], [*402.9, 405.5 s*],
+  [M→S (mix A, rep 1 / 2)], [25.4 / 24.0 s], [372.6 / 374.3 s], [237.2 / 236.6 s], [62.2 / 62.3 s], [15.6 / 14.6 s], [5.6 / 6.2 s], [*419.2 / 419.1 s*],
+  [M→H (control, rep 1 / 2)], [25.9 / 26.1 s], [362.7 / 364.7 s], [237.4 / 237.9 s], [54.5 / 54.4 s], [14.3 / 14.7 s], [4.6 / 4.7 s], [*407.5 / 410.2 s*],
   [(cold) →S], [–], [378.3 s], [233.6 s], [63.4 s], [14.6 s], [5.9 s], [–],
 )
 #footnote-text[a. From the last finished request: 7 s of result writing by the finished run, then
 drain, gateway-down and release, each a separate cluster job (about 6 s each, almost all job
 submission). The remaining gap before the deploy (about 18 s) is the deploy job's own start-up.
-The mix runs measure the same span without the ramp; their phase 2 starts at full throughput
-within 1 s of the standalone runs, so the ramp is already inside the phase-2 time there.]
+In the mix runs the deploy column includes the deploy job's start-up. The end-to-end job times in
+@sec-e2e already contain the ramp, so they use the gap without it (412.9–413.6 s for M→S).]
 
 Inside the deploy, the slowest engine spends 22 s starting Ray worker processes, 4 s initialising
 TPU devices, *236–238 s loading weights*, 26 s profiling and allocating the KV cache and 64 s
@@ -409,7 +409,7 @@ kept TP16 engine renamed (`large_b` → `large`), which is not implemented.
   they describe. The per-manifest table is independent of the mix runs.
 - *Policy confound in the control.* The reserve policy, chosen for W4, slows W5 on H by about
   10%; the control would lose even without it.
-- *Orchestration overhead is in C.* About 50–80 s of the 400–445 s is job submission and result
+- *Orchestration overhead is in C.* About 50–80 s of the 407–445 s is job submission and result
   writing; a controller calling the deploy API directly would pay about 370 s, which would move
   the full-redeploy break-evens down by about 10%, not change their order of magnitude.
 - *Repeated prompts.* W0×4 reuses W0's prompts; prefix caching is off, so the compute is the same,
