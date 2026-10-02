@@ -1,0 +1,209 @@
+{
+  "schema_version": 1,
+  "submission_id": "raysubmit_VtvrR5PzNZiWgkkG",
+  "reported_actor_pid": 408511,
+  "reported_actor_host": "192.168.102.38",
+  "source_log": "/tmp/omp_rcm/telemetry.jsonl",
+  "first_observed_core_halt": {
+    "timestamp": 1790940743.4931822,
+    "stage": "ici_native_jax",
+    "level": "INFO",
+    "message": "\u001b[36m(pid=, ip=192.168.102.44)\u001b[0m E1002 11:32:22.622680  324805 real_program_continuator.cc:1497] 0x4x0_TC0: [Physical location: tpu18:pe1:0] generic::internal: Core halted unexpectedly: Assertion args: 0x00000000 0x00000000 0x00000000 INTERNAL: Fatal error occurred during TPU execution. This indicates an infrastructure failure (hardware/network/power), a compiler bug, or a Pallas/Mosaic kernel bug. Please read https://openxla.org/xla/errors/error_0200 carefully for further details on how to triage and resolve this issue."
+  },
+  "first_observed_launch_assertion": {
+    "timestamp": 1790940743.4936,
+    "stage": "ici_native_jax",
+    "level": "INFO",
+    "message": "\u001b[36m(pid=, ip=192.168.102.44)\u001b[0m Detailed error: Node 0 halted unexpectedly at tag:pc TensorCoreSequencer:1:0x227 (from TensorCoreSequencer:1:0x357): scheckne: An unexpected leader shows up in the launch group with a different launch id than the current group leader. This signals a bug in the runtime scheduling system or above. no HLO mapping; HLO module: jit_step"
+  },
+  "direct_fatal_hlo_modules": [
+    "jit_step"
+  ],
+  "competing_program_observation": {
+    "hlo_module": "jit__device_put_reshard",
+    "native_times": [
+      "11:32:22.991224",
+      "11:32:23.022560",
+      "11:32:23.002392"
+    ],
+    "status": "compiler messages observed; not a second HLO named by fatal assertion"
+  },
+  "source_analysis": {
+    "file": "/home/hongtao/hetero-wt/ICIBench/hetero/ici_mixed.py",
+    "sha256_reviewed_checkout": "a438c6d91bf251cd9aaf57e51d701fcda471aa928ad471d5909b158cbc17b0d1",
+    "note": "Reviewed local checkout; digest is not claimed to be independently verified uploaded job source.",
+    "phase_order": [
+      {
+        "lines": "48-51",
+        "action": "box1 initializer block_until_ready then all-rank host status"
+      },
+      {
+        "lines": "57-61",
+        "action": "box1 first psum block_until_ready then all-rank host status"
+      },
+      {
+        "lines": "66-69",
+        "action": "1000 synchronous box1 baseline steps then all-rank host barrier"
+      },
+      {
+        "lines": "91-98",
+        "action": "start subset compute thread then full32 put_tree and block_until_ready"
+      }
+    ],
+    "classification": "INFERENCE: observed device_put_reshard compilation means execution advanced to deliberate-overlap code after host-safe preflight barriers, given this reviewed source. Native logs alone do not reveal launch ordering or prove which program executed first.",
+    "not_claimed": [
+      "No direct fatal pair jit_step/jit_device_put_reshard; only jit_step is assertion-named.",
+      "No measured mixed RPC result, throughput, or overlap-success claim.",
+      "No host OOM claim."
+    ],
+    "known_risk": "Thread/main scheduling independently orders intersecting subset16/full32 launches across hosts."
+  },
+  "fatal_cascade": "TPU launch-group leader/ID mismatch -> SLICE_FAILURE_SW_INJECT_ERROR -> libtpu SIGABRT at11:32:44.215180 -> Ray EOF",
+  "events": [
+    {
+      "timestamp": 1790940743.5122964,
+      "stage": "ici_native_jax",
+      "level": "INFO",
+      "message": "\u001b[36m(pid=, ip=192.168.102.44)\u001b[0m E1002 11:32:22.622680  324805 real_program_continuator.cc:1497] 0x4x0_TC0: [Physical location: tpu18:pe1:0] generic::internal: Core halted unexpectedly: Assertion args: 0x00000000 0x00000000 0x00000000 INTERNAL: Fatal error occurred during TPU execution. This indicates an infrastructure failure (hardware/network/power), a compiler bug, or a Pallas/Mosaic kernel bug. Please read https://openxla.org/xla/errors/error_0200 carefully for further details on how to triage and resolve this issue."
+    },
+    {
+      "timestamp": 1790940743.5132923,
+      "stage": "ici_native_jax",
+      "level": "INFO",
+      "message": "\u001b[36m(pid=, ip=192.168.102.44)\u001b[0m E1002 11:32:22.622897  324812 real_program_continuator.cc:1497] 1x4x0_TC0: [Physical location: tpu18:pe1:2] generic::internal: Core halted unexpectedly: Assertion args: 0x00000000 0x00000000 0x00000000 INTERNAL: Fatal error occurred during TPU execution. This indicates an infrastructure failure (hardware/network/power), a compiler bug, or a Pallas/Mosaic kernel bug. Please read https://openxla.org/xla/errors/error_0200 carefully for further details on how to triage and resolve this issue."
+    },
+    {
+      "timestamp": 1790940743.5137002,
+      "stage": "ici_native_jax",
+      "level": "INFO",
+      "message": "\u001b[36m(pid=, ip=192.168.102.44)\u001b[0m Detailed error: Node 0 halted unexpectedly at tag:pc TensorCoreSequencer:1:0x227 (from TensorCoreSequencer:1:0x357): scheckne: An unexpected leader shows up in the launch group with a different launch id than the current group leader. This signals a bug in the runtime scheduling system or above. no HLO mapping; HLO module: jit_step"
+    },
+    {
+      "timestamp": 1790940748.387417,
+      "stage": "ici_native_jax",
+      "level": "INFO",
+      "message": "\u001b[36m(pid=, ip=192.168.102.38)\u001b[0m I1002 11:32:23.022560  409081 deepsea_compiler_hlo_passes.cc:6049] xla_tpu_impure_hlo_parallel_compile is DISABLED. jit__device_put_reshard\u001b[32m [repeated 94x across cluster]\u001b[0m"
+    },
+    {
+      "timestamp": 1790940748.3878906,
+      "stage": "ici_native_jax",
+      "level": "INFO",
+      "message": "\u001b[36m(pid=, ip=192.168.102.38)\u001b[0m I1002 11:32:23.025023  409081 tpu_plumb_vmem_info.cc:666] scavenging_mode: 0 for module: jit__device_put_reshard\u001b[32m [repeated 94x across cluster]\u001b[0m"
+    },
+    {
+      "timestamp": 1790940748.3889756,
+      "stage": "ici_native_jax",
+      "level": "INFO",
+      "message": "\u001b[36m(pid=, ip=192.168.102.38)\u001b[0m I1002 11:32:23.058014  412259 isa_program_util_common.cc:373] (HLO module jit__device_put_reshard): Executable fingerprint:a87cb2d648e7e34154b81bbf9238797b91ee9560e46b8dd7a7fd02f22c78fc56\u001b[32m [repeated 94x across cluster]\u001b[0m"
+    },
+    {
+      "timestamp": 1790940748.389188,
+      "stage": "ici_native_jax",
+      "level": "INFO",
+      "message": "\u001b[36m(pid=, ip=192.168.102.38)\u001b[0m I1002 11:32:23.058016  412259 isa_program_util_common.cc:377] (HLO module jit__device_put_reshard): Executable fingerprint (including data segments):4e7f4d29e2267b830e3355fee3bd526771f72fd11a6795597be3a45890ea81d3\u001b[32m [repeated 94x across cluster]\u001b[0m"
+    },
+    {
+      "timestamp": 1790940748.3894074,
+      "stage": "ici_native_jax",
+      "level": "INFO",
+      "message": "\u001b[36m(pid=, ip=192.168.102.38)\u001b[0m I1002 11:32:23.058017  412259 isa_program_util_common.cc:380] (HLO module jit__device_put_reshard): Host transfer fingerprint:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\u001b[32m [repeated 94x across cluster]\u001b[0m"
+    },
+    {
+      "timestamp": 1790940763.081739,
+      "stage": "ici_native_jax",
+      "level": "INFO",
+      "message": "\u001b[36m(pid=, ip=192.168.102.45)\u001b[0m I1002 11:32:22.991224  389982 deepsea_compiler_hlo_passes.cc:6049] xla_tpu_impure_hlo_parallel_compile is DISABLED. jit__device_put_reshard\u001b[32m [repeated 2x across cluster]\u001b[0m"
+    },
+    {
+      "timestamp": 1790940763.081939,
+      "stage": "ici_native_jax",
+      "level": "INFO",
+      "message": "\u001b[36m(pid=, ip=192.168.102.45)\u001b[0m I1002 11:32:22.993257  389982 tpu_plumb_vmem_info.cc:666] scavenging_mode: 0 for module: jit__device_put_reshard\u001b[32m [repeated 2x across cluster]\u001b[0m"
+    },
+    {
+      "timestamp": 1790940763.0829453,
+      "stage": "ici_native_jax",
+      "level": "INFO",
+      "message": "\u001b[36m(pid=, ip=192.168.102.45)\u001b[0m I1002 11:32:23.024282  393067 isa_program_util_common.cc:373] (HLO module jit__device_put_reshard): Executable fingerprint:a87cb2d648e7e34154b81bbf9238797b91ee9560e46b8dd7a7fd02f22c78fc56\u001b[32m [repeated 2x across cluster]\u001b[0m"
+    },
+    {
+      "timestamp": 1790940763.0832381,
+      "stage": "ici_native_jax",
+      "level": "INFO",
+      "message": "\u001b[36m(pid=, ip=192.168.102.45)\u001b[0m I1002 11:32:23.024284  393067 isa_program_util_common.cc:377] (HLO module jit__device_put_reshard): Executable fingerprint (including data segments):4e7f4d29e2267b830e3355fee3bd526771f72fd11a6795597be3a45890ea81d3\u001b[32m [repeated 2x across cluster]\u001b[0m"
+    },
+    {
+      "timestamp": 1790940763.083489,
+      "stage": "ici_native_jax",
+      "level": "INFO",
+      "message": "\u001b[36m(pid=, ip=192.168.102.45)\u001b[0m I1002 11:32:23.024285  393067 isa_program_util_common.cc:380] (HLO module jit__device_put_reshard): Host transfer fingerprint:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\u001b[32m [repeated 2x across cluster]\u001b[0m"
+    },
+    {
+      "timestamp": 1790940765.0689318,
+      "stage": "ici_native_jax",
+      "level": "INFO",
+      "message": "\u001b[36m(pid=, ip=192.168.102.40)\u001b[0m W1002 11:32:44.214576  313258 tpu_system_state.cc:109] Skipping std::quick_exit(EXIT_FAILURE)."
+    },
+    {
+      "timestamp": 1790940765.06936,
+      "stage": "ici_native_jax",
+      "level": "INFO",
+      "message": "\u001b[36m(pid=, ip=192.168.102.40)\u001b[0m E1002 11:32:44.214571  313258 tpu_system_state.cc:98] Terminating process because the task is disconnected from the controller. This most likely indicates that the controller has failed itself and completed TPU dump collection, or the controller has been terminated; see the controller's task logs for more details."
+    },
+    {
+      "timestamp": 1790940765.0708473,
+      "stage": "ici_native_jax",
+      "level": "INFO",
+      "message": "\u001b[36m(Controller pid=408511, ip=192.168.102.38)\u001b[0m F1002 11:32:44.215180  408937 tpu_system_state.cc:66] Terminating the libtpu controller process because an anomalous TPUworker process is detected: SLICE_FAILURE_SW_INJECT_ERROR. This most likely indicates the slice setup is erroneous, or another process's TPUs have errors. See the reporting process's tpu_driver logs for details."
+    },
+    {
+      "timestamp": 1790940765.0845962,
+      "stage": "ici_native_jax",
+      "level": "INFO",
+      "message": "\u001b[36m(pid=, ip=192.168.102.38)\u001b[0m F1002 11:32:44.215180  408937 tpu_system_state.cc:66] Terminating the libtpu controller process because an anomalous TPUworker process is detected: SLICE_FAILURE_SW_INJECT_ERROR. This most likely indicates the slice setup is erroneous, or another process's TPUs have errors. See the reporting process's tpu_driver logs for details."
+    },
+    {
+      "timestamp": 1790940771.633046,
+      "stage": "ici_native_jax",
+      "level": "INFO",
+      "message": "\u001b[36m(pid=, ip=192.168.102.40)\u001b[0m I1002 11:32:23.002392  313371 deepsea_compiler_hlo_passes.cc:6049] xla_tpu_impure_hlo_parallel_compile is DISABLED. jit__device_put_reshard\u001b[32m [repeated 13x across cluster]\u001b[0m"
+    },
+    {
+      "timestamp": 1790940771.6332536,
+      "stage": "ici_native_jax",
+      "level": "INFO",
+      "message": "\u001b[36m(pid=, ip=192.168.102.40)\u001b[0m I1002 11:32:23.004374  313371 tpu_plumb_vmem_info.cc:666] scavenging_mode: 0 for module: jit__device_put_reshard\u001b[32m [repeated 13x across cluster]\u001b[0m"
+    },
+    {
+      "timestamp": 1790940771.634662,
+      "stage": "ici_native_jax",
+      "level": "INFO",
+      "message": "\u001b[36m(pid=, ip=192.168.102.40)\u001b[0m I1002 11:32:23.036140  316438 isa_program_util_common.cc:373] (HLO module jit__device_put_reshard): Executable fingerprint:a87cb2d648e7e34154b81bbf9238797b91ee9560e46b8dd7a7fd02f22c78fc56\u001b[32m [repeated 13x across cluster]\u001b[0m"
+    },
+    {
+      "timestamp": 1790940771.6348732,
+      "stage": "ici_native_jax",
+      "level": "INFO",
+      "message": "\u001b[36m(pid=, ip=192.168.102.40)\u001b[0m I1002 11:32:23.036143  316438 isa_program_util_common.cc:377] (HLO module jit__device_put_reshard): Executable fingerprint (including data segments):4e7f4d29e2267b830e3355fee3bd526771f72fd11a6795597be3a45890ea81d3\u001b[32m [repeated 13x across cluster]\u001b[0m"
+    },
+    {
+      "timestamp": 1790940771.635095,
+      "stage": "ici_native_jax",
+      "level": "INFO",
+      "message": "\u001b[36m(pid=, ip=192.168.102.40)\u001b[0m I1002 11:32:23.036144  316438 isa_program_util_common.cc:380] (HLO module jit__device_put_reshard): Host transfer fingerprint:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\u001b[32m [repeated 13x across cluster]\u001b[0m"
+    },
+    {
+      "timestamp": 1790940771.6433096,
+      "stage": "ici_native_jax",
+      "level": "INFO",
+      "message": "\u001b[36m(pid=, ip=192.168.102.41)\u001b[0m E1002 11:32:44.214810  287825 tpu_system_state.cc:98] Terminating process because the task is disconnected from the controller. This most likely indicates that the controller has failed itself and completed TPU dump collection, or the controller has been terminated; see the controller's task logs for more details.\u001b[32m [repeated 41x across cluster]\u001b[0m"
+    },
+    {
+      "timestamp": 1790940771.6435347,
+      "stage": "ici_native_jax",
+      "level": "INFO",
+      "message": "\u001b[36m(pid=, ip=192.168.102.41)\u001b[0m W1002 11:32:44.214814  287825 tpu_system_state.cc:109] Skipping std::quick_exit(EXIT_FAILURE).\u001b[32m [repeated 28x across cluster]\u001b[0m"
+    }
+  ],
+  "verification": "Extraction of existing local telemetry only; no cluster operations."
+}

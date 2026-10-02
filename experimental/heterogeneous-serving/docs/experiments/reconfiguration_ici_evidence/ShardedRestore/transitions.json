@@ -1,0 +1,66 @@
+[
+  {
+    "layout": "H",
+    "previous": "S",
+    "previous_drained_t": 1790927827.2977886,
+    "teardown_s": {
+      "teardown_start": 7.8,
+      "drained": 15.5,
+      "gateway_down": 21.5,
+      "released": 27.4
+    },
+    "deploy_wall_s": 165.0,
+    "deploy_stage_clocks": {
+      "backend_s": 1.62,
+      "placement_s": 0.1,
+      "actor_s": 0.43,
+      "engine_init_s": 152.23,
+      "serving_endpoint_s": 0.53
+    },
+    "slowest_engine_init": {
+      "instance": "large_b",
+      "executor_startup_s": 21.6,
+      "init_device_s": 3.9,
+      "load_model_s": 28.4,
+      "initialize_from_config_s": 25.8,
+      "compile_or_warm_up_model_s": 63.3,
+      "engine_init_s": 143.6
+    },
+    "deploy_end_to_first_dispatch_s": 20.9,
+    "steady_tokens_per_s": 1548.0,
+    "ramp_deficit_s": 8.1,
+    "cost_s": 221.4
+  },
+  {
+    "layout": "S",
+    "previous": "H",
+    "previous_drained_t": 1790928530.7526073,
+    "teardown_s": {
+      "teardown_start": 6.8,
+      "drained": 14.4,
+      "gateway_down": 20.3,
+      "released": 26.3
+    },
+    "deploy_wall_s": 175.4,
+    "deploy_stage_clocks": {
+      "backend_s": 1.51,
+      "placement_s": 0.2,
+      "actor_s": 0.45,
+      "engine_init_s": 162.83,
+      "serving_endpoint_s": 1.06
+    },
+    "slowest_engine_init": {
+      "instance": "small_a",
+      "executor_startup_s": 21.8,
+      "init_device_s": 2.8,
+      "load_model_s": 39.8,
+      "initialize_from_config_s": 25.7,
+      "compile_or_warm_up_model_s": 62.6,
+      "engine_init_s": 154.3
+    },
+    "deploy_end_to_first_dispatch_s": 21.3,
+    "steady_tokens_per_s": 2410.6,
+    "ramp_deficit_s": 5.7,
+    "cost_s": 228.6
+  }
+]

@@ -1,0 +1,701 @@
+{
+  "measured_restore_C_range_s": [
+    221.4,
+    228.6
+  ],
+  "table": [
+    {
+      "workload": "W0",
+      "from": "H",
+      "to": "S",
+      "cost_s": 221.4,
+      "r_from": 1451.3,
+      "r_to": 2101.9,
+      "gain_per_phase_s": 153.9,
+      "breakeven_tokens": 1038084,
+      "breakeven_phase_multiple": 1.44,
+      "breakeven_requests": 2536,
+      "sources": [
+        "measured rc-bab4f9e-H s1,s4 (500.0, 494.4) blind",
+        "measured rc-bab4f9e-S s1,s4 (352.4, 334.2) blind"
+      ]
+    },
+    {
+      "workload": "W0",
+      "from": "H",
+      "to": "S",
+      "cost_s": 228.6,
+      "r_from": 1451.3,
+      "r_to": 2101.9,
+      "gain_per_phase_s": 153.9,
+      "breakeven_tokens": 1071843,
+      "breakeven_phase_multiple": 1.49,
+      "breakeven_requests": 2619,
+      "sources": [
+        "measured rc-bab4f9e-H s1,s4 (500.0, 494.4) blind",
+        "measured rc-bab4f9e-S s1,s4 (352.4, 334.2) blind"
+      ]
+    },
+    {
+      "workload": "W0",
+      "from": "H",
+      "to": "M",
+      "cost_s": 221.4,
+      "r_from": 1451.3,
+      "r_to": 1542.9,
+      "gain_per_phase_s": 29.5,
+      "breakeven_tokens": 5415632,
+      "breakeven_phase_multiple": 7.51,
+      "breakeven_requests": 13231,
+      "sources": [
+        "measured rc-bab4f9e-H s1,s4 (500.0, 494.4) blind",
+        "measured rc-bab4f9e-M s1,s4 (482.5, 452.9) blind"
+      ]
+    },
+    {
+      "workload": "W0",
+      "from": "H",
+      "to": "M",
+      "cost_s": 228.6,
+      "r_from": 1451.3,
+      "r_to": 1542.9,
+      "gain_per_phase_s": 29.5,
+      "breakeven_tokens": 5591750,
+      "breakeven_phase_multiple": 7.75,
+      "breakeven_requests": 13662,
+      "sources": [
+        "measured rc-bab4f9e-H s1,s4 (500.0, 494.4) blind",
+        "measured rc-bab4f9e-M s1,s4 (482.5, 452.9) blind"
+      ]
+    },
+    {
+      "workload": "W0",
+      "from": "S",
+      "to": "H",
+      "cost_s": 221.4,
+      "r_from": 2101.9,
+      "r_to": 1451.3,
+      "gain_per_phase_s": -153.9,
+      "breakeven_tokens": null,
+      "breakeven_phase_multiple": null,
+      "breakeven_requests": null,
+      "sources": [
+        "measured rc-bab4f9e-S s1,s4 (352.4, 334.2) blind",
+        "measured rc-bab4f9e-H s1,s4 (500.0, 494.4) blind"
+      ]
+    },
+    {
+      "workload": "W0",
+      "from": "S",
+      "to": "H",
+      "cost_s": 228.6,
+      "r_from": 2101.9,
+      "r_to": 1451.3,
+      "gain_per_phase_s": -153.9,
+      "breakeven_tokens": null,
+      "breakeven_phase_multiple": null,
+      "breakeven_requests": null,
+      "sources": [
+        "measured rc-bab4f9e-S s1,s4 (352.4, 334.2) blind",
+        "measured rc-bab4f9e-H s1,s4 (500.0, 494.4) blind"
+      ]
+    },
+    {
+      "workload": "W0",
+      "from": "S",
+      "to": "M",
+      "cost_s": 221.4,
+      "r_from": 2101.9,
+      "r_to": 1542.9,
+      "gain_per_phase_s": -124.4,
+      "breakeven_tokens": null,
+      "breakeven_phase_multiple": null,
+      "breakeven_requests": null,
+      "sources": [
+        "measured rc-bab4f9e-S s1,s4 (352.4, 334.2) blind",
+        "measured rc-bab4f9e-M s1,s4 (482.5, 452.9) blind"
+      ]
+    },
+    {
+      "workload": "W0",
+      "from": "S",
+      "to": "M",
+      "cost_s": 228.6,
+      "r_from": 2101.9,
+      "r_to": 1542.9,
+      "gain_per_phase_s": -124.4,
+      "breakeven_tokens": null,
+      "breakeven_phase_multiple": null,
+      "breakeven_requests": null,
+      "sources": [
+        "measured rc-bab4f9e-S s1,s4 (352.4, 334.2) blind",
+        "measured rc-bab4f9e-M s1,s4 (482.5, 452.9) blind"
+      ]
+    },
+    {
+      "workload": "W0",
+      "from": "M",
+      "to": "H",
+      "cost_s": 221.4,
+      "r_from": 1542.9,
+      "r_to": 1451.3,
+      "gain_per_phase_s": -29.5,
+      "breakeven_tokens": null,
+      "breakeven_phase_multiple": null,
+      "breakeven_requests": null,
+      "sources": [
+        "measured rc-bab4f9e-M s1,s4 (482.5, 452.9) blind",
+        "measured rc-bab4f9e-H s1,s4 (500.0, 494.4) blind"
+      ]
+    },
+    {
+      "workload": "W0",
+      "from": "M",
+      "to": "H",
+      "cost_s": 228.6,
+      "r_from": 1542.9,
+      "r_to": 1451.3,
+      "gain_per_phase_s": -29.5,
+      "breakeven_tokens": null,
+      "breakeven_phase_multiple": null,
+      "breakeven_requests": null,
+      "sources": [
+        "measured rc-bab4f9e-M s1,s4 (482.5, 452.9) blind",
+        "measured rc-bab4f9e-H s1,s4 (500.0, 494.4) blind"
+      ]
+    },
+    {
+      "workload": "W0",
+      "from": "M",
+      "to": "S",
+      "cost_s": 221.4,
+      "r_from": 1542.9,
+      "r_to": 2101.9,
+      "gain_per_phase_s": 124.4,
+      "breakeven_tokens": 1284253,
+      "breakeven_phase_multiple": 1.78,
+      "breakeven_requests": 3138,
+      "sources": [
+        "measured rc-bab4f9e-M s1,s4 (482.5, 452.9) blind",
+        "measured rc-bab4f9e-S s1,s4 (352.4, 334.2) blind"
+      ]
+    },
+    {
+      "workload": "W0",
+      "from": "M",
+      "to": "S",
+      "cost_s": 228.6,
+      "r_from": 1542.9,
+      "r_to": 2101.9,
+      "gain_per_phase_s": 124.4,
+      "breakeven_tokens": 1326018,
+      "breakeven_phase_multiple": 1.84,
+      "breakeven_requests": 3240,
+      "sources": [
+        "measured rc-bab4f9e-M s1,s4 (482.5, 452.9) blind",
+        "measured rc-bab4f9e-S s1,s4 (352.4, 334.2) blind"
+      ]
+    },
+    {
+      "workload": "W3",
+      "from": "H",
+      "to": "S",
+      "cost_s": 221.4,
+      "r_from": 841.0,
+      "r_to": 797.5,
+      "gain_per_phase_s": -70.0,
+      "breakeven_tokens": null,
+      "breakeven_phase_multiple": null,
+      "breakeven_requests": null,
+      "sources": [
+        "measured w3-c7edd5a-r1 blind (1 rep)",
+        "measured w3-c7edd5a-r1 blind (1 rep)"
+      ]
+    },
+    {
+      "workload": "W3",
+      "from": "H",
+      "to": "S",
+      "cost_s": 228.6,
+      "r_from": 841.0,
+      "r_to": 797.5,
+      "gain_per_phase_s": -70.0,
+      "breakeven_tokens": null,
+      "breakeven_phase_multiple": null,
+      "breakeven_requests": null,
+      "sources": [
+        "measured w3-c7edd5a-r1 blind (1 rep)",
+        "measured w3-c7edd5a-r1 blind (1 rep)"
+      ]
+    },
+    {
+      "workload": "W3",
+      "from": "H",
+      "to": "M",
+      "cost_s": 221.4,
+      "r_from": 841.0,
+      "r_to": 781.3,
+      "gain_per_phase_s": -98.0,
+      "breakeven_tokens": null,
+      "breakeven_phase_multiple": null,
+      "breakeven_requests": null,
+      "sources": [
+        "measured w3-c7edd5a-r1 blind (1 rep)",
+        "measured w3-c7edd5a-r1 blind (1 rep)"
+      ]
+    },
+    {
+      "workload": "W3",
+      "from": "H",
+      "to": "M",
+      "cost_s": 228.6,
+      "r_from": 841.0,
+      "r_to": 781.3,
+      "gain_per_phase_s": -98.0,
+      "breakeven_tokens": null,
+      "breakeven_phase_multiple": null,
+      "breakeven_requests": null,
+      "sources": [
+        "measured w3-c7edd5a-r1 blind (1 rep)",
+        "measured w3-c7edd5a-r1 blind (1 rep)"
+      ]
+    },
+    {
+      "workload": "W3",
+      "from": "S",
+      "to": "H",
+      "cost_s": 221.4,
+      "r_from": 797.5,
+      "r_to": 841.0,
+      "gain_per_phase_s": 70.0,
+      "breakeven_tokens": 3415326,
+      "breakeven_phase_multiple": 3.16,
+      "breakeven_requests": 506,
+      "sources": [
+        "measured w3-c7edd5a-r1 blind (1 rep)",
+        "measured w3-c7edd5a-r1 blind (1 rep)"
+      ]
+    },
+    {
+      "workload": "W3",
+      "from": "S",
+      "to": "H",
+      "cost_s": 228.6,
+      "r_from": 797.5,
+      "r_to": 841.0,
+      "gain_per_phase_s": 70.0,
+      "breakeven_tokens": 3526393,
+      "breakeven_phase_multiple": 3.27,
+      "breakeven_requests": 523,
+      "sources": [
+        "measured w3-c7edd5a-r1 blind (1 rep)",
+        "measured w3-c7edd5a-r1 blind (1 rep)"
+      ]
+    },
+    {
+      "workload": "W3",
+      "from": "S",
+      "to": "M",
+      "cost_s": 221.4,
+      "r_from": 797.5,
+      "r_to": 781.3,
+      "gain_per_phase_s": -28.0,
+      "breakeven_tokens": null,
+      "breakeven_phase_multiple": null,
+      "breakeven_requests": null,
+      "sources": [
+        "measured w3-c7edd5a-r1 blind (1 rep)",
+        "measured w3-c7edd5a-r1 blind (1 rep)"
+      ]
+    },
+    {
+      "workload": "W3",
+      "from": "S",
+      "to": "M",
+      "cost_s": 228.6,
+      "r_from": 797.5,
+      "r_to": 781.3,
+      "gain_per_phase_s": -28.0,
+      "breakeven_tokens": null,
+      "breakeven_phase_multiple": null,
+      "breakeven_requests": null,
+      "sources": [
+        "measured w3-c7edd5a-r1 blind (1 rep)",
+        "measured w3-c7edd5a-r1 blind (1 rep)"
+      ]
+    },
+    {
+      "workload": "W3",
+      "from": "M",
+      "to": "H",
+      "cost_s": 221.4,
+      "r_from": 781.3,
+      "r_to": 841.0,
+      "gain_per_phase_s": 98.0,
+      "breakeven_tokens": 2439518,
+      "breakeven_phase_multiple": 2.26,
+      "breakeven_requests": 361,
+      "sources": [
+        "measured w3-c7edd5a-r1 blind (1 rep)",
+        "measured w3-c7edd5a-r1 blind (1 rep)"
+      ]
+    },
+    {
+      "workload": "W3",
+      "from": "M",
+      "to": "H",
+      "cost_s": 228.6,
+      "r_from": 781.3,
+      "r_to": 841.0,
+      "gain_per_phase_s": 98.0,
+      "breakeven_tokens": 2518852,
+      "breakeven_phase_multiple": 2.33,
+      "breakeven_requests": 373,
+      "sources": [
+        "measured w3-c7edd5a-r1 blind (1 rep)",
+        "measured w3-c7edd5a-r1 blind (1 rep)"
+      ]
+    },
+    {
+      "workload": "W3",
+      "from": "M",
+      "to": "S",
+      "cost_s": 221.4,
+      "r_from": 781.3,
+      "r_to": 797.5,
+      "gain_per_phase_s": 28.0,
+      "breakeven_tokens": 8538315,
+      "breakeven_phase_multiple": 7.91,
+      "breakeven_requests": 1265,
+      "sources": [
+        "measured w3-c7edd5a-r1 blind (1 rep)",
+        "measured w3-c7edd5a-r1 blind (1 rep)"
+      ]
+    },
+    {
+      "workload": "W3",
+      "from": "M",
+      "to": "S",
+      "cost_s": 228.6,
+      "r_from": 781.3,
+      "r_to": 797.5,
+      "gain_per_phase_s": 28.0,
+      "breakeven_tokens": 8815983,
+      "breakeven_phase_multiple": 8.16,
+      "breakeven_requests": 1306,
+      "sources": [
+        "measured w3-c7edd5a-r1 blind (1 rep)",
+        "measured w3-c7edd5a-r1 blind (1 rep)"
+      ]
+    },
+    {
+      "workload": "W4",
+      "from": "H",
+      "to": "M",
+      "cost_s": 221.4,
+      "r_from": 1117.8,
+      "r_to": 1243.9,
+      "gain_per_phase_s": 35.2,
+      "breakeven_tokens": 2440275,
+      "breakeven_phase_multiple": 6.29,
+      "breakeven_requests": 5686,
+      "sources": [
+        "measured w4 plain (347.2, 346.9)",
+        "measured w4 reserve (304.1, 319.6)"
+      ]
+    },
+    {
+      "workload": "W4",
+      "from": "H",
+      "to": "M",
+      "cost_s": 228.6,
+      "r_from": 1117.8,
+      "r_to": 1243.9,
+      "gain_per_phase_s": 35.2,
+      "breakeven_tokens": 2519633,
+      "breakeven_phase_multiple": 6.49,
+      "breakeven_requests": 5871,
+      "sources": [
+        "measured w4 plain (347.2, 346.9)",
+        "measured w4 reserve (304.1, 319.6)"
+      ]
+    },
+    {
+      "workload": "W4",
+      "from": "M",
+      "to": "H",
+      "cost_s": 221.4,
+      "r_from": 1243.9,
+      "r_to": 1117.8,
+      "gain_per_phase_s": -35.2,
+      "breakeven_tokens": null,
+      "breakeven_phase_multiple": null,
+      "breakeven_requests": null,
+      "sources": [
+        "measured w4 reserve (304.1, 319.6)",
+        "measured w4 plain (347.2, 346.9)"
+      ]
+    },
+    {
+      "workload": "W4",
+      "from": "M",
+      "to": "H",
+      "cost_s": 228.6,
+      "r_from": 1243.9,
+      "r_to": 1117.8,
+      "gain_per_phase_s": -35.2,
+      "breakeven_tokens": null,
+      "breakeven_phase_multiple": null,
+      "breakeven_requests": null,
+      "sources": [
+        "measured w4 reserve (304.1, 319.6)",
+        "measured w4 plain (347.2, 346.9)"
+      ]
+    },
+    {
+      "workload": "W5",
+      "from": "H",
+      "to": "S",
+      "cost_s": 221.4,
+      "r_from": 716.2,
+      "r_to": 677.5,
+      "gain_per_phase_s": -78.3,
+      "breakeven_tokens": null,
+      "breakeven_phase_multiple": null,
+      "breakeven_requests": null,
+      "sources": [
+        "measured rc-bab4f9e-H s2,s3 (1375.1, 1369.7) blind",
+        "measured rc-bab4f9e-S s2,s3 (1455.4, 1446.1) blind"
+      ]
+    },
+    {
+      "workload": "W5",
+      "from": "H",
+      "to": "S",
+      "cost_s": 228.6,
+      "r_from": 716.2,
+      "r_to": 677.5,
+      "gain_per_phase_s": -78.3,
+      "breakeven_tokens": null,
+      "breakeven_phase_multiple": null,
+      "breakeven_requests": null,
+      "sources": [
+        "measured rc-bab4f9e-H s2,s3 (1375.1, 1369.7) blind",
+        "measured rc-bab4f9e-S s2,s3 (1455.4, 1446.1) blind"
+      ]
+    },
+    {
+      "workload": "W5",
+      "from": "H",
+      "to": "M",
+      "cost_s": 221.4,
+      "r_from": 716.2,
+      "r_to": 697.3,
+      "gain_per_phase_s": -37.2,
+      "breakeven_tokens": null,
+      "breakeven_phase_multiple": null,
+      "breakeven_requests": null,
+      "sources": [
+        "measured rc-bab4f9e-H s2,s3 (1375.1, 1369.7) blind",
+        "measured rc-bab4f9e-M s2,s3 (1395.3, 1423.9) blind"
+      ]
+    },
+    {
+      "workload": "W5",
+      "from": "H",
+      "to": "M",
+      "cost_s": 228.6,
+      "r_from": 716.2,
+      "r_to": 697.3,
+      "gain_per_phase_s": -37.2,
+      "breakeven_tokens": null,
+      "breakeven_phase_multiple": null,
+      "breakeven_requests": null,
+      "sources": [
+        "measured rc-bab4f9e-H s2,s3 (1375.1, 1369.7) blind",
+        "measured rc-bab4f9e-M s2,s3 (1395.3, 1423.9) blind"
+      ]
+    },
+    {
+      "workload": "W5",
+      "from": "S",
+      "to": "H",
+      "cost_s": 221.4,
+      "r_from": 677.5,
+      "r_to": 716.2,
+      "gain_per_phase_s": 78.3,
+      "breakeven_tokens": 2779232,
+      "breakeven_phase_multiple": 2.83,
+      "breakeven_requests": 707,
+      "sources": [
+        "measured rc-bab4f9e-S s2,s3 (1455.4, 1446.1) blind",
+        "measured rc-bab4f9e-H s2,s3 (1375.1, 1369.7) blind"
+      ]
+    },
+    {
+      "workload": "W5",
+      "from": "S",
+      "to": "H",
+      "cost_s": 228.6,
+      "r_from": 677.5,
+      "r_to": 716.2,
+      "gain_per_phase_s": 78.3,
+      "breakeven_tokens": 2869613,
+      "breakeven_phase_multiple": 2.92,
+      "breakeven_requests": 730,
+      "sources": [
+        "measured rc-bab4f9e-S s2,s3 (1455.4, 1446.1) blind",
+        "measured rc-bab4f9e-H s2,s3 (1375.1, 1369.7) blind"
+      ]
+    },
+    {
+      "workload": "W5",
+      "from": "S",
+      "to": "M",
+      "cost_s": 221.4,
+      "r_from": 677.5,
+      "r_to": 697.3,
+      "gain_per_phase_s": 41.1,
+      "breakeven_tokens": 5294741,
+      "breakeven_phase_multiple": 5.39,
+      "breakeven_requests": 1347,
+      "sources": [
+        "measured rc-bab4f9e-S s2,s3 (1455.4, 1446.1) blind",
+        "measured rc-bab4f9e-M s2,s3 (1395.3, 1423.9) blind"
+      ]
+    },
+    {
+      "workload": "W5",
+      "from": "S",
+      "to": "M",
+      "cost_s": 228.6,
+      "r_from": 677.5,
+      "r_to": 697.3,
+      "gain_per_phase_s": 41.1,
+      "breakeven_tokens": 5466927,
+      "breakeven_phase_multiple": 5.56,
+      "breakeven_requests": 1391,
+      "sources": [
+        "measured rc-bab4f9e-S s2,s3 (1455.4, 1446.1) blind",
+        "measured rc-bab4f9e-M s2,s3 (1395.3, 1423.9) blind"
+      ]
+    },
+    {
+      "workload": "W5",
+      "from": "M",
+      "to": "H",
+      "cost_s": 221.4,
+      "r_from": 697.3,
+      "r_to": 716.2,
+      "gain_per_phase_s": 37.2,
+      "breakeven_tokens": 5849834,
+      "breakeven_phase_multiple": 5.95,
+      "breakeven_requests": 1488,
+      "sources": [
+        "measured rc-bab4f9e-M s2,s3 (1395.3, 1423.9) blind",
+        "measured rc-bab4f9e-H s2,s3 (1375.1, 1369.7) blind"
+      ]
+    },
+    {
+      "workload": "W5",
+      "from": "M",
+      "to": "H",
+      "cost_s": 228.6,
+      "r_from": 697.3,
+      "r_to": 716.2,
+      "gain_per_phase_s": 37.2,
+      "breakeven_tokens": 6040073,
+      "breakeven_phase_multiple": 6.15,
+      "breakeven_requests": 1536,
+      "sources": [
+        "measured rc-bab4f9e-M s2,s3 (1395.3, 1423.9) blind",
+        "measured rc-bab4f9e-H s2,s3 (1375.1, 1369.7) blind"
+      ]
+    },
+    {
+      "workload": "W5",
+      "from": "M",
+      "to": "S",
+      "cost_s": 221.4,
+      "r_from": 697.3,
+      "r_to": 677.5,
+      "gain_per_phase_s": -41.1,
+      "breakeven_tokens": null,
+      "breakeven_phase_multiple": null,
+      "breakeven_requests": null,
+      "sources": [
+        "measured rc-bab4f9e-M s2,s3 (1395.3, 1423.9) blind",
+        "measured rc-bab4f9e-S s2,s3 (1455.4, 1446.1) blind"
+      ]
+    },
+    {
+      "workload": "W5",
+      "from": "M",
+      "to": "S",
+      "cost_s": 228.6,
+      "r_from": 697.3,
+      "r_to": 677.5,
+      "gain_per_phase_s": -41.1,
+      "breakeven_tokens": null,
+      "breakeven_phase_multiple": null,
+      "breakeven_requests": null,
+      "sources": [
+        "measured rc-bab4f9e-M s2,s3 (1395.3, 1423.9) blind",
+        "measured rc-bab4f9e-S s2,s3 (1455.4, 1446.1) blind"
+      ]
+    }
+  ],
+  "table_cost_assumption": "Measured H/S restore cost range applied to every beneficial layout switch; M costs projected, not measured",
+  "mix_A": [
+    {
+      "mode": "full_redeploy_restore",
+      "status": "ESTIMATE",
+      "source_measured_full_restore_C_s": 221.4,
+      "effective_cost_s": 221.4,
+      "assumption": "M-to-S full cost approximated by measured H/S restore range",
+      "overlap_forfeited_s": 115.07500000000005,
+      "gain_per_W0_copy_s": 81.96666666666664,
+      "breakeven_W0_copies": 4.10502236681578,
+      "breakeven_output_tokens": 2962163.614782433
+    },
+    {
+      "mode": "partial_restore",
+      "status": "ESTIMATE",
+      "source_measured_full_restore_C_s": 221.4,
+      "effective_cost_s": 99.90010889292198,
+      "assumption": "M-to-S full cost approximated by measured H/S restore range; partial/full effective-cost ratio held fixed",
+      "overlap_forfeited_s": 115.07500000000005,
+      "gain_per_W0_copy_s": 81.96666666666664,
+      "breakeven_W0_copies": 2.6227138132524046,
+      "breakeven_output_tokens": 1892537.174073869
+    },
+    {
+      "mode": "full_redeploy_restore",
+      "status": "ESTIMATE",
+      "source_measured_full_restore_C_s": 228.6,
+      "effective_cost_s": 228.6,
+      "assumption": "M-to-S full cost approximated by measured H/S restore range",
+      "overlap_forfeited_s": 115.07500000000005,
+      "gain_per_W0_copy_s": 81.96666666666664,
+      "breakeven_W0_copies": 4.192862952419685,
+      "breakeven_output_tokens": 3025548.942151283
+    },
+    {
+      "mode": "partial_restore",
+      "status": "ESTIMATE",
+      "source_measured_full_restore_C_s": 228.6,
+      "effective_cost_s": 103.1488929219601,
+      "assumption": "M-to-S full cost approximated by measured H/S restore range; partial/full effective-cost ratio held fixed",
+      "overlap_forfeited_s": 115.07500000000005,
+      "gain_per_W0_copy_s": 81.96666666666664,
+      "breakeven_W0_copies": 2.6623492426428657,
+      "breakeven_output_tokens": 1921137.9017448786
+    }
+  ],
+  "partial_effective_cost_fraction": 0.4512200040330713,
+  "sources": {
+    "cost": "transitions.json",
+    "throughput": "throughput_table_measured.json",
+    "mix_terms": "mixA_model.json"
+  }
+}

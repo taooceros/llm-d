@@ -1,0 +1,39 @@
+Gemma-4 31B TPU load profile (2026-10-02)
+Branch: restore/load-profiler; instrumentation commits 3e08771, 01a9c81.
+Evidence: load_profile_S.json (raysubmit_WhmszEvQNQQRbC8D), load_profile_H.json (raysubmit_2nBVMqqZSjXNP12X), summary.json. Each layout has eight profiled host workers. Values below are worker medians, in seconds unless stated otherwise.
+
+                              S / TP8        H / TP16
+load_model                     239.145         240.038
+safetensors iterator             0.179           0.177
+host tensor work                156.966         156.543
+host-to-device                    2.981           1.972
+load JIT/cache lookup/load        74.893          76.797
+post-load                         4.101           4.255
+raw final-shard transfer           2.647           1.636
+local final-shard bytes/host       31.448 GB       15.824 GB
+observed raw transfer bandwidth    11.880 GB/s      9.675 GB/s
+
+Categories partition wall time per worker. Maximum closure error versus the existing phase clock is 0.000269%; medians of separate columns need not sum exactly to the median load. File timing is iterator advancement/deserialize, NOT a separate measurement of all physical I/O: later mmap page faults belong to the host conversion category.
+
+The actual implementation is get_flax_model, not VllmModelWrapper. Path: HeteroTPUWorker.load_model -> TPUWorker.load_model -> TPUModelRunner.load_model -> model_loader.get_model -> _get_nnx_model/nnx.eval_shape -> DefaultModelLoader.load_weights -> Gemma4/JaxAutoWeightsLoader -> jax_array_from_reshaped_torch -> t2j on CPU -> assign_and_shard_param/shard_put -> general_device_put -> make_array_from_callback -> pxla.batched_device_put. The final nnx model-construction JIT and runner cache cleanup are inside load_model. Torchax conversion is still a utility fallback on the native flax path; torchax model wrapping and cleanup_sharding are not this model's load route.
+
+The main host hotspot is jax_array_from_reshaped_torch: 127.972 s TP8 / 127.584 s TP16 across 1188 conversions. The slowest boundaries are attention o_proj weights; representative TP8 rank zero has layers 29/5/53/11 taking about 4.0 s exclusive conversion each (raw top20 in the deploy evidence). [INFERENCE] Their reshape/permutation misses t2j's contiguous-bfloat16 fast bitcast and takes the torchax fallback. This specific inner conversion cause was not separately timed. There are 3365 compile_or_get_cached calls and 333 clear_caches calls in BOTH layouts. Source weight_utils.py:1070-1073 clears caches after each module's post-load processing, so [INFERENCE] repeated cache clearing removes in-process reuse of shape-compatible load kernels; the profile alone does not prove that counterfactual speedup.
+
+Halving per-host/per-chip final bytes does not halve load: load time is essentially unchanged, while raw transfer drops from 2.647 to 1.636 s. This rules out final per-chip transfer bytes as the dominant cost. Full checkpoint size and tensor count are held fixed, so these two deployments cannot distinguish full-host-byte scaling from tensor-count scaling. Costs are not uniform per tensor: a few o_proj conversions are much slower than the 1188-tensor average.
+
+[ESTIMATE] A pre-sharded snapshot containing final dtype/layout arrays skips the full-tensor host conversion, merge/reorder/local shard selection, and most load-kernel compile/cache activity; it still needs snapshot reads, array/model reconstruction and TPU transfer. The observed transfer-only load floor using these measured final-shard puts is 2.65 s TP8 / 1.64 s TP16 per worker, excluding those remaining costs. This is not achieved restore latency or a hardware-spec-sheet estimate; bandwidth is measured at synchronized raw batched_device_put, with 1031 calls per worker (1028 weight puts plus tiny initialization arrays).
+
+py-spy is installed, but every rank-zero cross-check at 30/90 s failed with ptrace Permission denied (os error 13); stderr is retained in each worker profile. No image packages or permissions were changed. Successful complete lock sequence: 854.94 s; both layouts released, no timed workloads, no snapshot tmpfs mutations. Host RAM checks are in host_memory_before_deploy.jsonl. Earlier controller failures are recorded in first_attempt_failure.json and second_attempt_failure.json.
+
+Reproduce from this worktree:
+  export KUBECONFIG=$HOME/.kube/hetero-agent.yaml
+  flock /tmp/hetero-cluster.lock bash scripts/load_profile_campaign.sh
+  .venv/bin/python scripts/analyze_load_profile.py results/restore/LoadProfiler/load_profile_S.json results/restore/LoadProfiler/load_profile_H.json --output results/restore/LoadProfiler/summary.json
+  # Clean worktree test prerequisite: link ignored, existing evidence fixtures.
+  mkdir -p results/hetero/20260918
+  ln -s "$HOME/hetero-research/results/hetero/continuation_qualification_protocol.json" results/hetero/continuation_qualification_protocol.json
+  ln -s "$HOME/hetero-research/results/hetero/mechanism_cost_protocol.json" results/hetero/mechanism_cost_protocol.json
+  ln -s "$HOME/hetero-research/results/hetero/20260918/minimal_fp32_state_continuation.json" results/hetero/20260918/minimal_fp32_state_continuation.json
+  .venv/bin/python -m pytest -q tests
+
+The full local suite initially had 153 passed and 15 missing-ignored-fixture failures/errors. Linking the three existing fixtures from ~/hetero-research/results/hetero fixed the prerequisite; all 28 tests in the affected files passed. The four new accounting tests also pass. The full suite was not repeated after the fixture-only correction.

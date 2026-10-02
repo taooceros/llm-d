@@ -1,0 +1,17 @@
+[
+  {
+    "op": "test",
+    "path": "/spec/workerGroupSpecs/0/groupName",
+    "value": "tpu-worker-group"
+  },
+  {
+    "op": "replace",
+    "path": "/spec/workerGroupSpecs/0/minReplicas",
+    "value": 0
+  },
+  {
+    "op": "replace",
+    "path": "/spec/workerGroupSpecs/0/replicas",
+    "value": 0
+  }
+]

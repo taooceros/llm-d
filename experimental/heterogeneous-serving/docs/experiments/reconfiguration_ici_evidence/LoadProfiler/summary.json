@@ -1,0 +1,4004 @@
+{
+  "load_profile_S": {
+    "source": "results/restore/LoadProfiler/load_profile_S.json",
+    "submission_id": "raysubmit_WhmszEvQNQQRbC8D",
+    "workers": [
+      {
+        "worker_path": "/measurements/deployment/instances/0/initialization/worker_init_phases/0",
+        "executor_rank": 0,
+        "implementation": "get_flax_model",
+        "load_model_s": 240.03049564361572,
+        "categories_s": {
+          "file_deserialize": 0.18414415809093043,
+          "host_tensor_ops": 157.89595262391958,
+          "host_to_device": 3.015698299219366,
+          "jit_compile": 74.72906156157842,
+          "post_load": 4.2061063591972925
+        },
+        "closure_error_fraction": 1.9470792184808083e-06,
+        "raw_transfer_s": 2.6843664046609774,
+        "raw_transfer_calls": 1031,
+        "final_local_bytes": 31448474476,
+        "observed_raw_transfer_GBps": 11.715417992638674,
+        "snapshot_transfer_only_lower_bound_s": 2.6843664046609774,
+        "snapshot_skippable_load_s_INFERENCE": 237.34612923895475,
+        "calls": {
+          "UnquantizedMergedLinearMethod._load_merged_tensor": {
+            "exclusive_s": 5.258191517030355,
+            "count": 270,
+            "local_bytes": 0
+          },
+          "assign_and_shard_param": {
+            "exclusive_s": 0.12552041211165488,
+            "count": 1028,
+            "local_bytes": 0
+          },
+          "compile_or_get_cached": {
+            "exclusive_s": 74.72906156157842,
+            "count": 3365,
+            "local_bytes": 0
+          },
+          "jax.clear_caches": {
+            "exclusive_s": 4.2061063591972925,
+            "count": 333,
+            "local_bytes": 0
+          },
+          "jax_array_from_reshaped_torch": {
+            "exclusive_s": 129.37167545204284,
+            "count": 1188,
+            "local_bytes": 0
+          },
+          "load_model_unwrapped": {
+            "exclusive_s": 17.57851523347199,
+            "count": 1,
+            "local_bytes": 0
+          },
+          "load_nnx_param_from_reshaped_torch": {
+            "exclusive_s": 0.17570197122404352,
+            "count": 918,
+            "local_bytes": 0
+          },
+          "local_shard_selection": {
+            "exclusive_s": 5.3863480380387045,
+            "count": 2355,
+            "local_bytes": 0
+          },
+          "raw_batched_device_put": {
+            "exclusive_s": 2.6843664046609774,
+            "count": 1031,
+            "local_bytes": 31448474476
+          },
+          "safetensors_weights_iterator": {
+            "exclusive_s": 0.18414415809093043,
+            "count": 1189,
+            "local_bytes": 0
+          },
+          "shard_put": {
+            "exclusive_s": 0.33133189455838874,
+            "count": 1028,
+            "local_bytes": 31448474464
+          }
+        },
+        "top20": [
+          {
+            "call": "load_model_unwrapped",
+            "tensor": "model.language_model.layers.59.self_attn.q_proj.weight",
+            "wall_s": 240.0309630020056,
+            "exclusive_s": 17.57851523347199,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.29.self_attn.o_proj.weight",
+            "wall_s": 4.164098520996049,
+            "exclusive_s": 0.00095394003437832,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.5.self_attn.o_proj.weight",
+            "wall_s": 4.150041202025022,
+            "exclusive_s": 0.0009599299519322813,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.53.self_attn.o_proj.weight",
+            "wall_s": 4.148965222004335,
+            "exclusive_s": 0.0009659299976192415,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.11.self_attn.o_proj.weight",
+            "wall_s": 4.129851770994719,
+            "exclusive_s": 0.0009208900155499578,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.29.self_attn.o_proj.weight",
+            "wall_s": 4.104899621976074,
+            "exclusive_s": 4.054337991925422,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.5.self_attn.o_proj.weight",
+            "wall_s": 4.093313612043858,
+            "exclusive_s": 4.042216473026201,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.53.self_attn.o_proj.weight",
+            "wall_s": 4.091374223004095,
+            "exclusive_s": 4.040625094028655,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.11.self_attn.o_proj.weight",
+            "wall_s": 4.070340231992304,
+            "exclusive_s": 4.019037602934986,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.17.self_attn.o_proj.weight",
+            "wall_s": 4.059178331983276,
+            "exclusive_s": 0.0009202899527736008,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.41.self_attn.o_proj.weight",
+            "wall_s": 4.053029732021969,
+            "exclusive_s": 0.0008700800244696438,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.47.self_attn.o_proj.weight",
+            "wall_s": 4.029688702954445,
+            "exclusive_s": 0.0009111999534070492,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.35.self_attn.o_proj.weight",
+            "wall_s": 4.0268653219682164,
+            "exclusive_s": 0.00102279894053936,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.17.self_attn.o_proj.weight",
+            "wall_s": 4.001007243001368,
+            "exclusive_s": 3.950209882983472,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.41.self_attn.o_proj.weight",
+            "wall_s": 3.9918089029961266,
+            "exclusive_s": 3.9400991639704444,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.47.self_attn.o_proj.weight",
+            "wall_s": 3.9718764240387827,
+            "exclusive_s": 3.9218724440434016,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.35.self_attn.o_proj.weight",
+            "wall_s": 3.966900774044916,
+            "exclusive_s": 3.9156312940758653,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.23.self_attn.o_proj.weight",
+            "wall_s": 3.9412056440487504,
+            "exclusive_s": 0.0009300500387325883,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.59.self_attn.o_proj.weight",
+            "wall_s": 3.8865621549775824,
+            "exclusive_s": 0.0009380599949508905,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.23.self_attn.o_proj.weight",
+            "wall_s": 3.8800468150293455,
+            "exclusive_s": 3.8293002850259654,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          }
+        ]
+      },
+      {
+        "worker_path": "/measurements/deployment/instances/0/initialization/worker_init_phases/1",
+        "executor_rank": 1,
+        "implementation": "get_flax_model",
+        "load_model_s": 239.62260508537292,
+        "categories_s": {
+          "file_deserialize": 0.17792197444941849,
+          "host_tensor_ops": 157.06451088760514,
+          "host_to_device": 2.9735499461530708,
+          "jit_compile": 75.171937925159,
+          "post_load": 4.23469397763256
+        },
+        "closure_error_fraction": 4.016994247620311e-08,
+        "raw_transfer_s": 2.6348527881200425,
+        "raw_transfer_calls": 1031,
+        "final_local_bytes": 31448474476,
+        "observed_raw_transfer_GBps": 11.935571739641048,
+        "snapshot_transfer_only_lower_bound_s": 2.6348527881200425,
+        "snapshot_skippable_load_s_INFERENCE": 236.98775229725288,
+        "calls": {
+          "UnquantizedMergedLinearMethod._load_merged_tensor": {
+            "exclusive_s": 5.331116745481268,
+            "count": 270,
+            "local_bytes": 0
+          },
+          "assign_and_shard_param": {
+            "exclusive_s": 0.12067695439327508,
+            "count": 1028,
+            "local_bytes": 0
+          },
+          "compile_or_get_cached": {
+            "exclusive_s": 75.171937925159,
+            "count": 3365,
+            "local_bytes": 0
+          },
+          "jax.clear_caches": {
+            "exclusive_s": 4.23469397763256,
+            "count": 333,
+            "local_bytes": 0
+          },
+          "jax_array_from_reshaped_torch": {
+            "exclusive_s": 127.49165242904564,
+            "count": 1188,
+            "local_bytes": 0
+          },
+          "load_model_unwrapped": {
+            "exclusive_s": 17.226724924868904,
+            "count": 1,
+            "local_bytes": 0
+          },
+          "load_nnx_param_from_reshaped_torch": {
+            "exclusive_s": 0.16580934840021655,
+            "count": 918,
+            "local_bytes": 0
+          },
+          "local_shard_selection": {
+            "exclusive_s": 6.728530485415831,
+            "count": 2355,
+            "local_bytes": 0
+          },
+          "raw_batched_device_put": {
+            "exclusive_s": 2.6348527881200425,
+            "count": 1031,
+            "local_bytes": 31448474476
+          },
+          "safetensors_weights_iterator": {
+            "exclusive_s": 0.17792197444941849,
+            "count": 1189,
+            "local_bytes": 0
+          },
+          "shard_put": {
+            "exclusive_s": 0.33869715803302824,
+            "count": 1028,
+            "local_bytes": 31448474464
+          }
+        },
+        "top20": [
+          {
+            "call": "load_model_unwrapped",
+            "tensor": "model.language_model.layers.59.self_attn.q_proj.weight",
+            "wall_s": 239.6226147109992,
+            "exclusive_s": 17.226724924868904,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.35.self_attn.o_proj.weight",
+            "wall_s": 4.046900361950975,
+            "exclusive_s": 0.0009289689478464425,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.47.self_attn.o_proj.weight",
+            "wall_s": 4.04457128199283,
+            "exclusive_s": 0.0008005190175026655,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.11.self_attn.o_proj.weight",
+            "wall_s": 4.043581673002336,
+            "exclusive_s": 0.0010137099889107049,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.59.self_attn.o_proj.weight",
+            "wall_s": 4.018093172984663,
+            "exclusive_s": 0.0009893399546854198,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.5.self_attn.o_proj.weight",
+            "wall_s": 4.003863253979944,
+            "exclusive_s": 0.001052569947205484,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.53.self_attn.o_proj.weight",
+            "wall_s": 4.001420093001798,
+            "exclusive_s": 0.0007932099979370832,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.35.self_attn.o_proj.weight",
+            "wall_s": 3.9905862230225466,
+            "exclusive_s": 3.9409582540974952,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.47.self_attn.o_proj.weight",
+            "wall_s": 3.988148292992264,
+            "exclusive_s": 3.941578494035639,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.11.self_attn.o_proj.weight",
+            "wall_s": 3.9863801930332556,
+            "exclusive_s": 3.9376599340466782,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.41.self_attn.o_proj.weight",
+            "wall_s": 3.973198293009773,
+            "exclusive_s": 0.001029078965075314,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.59.self_attn.o_proj.weight",
+            "wall_s": 3.9609780440223403,
+            "exclusive_s": 3.913274164078757,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.29.self_attn.o_proj.weight",
+            "wall_s": 3.9520327940117568,
+            "exclusive_s": 0.0010293800150975585,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.23.self_attn.o_proj.weight",
+            "wall_s": 3.9505163530120626,
+            "exclusive_s": 0.0009677599882707,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.17.self_attn.o_proj.weight",
+            "wall_s": 3.948496732977219,
+            "exclusive_s": 0.0009613200090825558,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.5.self_attn.o_proj.weight",
+            "wall_s": 3.946431874006521,
+            "exclusive_s": 3.8978062749956734,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.53.self_attn.o_proj.weight",
+            "wall_s": 3.9432660340098664,
+            "exclusive_s": 3.894484465010464,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.41.self_attn.o_proj.weight",
+            "wall_s": 3.915726214007009,
+            "exclusive_s": 3.866758785035927,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.23.self_attn.o_proj.weight",
+            "wall_s": 3.895673834020272,
+            "exclusive_s": 3.846149075019639,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.29.self_attn.o_proj.weight",
+            "wall_s": 3.8955947950016707,
+            "exclusive_s": 3.8468314659548923,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          }
+        ]
+      },
+      {
+        "worker_path": "/measurements/deployment/instances/1/initialization/worker_init_phases/0",
+        "executor_rank": 0,
+        "implementation": "get_flax_model",
+        "load_model_s": 238.26514077186584,
+        "categories_s": {
+          "file_deserialize": 0.18513657414587215,
+          "host_tensor_ops": 155.83313799323514,
+          "host_to_device": 2.982142377702985,
+          "jit_compile": 74.92393287096638,
+          "post_load": 4.341211593942717
+        },
+        "closure_error_fraction": 1.7654203459632906e-06,
+        "raw_transfer_s": 2.6485794036416337,
+        "raw_transfer_calls": 1031,
+        "final_local_bytes": 31448474476,
+        "observed_raw_transfer_GBps": 11.873714049410896,
+        "snapshot_transfer_only_lower_bound_s": 2.6485794036416337,
+        "snapshot_skippable_load_s_INFERENCE": 235.6165613682242,
+        "calls": {
+          "UnquantizedMergedLinearMethod._load_merged_tensor": {
+            "exclusive_s": 5.087824279558845,
+            "count": 270,
+            "local_bytes": 0
+          },
+          "assign_and_shard_param": {
+            "exclusive_s": 0.12223712197737768,
+            "count": 1028,
+            "local_bytes": 0
+          },
+          "compile_or_get_cached": {
+            "exclusive_s": 74.92393287096638,
+            "count": 3365,
+            "local_bytes": 0
+          },
+          "jax.clear_caches": {
+            "exclusive_s": 4.341211593942717,
+            "count": 333,
+            "local_bytes": 0
+          },
+          "jax_array_from_reshaped_torch": {
+            "exclusive_s": 127.67084463551873,
+            "count": 1188,
+            "local_bytes": 0
+          },
+          "load_model_unwrapped": {
+            "exclusive_s": 17.33592710882658,
+            "count": 1,
+            "local_bytes": 0
+          },
+          "load_nnx_param_from_reshaped_torch": {
+            "exclusive_s": 0.167992121190764,
+            "count": 918,
+            "local_bytes": 0
+          },
+          "local_shard_selection": {
+            "exclusive_s": 5.44831272616284,
+            "count": 2355,
+            "local_bytes": 0
+          },
+          "raw_batched_device_put": {
+            "exclusive_s": 2.6485794036416337,
+            "count": 1031,
+            "local_bytes": 31448474476
+          },
+          "safetensors_weights_iterator": {
+            "exclusive_s": 0.18513657414587215,
+            "count": 1189,
+            "local_bytes": 0
+          },
+          "shard_put": {
+            "exclusive_s": 0.33356297406135127,
+            "count": 1028,
+            "local_bytes": 31448474464
+          }
+        },
+        "top20": [
+          {
+            "call": "load_model_unwrapped",
+            "tensor": "model.language_model.layers.59.self_attn.q_proj.weight",
+            "wall_s": 238.2655614099931,
+            "exclusive_s": 17.33592710882658,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.35.self_attn.o_proj.weight",
+            "wall_s": 4.119189926015679,
+            "exclusive_s": 0.0007344899931922555,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.29.self_attn.o_proj.weight",
+            "wall_s": 4.091888476978056,
+            "exclusive_s": 0.0007040000054985285,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.35.self_attn.o_proj.weight",
+            "wall_s": 4.059490467014257,
+            "exclusive_s": 4.008757958072238,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.5.self_attn.o_proj.weight",
+            "wall_s": 4.048728107009083,
+            "exclusive_s": 0.0008236499852500856,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.59.self_attn.o_proj.weight",
+            "wall_s": 4.034525228023995,
+            "exclusive_s": 0.0009395500528626144,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.29.self_attn.o_proj.weight",
+            "wall_s": 4.033842007978819,
+            "exclusive_s": 3.985498459020164,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.11.self_attn.o_proj.weight",
+            "wall_s": 4.01237917796243,
+            "exclusive_s": 0.0011185689363628626,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.47.self_attn.o_proj.weight",
+            "wall_s": 4.006180979020428,
+            "exclusive_s": 0.0010131500312127173,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.23.self_attn.o_proj.weight",
+            "wall_s": 3.993201659002807,
+            "exclusive_s": 0.0008890599710866809,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.5.self_attn.o_proj.weight",
+            "wall_s": 3.988767729024403,
+            "exclusive_s": 3.9364384789951146,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.41.self_attn.o_proj.weight",
+            "wall_s": 3.988006768980995,
+            "exclusive_s": 0.0010205400176346302,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.53.self_attn.o_proj.weight",
+            "wall_s": 3.983199918991886,
+            "exclusive_s": 0.001073391002137214,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.59.self_attn.o_proj.weight",
+            "wall_s": 3.976671448966954,
+            "exclusive_s": 3.9262042499613017,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.11.self_attn.o_proj.weight",
+            "wall_s": 3.952707759977784,
+            "exclusive_s": 3.9023224499542266,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.47.self_attn.o_proj.weight",
+            "wall_s": 3.946461889951024,
+            "exclusive_s": 3.8965623910189606,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.23.self_attn.o_proj.weight",
+            "wall_s": 3.9387842600117438,
+            "exclusive_s": 3.8908869809820317,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.41.self_attn.o_proj.weight",
+            "wall_s": 3.9284921300131828,
+            "exclusive_s": 3.8762556510046124,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.53.self_attn.o_proj.weight",
+            "wall_s": 3.9264651489793323,
+            "exclusive_s": 3.8750258999643847,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.17.self_attn.o_proj.weight",
+            "wall_s": 3.9138633699622005,
+            "exclusive_s": 0.0006915389094501734,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          }
+        ]
+      },
+      {
+        "worker_path": "/measurements/deployment/instances/1/initialization/worker_init_phases/1",
+        "executor_rank": 1,
+        "implementation": "get_flax_model",
+        "load_model_s": 238.47888445854187,
+        "categories_s": {
+          "file_deserialize": 0.17926463374169543,
+          "host_tensor_ops": 157.0622765062726,
+          "host_to_device": 2.9842497140634805,
+          "jit_compile": 74.2336975155049,
+          "post_load": 4.019407829386182
+        },
+        "closure_error_fraction": 4.923046761662652e-08,
+        "raw_transfer_s": 2.6549395816400647,
+        "raw_transfer_calls": 1031,
+        "final_local_bytes": 31448474476,
+        "observed_raw_transfer_GBps": 11.845269358850341,
+        "snapshot_transfer_only_lower_bound_s": 2.6549395816400647,
+        "snapshot_skippable_load_s_INFERENCE": 235.8239448769018,
+        "calls": {
+          "UnquantizedMergedLinearMethod._load_merged_tensor": {
+            "exclusive_s": 5.532647429732606,
+            "count": 270,
+            "local_bytes": 0
+          },
+          "assign_and_shard_param": {
+            "exclusive_s": 0.11789188242983073,
+            "count": 1028,
+            "local_bytes": 0
+          },
+          "compile_or_get_cached": {
+            "exclusive_s": 74.2336975155049,
+            "count": 3365,
+            "local_bytes": 0
+          },
+          "jax.clear_caches": {
+            "exclusive_s": 4.019407829386182,
+            "count": 333,
+            "local_bytes": 0
+          },
+          "jax_array_from_reshaped_torch": {
+            "exclusive_s": 128.1131106505054,
+            "count": 1188,
+            "local_bytes": 0
+          },
+          "load_model_unwrapped": {
+            "exclusive_s": 17.633914518693928,
+            "count": 1,
+            "local_bytes": 0
+          },
+          "load_nnx_param_from_reshaped_torch": {
+            "exclusive_s": 0.16125808958895504,
+            "count": 918,
+            "local_bytes": 0
+          },
+          "local_shard_selection": {
+            "exclusive_s": 5.503453935321886,
+            "count": 2355,
+            "local_bytes": 0
+          },
+          "raw_batched_device_put": {
+            "exclusive_s": 2.6549395816400647,
+            "count": 1031,
+            "local_bytes": 31448474476
+          },
+          "safetensors_weights_iterator": {
+            "exclusive_s": 0.17926463374169543,
+            "count": 1189,
+            "local_bytes": 0
+          },
+          "shard_put": {
+            "exclusive_s": 0.3293101324234158,
+            "count": 1028,
+            "local_bytes": 31448474464
+          }
+        },
+        "top20": [
+          {
+            "call": "load_model_unwrapped",
+            "tensor": "model.language_model.layers.59.self_attn.q_proj.weight",
+            "wall_s": 238.47889619896887,
+            "exclusive_s": 17.633914518693928,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.11.self_attn.o_proj.weight",
+            "wall_s": 4.160805984982289,
+            "exclusive_s": 0.00084874895401299,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.41.self_attn.o_proj.weight",
+            "wall_s": 4.105193116993178,
+            "exclusive_s": 0.0007869599503464997,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.11.self_attn.o_proj.weight",
+            "wall_s": 4.100493177014869,
+            "exclusive_s": 4.051385527011007,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.23.self_attn.o_proj.weight",
+            "wall_s": 4.082750236964785,
+            "exclusive_s": 0.001220199919771403,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.17.self_attn.o_proj.weight",
+            "wall_s": 4.075518507044762,
+            "exclusive_s": 0.0007407799712382257,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.53.self_attn.o_proj.weight",
+            "wall_s": 4.061062668042723,
+            "exclusive_s": 0.0007341000018641353,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.41.self_attn.o_proj.weight",
+            "wall_s": 4.0448573480243795,
+            "exclusive_s": 3.9943594990763813,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.47.self_attn.o_proj.weight",
+            "wall_s": 4.04385702800937,
+            "exclusive_s": 0.0009691200102679431,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.23.self_attn.o_proj.weight",
+            "wall_s": 4.021518298017327,
+            "exclusive_s": 3.970682099054102,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.29.self_attn.o_proj.weight",
+            "wall_s": 4.021440817974508,
+            "exclusive_s": 0.000788929988630116,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.17.self_attn.o_proj.weight",
+            "wall_s": 4.013928868051153,
+            "exclusive_s": 3.9637729579699226,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.59.self_attn.o_proj.weight",
+            "wall_s": 4.005944898992311,
+            "exclusive_s": 0.0007784299668855965,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.53.self_attn.o_proj.weight",
+            "wall_s": 4.003333259024657,
+            "exclusive_s": 3.952289200038649,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.47.self_attn.o_proj.weight",
+            "wall_s": 3.9849907790194266,
+            "exclusive_s": 3.9348997190827504,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.29.self_attn.o_proj.weight",
+            "wall_s": 3.959671969001647,
+            "exclusive_s": 3.9099712389870547,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.59.self_attn.o_proj.weight",
+            "wall_s": 3.9466270100092515,
+            "exclusive_s": 3.8967177409795113,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.35.self_attn.o_proj.weight",
+            "wall_s": 3.9393882699660026,
+            "exclusive_s": 0.0006917199352756143,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.5.self_attn.o_proj.weight",
+            "wall_s": 3.882078941038344,
+            "exclusive_s": 0.0006705200066789985,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.35.self_attn.o_proj.weight",
+            "wall_s": 3.880211331008468,
+            "exclusive_s": 3.829690851038322,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          }
+        ]
+      },
+      {
+        "worker_path": "/measurements/deployment/instances/2/initialization/worker_init_phases/0",
+        "executor_rank": 0,
+        "implementation": "get_flax_model",
+        "load_model_s": 241.3813238143921,
+        "categories_s": {
+          "file_deserialize": 0.16718877875246108,
+          "host_tensor_ops": 156.8689028113149,
+          "host_to_device": 2.9657544038491324,
+          "jit_compile": 77.33136884629494,
+          "post_load": 4.048581447801553
+        },
+        "closure_error_fraction": 1.9573743876972483e-06,
+        "raw_transfer_s": 2.631845799740404,
+        "raw_transfer_calls": 1031,
+        "final_local_bytes": 31448474476,
+        "observed_raw_transfer_GBps": 11.949208604509417,
+        "snapshot_transfer_only_lower_bound_s": 2.631845799740404,
+        "snapshot_skippable_load_s_INFERENCE": 238.7494780146517,
+        "calls": {
+          "UnquantizedMergedLinearMethod._load_merged_tensor": {
+            "exclusive_s": 5.1317522074095905,
+            "count": 270,
+            "local_bytes": 0
+          },
+          "assign_and_shard_param": {
+            "exclusive_s": 0.11749193532159552,
+            "count": 1028,
+            "local_bytes": 0
+          },
+          "compile_or_get_cached": {
+            "exclusive_s": 77.33136884629494,
+            "count": 3365,
+            "local_bytes": 0
+          },
+          "jax.clear_caches": {
+            "exclusive_s": 4.048581447801553,
+            "count": 333,
+            "local_bytes": 0
+          },
+          "jax_array_from_reshaped_torch": {
+            "exclusive_s": 128.46950363146607,
+            "count": 1188,
+            "local_bytes": 0
+          },
+          "load_model_unwrapped": {
+            "exclusive_s": 17.44669527973747,
+            "count": 1,
+            "local_bytes": 0
+          },
+          "load_nnx_param_from_reshaped_torch": {
+            "exclusive_s": 0.17118588008452207,
+            "count": 918,
+            "local_bytes": 0
+          },
+          "local_shard_selection": {
+            "exclusive_s": 5.532273877295665,
+            "count": 2355,
+            "local_bytes": 0
+          },
+          "raw_batched_device_put": {
+            "exclusive_s": 2.631845799740404,
+            "count": 1031,
+            "local_bytes": 31448474476
+          },
+          "safetensors_weights_iterator": {
+            "exclusive_s": 0.16718877875246108,
+            "count": 1189,
+            "local_bytes": 0
+          },
+          "shard_put": {
+            "exclusive_s": 0.33390860410872847,
+            "count": 1028,
+            "local_bytes": 31448474464
+          }
+        },
+        "top20": [
+          {
+            "call": "load_model_unwrapped",
+            "tensor": "model.language_model.layers.59.self_attn.q_proj.weight",
+            "wall_s": 241.381796288013,
+            "exclusive_s": 17.44669527973747,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.41.self_attn.o_proj.weight",
+            "wall_s": 4.175450430018827,
+            "exclusive_s": 0.0012184290098957717,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.5.self_attn.o_proj.weight",
+            "wall_s": 4.159578280989081,
+            "exclusive_s": 0.0006619400228373706,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.41.self_attn.o_proj.weight",
+            "wall_s": 4.1156176250078715,
+            "exclusive_s": 4.063933328026906,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.5.self_attn.o_proj.weight",
+            "wall_s": 4.097768145962618,
+            "exclusive_s": 4.046381220978219,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.17.self_attn.o_proj.weight",
+            "wall_s": 4.092781436978839,
+            "exclusive_s": 0.0010139589430764318,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.29.self_attn.o_proj.weight",
+            "wall_s": 4.064598077966366,
+            "exclusive_s": 0.0011834089527837932,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.59.self_attn.o_proj.weight",
+            "wall_s": 4.06017057900317,
+            "exclusive_s": 0.0007990599842742085,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.47.self_attn.o_proj.weight",
+            "wall_s": 4.050534719019197,
+            "exclusive_s": 0.0009489579824730754,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.53.self_attn.o_proj.weight",
+            "wall_s": 4.035569730971474,
+            "exclusive_s": 0.0007671299390494823,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.17.self_attn.o_proj.weight",
+            "wall_s": 4.0340024220058694,
+            "exclusive_s": 3.983813036000356,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.35.self_attn.o_proj.weight",
+            "wall_s": 4.024377972993534,
+            "exclusive_s": 0.0009082009783014655,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.29.self_attn.o_proj.weight",
+            "wall_s": 4.0035089629818685,
+            "exclusive_s": 3.9548600369598716,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.59.self_attn.o_proj.weight",
+            "wall_s": 3.999535344017204,
+            "exclusive_s": 3.9497691669967026,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.47.self_attn.o_proj.weight",
+            "wall_s": 3.9931344750220887,
+            "exclusive_s": 3.942925909999758,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.11.self_attn.o_proj.weight",
+            "wall_s": 3.9754778260248713,
+            "exclusive_s": 0.0011415990302339196,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.53.self_attn.o_proj.weight",
+            "wall_s": 3.9750109360320494,
+            "exclusive_s": 3.9239843410323374,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.35.self_attn.o_proj.weight",
+            "wall_s": 3.96460800699424,
+            "exclusive_s": 3.9137021219939925,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.23.self_attn.o_proj.weight",
+            "wall_s": 3.956734838022385,
+            "exclusive_s": 0.0010837900335900486,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.11.self_attn.o_proj.weight",
+            "wall_s": 3.917628101014998,
+            "exclusive_s": 3.867850935959723,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          }
+        ]
+      },
+      {
+        "worker_path": "/measurements/deployment/instances/2/initialization/worker_init_phases/1",
+        "executor_rank": 1,
+        "implementation": "get_flax_model",
+        "load_model_s": 240.98070120811462,
+        "categories_s": {
+          "file_deserialize": 0.18798798287753016,
+          "host_tensor_ops": 160.18943835841492,
+          "host_to_device": 2.9807661877712235,
+          "jit_compile": 73.60123858542647,
+          "post_load": 4.021282087487634
+        },
+        "closure_error_fraction": 4.9771052594973637e-08,
+        "raw_transfer_s": 2.6458736725035124,
+        "raw_transfer_calls": 1031,
+        "final_local_bytes": 31448474476,
+        "observed_raw_transfer_GBps": 11.885856381889772,
+        "snapshot_transfer_only_lower_bound_s": 2.6458736725035124,
+        "snapshot_skippable_load_s_INFERENCE": 238.3348275356111,
+        "calls": {
+          "UnquantizedMergedLinearMethod._load_merged_tensor": {
+            "exclusive_s": 5.13011551782256,
+            "count": 270,
+            "local_bytes": 0
+          },
+          "assign_and_shard_param": {
+            "exclusive_s": 0.12195827113464475,
+            "count": 1028,
+            "local_bytes": 0
+          },
+          "compile_or_get_cached": {
+            "exclusive_s": 73.60123858542647,
+            "count": 3365,
+            "local_bytes": 0
+          },
+          "jax.clear_caches": {
+            "exclusive_s": 4.021282087487634,
+            "count": 333,
+            "local_bytes": 0
+          },
+          "jax_array_from_reshaped_torch": {
+            "exclusive_s": 126.68434938817518,
+            "count": 1188,
+            "local_bytes": 0
+          },
+          "load_model_unwrapped": {
+            "exclusive_s": 17.286265407921746,
+            "count": 1,
+            "local_bytes": 0
+          },
+          "load_nnx_param_from_reshaped_torch": {
+            "exclusive_s": 0.16907624126179144,
+            "count": 918,
+            "local_bytes": 0
+          },
+          "local_shard_selection": {
+            "exclusive_s": 10.797673532098997,
+            "count": 2355,
+            "local_bytes": 0
+          },
+          "raw_batched_device_put": {
+            "exclusive_s": 2.6458736725035124,
+            "count": 1031,
+            "local_bytes": 31448474476
+          },
+          "safetensors_weights_iterator": {
+            "exclusive_s": 0.18798798287753016,
+            "count": 1189,
+            "local_bytes": 0
+          },
+          "shard_put": {
+            "exclusive_s": 0.33489251526771113,
+            "count": 1028,
+            "local_bytes": 31448474464
+          }
+        },
+        "top20": [
+          {
+            "call": "load_model_unwrapped",
+            "tensor": "model.language_model.layers.59.self_attn.q_proj.weight",
+            "wall_s": 240.98071320197778,
+            "exclusive_s": 17.286265407921746,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "local_shard_selection",
+            "tensor": "model.language_model.layers.59.self_attn.q_proj.weight",
+            "wall_s": 5.170988359022886,
+            "exclusive_s": 5.170988359022886,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.35.self_attn.o_proj.weight",
+            "wall_s": 4.109556707961019,
+            "exclusive_s": 0.0010376800200901926,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.41.self_attn.o_proj.weight",
+            "wall_s": 4.081754990038462,
+            "exclusive_s": 0.0007259700796566904,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.29.self_attn.o_proj.weight",
+            "wall_s": 4.067932559992187,
+            "exclusive_s": 0.0007745689945295453,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.35.self_attn.o_proj.weight",
+            "wall_s": 4.051935911993496,
+            "exclusive_s": 4.002408576954622,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.41.self_attn.o_proj.weight",
+            "wall_s": 4.023451884975657,
+            "exclusive_s": 3.9722640379332006,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.5.self_attn.o_proj.weight",
+            "wall_s": 4.019762923999224,
+            "exclusive_s": 0.0012849100166931748,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.23.self_attn.o_proj.weight",
+            "wall_s": 4.011117635003757,
+            "exclusive_s": 0.0010125599801540375,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.29.self_attn.o_proj.weight",
+            "wall_s": 4.010895896004513,
+            "exclusive_s": 3.9615129500161856,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.47.self_attn.o_proj.weight",
+            "wall_s": 3.9990466060116887,
+            "exclusive_s": 0.0007894400623627007,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.59.self_attn.o_proj.weight",
+            "wall_s": 3.973736777959857,
+            "exclusive_s": 0.001157339895144105,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.5.self_attn.o_proj.weight",
+            "wall_s": 3.9590910989791155,
+            "exclusive_s": 3.9104568230104633,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.23.self_attn.o_proj.weight",
+            "wall_s": 3.9555621600011364,
+            "exclusive_s": 3.9062847439199686,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.47.self_attn.o_proj.weight",
+            "wall_s": 3.94009476096835,
+            "exclusive_s": 3.892083265061956,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.53.self_attn.o_proj.weight",
+            "wall_s": 3.9184793829917908,
+            "exclusive_s": 0.0007576009957119823,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.59.self_attn.o_proj.weight",
+            "wall_s": 3.9162347830133513,
+            "exclusive_s": 3.8663893369957805,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.11.self_attn.o_proj.weight",
+            "wall_s": 3.9130054129636846,
+            "exclusive_s": 0.0008172599482350051,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.53.self_attn.o_proj.weight",
+            "wall_s": 3.8606947669759393,
+            "exclusive_s": 3.8137880209833384,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.11.self_attn.o_proj.weight",
+            "wall_s": 3.8567085480317473,
+            "exclusive_s": 3.807195871078875,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          }
+        ]
+      },
+      {
+        "worker_path": "/measurements/deployment/instances/3/initialization/worker_init_phases/0",
+        "executor_rank": 0,
+        "implementation": "get_flax_model",
+        "load_model_s": 238.2720766067505,
+        "categories_s": {
+          "file_deserialize": 0.17787935736123472,
+          "host_tensor_ops": 156.29438442573883,
+          "host_to_device": 2.9162680390872993,
+          "jit_compile": 74.86197991447989,
+          "post_load": 4.022078272304498
+        },
+        "closure_error_fraction": 2.1546889949092107e-06,
+        "raw_transfer_s": 2.598677265632432,
+        "raw_transfer_calls": 1031,
+        "final_local_bytes": 31448474476,
+        "observed_raw_transfer_GBps": 12.101723785368355,
+        "snapshot_transfer_only_lower_bound_s": 2.598677265632432,
+        "snapshot_skippable_load_s_INFERENCE": 235.67339934111806,
+        "calls": {
+          "UnquantizedMergedLinearMethod._load_merged_tensor": {
+            "exclusive_s": 5.132526768138632,
+            "count": 270,
+            "local_bytes": 0
+          },
+          "assign_and_shard_param": {
+            "exclusive_s": 0.12013671168824658,
+            "count": 1028,
+            "local_bytes": 0
+          },
+          "compile_or_get_cached": {
+            "exclusive_s": 74.86197991447989,
+            "count": 3365,
+            "local_bytes": 0
+          },
+          "jax.clear_caches": {
+            "exclusive_s": 4.022078272304498,
+            "count": 333,
+            "local_bytes": 0
+          },
+          "jax_array_from_reshaped_torch": {
+            "exclusive_s": 128.02363098878413,
+            "count": 1188,
+            "local_bytes": 0
+          },
+          "load_model_unwrapped": {
+            "exclusive_s": 17.410920706228353,
+            "count": 1,
+            "local_bytes": 0
+          },
+          "load_nnx_param_from_reshaped_torch": {
+            "exclusive_s": 0.1647135025705211,
+            "count": 918,
+            "local_bytes": 0
+          },
+          "local_shard_selection": {
+            "exclusive_s": 5.442455748328939,
+            "count": 2355,
+            "local_bytes": 0
+          },
+          "raw_batched_device_put": {
+            "exclusive_s": 2.598677265632432,
+            "count": 1031,
+            "local_bytes": 31448474476
+          },
+          "safetensors_weights_iterator": {
+            "exclusive_s": 0.17787935736123472,
+            "count": 1189,
+            "local_bytes": 0
+          },
+          "shard_put": {
+            "exclusive_s": 0.3175907734548673,
+            "count": 1028,
+            "local_bytes": 31448474464
+          }
+        },
+        "top20": [
+          {
+            "call": "load_model_unwrapped",
+            "tensor": "model.language_model.layers.59.self_attn.q_proj.weight",
+            "wall_s": 238.27259000897175,
+            "exclusive_s": 17.410920706228353,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.59.self_attn.o_proj.weight",
+            "wall_s": 4.088652327016462,
+            "exclusive_s": 0.0009893199894577265,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.41.self_attn.o_proj.weight",
+            "wall_s": 4.0613978679757565,
+            "exclusive_s": 0.000747379963286221,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.5.self_attn.o_proj.weight",
+            "wall_s": 4.036516898020636,
+            "exclusive_s": 0.0007844500942155719,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.53.self_attn.o_proj.weight",
+            "wall_s": 4.035043957992457,
+            "exclusive_s": 0.0008023699629120529,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.59.self_attn.o_proj.weight",
+            "wall_s": 4.0305699380114675,
+            "exclusive_s": 3.9812097389949486,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.47.self_attn.o_proj.weight",
+            "wall_s": 4.009163418028038,
+            "exclusive_s": 0.0008225589990615845,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.11.self_attn.o_proj.weight",
+            "wall_s": 4.005558998964261,
+            "exclusive_s": 0.0008867699652910233,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.41.self_attn.o_proj.weight",
+            "wall_s": 4.0037100479821675,
+            "exclusive_s": 3.9516945089562796,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.17.self_attn.o_proj.weight",
+            "wall_s": 3.9955632989876904,
+            "exclusive_s": 0.0008380800136364996,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.23.self_attn.o_proj.weight",
+            "wall_s": 3.9940093390177935,
+            "exclusive_s": 0.0009477000567130744,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.5.self_attn.o_proj.weight",
+            "wall_s": 3.9821444989647716,
+            "exclusive_s": 3.931887579965405,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.53.self_attn.o_proj.weight",
+            "wall_s": 3.9750456089968793,
+            "exclusive_s": 3.925038769026287,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.47.self_attn.o_proj.weight",
+            "wall_s": 3.951468510029372,
+            "exclusive_s": 3.901524441083893,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.11.self_attn.o_proj.weight",
+            "wall_s": 3.9476234189933166,
+            "exclusive_s": 3.897034169000108,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.17.self_attn.o_proj.weight",
+            "wall_s": 3.9403257190133445,
+            "exclusive_s": 3.891824360063765,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.35.self_attn.o_proj.weight",
+            "wall_s": 3.939984538999852,
+            "exclusive_s": 0.0008453100454062223,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.29.self_attn.o_proj.weight",
+            "wall_s": 3.937541238963604,
+            "exclusive_s": 0.000786309945397079,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.23.self_attn.o_proj.weight",
+            "wall_s": 3.9351474799914286,
+            "exclusive_s": 3.884739640983753,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.35.self_attn.o_proj.weight",
+            "wall_s": 3.8831010999856517,
+            "exclusive_s": 3.8318403709563427,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          }
+        ]
+      },
+      {
+        "worker_path": "/measurements/deployment/instances/3/initialization/worker_init_phases/1",
+        "executor_rank": 1,
+        "implementation": "get_flax_model",
+        "load_model_s": 238.66657519340515,
+        "categories_s": {
+          "file_deserialize": 0.1784399026655592,
+          "host_tensor_ops": 156.17357479850762,
+          "host_to_device": 3.016193464922253,
+          "jit_compile": 75.14532784192124,
+          "post_load": 4.153050831984729
+        },
+        "closure_error_fraction": 4.879860633922053e-08,
+        "raw_transfer_s": 2.6881226881523617,
+        "raw_transfer_calls": 1031,
+        "final_local_bytes": 31448474476,
+        "observed_raw_transfer_GBps": 11.699047299666077,
+        "snapshot_transfer_only_lower_bound_s": 2.6881226881523617,
+        "snapshot_skippable_load_s_INFERENCE": 235.9784525052528,
+        "calls": {
+          "UnquantizedMergedLinearMethod._load_merged_tensor": {
+            "exclusive_s": 5.239669644506648,
+            "count": 270,
+            "local_bytes": 0
+          },
+          "assign_and_shard_param": {
+            "exclusive_s": 0.12201320537133142,
+            "count": 1028,
+            "local_bytes": 0
+          },
+          "compile_or_get_cached": {
+            "exclusive_s": 75.14532784192124,
+            "count": 3365,
+            "local_bytes": 0
+          },
+          "jax.clear_caches": {
+            "exclusive_s": 4.153050831984729,
+            "count": 333,
+            "local_bytes": 0
+          },
+          "jax_array_from_reshaped_torch": {
+            "exclusive_s": 127.9209929946228,
+            "count": 1188,
+            "local_bytes": 0
+          },
+          "load_model_unwrapped": {
+            "exclusive_s": 17.745884455624036,
+            "count": 1,
+            "local_bytes": 0
+          },
+          "load_nnx_param_from_reshaped_torch": {
+            "exclusive_s": 0.1685618731426075,
+            "count": 918,
+            "local_bytes": 0
+          },
+          "local_shard_selection": {
+            "exclusive_s": 4.976452625240199,
+            "count": 2355,
+            "local_bytes": 0
+          },
+          "raw_batched_device_put": {
+            "exclusive_s": 2.6881226881523617,
+            "count": 1031,
+            "local_bytes": 31448474476
+          },
+          "safetensors_weights_iterator": {
+            "exclusive_s": 0.1784399026655592,
+            "count": 1189,
+            "local_bytes": 0
+          },
+          "shard_put": {
+            "exclusive_s": 0.3280707767698914,
+            "count": 1028,
+            "local_bytes": 31448474464
+          }
+        },
+        "top20": [
+          {
+            "call": "load_model_unwrapped",
+            "tensor": "model.language_model.layers.59.self_attn.q_proj.weight",
+            "wall_s": 238.6665868400014,
+            "exclusive_s": 17.745884455624036,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.29.self_attn.o_proj.weight",
+            "wall_s": 4.1181021819938906,
+            "exclusive_s": 0.000798950030002743,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.17.self_attn.o_proj.weight",
+            "wall_s": 4.116572602011729,
+            "exclusive_s": 0.0008871500031091273,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.59.self_attn.o_proj.weight",
+            "wall_s": 4.071790882968344,
+            "exclusive_s": 0.0007429610122926533,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.17.self_attn.o_proj.weight",
+            "wall_s": 4.057050963048823,
+            "exclusive_s": 4.0066003140527755,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.29.self_attn.o_proj.weight",
+            "wall_s": 4.057045282970648,
+            "exclusive_s": 4.0066958429524675,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.23.self_attn.o_proj.weight",
+            "wall_s": 4.023465212958399,
+            "exclusive_s": 0.0007605599239468575,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.5.self_attn.o_proj.weight",
+            "wall_s": 4.02212060301099,
+            "exclusive_s": 0.0012075999984517694,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.59.self_attn.o_proj.weight",
+            "wall_s": 4.014810182969086,
+            "exclusive_s": 3.964464603981469,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.23.self_attn.o_proj.weight",
+            "wall_s": 3.9642229140154086,
+            "exclusive_s": 3.9160409750184044,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.5.self_attn.o_proj.weight",
+            "wall_s": 3.9616875339997932,
+            "exclusive_s": 3.9118669650051743,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.41.self_attn.o_proj.weight",
+            "wall_s": 3.885767004045192,
+            "exclusive_s": 0.0009119200403802097,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.35.self_attn.o_proj.weight",
+            "wall_s": 3.867057274968829,
+            "exclusive_s": 0.0008822499075904489,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.11.self_attn.o_proj.weight",
+            "wall_s": 3.866081004962325,
+            "exclusive_s": 0.0007348199724219739,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.41.self_attn.o_proj.weight",
+            "wall_s": 3.8248267250019126,
+            "exclusive_s": 3.7748324049753137,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.35.self_attn.o_proj.weight",
+            "wall_s": 3.807370376016479,
+            "exclusive_s": 3.75651627703337,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.11.self_attn.o_proj.weight",
+            "wall_s": 3.8072540059802122,
+            "exclusive_s": 3.7566757859895006,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.47.self_attn.o_proj.weight",
+            "wall_s": 3.7854430159786716,
+            "exclusive_s": 0.0010741599835455418,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.53.self_attn.o_proj.weight",
+            "wall_s": 3.7438638769672252,
+            "exclusive_s": 0.0008267499506473541,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.47.self_attn.o_proj.weight",
+            "wall_s": 3.726613376988098,
+            "exclusive_s": 3.6783652179292403,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          }
+        ]
+      }
+    ],
+    "median": {
+      "load_model_s": 239.14459013938904,
+      "raw_transfer_s": 2.647226538072573,
+      "final_local_bytes": 31448474476.0,
+      "observed_raw_transfer_GBps": 11.879785215650333,
+      "raw_transfer_calls": 1031.0
+    },
+    "ranges": {
+      "load_model_s": [
+        238.26514077186584,
+        241.3813238143921
+      ],
+      "raw_transfer_s": [
+        2.598677265632432,
+        2.6881226881523617
+      ],
+      "final_local_bytes": [
+        31448474476,
+        31448474476
+      ],
+      "observed_raw_transfer_GBps": [
+        11.699047299666077,
+        12.101723785368355
+      ],
+      "raw_transfer_calls": [
+        1031,
+        1031
+      ]
+    },
+    "median_calls": {
+      "UnquantizedMergedLinearMethod._load_merged_tensor": {
+        "exclusive_s": 5.18609820632264,
+        "count": 270.0
+      },
+      "assign_and_shard_param": {
+        "exclusive_s": 0.12131761276395991,
+        "count": 1028.0
+      },
+      "compile_or_get_cached": {
+        "exclusive_s": 74.89295639272314,
+        "count": 3365.0
+      },
+      "jax.clear_caches": {
+        "exclusive_s": 4.100816139893141,
+        "count": 333.0
+      },
+      "jax_array_from_reshaped_torch": {
+        "exclusive_s": 127.97231199170346,
+        "count": 1188.0
+      },
+      "load_model_unwrapped": {
+        "exclusive_s": 17.42880799298291,
+        "count": 1.0
+      },
+      "load_nnx_param_from_reshaped_torch": {
+        "exclusive_s": 0.16827699716668576,
+        "count": 918.0
+      },
+      "local_shard_selection": {
+        "exclusive_s": 5.475883330742363,
+        "count": 2355.0
+      },
+      "raw_batched_device_put": {
+        "exclusive_s": 2.647226538072573,
+        "count": 1031.0
+      },
+      "safetensors_weights_iterator": {
+        "exclusive_s": 0.17885226820362732,
+        "count": 1189.0
+      },
+      "shard_put": {
+        "exclusive_s": 0.33244743430987,
+        "count": 1028.0
+      }
+    },
+    "median_categories_s": {
+      "file_deserialize": 0.17885226820362732,
+      "host_tensor_ops": 156.96558965879376,
+      "host_to_device": 2.9814542827371042,
+      "jit_compile": 74.89295639272314,
+      "post_load": 4.100816139893141
+    },
+    "interpretation": "Transfer-only lower bound is the sum of observed synchronized raw final-shard puts; it excludes snapshot I/O, reconstruction and coordination. It is not an achieved restore time."
+  },
+  "load_profile_H": {
+    "source": "results/restore/LoadProfiler/load_profile_H.json",
+    "submission_id": "raysubmit_2nBVMqqZSjXNP12X",
+    "workers": [
+      {
+        "worker_path": "/measurements/deployment/instances/0/initialization/worker_init_phases/0",
+        "executor_rank": 0,
+        "implementation": "get_flax_model",
+        "load_model_s": 240.30696892738342,
+        "categories_s": {
+          "file_deserialize": 0.17707244720077142,
+          "host_tensor_ops": 155.55428562208544,
+          "host_to_device": 1.9402256313478574,
+          "jit_compile": 78.49878438195447,
+          "post_load": 4.137166677392088
+        },
+        "closure_error_fraction": 2.354624169782348e-06,
+        "raw_transfer_s": 1.61305838287808,
+        "raw_transfer_calls": 1031,
+        "final_local_bytes": 15824457580,
+        "observed_raw_transfer_GBps": 9.810219982097239,
+        "snapshot_transfer_only_lower_bound_s": 1.61305838287808,
+        "snapshot_skippable_load_s_INFERENCE": 238.69391054450534,
+        "calls": {
+          "UnquantizedMergedLinearMethod._load_merged_tensor": {
+            "exclusive_s": 5.4486189085873775,
+            "count": 270,
+            "local_bytes": 0
+          },
+          "assign_and_shard_param": {
+            "exclusive_s": 0.11419505055528134,
+            "count": 1028,
+            "local_bytes": 0
+          },
+          "compile_or_get_cached": {
+            "exclusive_s": 78.49878438195447,
+            "count": 3365,
+            "local_bytes": 0
+          },
+          "jax.clear_caches": {
+            "exclusive_s": 4.137166677392088,
+            "count": 333,
+            "local_bytes": 0
+          },
+          "jax_array_from_reshaped_torch": {
+            "exclusive_s": 128.26752969669178,
+            "count": 1188,
+            "local_bytes": 0
+          },
+          "load_model_unwrapped": {
+            "exclusive_s": 16.926446661760565,
+            "count": 1,
+            "local_bytes": 0
+          },
+          "load_nnx_param_from_reshaped_torch": {
+            "exclusive_s": 0.15500564459944144,
+            "count": 918,
+            "local_bytes": 0
+          },
+          "local_shard_selection": {
+            "exclusive_s": 4.642489659890998,
+            "count": 2355,
+            "local_bytes": 0
+          },
+          "raw_batched_device_put": {
+            "exclusive_s": 1.61305838287808,
+            "count": 1031,
+            "local_bytes": 15824457580
+          },
+          "safetensors_weights_iterator": {
+            "exclusive_s": 0.17707244720077142,
+            "count": 1189,
+            "local_bytes": 0
+          },
+          "shard_put": {
+            "exclusive_s": 0.3271672484697774,
+            "count": 1028,
+            "local_bytes": 15824457568
+          }
+        },
+        "top20": [
+          {
+            "call": "load_model_unwrapped",
+            "tensor": "model.language_model.layers.59.self_attn.q_proj.weight",
+            "wall_s": 240.30753475998063,
+            "exclusive_s": 16.926446661760565,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.5.self_attn.o_proj.weight",
+            "wall_s": 4.146819541987497,
+            "exclusive_s": 0.0007571600144729018,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.29.self_attn.o_proj.weight",
+            "wall_s": 4.136398172995541,
+            "exclusive_s": 0.0007552099996246397,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.53.self_attn.o_proj.weight",
+            "wall_s": 4.09312080295058,
+            "exclusive_s": 0.0006994399591349065,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.5.self_attn.o_proj.weight",
+            "wall_s": 4.09210627299035,
+            "exclusive_s": 4.0418205540045165,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.29.self_attn.o_proj.weight",
+            "wall_s": 4.081899453012738,
+            "exclusive_s": 4.031563213968184,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.11.self_attn.o_proj.weight",
+            "wall_s": 4.063082093023695,
+            "exclusive_s": 0.0007792400429025292,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.41.self_attn.o_proj.weight",
+            "wall_s": 4.042393693001941,
+            "exclusive_s": 0.00077704997966066,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.53.self_attn.o_proj.weight",
+            "wall_s": 4.040408244007267,
+            "exclusive_s": 3.99096406402532,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.11.self_attn.o_proj.weight",
+            "wall_s": 4.010323463997338,
+            "exclusive_s": 3.958282932988368,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.47.self_attn.o_proj.weight",
+            "wall_s": 4.00010199402459,
+            "exclusive_s": 0.0007451800629496574,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.35.self_attn.o_proj.weight",
+            "wall_s": 3.997090744029265,
+            "exclusive_s": 0.0007465090602636337,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.17.self_attn.o_proj.weight",
+            "wall_s": 3.9917557339649647,
+            "exclusive_s": 0.000841609959024936,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.41.self_attn.o_proj.weight",
+            "wall_s": 3.9876914939959534,
+            "exclusive_s": 3.9361099950037897,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.47.self_attn.o_proj.weight",
+            "wall_s": 3.9462964039994404,
+            "exclusive_s": 3.89483070501592,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.35.self_attn.o_proj.weight",
+            "wall_s": 3.9410939449444413,
+            "exclusive_s": 3.889489325985778,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.17.self_attn.o_proj.weight",
+            "wall_s": 3.9333965849946253,
+            "exclusive_s": 3.879532045975793,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.59.self_attn.o_proj.weight",
+            "wall_s": 3.9032693849876523,
+            "exclusive_s": 0.0007410389953292906,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.23.self_attn.o_proj.weight",
+            "wall_s": 3.8788607750320807,
+            "exclusive_s": 0.0008433780167251825,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.59.self_attn.o_proj.weight",
+            "wall_s": 3.8488260459853336,
+            "exclusive_s": 3.7994607059517875,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          }
+        ]
+      },
+      {
+        "worker_path": "/measurements/deployment/instances/0/initialization/worker_init_phases/1",
+        "executor_rank": 1,
+        "implementation": "get_flax_model",
+        "load_model_s": 239.90449571609497,
+        "categories_s": {
+          "file_deserialize": 0.16939962847391143,
+          "host_tensor_ops": 156.43597734475043,
+          "host_to_device": 1.971168419404421,
+          "jit_compile": 76.8715033805347,
+          "post_load": 4.456466177827679
+        },
+        "closure_error_fraction": 8.01773060334842e-08,
+        "raw_transfer_s": 1.6411624716129154,
+        "raw_transfer_calls": 1031,
+        "final_local_bytes": 15824457580,
+        "observed_raw_transfer_GBps": 9.642224858120176,
+        "snapshot_transfer_only_lower_bound_s": 1.6411624716129154,
+        "snapshot_skippable_load_s_INFERENCE": 238.26333324448206,
+        "calls": {
+          "UnquantizedMergedLinearMethod._load_merged_tensor": {
+            "exclusive_s": 5.517234360799193,
+            "count": 270,
+            "local_bytes": 0
+          },
+          "assign_and_shard_param": {
+            "exclusive_s": 0.11593486304627731,
+            "count": 1028,
+            "local_bytes": 0
+          },
+          "compile_or_get_cached": {
+            "exclusive_s": 76.8715033805347,
+            "count": 3365,
+            "local_bytes": 0
+          },
+          "jax.clear_caches": {
+            "exclusive_s": 4.456466177827679,
+            "count": 333,
+            "local_bytes": 0
+          },
+          "jax_array_from_reshaped_torch": {
+            "exclusive_s": 127.36570067470893,
+            "count": 1188,
+            "local_bytes": 0
+          },
+          "load_model_unwrapped": {
+            "exclusive_s": 16.616819203132764,
+            "count": 1,
+            "local_bytes": 0
+          },
+          "load_nnx_param_from_reshaped_torch": {
+            "exclusive_s": 0.16127830051118508,
+            "count": 918,
+            "local_bytes": 0
+          },
+          "local_shard_selection": {
+            "exclusive_s": 6.659009942552075,
+            "count": 2355,
+            "local_bytes": 0
+          },
+          "raw_batched_device_put": {
+            "exclusive_s": 1.6411624716129154,
+            "count": 1031,
+            "local_bytes": 15824457580
+          },
+          "safetensors_weights_iterator": {
+            "exclusive_s": 0.16939962847391143,
+            "count": 1189,
+            "local_bytes": 0
+          },
+          "shard_put": {
+            "exclusive_s": 0.3300059477915056,
+            "count": 1028,
+            "local_bytes": 15824457568
+          }
+        },
+        "top20": [
+          {
+            "call": "load_model_unwrapped",
+            "tensor": "model.language_model.layers.59.self_attn.q_proj.weight",
+            "wall_s": 239.90451495099114,
+            "exclusive_s": 16.616819203132764,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.11.self_attn.o_proj.weight",
+            "wall_s": 4.061107072979212,
+            "exclusive_s": 0.0010090499417856336,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.47.self_attn.o_proj.weight",
+            "wall_s": 4.051394002977759,
+            "exclusive_s": 0.0010137810022570193,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.35.self_attn.o_proj.weight",
+            "wall_s": 4.041943993011955,
+            "exclusive_s": 0.0008536300156265497,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.5.self_attn.o_proj.weight",
+            "wall_s": 4.018959212990012,
+            "exclusive_s": 0.0008200699230656028,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.59.self_attn.o_proj.weight",
+            "wall_s": 4.017359762976412,
+            "exclusive_s": 0.0007127000135369599,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.11.self_attn.o_proj.weight",
+            "wall_s": 4.007777503051329,
+            "exclusive_s": 3.9590743940207176,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.53.self_attn.o_proj.weight",
+            "wall_s": 4.00493784295395,
+            "exclusive_s": 0.00109779997728765,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.47.self_attn.o_proj.weight",
+            "wall_s": 4.0015476230182685,
+            "exclusive_s": 3.952672393992543,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.35.self_attn.o_proj.weight",
+            "wall_s": 3.990124952979386,
+            "exclusive_s": 3.939244884008076,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.59.self_attn.o_proj.weight",
+            "wall_s": 3.964523553964682,
+            "exclusive_s": 3.9151187739917077,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.5.self_attn.o_proj.weight",
+            "wall_s": 3.963651304016821,
+            "exclusive_s": 3.9153645749902353,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.23.self_attn.o_proj.weight",
+            "wall_s": 3.9583844139706343,
+            "exclusive_s": 0.0009220709907822311,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.41.self_attn.o_proj.weight",
+            "wall_s": 3.958125773991924,
+            "exclusive_s": 0.0007571009919047356,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.53.self_attn.o_proj.weight",
+            "wall_s": 3.9501282739802264,
+            "exclusive_s": 3.8989710139576346,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.29.self_attn.o_proj.weight",
+            "wall_s": 3.934759313997347,
+            "exclusive_s": 0.0009609200642444193,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.17.self_attn.o_proj.weight",
+            "wall_s": 3.933824823994655,
+            "exclusive_s": 0.0009984200005419552,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.41.self_attn.o_proj.weight",
+            "wall_s": 3.9050716240308248,
+            "exclusive_s": 3.8560682950774208,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.23.self_attn.o_proj.weight",
+            "wall_s": 3.904378473991528,
+            "exclusive_s": 3.8513476939406246,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.29.self_attn.o_proj.weight",
+            "wall_s": 3.8827341849682853,
+            "exclusive_s": 3.832448893925175,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          }
+        ]
+      },
+      {
+        "worker_path": "/measurements/deployment/instances/0/initialization/worker_init_phases/2",
+        "executor_rank": 2,
+        "implementation": "get_flax_model",
+        "load_model_s": 240.1754710674286,
+        "categories_s": {
+          "file_deserialize": 0.17418088123667985,
+          "host_tensor_ops": 157.84710299002472,
+          "host_to_device": 1.9514387709205039,
+          "jit_compile": 75.85880334058311,
+          "post_load": 4.343956649245229
+        },
+        "closure_error_fraction": 4.8150552608759755e-08,
+        "raw_transfer_s": 1.610962520877365,
+        "raw_transfer_calls": 1031,
+        "final_local_bytes": 15824457580,
+        "observed_raw_transfer_GBps": 9.822983076838845,
+        "snapshot_transfer_only_lower_bound_s": 1.610962520877365,
+        "snapshot_skippable_load_s_INFERENCE": 238.56450854655122,
+        "calls": {
+          "UnquantizedMergedLinearMethod._load_merged_tensor": {
+            "exclusive_s": 5.92120397411054,
+            "count": 270,
+            "local_bytes": 0
+          },
+          "assign_and_shard_param": {
+            "exclusive_s": 0.11503085715230554,
+            "count": 1028,
+            "local_bytes": 0
+          },
+          "compile_or_get_cached": {
+            "exclusive_s": 75.85880334058311,
+            "count": 3365,
+            "local_bytes": 0
+          },
+          "jax.clear_caches": {
+            "exclusive_s": 4.343956649245229,
+            "count": 333,
+            "local_bytes": 0
+          },
+          "jax_array_from_reshaped_torch": {
+            "exclusive_s": 127.64703780668788,
+            "count": 1188,
+            "local_bytes": 0
+          },
+          "load_model_unwrapped": {
+            "exclusive_s": 17.4582087531453,
+            "count": 1,
+            "local_bytes": 0
+          },
+          "load_nnx_param_from_reshaped_torch": {
+            "exclusive_s": 0.1653006878332235,
+            "count": 918,
+            "local_bytes": 0
+          },
+          "local_shard_selection": {
+            "exclusive_s": 6.540320911095478,
+            "count": 2355,
+            "local_bytes": 0
+          },
+          "raw_batched_device_put": {
+            "exclusive_s": 1.610962520877365,
+            "count": 1031,
+            "local_bytes": 15824457580
+          },
+          "safetensors_weights_iterator": {
+            "exclusive_s": 0.17418088123667985,
+            "count": 1189,
+            "local_bytes": 0
+          },
+          "shard_put": {
+            "exclusive_s": 0.34047625004313886,
+            "count": 1028,
+            "local_bytes": 15824457568
+          }
+        },
+        "top20": [
+          {
+            "call": "load_model_unwrapped",
+            "tensor": "model.language_model.layers.59.self_attn.q_proj.weight",
+            "wall_s": 240.17548263201024,
+            "exclusive_s": 17.4582087531453,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.35.self_attn.o_proj.weight",
+            "wall_s": 4.1499107659910806,
+            "exclusive_s": 0.0008715700241737068,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.29.self_attn.o_proj.weight",
+            "wall_s": 4.110957756987773,
+            "exclusive_s": 0.0009226900292560458,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.35.self_attn.o_proj.weight",
+            "wall_s": 4.095264506991953,
+            "exclusive_s": 4.0445458280155435,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.29.self_attn.o_proj.weight",
+            "wall_s": 4.056930027960334,
+            "exclusive_s": 4.008428398985416,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.5.self_attn.o_proj.weight",
+            "wall_s": 4.035130217962433,
+            "exclusive_s": 0.0007808499503880739,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.47.self_attn.o_proj.weight",
+            "wall_s": 4.034902948013041,
+            "exclusive_s": 0.0009461399749852717,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.41.self_attn.o_proj.weight",
+            "wall_s": 4.029071159020532,
+            "exclusive_s": 0.0009431600337848067,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.59.self_attn.o_proj.weight",
+            "wall_s": 4.0002872490440495,
+            "exclusive_s": 0.0009285900741815567,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.47.self_attn.o_proj.weight",
+            "wall_s": 3.98439988901373,
+            "exclusive_s": 3.934866260038689,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.23.self_attn.o_proj.weight",
+            "wall_s": 3.9842145789880306,
+            "exclusive_s": 0.0009394809603691101,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.5.self_attn.o_proj.weight",
+            "wall_s": 3.9828727890271693,
+            "exclusive_s": 3.935239120037295,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.41.self_attn.o_proj.weight",
+            "wall_s": 3.9762856289744377,
+            "exclusive_s": 3.924997741007246,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.53.self_attn.o_proj.weight",
+            "wall_s": 3.9734025889774784,
+            "exclusive_s": 0.0009801299893297255,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.17.self_attn.o_proj.weight",
+            "wall_s": 3.9501601199735887,
+            "exclusive_s": 0.0009962599724531174,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.59.self_attn.o_proj.weight",
+            "wall_s": 3.9481355299940333,
+            "exclusive_s": 3.8991620309534483,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.23.self_attn.o_proj.weight",
+            "wall_s": 3.9304736790363677,
+            "exclusive_s": 3.881197810114827,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.53.self_attn.o_proj.weight",
+            "wall_s": 3.921091240015812,
+            "exclusive_s": 3.8728817119263113,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.17.self_attn.o_proj.weight",
+            "wall_s": 3.898526660981588,
+            "exclusive_s": 3.8475978919886984,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.11.self_attn.o_proj.weight",
+            "wall_s": 3.888825910980813,
+            "exclusive_s": 0.0008442799444310367,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          }
+        ]
+      },
+      {
+        "worker_path": "/measurements/deployment/instances/0/initialization/worker_init_phases/3",
+        "executor_rank": 3,
+        "implementation": "get_flax_model",
+        "load_model_s": 240.1720199584961,
+        "categories_s": {
+          "file_deserialize": 0.1699425772530958,
+          "host_tensor_ops": 156.09143606445286,
+          "host_to_device": 1.9796944492845796,
+          "jit_compile": 77.73644069914008,
+          "post_load": 4.1945171798579395
+        },
+        "closure_error_fraction": 4.584835678556143e-08,
+        "raw_transfer_s": 1.6425655261264183,
+        "raw_transfer_calls": 1031,
+        "final_local_bytes": 15824457580,
+        "observed_raw_transfer_GBps": 9.633988616160746,
+        "snapshot_transfer_only_lower_bound_s": 1.6425655261264183,
+        "snapshot_skippable_load_s_INFERENCE": 238.52945443236968,
+        "calls": {
+          "UnquantizedMergedLinearMethod._load_merged_tensor": {
+            "exclusive_s": 5.450136691972148,
+            "count": 270,
+            "local_bytes": 0
+          },
+          "assign_and_shard_param": {
+            "exclusive_s": 0.11713217169744894,
+            "count": 1028,
+            "local_bytes": 0
+          },
+          "compile_or_get_cached": {
+            "exclusive_s": 77.73644069914008,
+            "count": 3365,
+            "local_bytes": 0
+          },
+          "jax.clear_caches": {
+            "exclusive_s": 4.1945171798579395,
+            "count": 333,
+            "local_bytes": 0
+          },
+          "jax_array_from_reshaped_torch": {
+            "exclusive_s": 127.49897665542085,
+            "count": 1188,
+            "local_bytes": 0
+          },
+          "load_model_unwrapped": {
+            "exclusive_s": 17.46697596384911,
+            "count": 1,
+            "local_bytes": 0
+          },
+          "load_nnx_param_from_reshaped_torch": {
+            "exclusive_s": 0.16012183611746877,
+            "count": 918,
+            "local_bytes": 0
+          },
+          "local_shard_selection": {
+            "exclusive_s": 5.398092745395843,
+            "count": 2355,
+            "local_bytes": 0
+          },
+          "raw_batched_device_put": {
+            "exclusive_s": 1.6425655261264183,
+            "count": 1031,
+            "local_bytes": 15824457580
+          },
+          "safetensors_weights_iterator": {
+            "exclusive_s": 0.1699425772530958,
+            "count": 1189,
+            "local_bytes": 0
+          },
+          "shard_put": {
+            "exclusive_s": 0.33712892315816134,
+            "count": 1028,
+            "local_bytes": 15824457568
+          }
+        },
+        "top20": [
+          {
+            "call": "load_model_unwrapped",
+            "tensor": "model.language_model.layers.59.self_attn.q_proj.weight",
+            "wall_s": 240.17203096998855,
+            "exclusive_s": 17.46697596384911,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.41.self_attn.o_proj.weight",
+            "wall_s": 4.080105136963539,
+            "exclusive_s": 0.0010858990135602653,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.11.self_attn.o_proj.weight",
+            "wall_s": 4.079229906958062,
+            "exclusive_s": 0.0009852389921434224,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.47.self_attn.o_proj.weight",
+            "wall_s": 4.0462790980236605,
+            "exclusive_s": 0.0007376000285148621,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.17.self_attn.o_proj.weight",
+            "wall_s": 4.0285596390021965,
+            "exclusive_s": 0.0008135400130413473,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.11.self_attn.o_proj.weight",
+            "wall_s": 4.027338587970007,
+            "exclusive_s": 3.9764418989652768,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.41.self_attn.o_proj.weight",
+            "wall_s": 4.025674598990008,
+            "exclusive_s": 3.9750048700370826,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.53.self_attn.o_proj.weight",
+            "wall_s": 4.018798939010594,
+            "exclusive_s": 0.0007806700305081904,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.29.self_attn.o_proj.weight",
+            "wall_s": 4.016140158986673,
+            "exclusive_s": 0.0007573599577881396,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.59.self_attn.o_proj.weight",
+            "wall_s": 3.9926060889847577,
+            "exclusive_s": 0.0006955310236662626,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.47.self_attn.o_proj.weight",
+            "wall_s": 3.9911009590141475,
+            "exclusive_s": 3.939382620039396,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.23.self_attn.o_proj.weight",
+            "wall_s": 3.9909012189600617,
+            "exclusive_s": 0.0008083709399215877,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.17.self_attn.o_proj.weight",
+            "wall_s": 3.9760483889840543,
+            "exclusive_s": 3.923743048973847,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.53.self_attn.o_proj.weight",
+            "wall_s": 3.966690319997724,
+            "exclusive_s": 3.9177384700160474,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.29.self_attn.o_proj.weight",
+            "wall_s": 3.9612737100105733,
+            "exclusive_s": 3.911633370036725,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.23.self_attn.o_proj.weight",
+            "wall_s": 3.9385660690022632,
+            "exclusive_s": 3.888688138977159,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.59.self_attn.o_proj.weight",
+            "wall_s": 3.9375546899973415,
+            "exclusive_s": 3.888399212039076,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.35.self_attn.o_proj.weight",
+            "wall_s": 3.908879460999742,
+            "exclusive_s": 0.000965641054790467,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.35.self_attn.o_proj.weight",
+            "wall_s": 3.855394260957837,
+            "exclusive_s": 3.802474640950095,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.5.self_attn.o_proj.weight",
+            "wall_s": 3.8503294209949672,
+            "exclusive_s": 0.000990399974398315,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          }
+        ]
+      },
+      {
+        "worker_path": "/measurements/deployment/instances/1/initialization/worker_init_phases/0",
+        "executor_rank": 0,
+        "implementation": "get_flax_model",
+        "load_model_s": 239.47202897071838,
+        "categories_s": {
+          "file_deserialize": 0.19108614046126604,
+          "host_tensor_ops": 157.69864203291945,
+          "host_to_device": 1.8961999758030288,
+          "jit_compile": 75.3718618749408,
+          "post_load": 4.314882242877502
+        },
+        "closure_error_fraction": 2.686310741320145e-06,
+        "raw_transfer_s": 1.573245472565759,
+        "raw_transfer_calls": 1031,
+        "final_local_bytes": 15824457580,
+        "observed_raw_transfer_GBps": 10.058479656192727,
+        "snapshot_transfer_only_lower_bound_s": 1.573245472565759,
+        "snapshot_skippable_load_s_INFERENCE": 237.89878349815262,
+        "calls": {
+          "UnquantizedMergedLinearMethod._load_merged_tensor": {
+            "exclusive_s": 5.108530600205995,
+            "count": 270,
+            "local_bytes": 0
+          },
+          "assign_and_shard_param": {
+            "exclusive_s": 0.11388324177823961,
+            "count": 1028,
+            "local_bytes": 0
+          },
+          "compile_or_get_cached": {
+            "exclusive_s": 75.3718618749408,
+            "count": 3365,
+            "local_bytes": 0
+          },
+          "jax.clear_caches": {
+            "exclusive_s": 4.314882242877502,
+            "count": 333,
+            "local_bytes": 0
+          },
+          "jax_array_from_reshaped_torch": {
+            "exclusive_s": 128.383006065269,
+            "count": 1188,
+            "local_bytes": 0
+          },
+          "load_model_unwrapped": {
+            "exclusive_s": 16.770603343611583,
+            "count": 1,
+            "local_bytes": 0
+          },
+          "load_nnx_param_from_reshaped_torch": {
+            "exclusive_s": 0.1589718456962146,
+            "count": 918,
+            "local_bytes": 0
+          },
+          "local_shard_selection": {
+            "exclusive_s": 7.163646936358418,
+            "count": 2355,
+            "local_bytes": 0
+          },
+          "raw_batched_device_put": {
+            "exclusive_s": 1.573245472565759,
+            "count": 1031,
+            "local_bytes": 15824457580
+          },
+          "safetensors_weights_iterator": {
+            "exclusive_s": 0.19108614046126604,
+            "count": 1189,
+            "local_bytes": 0
+          },
+          "shard_put": {
+            "exclusive_s": 0.3229545032372698,
+            "count": 1028,
+            "local_bytes": 15824457568
+          }
+        },
+        "top20": [
+          {
+            "call": "load_model_unwrapped",
+            "tensor": "model.language_model.layers.59.self_attn.q_proj.weight",
+            "wall_s": 239.47267226700205,
+            "exclusive_s": 16.770603343611583,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.5.self_attn.o_proj.weight",
+            "wall_s": 4.154694741999265,
+            "exclusive_s": 0.000720629992429167,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.5.self_attn.o_proj.weight",
+            "wall_s": 4.102972006017808,
+            "exclusive_s": 4.054589889012277,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.41.self_attn.o_proj.weight",
+            "wall_s": 4.101042076013982,
+            "exclusive_s": 0.0009811200434342027,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.29.self_attn.o_proj.weight",
+            "wall_s": 4.0986124069895595,
+            "exclusive_s": 0.001130980032030493,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.17.self_attn.o_proj.weight",
+            "wall_s": 4.060910939995665,
+            "exclusive_s": 0.0009157210006378591,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.41.self_attn.o_proj.weight",
+            "wall_s": 4.047081149998121,
+            "exclusive_s": 3.9980859540519305,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.29.self_attn.o_proj.weight",
+            "wall_s": 4.043420140980743,
+            "exclusive_s": 3.994530575990211,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.59.self_attn.o_proj.weight",
+            "wall_s": 4.031734041986056,
+            "exclusive_s": 0.0008811699808575213,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.47.self_attn.o_proj.weight",
+            "wall_s": 4.024468342948239,
+            "exclusive_s": 0.0007386799552477896,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.53.self_attn.o_proj.weight",
+            "wall_s": 4.024067332036793,
+            "exclusive_s": 0.00106716004665941,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.17.self_attn.o_proj.weight",
+            "wall_s": 4.007160773966461,
+            "exclusive_s": 3.9602902369806543,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.11.self_attn.o_proj.weight",
+            "wall_s": 4.0004501640214585,
+            "exclusive_s": 0.000991530017927289,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.35.self_attn.o_proj.weight",
+            "wall_s": 3.9784189359634183,
+            "exclusive_s": 0.0010299399145878851,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.59.self_attn.o_proj.weight",
+            "wall_s": 3.978198495984543,
+            "exclusive_s": 3.9285057489178143,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.47.self_attn.o_proj.weight",
+            "wall_s": 3.9709947369992733,
+            "exclusive_s": 3.9209675419842824,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.53.self_attn.o_proj.weight",
+            "wall_s": 3.969688466982916,
+            "exclusive_s": 3.920040091034025,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.23.self_attn.o_proj.weight",
+            "wall_s": 3.967662326991558,
+            "exclusive_s": 0.0007287299958989024,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.11.self_attn.o_proj.weight",
+            "wall_s": 3.946802899008617,
+            "exclusive_s": 3.8964750230079517,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.35.self_attn.o_proj.weight",
+            "wall_s": 3.9260987500310875,
+            "exclusive_s": 3.87809393403586,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          }
+        ]
+      },
+      {
+        "worker_path": "/measurements/deployment/instances/1/initialization/worker_init_phases/1",
+        "executor_rank": 1,
+        "implementation": "get_flax_model",
+        "load_model_s": 239.7696635723114,
+        "categories_s": {
+          "file_deserialize": 0.17767465114593506,
+          "host_tensor_ops": 157.2907392330235,
+          "host_to_device": 1.974873508035671,
+          "jit_compile": 76.18931294919457,
+          "post_load": 4.137073506601155
+        },
+        "closure_error_fraction": 4.2856503471966356e-08,
+        "raw_transfer_s": 1.6308799051330425,
+        "raw_transfer_calls": 1031,
+        "final_local_bytes": 15824457580,
+        "observed_raw_transfer_GBps": 9.703018309437743,
+        "snapshot_transfer_only_lower_bound_s": 1.6308799051330425,
+        "snapshot_skippable_load_s_INFERENCE": 238.13878366717836,
+        "calls": {
+          "UnquantizedMergedLinearMethod._load_merged_tensor": {
+            "exclusive_s": 5.550704486086033,
+            "count": 270,
+            "local_bytes": 0
+          },
+          "assign_and_shard_param": {
+            "exclusive_s": 0.11523349810158834,
+            "count": 1028,
+            "local_bytes": 0
+          },
+          "compile_or_get_cached": {
+            "exclusive_s": 76.18931294919457,
+            "count": 3365,
+            "local_bytes": 0
+          },
+          "jax.clear_caches": {
+            "exclusive_s": 4.137073506601155,
+            "count": 333,
+            "local_bytes": 0
+          },
+          "jax_array_from_reshaped_torch": {
+            "exclusive_s": 127.39988099073526,
+            "count": 1188,
+            "local_bytes": 0
+          },
+          "load_model_unwrapped": {
+            "exclusive_s": 17.566015804070048,
+            "count": 1,
+            "local_bytes": 0
+          },
+          "load_nnx_param_from_reshaped_torch": {
+            "exclusive_s": 0.16413539473433048,
+            "count": 918,
+            "local_bytes": 0
+          },
+          "local_shard_selection": {
+            "exclusive_s": 6.494769059296232,
+            "count": 2355,
+            "local_bytes": 0
+          },
+          "raw_batched_device_put": {
+            "exclusive_s": 1.6308799051330425,
+            "count": 1031,
+            "local_bytes": 15824457580
+          },
+          "safetensors_weights_iterator": {
+            "exclusive_s": 0.17767465114593506,
+            "count": 1189,
+            "local_bytes": 0
+          },
+          "shard_put": {
+            "exclusive_s": 0.3439936029026285,
+            "count": 1028,
+            "local_bytes": 15824457568
+          }
+        },
+        "top20": [
+          {
+            "call": "load_model_unwrapped",
+            "tensor": "model.language_model.layers.59.self_attn.q_proj.weight",
+            "wall_s": 239.76967384800082,
+            "exclusive_s": 17.566015804070048,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.29.self_attn.o_proj.weight",
+            "wall_s": 4.141040242044255,
+            "exclusive_s": 0.0009290900779888034,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.29.self_attn.o_proj.weight",
+            "wall_s": 4.086219322984107,
+            "exclusive_s": 4.0359125030227005,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.17.self_attn.o_proj.weight",
+            "wall_s": 4.04844141297508,
+            "exclusive_s": 0.001170209958218038,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.59.self_attn.o_proj.weight",
+            "wall_s": 4.028602872975171,
+            "exclusive_s": 0.0010572600294835865,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.5.self_attn.o_proj.weight",
+            "wall_s": 4.014422222971916,
+            "exclusive_s": 0.0007078289054334164,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.23.self_attn.o_proj.weight",
+            "wall_s": 4.006904573994689,
+            "exclusive_s": 0.001075380016118288,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.17.self_attn.o_proj.weight",
+            "wall_s": 3.993488563981373,
+            "exclusive_s": 3.945134363952093,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.59.self_attn.o_proj.weight",
+            "wall_s": 3.9760072929784656,
+            "exclusive_s": 3.9269941239617765,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.5.self_attn.o_proj.weight",
+            "wall_s": 3.9602038240409456,
+            "exclusive_s": 3.9096964640775695,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.23.self_attn.o_proj.weight",
+            "wall_s": 3.9512316239997745,
+            "exclusive_s": 3.897714154969435,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.11.self_attn.o_proj.weight",
+            "wall_s": 3.887892553990241,
+            "exclusive_s": 0.0007385900244116783,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.41.self_attn.o_proj.weight",
+            "wall_s": 3.8528789349948056,
+            "exclusive_s": 0.0011240799212828279,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.11.self_attn.o_proj.weight",
+            "wall_s": 3.836349165008869,
+            "exclusive_s": 3.7884521749801934,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.35.self_attn.o_proj.weight",
+            "wall_s": 3.824392036010977,
+            "exclusive_s": 0.0011716799926944077,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.41.self_attn.o_proj.weight",
+            "wall_s": 3.7975308560417034,
+            "exclusive_s": 3.745814725989476,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.47.self_attn.o_proj.weight",
+            "wall_s": 3.785044606018346,
+            "exclusive_s": 0.001047990983352065,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.35.self_attn.o_proj.weight",
+            "wall_s": 3.7695048070163466,
+            "exclusive_s": 3.7206341470009647,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.53.self_attn.o_proj.weight",
+            "wall_s": 3.759226126014255,
+            "exclusive_s": 0.0006850200588814914,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.47.self_attn.o_proj.weight",
+            "wall_s": 3.7289108860422857,
+            "exclusive_s": 3.678668156033382,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          }
+        ]
+      },
+      {
+        "worker_path": "/measurements/deployment/instances/1/initialization/worker_init_phases/2",
+        "executor_rank": 2,
+        "implementation": "get_flax_model",
+        "load_model_s": 240.17309069633484,
+        "categories_s": {
+          "file_deserialize": 0.1772934541804716,
+          "host_tensor_ops": 156.56721434521023,
+          "host_to_device": 1.9729590493952855,
+          "jit_compile": 77.38960960472468,
+          "post_load": 4.066025531501509
+        },
+        "closure_error_fraction": 4.700225703681762e-08,
+        "raw_transfer_s": 1.6403628890402615,
+        "raw_transfer_calls": 1031,
+        "final_local_bytes": 15824457580,
+        "observed_raw_transfer_GBps": 9.646924888223072,
+        "snapshot_transfer_only_lower_bound_s": 1.6403628890402615,
+        "snapshot_skippable_load_s_INFERENCE": 238.53272780729458,
+        "calls": {
+          "UnquantizedMergedLinearMethod._load_merged_tensor": {
+            "exclusive_s": 5.775484610814601,
+            "count": 270,
+            "local_bytes": 0
+          },
+          "assign_and_shard_param": {
+            "exclusive_s": 0.11862635164288804,
+            "count": 1028,
+            "local_bytes": 0
+          },
+          "compile_or_get_cached": {
+            "exclusive_s": 77.38960960472468,
+            "count": 3365,
+            "local_bytes": 0
+          },
+          "jax.clear_caches": {
+            "exclusive_s": 4.066025531501509,
+            "count": 333,
+            "local_bytes": 0
+          },
+          "jax_array_from_reshaped_torch": {
+            "exclusive_s": 127.52158747194335,
+            "count": 1188,
+            "local_bytes": 0
+          },
+          "load_model_unwrapped": {
+            "exclusive_s": 17.490775040874723,
+            "count": 1,
+            "local_bytes": 0
+          },
+          "load_nnx_param_from_reshaped_torch": {
+            "exclusive_s": 0.156095297599677,
+            "count": 918,
+            "local_bytes": 0
+          },
+          "local_shard_selection": {
+            "exclusive_s": 5.504645572334994,
+            "count": 2355,
+            "local_bytes": 0
+          },
+          "raw_batched_device_put": {
+            "exclusive_s": 1.6403628890402615,
+            "count": 1031,
+            "local_bytes": 15824457580
+          },
+          "safetensors_weights_iterator": {
+            "exclusive_s": 0.1772934541804716,
+            "count": 1189,
+            "local_bytes": 0
+          },
+          "shard_put": {
+            "exclusive_s": 0.33259616035502404,
+            "count": 1028,
+            "local_bytes": 15824457568
+          }
+        },
+        "top20": [
+          {
+            "call": "load_model_unwrapped",
+            "tensor": "model.language_model.layers.59.self_attn.q_proj.weight",
+            "wall_s": 240.17310198501218,
+            "exclusive_s": 17.490775040874723,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.35.self_attn.o_proj.weight",
+            "wall_s": 4.099158928962424,
+            "exclusive_s": 0.0008002909016795456,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.41.self_attn.o_proj.weight",
+            "wall_s": 4.097292838036083,
+            "exclusive_s": 0.0007508900598622859,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.29.self_attn.o_proj.weight",
+            "wall_s": 4.087950219050981,
+            "exclusive_s": 0.0008227500948123634,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.5.self_attn.o_proj.weight",
+            "wall_s": 4.0794652590411715,
+            "exclusive_s": 0.0006908300565555692,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.59.self_attn.o_proj.weight",
+            "wall_s": 4.050152720999904,
+            "exclusive_s": 0.0007306289626285434,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.35.self_attn.o_proj.weight",
+            "wall_s": 4.044589682016522,
+            "exclusive_s": 3.996629876026418,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.41.self_attn.o_proj.weight",
+            "wall_s": 4.043831661983859,
+            "exclusive_s": 3.992790696967859,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.47.self_attn.o_proj.weight",
+            "wall_s": 4.042424901970662,
+            "exclusive_s": 0.0008499589748680592,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.29.self_attn.o_proj.weight",
+            "wall_s": 4.034556082973722,
+            "exclusive_s": 3.984619907976594,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.5.self_attn.o_proj.weight",
+            "wall_s": 4.024693563987967,
+            "exclusive_s": 3.974565176933538,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.23.self_attn.o_proj.weight",
+            "wall_s": 4.011223534995224,
+            "exclusive_s": 0.0009037299314513803,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.59.self_attn.o_proj.weight",
+            "wall_s": 3.9955530560109764,
+            "exclusive_s": 3.9456028600106947,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.47.self_attn.o_proj.weight",
+            "wall_s": 3.9886009869514965,
+            "exclusive_s": 3.940420420956798,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.53.self_attn.o_proj.weight",
+            "wall_s": 3.9664973890176043,
+            "exclusive_s": 0.0007249699556268752,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.23.self_attn.o_proj.weight",
+            "wall_s": 3.957357789040543,
+            "exclusive_s": 3.9103664730791934,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.11.self_attn.o_proj.weight",
+            "wall_s": 3.937009880959522,
+            "exclusive_s": 0.0007739499560557306,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.53.self_attn.o_proj.weight",
+            "wall_s": 3.9146546230185777,
+            "exclusive_s": 3.8657377670751885,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.11.self_attn.o_proj.weight",
+            "wall_s": 3.8824235359788872,
+            "exclusive_s": 3.832111019990407,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.17.self_attn.o_proj.weight",
+            "wall_s": 3.8621708180289716,
+            "exclusive_s": 0.0008072900236584246,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          }
+        ]
+      },
+      {
+        "worker_path": "/measurements/deployment/instances/1/initialization/worker_init_phases/3",
+        "executor_rank": 3,
+        "implementation": "get_flax_model",
+        "load_model_s": 239.78512048721313,
+        "categories_s": {
+          "file_deserialize": 0.18777537863934413,
+          "host_tensor_ops": 156.51974431355484,
+          "host_to_device": 2.012860776798334,
+          "jit_compile": 76.7229269319796,
+          "post_load": 4.3418243690393865
+        },
+        "closure_error_fraction": 4.705378859855256e-08,
+        "raw_transfer_s": 1.6754875447950326,
+        "raw_transfer_calls": 1031,
+        "final_local_bytes": 15824457580,
+        "observed_raw_transfer_GBps": 9.444688281425485,
+        "snapshot_transfer_only_lower_bound_s": 1.6754875447950326,
+        "snapshot_skippable_load_s_INFERENCE": 238.1096329424181,
+        "calls": {
+          "UnquantizedMergedLinearMethod._load_merged_tensor": {
+            "exclusive_s": 5.326462582568638,
+            "count": 270,
+            "local_bytes": 0
+          },
+          "assign_and_shard_param": {
+            "exclusive_s": 0.12097340740729123,
+            "count": 1028,
+            "local_bytes": 0
+          },
+          "compile_or_get_cached": {
+            "exclusive_s": 76.7229269319796,
+            "count": 3365,
+            "local_bytes": 0
+          },
+          "jax.clear_caches": {
+            "exclusive_s": 4.3418243690393865,
+            "count": 333,
+            "local_bytes": 0
+          },
+          "jax_array_from_reshaped_torch": {
+            "exclusive_s": 127.85607937019086,
+            "count": 1188,
+            "local_bytes": 0
+          },
+          "load_model_unwrapped": {
+            "exclusive_s": 17.521054365613963,
+            "count": 1,
+            "local_bytes": 0
+          },
+          "load_nnx_param_from_reshaped_torch": {
+            "exclusive_s": 0.16218774119624868,
+            "count": 918,
+            "local_bytes": 0
+          },
+          "local_shard_selection": {
+            "exclusive_s": 5.532986846577842,
+            "count": 2355,
+            "local_bytes": 0
+          },
+          "raw_batched_device_put": {
+            "exclusive_s": 1.6754875447950326,
+            "count": 1031,
+            "local_bytes": 15824457580
+          },
+          "safetensors_weights_iterator": {
+            "exclusive_s": 0.18777537863934413,
+            "count": 1189,
+            "local_bytes": 0
+          },
+          "shard_put": {
+            "exclusive_s": 0.3373732320033014,
+            "count": 1028,
+            "local_bytes": 15824457568
+          }
+        },
+        "top20": [
+          {
+            "call": "load_model_unwrapped",
+            "tensor": "model.language_model.layers.59.self_attn.q_proj.weight",
+            "wall_s": 239.7851317700115,
+            "exclusive_s": 17.521054365613963,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.59.self_attn.o_proj.weight",
+            "wall_s": 4.083675227011554,
+            "exclusive_s": 0.0008202689932659268,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.41.self_attn.o_proj.weight",
+            "wall_s": 4.048446597997099,
+            "exclusive_s": 0.0007397900335490704,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.59.self_attn.o_proj.weight",
+            "wall_s": 4.030315678974148,
+            "exclusive_s": 3.981811718957033,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.5.self_attn.o_proj.weight",
+            "wall_s": 4.027786728052888,
+            "exclusive_s": 0.0006886200862936676,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.11.self_attn.o_proj.weight",
+            "wall_s": 4.02433528797701,
+            "exclusive_s": 0.0006550499820150435,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.17.self_attn.o_proj.weight",
+            "wall_s": 4.0175952179706655,
+            "exclusive_s": 0.0007325299666263163,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.47.self_attn.o_proj.weight",
+            "wall_s": 4.011471818026621,
+            "exclusive_s": 0.0007354299887083471,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.53.self_attn.o_proj.weight",
+            "wall_s": 4.0054600890143774,
+            "exclusive_s": 0.0007828010129742324,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.41.self_attn.o_proj.weight",
+            "wall_s": 3.9956247489899397,
+            "exclusive_s": 3.9462572690099478,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.35.self_attn.o_proj.weight",
+            "wall_s": 3.976148429035675,
+            "exclusive_s": 0.0008494900539517403,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.5.self_attn.o_proj.weight",
+            "wall_s": 3.9760324279777706,
+            "exclusive_s": 3.925886078970507,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.11.self_attn.o_proj.weight",
+            "wall_s": 3.970004278002307,
+            "exclusive_s": 3.919143298990093,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.17.self_attn.o_proj.weight",
+            "wall_s": 3.9640665689948946,
+            "exclusive_s": 3.9168932789471,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.23.self_attn.o_proj.weight",
+            "wall_s": 3.9627387289656326,
+            "exclusive_s": 0.0007491199648939073,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.47.self_attn.o_proj.weight",
+            "wall_s": 3.958657829032745,
+            "exclusive_s": 3.9086894990177825,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.53.self_attn.o_proj.weight",
+            "wall_s": 3.952985409006942,
+            "exclusive_s": 3.9046179290744476,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "load_nnx_param_from_reshaped_torch",
+            "tensor": "model.language_model.layers.29.self_attn.o_proj.weight",
+            "wall_s": 3.9282093690126203,
+            "exclusive_s": 0.0007601200486533344,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.35.self_attn.o_proj.weight",
+            "wall_s": 3.920915700029582,
+            "exclusive_s": 3.8696041899966076,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          },
+          {
+            "call": "jax_array_from_reshaped_torch",
+            "tensor": "model.language_model.layers.23.self_attn.o_proj.weight",
+            "wall_s": 3.9104786689858884,
+            "exclusive_s": 3.8615628700354137,
+            "category": "host_tensor_ops",
+            "bytes": 0
+          }
+        ]
+      }
+    ],
+    "median": {
+      "load_model_s": 240.03825783729553,
+      "raw_transfer_s": 1.635621397086652,
+      "final_local_bytes": 15824457580.0,
+      "observed_raw_transfer_GBps": 9.674971598830407,
+      "raw_transfer_calls": 1031.0
+    },
+    "ranges": {
+      "load_model_s": [
+        239.47202897071838,
+        240.30696892738342
+      ],
+      "raw_transfer_s": [
+        1.573245472565759,
+        1.6754875447950326
+      ],
+      "final_local_bytes": [
+        15824457580,
+        15824457580
+      ],
+      "observed_raw_transfer_GBps": [
+        9.444688281425485,
+        10.058479656192727
+      ],
+      "raw_transfer_calls": [
+        1031,
+        1031
+      ]
+    },
+    "median_calls": {
+      "UnquantizedMergedLinearMethod._load_merged_tensor": {
+        "exclusive_s": 5.4836855263856705,
+        "count": 270.0
+      },
+      "assign_and_shard_param": {
+        "exclusive_s": 0.11558418057393283,
+        "count": 1028.0
+      },
+      "compile_or_get_cached": {
+        "exclusive_s": 76.79721515625715,
+        "count": 3365.0
+      },
+      "jax.clear_caches": {
+        "exclusive_s": 4.254699711367721,
+        "count": 333.0
+      },
+      "jax_array_from_reshaped_torch": {
+        "exclusive_s": 127.58431263931561,
+        "count": 1188.0
+      },
+      "load_model_unwrapped": {
+        "exclusive_s": 17.462592358497204,
+        "count": 1.0
+      },
+      "load_nnx_param_from_reshaped_torch": {
+        "exclusive_s": 0.16070006831432693,
+        "count": 918.0
+      },
+      "local_shard_selection": {
+        "exclusive_s": 6.013877952937037,
+        "count": 2355.0
+      },
+      "raw_batched_device_put": {
+        "exclusive_s": 1.635621397086652,
+        "count": 1031.0
+      },
+      "safetensors_weights_iterator": {
+        "exclusive_s": 0.1771829506906215,
+        "count": 1189.0
+      },
+      "shard_put": {
+        "exclusive_s": 0.3348625417565927,
+        "count": 1028.0
+      }
+    },
+    "median_categories_s": {
+      "file_deserialize": 0.1771829506906215,
+      "host_tensor_ops": 156.54347932938254,
+      "host_to_device": 1.9720637343998533,
+      "jit_compile": 76.79721515625715,
+      "post_load": 4.254699711367721
+    },
+    "interpretation": "Transfer-only lower bound is the sum of observed synchronized raw final-shard puts; it excludes snapshot I/O, reconstruction and coordination. It is not an achieved restore time."
+  }
+}

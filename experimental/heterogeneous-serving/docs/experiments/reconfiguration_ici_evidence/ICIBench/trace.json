@@ -1,0 +1,130 @@
+{
+  "traces": [
+    {
+      "path": "results/ici/ICIBench/profile/process0/plugins/profile/2026_10_02_10_49_56/gke-tpu-8770cb66-8v5c.trace.json.gz",
+      "sha256": "1b0056aa1c8c671a4c6fb7be53cd29d0e72137ff13f456859128ffa9e2e22d7c",
+      "events": 444832,
+      "collective_permute_start_count": 1768,
+      "collective_permute_done_count": 1768,
+      "host_parameter_copy_event_count_by_name": 0,
+      "collective_example": {
+        "ph": "X",
+        "pid": 3,
+        "tid": 3,
+        "ts": 29740.31875,
+        "dur": 0.45375,
+        "name": "collective-permute-start",
+        "args": {
+          "Time Scale Multiplier": "1",
+          "bytes_accessed": "2322440",
+          "device_duration_ps": "453750",
+          "device_offset_ps": "29732552500",
+          "hlo_category": "collective-permute-start",
+          "long_name": "%collective-permute-start = (bf16[1152,336]{0,1:T(8,128)(2,1)S(1)}, bf16[1152,336]{0,1:T(8,128)(2,1)S(1)}, u32[]{:S(2)}, u32[]{:S(2)}) collective-permute-start(bf16[1152,336]{0,1:T(8,128)(2,1)S(1)} %constant_dynamic-slice_fusion), channel_id=1, source_target_pairs={{0,0},{2,1},{1,2},{3,3},{5,4},{15,5},{4,6},{6,7},{10,8},{12,9},{11,10},{13,11},{7,12},{9,13},{8,14},{14,15}}, frontend_attributes={is_spmd_generated=\"true\"}",
+          "memory_access_breakdown": "<opaque bytes>",
+          "model_flops": "0",
+          "raw_bytes_accessed": "2322440",
+          "shape_with_layout": "(bf16[1152,336]{0,1:T(8,128)(2,1)S(1)}, bf16[1152,336]{0,1:T(8,128)(2,1)S(1)}, u32[]{:S(2)}, u32[]{:S(2)})"
+        }
+      },
+      "reshard_execution_count": 1028
+    },
+    {
+      "path": "results/ici/ICIBench/profile/process1/plugins/profile/2026_10_02_10_49_56/gke-tpu-8770cb66-hsqj.trace.json.gz",
+      "sha256": "2d68dc13595ef0b2bed64ff08719c1bbfcbd854132b7c6ca9a5c7b69be20ea66",
+      "events": 444866,
+      "collective_permute_start_count": 1768,
+      "collective_permute_done_count": 1768,
+      "host_parameter_copy_event_count_by_name": 0,
+      "collective_example": {
+        "ph": "X",
+        "pid": 3,
+        "tid": 3,
+        "ts": 29419.606328,
+        "dur": 0.905078,
+        "name": "collective-permute-start",
+        "args": {
+          "Time Scale Multiplier": "1",
+          "bytes_accessed": "2322440",
+          "device_duration_ps": "905000",
+          "device_offset_ps": "29413857500",
+          "hlo_category": "collective-permute-start",
+          "long_name": "%collective-permute-start = (bf16[1152,336]{0,1:T(8,128)(2,1)S(1)}, bf16[1152,336]{0,1:T(8,128)(2,1)S(1)}, u32[]{:S(2)}, u32[]{:S(2)}) collective-permute-start(bf16[1152,336]{0,1:T(8,128)(2,1)S(1)} %constant_dynamic-slice_fusion), channel_id=1, source_target_pairs={{0,0},{2,1},{1,2},{3,3},{5,4},{15,5},{4,6},{6,7},{10,8},{12,9},{11,10},{13,11},{7,12},{9,13},{8,14},{14,15}}, frontend_attributes={is_spmd_generated=\"true\"}",
+          "memory_access_breakdown": "<opaque bytes>",
+          "model_flops": "0",
+          "raw_bytes_accessed": "2322440",
+          "shape_with_layout": "(bf16[1152,336]{0,1:T(8,128)(2,1)S(1)}, bf16[1152,336]{0,1:T(8,128)(2,1)S(1)}, u32[]{:S(2)}, u32[]{:S(2)})"
+        }
+      },
+      "reshard_execution_count": 1028
+    },
+    {
+      "path": "results/ici/ICIBench/profile/process2/plugins/profile/2026_10_02_10_49_56/gke-tpu-8770cb66-m8vd.trace.json.gz",
+      "sha256": "fa204c02142a5f38ba4cbbb2f449323e6c27749c76b5a7f4ad8dfef20bbd5160",
+      "events": 444012,
+      "collective_permute_start_count": 1768,
+      "collective_permute_done_count": 1768,
+      "host_parameter_copy_event_count_by_name": 0,
+      "collective_example": {
+        "ph": "X",
+        "pid": 3,
+        "tid": 3,
+        "ts": 29600.368672,
+        "dur": 0.8875,
+        "name": "collective-permute-start",
+        "args": {
+          "Time Scale Multiplier": "1",
+          "bytes_accessed": "2322440",
+          "device_duration_ps": "887500",
+          "device_offset_ps": "29591277500",
+          "hlo_category": "collective-permute-start",
+          "long_name": "%collective-permute-start = (bf16[1152,336]{0,1:T(8,128)(2,1)S(1)}, bf16[1152,336]{0,1:T(8,128)(2,1)S(1)}, u32[]{:S(2)}, u32[]{:S(2)}) collective-permute-start(bf16[1152,336]{0,1:T(8,128)(2,1)S(1)} %constant_dynamic-slice_fusion), channel_id=1, source_target_pairs={{0,0},{2,1},{1,2},{3,3},{5,4},{15,5},{4,6},{6,7},{10,8},{12,9},{11,10},{13,11},{7,12},{9,13},{8,14},{14,15}}, frontend_attributes={is_spmd_generated=\"true\"}",
+          "memory_access_breakdown": "<opaque bytes>",
+          "model_flops": "0",
+          "raw_bytes_accessed": "2322440",
+          "shape_with_layout": "(bf16[1152,336]{0,1:T(8,128)(2,1)S(1)}, bf16[1152,336]{0,1:T(8,128)(2,1)S(1)}, u32[]{:S(2)}, u32[]{:S(2)})"
+        }
+      },
+      "reshard_execution_count": 1028
+    },
+    {
+      "path": "results/ici/ICIBench/profile/process3/plugins/profile/2026_10_02_10_49_56/gke-tpu-8770cb66-j6g4.trace.json.gz",
+      "sha256": "d41d9b59c857fd0e54ad99672beac19d2c4ab09e0f699fd49b4bc35c7852593c",
+      "events": 443892,
+      "collective_permute_start_count": 1768,
+      "collective_permute_done_count": 1768,
+      "host_parameter_copy_event_count_by_name": 0,
+      "collective_example": {
+        "ph": "X",
+        "pid": 3,
+        "tid": 3,
+        "ts": 29389.8565,
+        "dur": 1.009922,
+        "name": "collective-permute-start",
+        "args": {
+          "Time Scale Multiplier": "1",
+          "bytes_accessed": "2322440",
+          "device_duration_ps": "1010000",
+          "device_offset_ps": "29376632500",
+          "hlo_category": "collective-permute-start",
+          "long_name": "%collective-permute-start = (bf16[1152,336]{0,1:T(8,128)(2,1)S(1)}, bf16[1152,336]{0,1:T(8,128)(2,1)S(1)}, u32[]{:S(2)}, u32[]{:S(2)}) collective-permute-start(bf16[1152,336]{0,1:T(8,128)(2,1)S(1)} %constant_dynamic-slice_fusion), channel_id=1, source_target_pairs={{0,0},{2,1},{1,2},{3,3},{5,4},{15,5},{4,6},{6,7},{10,8},{12,9},{11,10},{13,11},{7,12},{9,13},{8,14},{14,15}}, frontend_attributes={is_spmd_generated=\"true\"}",
+          "memory_access_breakdown": "<opaque bytes>",
+          "model_flops": "0",
+          "raw_bytes_accessed": "2322440",
+          "shape_with_layout": "(bf16[1152,336]{0,1:T(8,128)(2,1)S(1)}, bf16[1152,336]{0,1:T(8,128)(2,1)S(1)}, u32[]{:S(2)}, u32[]{:S(2)})"
+        }
+      },
+      "reshard_execution_count": 1028
+    }
+  ],
+  "tpu_collective_observed": true,
+  "host_copy_event_count_by_name": 0,
+  "conclusion": "Device-side TPU collective-permute observed with no host-copy event names",
+  "interpretation": "Native TPU collective transfer supports ICI/no-host-weight-roundtrip pathway. No physical-link counters or wire-byte measurement; bytes_accessed is HBM accounting, not network traffic.",
+  "provenance": {
+    "source": "results/ici/ICIBench/reshard_box_complete_run.json.gz",
+    "submission_id": "raysubmit_AxSaeccWYsesZFLf",
+    "profile_timestamp": "2026_10_02_10_49_56",
+    "note": "Run association is supplied by experiment collection metadata; Ray run IDs are not encoded in JAX traces."
+  }
+}

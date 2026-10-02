@@ -1,0 +1,3226 @@
+{
+  "jax_version": "0.11.2",
+  "jaxlib_version": "0.11.2",
+  "platform": "cpu",
+  "device_count": 16,
+  "width": 32,
+  "layers": 2,
+  "logical_parameter_bytes": 194816,
+  "tp_sharded_parameter_bytes": 188416,
+  "partition_specs": {
+    "embed_tokens": [
+      "model",
+      null
+    ],
+    "lm_head": [
+      null,
+      null
+    ],
+    "layers.0.mlp.gate_up": [
+      null,
+      "model"
+    ],
+    "layers.0.mlp.down": [
+      "model",
+      null
+    ],
+    "layers.0.attn.qkv": [
+      null,
+      "model"
+    ],
+    "layers.0.attn.q": [
+      null,
+      "model",
+      null
+    ],
+    "layers.0.attn.k": [
+      null,
+      null,
+      "model"
+    ],
+    "layers.0.attn.o": [
+      "model",
+      null,
+      null
+    ],
+    "layers.0.norm": [
+      null
+    ],
+    "layers.0.q_norm": [
+      null
+    ],
+    "layers.0.ple_gate": [
+      null,
+      null
+    ],
+    "layers.1.mlp.gate_up": [
+      null,
+      "model"
+    ],
+    "layers.1.mlp.down": [
+      "model",
+      null
+    ],
+    "layers.1.attn.qkv": [
+      null,
+      "model"
+    ],
+    "layers.1.attn.q": [
+      null,
+      "model",
+      null
+    ],
+    "layers.1.attn.k": [
+      null,
+      null,
+      "model"
+    ],
+    "layers.1.attn.o": [
+      "model",
+      null,
+      null
+    ],
+    "layers.1.norm": [
+      null
+    ],
+    "layers.1.q_norm": [
+      null
+    ],
+    "layers.1.ple_gate": [
+      null,
+      null
+    ]
+  },
+  "equality": {
+    "S_to_H": true,
+    "H_to_S_both_replicas": true
+  },
+  "cpu_compile_and_execution_s_not_ICI": {
+    "merge": 19.17656141007319,
+    "jit_merge": 0.33503339905291796,
+    "split": 0.04356055986136198
+  },
+  "prototype_movement_lower_bound": {
+    "S_to_H": {
+      "per_device": {
+        "(0, 0, 0)": {
+          "received_bytes": 0,
+          "retained_bytes": 18176
+        },
+        "(1, 0, 0)": {
+          "received_bytes": 11776,
+          "retained_bytes": 6400
+        },
+        "(2, 0, 0)": {
+          "received_bytes": 11776,
+          "retained_bytes": 6400
+        },
+        "(3, 0, 0)": {
+          "received_bytes": 0,
+          "retained_bytes": 18176
+        },
+        "(3, 1, 0)": {
+          "received_bytes": 11776,
+          "retained_bytes": 6400
+        },
+        "(2, 1, 0)": {
+          "received_bytes": 0,
+          "retained_bytes": 18176
+        },
+        "(1, 1, 0)": {
+          "received_bytes": 0,
+          "retained_bytes": 18176
+        },
+        "(1, 2, 0)": {
+          "received_bytes": 11776,
+          "retained_bytes": 6400
+        },
+        "(2, 2, 0)": {
+          "received_bytes": 11776,
+          "retained_bytes": 6400
+        },
+        "(3, 2, 0)": {
+          "received_bytes": 11776,
+          "retained_bytes": 6400
+        },
+        "(3, 3, 0)": {
+          "received_bytes": 11776,
+          "retained_bytes": 6400
+        },
+        "(2, 3, 0)": {
+          "received_bytes": 0,
+          "retained_bytes": 18176
+        },
+        "(1, 3, 0)": {
+          "received_bytes": 11776,
+          "retained_bytes": 6400
+        },
+        "(0, 3, 0)": {
+          "received_bytes": 11776,
+          "retained_bytes": 6400
+        },
+        "(0, 2, 0)": {
+          "received_bytes": 0,
+          "retained_bytes": 18176
+        },
+        "(0, 1, 0)": {
+          "received_bytes": 11776,
+          "retained_bytes": 6400
+        }
+      },
+      "received_bytes": 117760,
+      "max_received_bytes": 11776
+    },
+    "H_to_S": {
+      "per_device": {
+        "(0, 0, 0)": {
+          "received_bytes": 11776,
+          "retained_bytes": 18176
+        },
+        "(1, 0, 0)": {
+          "received_bytes": 23552,
+          "retained_bytes": 6400
+        },
+        "(0, 1, 0)": {
+          "received_bytes": 23552,
+          "retained_bytes": 6400
+        },
+        "(1, 1, 0)": {
+          "received_bytes": 11776,
+          "retained_bytes": 18176
+        },
+        "(1, 3, 0)": {
+          "received_bytes": 23552,
+          "retained_bytes": 6400
+        },
+        "(0, 3, 0)": {
+          "received_bytes": 23552,
+          "retained_bytes": 6400
+        },
+        "(1, 2, 0)": {
+          "received_bytes": 23552,
+          "retained_bytes": 6400
+        },
+        "(0, 2, 0)": {
+          "received_bytes": 11776,
+          "retained_bytes": 18176
+        },
+        "(2, 0, 0)": {
+          "received_bytes": 23552,
+          "retained_bytes": 6400
+        },
+        "(3, 0, 0)": {
+          "received_bytes": 11776,
+          "retained_bytes": 18176
+        },
+        "(2, 1, 0)": {
+          "received_bytes": 11776,
+          "retained_bytes": 18176
+        },
+        "(3, 1, 0)": {
+          "received_bytes": 23552,
+          "retained_bytes": 6400
+        },
+        "(3, 3, 0)": {
+          "received_bytes": 23552,
+          "retained_bytes": 6400
+        },
+        "(2, 3, 0)": {
+          "received_bytes": 11776,
+          "retained_bytes": 18176
+        },
+        "(3, 2, 0)": {
+          "received_bytes": 23552,
+          "retained_bytes": 6400
+        },
+        "(2, 2, 0)": {
+          "received_bytes": 23552,
+          "retained_bytes": 6400
+        }
+      },
+      "received_bytes": 306176,
+      "max_received_bytes": 23552
+    }
+  },
+  "direct_jit_native_order_error": "Received incompatible devices for jitted computation. Got argument x['embed_tokens'] of run.<locals>.<lambda> with shape bfloat16[64,32] and with device ids [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] on platform CPU and explicit output sharding with device ids [0, 1, 8, 9, 11, 10, 3, 6, 15, 14, 12, 13, 4, 5, 7, 2] on platform CPU",
+  "layout_order_status": "INFERENCE: replayed native relative-coordinate JAX mesh algorithm; not TPU-traced",
+  "layouts": {
+    "H": [
+      {
+        "id": "large_a",
+        "tp": 16,
+        "box": [
+          [
+            0,
+            3
+          ],
+          [
+            0,
+            3
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "hosts": [
+          "192.168.102.38",
+          "192.168.102.43",
+          "192.168.102.45",
+          "192.168.102.40"
+        ],
+        "order": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            3,
+            0,
+            0
+          ],
+          [
+            3,
+            1,
+            0
+          ],
+          [
+            2,
+            1,
+            0
+          ],
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            1,
+            2,
+            0
+          ],
+          [
+            2,
+            2,
+            0
+          ],
+          [
+            3,
+            2,
+            0
+          ],
+          [
+            3,
+            3,
+            0
+          ],
+          [
+            2,
+            3,
+            0
+          ],
+          [
+            1,
+            3,
+            0
+          ],
+          [
+            0,
+            3,
+            0
+          ],
+          [
+            0,
+            2,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ]
+      },
+      {
+        "id": "large_b",
+        "tp": 16,
+        "box": [
+          [
+            0,
+            3
+          ],
+          [
+            4,
+            7
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "hosts": [
+          "192.168.102.44",
+          "192.168.102.39",
+          "192.168.102.42",
+          "192.168.102.41"
+        ],
+        "order": [
+          [
+            0,
+            4,
+            0
+          ],
+          [
+            1,
+            4,
+            0
+          ],
+          [
+            2,
+            4,
+            0
+          ],
+          [
+            3,
+            4,
+            0
+          ],
+          [
+            3,
+            5,
+            0
+          ],
+          [
+            2,
+            5,
+            0
+          ],
+          [
+            1,
+            5,
+            0
+          ],
+          [
+            1,
+            6,
+            0
+          ],
+          [
+            2,
+            6,
+            0
+          ],
+          [
+            3,
+            6,
+            0
+          ],
+          [
+            3,
+            7,
+            0
+          ],
+          [
+            2,
+            7,
+            0
+          ],
+          [
+            1,
+            7,
+            0
+          ],
+          [
+            0,
+            7,
+            0
+          ],
+          [
+            0,
+            6,
+            0
+          ],
+          [
+            0,
+            5,
+            0
+          ]
+        ]
+      }
+    ],
+    "S": [
+      {
+        "id": "small_a",
+        "tp": 8,
+        "box": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            3
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "hosts": [
+          "192.168.102.38",
+          "192.168.102.45"
+        ],
+        "order": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            1,
+            3,
+            0
+          ],
+          [
+            0,
+            3,
+            0
+          ],
+          [
+            1,
+            2,
+            0
+          ],
+          [
+            0,
+            2,
+            0
+          ]
+        ]
+      },
+      {
+        "id": "small_b",
+        "tp": 8,
+        "box": [
+          [
+            2,
+            3
+          ],
+          [
+            0,
+            3
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "hosts": [
+          "192.168.102.43",
+          "192.168.102.40"
+        ],
+        "order": [
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            3,
+            0,
+            0
+          ],
+          [
+            2,
+            1,
+            0
+          ],
+          [
+            3,
+            1,
+            0
+          ],
+          [
+            3,
+            3,
+            0
+          ],
+          [
+            2,
+            3,
+            0
+          ],
+          [
+            3,
+            2,
+            0
+          ],
+          [
+            2,
+            2,
+            0
+          ]
+        ]
+      },
+      {
+        "id": "small_c",
+        "tp": 8,
+        "box": [
+          [
+            0,
+            1
+          ],
+          [
+            4,
+            7
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "hosts": [
+          "192.168.102.44",
+          "192.168.102.42"
+        ],
+        "order": [
+          [
+            0,
+            4,
+            0
+          ],
+          [
+            1,
+            4,
+            0
+          ],
+          [
+            0,
+            5,
+            0
+          ],
+          [
+            1,
+            5,
+            0
+          ],
+          [
+            1,
+            7,
+            0
+          ],
+          [
+            0,
+            7,
+            0
+          ],
+          [
+            1,
+            6,
+            0
+          ],
+          [
+            0,
+            6,
+            0
+          ]
+        ]
+      },
+      {
+        "id": "small_d",
+        "tp": 8,
+        "box": [
+          [
+            2,
+            3
+          ],
+          [
+            4,
+            7
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "hosts": [
+          "192.168.102.39",
+          "192.168.102.41"
+        ],
+        "order": [
+          [
+            2,
+            4,
+            0
+          ],
+          [
+            3,
+            4,
+            0
+          ],
+          [
+            2,
+            5,
+            0
+          ],
+          [
+            3,
+            5,
+            0
+          ],
+          [
+            3,
+            7,
+            0
+          ],
+          [
+            2,
+            7,
+            0
+          ],
+          [
+            3,
+            6,
+            0
+          ],
+          [
+            2,
+            6,
+            0
+          ]
+        ]
+      }
+    ],
+    "M": [
+      {
+        "id": "small_a",
+        "tp": 8,
+        "box": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            3
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "hosts": [
+          "192.168.102.38",
+          "192.168.102.45"
+        ],
+        "order": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            1,
+            3,
+            0
+          ],
+          [
+            0,
+            3,
+            0
+          ],
+          [
+            1,
+            2,
+            0
+          ],
+          [
+            0,
+            2,
+            0
+          ]
+        ]
+      },
+      {
+        "id": "small_b",
+        "tp": 8,
+        "box": [
+          [
+            2,
+            3
+          ],
+          [
+            0,
+            3
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "hosts": [
+          "192.168.102.43",
+          "192.168.102.40"
+        ],
+        "order": [
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            3,
+            0,
+            0
+          ],
+          [
+            2,
+            1,
+            0
+          ],
+          [
+            3,
+            1,
+            0
+          ],
+          [
+            3,
+            3,
+            0
+          ],
+          [
+            2,
+            3,
+            0
+          ],
+          [
+            3,
+            2,
+            0
+          ],
+          [
+            2,
+            2,
+            0
+          ]
+        ]
+      },
+      {
+        "id": "large",
+        "tp": 16,
+        "box": [
+          [
+            0,
+            3
+          ],
+          [
+            4,
+            7
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "hosts": [
+          "192.168.102.44",
+          "192.168.102.39",
+          "192.168.102.42",
+          "192.168.102.41"
+        ],
+        "order": [
+          [
+            0,
+            4,
+            0
+          ],
+          [
+            1,
+            4,
+            0
+          ],
+          [
+            2,
+            4,
+            0
+          ],
+          [
+            3,
+            4,
+            0
+          ],
+          [
+            3,
+            5,
+            0
+          ],
+          [
+            2,
+            5,
+            0
+          ],
+          [
+            1,
+            5,
+            0
+          ],
+          [
+            1,
+            6,
+            0
+          ],
+          [
+            2,
+            6,
+            0
+          ],
+          [
+            3,
+            6,
+            0
+          ],
+          [
+            3,
+            7,
+            0
+          ],
+          [
+            2,
+            7,
+            0
+          ],
+          [
+            1,
+            7,
+            0
+          ],
+          [
+            0,
+            7,
+            0
+          ],
+          [
+            0,
+            6,
+            0
+          ],
+          [
+            0,
+            5,
+            0
+          ]
+        ]
+      }
+    ]
+  },
+  "transitions": {
+    "H->S": {
+      "per_device": [
+        {
+          "chip": [
+            0,
+            0,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            1,
+            0,
+            0
+          ],
+          "received_bytes_estimate": 7812500000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            0,
+            1,
+            0
+          ],
+          "received_bytes_estimate": 7812500000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            1,
+            1,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            1,
+            3,
+            0
+          ],
+          "received_bytes_estimate": 7812500000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            0,
+            3,
+            0
+          ],
+          "received_bytes_estimate": 7812500000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            1,
+            2,
+            0
+          ],
+          "received_bytes_estimate": 7812500000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            0,
+            2,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            2,
+            0,
+            0
+          ],
+          "received_bytes_estimate": 7812500000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            3,
+            0,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            2,
+            1,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            3,
+            1,
+            0
+          ],
+          "received_bytes_estimate": 7812500000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            3,
+            3,
+            0
+          ],
+          "received_bytes_estimate": 7812500000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            2,
+            3,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            3,
+            2,
+            0
+          ],
+          "received_bytes_estimate": 7812500000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            2,
+            2,
+            0
+          ],
+          "received_bytes_estimate": 7812500000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            0,
+            4,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            1,
+            4,
+            0
+          ],
+          "received_bytes_estimate": 7812500000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            0,
+            5,
+            0
+          ],
+          "received_bytes_estimate": 7812500000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            1,
+            5,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            1,
+            7,
+            0
+          ],
+          "received_bytes_estimate": 7812500000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            0,
+            7,
+            0
+          ],
+          "received_bytes_estimate": 7812500000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            1,
+            6,
+            0
+          ],
+          "received_bytes_estimate": 7812500000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            0,
+            6,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            2,
+            4,
+            0
+          ],
+          "received_bytes_estimate": 7812500000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            3,
+            4,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            2,
+            5,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            3,
+            5,
+            0
+          ],
+          "received_bytes_estimate": 7812500000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            3,
+            7,
+            0
+          ],
+          "received_bytes_estimate": 7812500000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            2,
+            7,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            3,
+            6,
+            0
+          ],
+          "received_bytes_estimate": 7812500000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            2,
+            6,
+            0
+          ],
+          "received_bytes_estimate": 7812500000.0,
+          "retained_bytes_estimate": 0.0
+        }
+      ],
+      "received_bytes_estimate": 203125000000.0,
+      "max_received_bytes_estimate": 7812500000.0,
+      "status": "ESTIMATE: 62.5GB checkpoint approximated as entirely TP-sharded bf16",
+      "ideal_transfer_seconds_estimate": 0.0390625,
+      "transfer_seconds_at_10_to_100_percent_efficiency_estimate": [
+        0.0390625,
+        0.390625
+      ],
+      "C_seconds_component_estimate": [
+        90.0390625,
+        100.390625
+      ]
+    },
+    "H->M": {
+      "per_device": [
+        {
+          "chip": [
+            0,
+            0,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            1,
+            0,
+            0
+          ],
+          "received_bytes_estimate": 7812500000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            0,
+            1,
+            0
+          ],
+          "received_bytes_estimate": 7812500000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            1,
+            1,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            1,
+            3,
+            0
+          ],
+          "received_bytes_estimate": 7812500000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            0,
+            3,
+            0
+          ],
+          "received_bytes_estimate": 7812500000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            1,
+            2,
+            0
+          ],
+          "received_bytes_estimate": 7812500000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            0,
+            2,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            2,
+            0,
+            0
+          ],
+          "received_bytes_estimate": 7812500000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            3,
+            0,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            2,
+            1,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            3,
+            1,
+            0
+          ],
+          "received_bytes_estimate": 7812500000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            3,
+            3,
+            0
+          ],
+          "received_bytes_estimate": 7812500000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            2,
+            3,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            3,
+            2,
+            0
+          ],
+          "received_bytes_estimate": 7812500000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            2,
+            2,
+            0
+          ],
+          "received_bytes_estimate": 7812500000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            0,
+            4,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            1,
+            4,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            2,
+            4,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            3,
+            4,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            3,
+            5,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            2,
+            5,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            1,
+            5,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            1,
+            6,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            2,
+            6,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            3,
+            6,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            3,
+            7,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            2,
+            7,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            1,
+            7,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            0,
+            7,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            0,
+            6,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            0,
+            5,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        }
+      ],
+      "received_bytes_estimate": 101562500000.0,
+      "max_received_bytes_estimate": 7812500000.0,
+      "status": "ESTIMATE: 62.5GB checkpoint approximated as entirely TP-sharded bf16",
+      "ideal_transfer_seconds_estimate": 0.0390625,
+      "transfer_seconds_at_10_to_100_percent_efficiency_estimate": [
+        0.0390625,
+        0.390625
+      ],
+      "C_seconds_component_estimate": [
+        90.0390625,
+        100.390625
+      ]
+    },
+    "S->H": {
+      "per_device": [
+        {
+          "chip": [
+            0,
+            0,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            1,
+            0,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            2,
+            0,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            3,
+            0,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            3,
+            1,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            2,
+            1,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            1,
+            1,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            1,
+            2,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            2,
+            2,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            3,
+            2,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            3,
+            3,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            2,
+            3,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            1,
+            3,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            0,
+            3,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            0,
+            2,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            0,
+            1,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            0,
+            4,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            1,
+            4,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            2,
+            4,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            3,
+            4,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            3,
+            5,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            2,
+            5,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            1,
+            5,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            1,
+            6,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            2,
+            6,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            3,
+            6,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            3,
+            7,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            2,
+            7,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            1,
+            7,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            0,
+            7,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            0,
+            6,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            0,
+            5,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 0.0
+        }
+      ],
+      "received_bytes_estimate": 78125000000.0,
+      "max_received_bytes_estimate": 3906250000.0,
+      "status": "ESTIMATE: 62.5GB checkpoint approximated as entirely TP-sharded bf16",
+      "ideal_transfer_seconds_estimate": 0.01953125,
+      "transfer_seconds_at_10_to_100_percent_efficiency_estimate": [
+        0.01953125,
+        0.1953125
+      ],
+      "C_seconds_component_estimate": [
+        90.01953125,
+        100.1953125
+      ]
+    },
+    "S->M": {
+      "per_device": [
+        {
+          "chip": [
+            0,
+            0,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 7812500000.0
+        },
+        {
+          "chip": [
+            1,
+            0,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 7812500000.0
+        },
+        {
+          "chip": [
+            0,
+            1,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 7812500000.0
+        },
+        {
+          "chip": [
+            1,
+            1,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 7812500000.0
+        },
+        {
+          "chip": [
+            1,
+            3,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 7812500000.0
+        },
+        {
+          "chip": [
+            0,
+            3,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 7812500000.0
+        },
+        {
+          "chip": [
+            1,
+            2,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 7812500000.0
+        },
+        {
+          "chip": [
+            0,
+            2,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 7812500000.0
+        },
+        {
+          "chip": [
+            2,
+            0,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 7812500000.0
+        },
+        {
+          "chip": [
+            3,
+            0,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 7812500000.0
+        },
+        {
+          "chip": [
+            2,
+            1,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 7812500000.0
+        },
+        {
+          "chip": [
+            3,
+            1,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 7812500000.0
+        },
+        {
+          "chip": [
+            3,
+            3,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 7812500000.0
+        },
+        {
+          "chip": [
+            2,
+            3,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 7812500000.0
+        },
+        {
+          "chip": [
+            3,
+            2,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 7812500000.0
+        },
+        {
+          "chip": [
+            2,
+            2,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 7812500000.0
+        },
+        {
+          "chip": [
+            0,
+            4,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            1,
+            4,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            2,
+            4,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            3,
+            4,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            3,
+            5,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            2,
+            5,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            1,
+            5,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            1,
+            6,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            2,
+            6,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            3,
+            6,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            3,
+            7,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            2,
+            7,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            1,
+            7,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            0,
+            7,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            0,
+            6,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            0,
+            5,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 0.0
+        }
+      ],
+      "received_bytes_estimate": 39062500000.0,
+      "max_received_bytes_estimate": 3906250000.0,
+      "status": "ESTIMATE: 62.5GB checkpoint approximated as entirely TP-sharded bf16",
+      "ideal_transfer_seconds_estimate": 0.01953125,
+      "transfer_seconds_at_10_to_100_percent_efficiency_estimate": [
+        0.01953125,
+        0.1953125
+      ],
+      "C_seconds_component_estimate": [
+        90.01953125,
+        100.1953125
+      ]
+    },
+    "M->H": {
+      "per_device": [
+        {
+          "chip": [
+            0,
+            0,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            1,
+            0,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            2,
+            0,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            3,
+            0,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            3,
+            1,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            2,
+            1,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            1,
+            1,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            1,
+            2,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            2,
+            2,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            3,
+            2,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            3,
+            3,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            2,
+            3,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            1,
+            3,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            0,
+            3,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            0,
+            2,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            0,
+            1,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            0,
+            4,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            1,
+            4,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            2,
+            4,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            3,
+            4,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            3,
+            5,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            2,
+            5,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            1,
+            5,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            1,
+            6,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            2,
+            6,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            3,
+            6,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            3,
+            7,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            2,
+            7,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            1,
+            7,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            0,
+            7,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            0,
+            6,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            0,
+            5,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 3906250000.0
+        }
+      ],
+      "received_bytes_estimate": 39062500000.0,
+      "max_received_bytes_estimate": 3906250000.0,
+      "status": "ESTIMATE: 62.5GB checkpoint approximated as entirely TP-sharded bf16",
+      "ideal_transfer_seconds_estimate": 0.01953125,
+      "transfer_seconds_at_10_to_100_percent_efficiency_estimate": [
+        0.01953125,
+        0.1953125
+      ],
+      "C_seconds_component_estimate": [
+        90.01953125,
+        100.1953125
+      ]
+    },
+    "M->S": {
+      "per_device": [
+        {
+          "chip": [
+            0,
+            0,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 7812500000.0
+        },
+        {
+          "chip": [
+            1,
+            0,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 7812500000.0
+        },
+        {
+          "chip": [
+            0,
+            1,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 7812500000.0
+        },
+        {
+          "chip": [
+            1,
+            1,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 7812500000.0
+        },
+        {
+          "chip": [
+            1,
+            3,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 7812500000.0
+        },
+        {
+          "chip": [
+            0,
+            3,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 7812500000.0
+        },
+        {
+          "chip": [
+            1,
+            2,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 7812500000.0
+        },
+        {
+          "chip": [
+            0,
+            2,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 7812500000.0
+        },
+        {
+          "chip": [
+            2,
+            0,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 7812500000.0
+        },
+        {
+          "chip": [
+            3,
+            0,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 7812500000.0
+        },
+        {
+          "chip": [
+            2,
+            1,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 7812500000.0
+        },
+        {
+          "chip": [
+            3,
+            1,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 7812500000.0
+        },
+        {
+          "chip": [
+            3,
+            3,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 7812500000.0
+        },
+        {
+          "chip": [
+            2,
+            3,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 7812500000.0
+        },
+        {
+          "chip": [
+            3,
+            2,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 7812500000.0
+        },
+        {
+          "chip": [
+            2,
+            2,
+            0
+          ],
+          "received_bytes_estimate": 0.0,
+          "retained_bytes_estimate": 7812500000.0
+        },
+        {
+          "chip": [
+            0,
+            4,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            1,
+            4,
+            0
+          ],
+          "received_bytes_estimate": 7812500000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            0,
+            5,
+            0
+          ],
+          "received_bytes_estimate": 7812500000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            1,
+            5,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            1,
+            7,
+            0
+          ],
+          "received_bytes_estimate": 7812500000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            0,
+            7,
+            0
+          ],
+          "received_bytes_estimate": 7812500000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            1,
+            6,
+            0
+          ],
+          "received_bytes_estimate": 7812500000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            0,
+            6,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            2,
+            4,
+            0
+          ],
+          "received_bytes_estimate": 7812500000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            3,
+            4,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            2,
+            5,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            3,
+            5,
+            0
+          ],
+          "received_bytes_estimate": 7812500000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            3,
+            7,
+            0
+          ],
+          "received_bytes_estimate": 7812500000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            2,
+            7,
+            0
+          ],
+          "received_bytes_estimate": 3906250000.0,
+          "retained_bytes_estimate": 3906250000.0
+        },
+        {
+          "chip": [
+            3,
+            6,
+            0
+          ],
+          "received_bytes_estimate": 7812500000.0,
+          "retained_bytes_estimate": 0.0
+        },
+        {
+          "chip": [
+            2,
+            6,
+            0
+          ],
+          "received_bytes_estimate": 7812500000.0,
+          "retained_bytes_estimate": 0.0
+        }
+      ],
+      "received_bytes_estimate": 101562500000.0,
+      "max_received_bytes_estimate": 7812500000.0,
+      "status": "ESTIMATE: 62.5GB checkpoint approximated as entirely TP-sharded bf16",
+      "ideal_transfer_seconds_estimate": 0.0390625,
+      "transfer_seconds_at_10_to_100_percent_efficiency_estimate": [
+        0.0390625,
+        0.390625
+      ],
+      "C_seconds_component_estimate": [
+        90.0390625,
+        100.390625
+      ]
+    }
+  },
+  "bandwidth_source": "https://docs.cloud.google.com/tpu/docs/v5e (400 GB/s bidirectional per chip)",
+  "C_excludes": [
+    "drain",
+    "runner rebuild",
+    "coordination",
+    "HBM copies",
+    "cold compiler cache",
+    "errors"
+  ],
+  "inventory_sha256": "299abf024a35833452c4290a47fb6e929d85b741ad1c9bd2ef9ded26b41808dd",
+  "inventory_source": "/tmp/hetero-inventory-only.json",
+  "inventory": {
+    "slice_name": "tpu-worker-group-0",
+    "chip_dims": [
+      4,
+      8,
+      1
+    ],
+    "host_chip_dims": [
+      2,
+      2,
+      1
+    ],
+    "host_grid_dims": [
+      2,
+      4,
+      1
+    ],
+    "total_chips": 32,
+    "ray_session": "04000000",
+    "ray_node_generation": "457579ada8cec7b3",
+    "observed_at": 1790659720.629487,
+    "hosts": [
+      {
+        "node_ip": "192.168.102.38",
+        "ray_node_id": "7cbd00b45f9d0eafcaa2e995b8b70cac28d4aa2d0f5e8131c4f4f228",
+        "hostname": "gke-tpu-8770cb66-8v5c",
+        "tpu_worker_id": 4,
+        "tpu_name": "tpu-worker-group-0",
+        "tpu_count": 4,
+        "chip_coords": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            1,
+            1,
+            0
+          ]
+        ],
+        "jax_process_index": 0,
+        "jax_global_device_count": 32,
+        "chip_box": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "host_grid_position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "node_ip": "192.168.102.43",
+        "ray_node_id": "4096df7539468240aaa65aed3fa988b547fc08311354336fb0e3bf9e",
+        "hostname": "gke-tpu-8770cb66-hsqj",
+        "tpu_worker_id": 0,
+        "tpu_name": "tpu-worker-group-0",
+        "tpu_count": 4,
+        "chip_coords": [
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            3,
+            0,
+            0
+          ],
+          [
+            2,
+            1,
+            0
+          ],
+          [
+            3,
+            1,
+            0
+          ]
+        ],
+        "jax_process_index": 1,
+        "jax_global_device_count": 32,
+        "chip_box": [
+          [
+            2,
+            3
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "host_grid_position": [
+          1,
+          0,
+          0
+        ]
+      },
+      {
+        "node_ip": "192.168.102.45",
+        "ray_node_id": "2f271beaf24768468e03d778813fc969f53b4962a42a791df3605e20",
+        "hostname": "gke-tpu-8770cb66-m8vd",
+        "tpu_worker_id": 1,
+        "tpu_name": "tpu-worker-group-0",
+        "tpu_count": 4,
+        "chip_coords": [
+          [
+            0,
+            2,
+            0
+          ],
+          [
+            1,
+            2,
+            0
+          ],
+          [
+            0,
+            3,
+            0
+          ],
+          [
+            1,
+            3,
+            0
+          ]
+        ],
+        "jax_process_index": 2,
+        "jax_global_device_count": 32,
+        "chip_box": [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "host_grid_position": [
+          0,
+          1,
+          0
+        ]
+      },
+      {
+        "node_ip": "192.168.102.40",
+        "ray_node_id": "cfb9ec7efadbbf0f126eafd1d06a188c5f92f77df74cd0f885032cfd",
+        "hostname": "gke-tpu-8770cb66-j6g4",
+        "tpu_worker_id": 2,
+        "tpu_name": "tpu-worker-group-0",
+        "tpu_count": 4,
+        "chip_coords": [
+          [
+            2,
+            2,
+            0
+          ],
+          [
+            3,
+            2,
+            0
+          ],
+          [
+            2,
+            3,
+            0
+          ],
+          [
+            3,
+            3,
+            0
+          ]
+        ],
+        "jax_process_index": 3,
+        "jax_global_device_count": 32,
+        "chip_box": [
+          [
+            2,
+            3
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "host_grid_position": [
+          1,
+          1,
+          0
+        ]
+      },
+      {
+        "node_ip": "192.168.102.44",
+        "ray_node_id": "0b1e112c8a703272b896df9ac46a94ee1d9a2fe0b5198a5b142fab93",
+        "hostname": "gke-tpu-8770cb66-45jj",
+        "tpu_worker_id": 3,
+        "tpu_name": "tpu-worker-group-0",
+        "tpu_count": 4,
+        "chip_coords": [
+          [
+            0,
+            4,
+            0
+          ],
+          [
+            1,
+            4,
+            0
+          ],
+          [
+            0,
+            5,
+            0
+          ],
+          [
+            1,
+            5,
+            0
+          ]
+        ],
+        "jax_process_index": 4,
+        "jax_global_device_count": 32,
+        "chip_box": [
+          [
+            0,
+            1
+          ],
+          [
+            4,
+            5
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "host_grid_position": [
+          0,
+          2,
+          0
+        ]
+      },
+      {
+        "node_ip": "192.168.102.39",
+        "ray_node_id": "d117c321900e6242d54e11c0865258a27f726baa5eb52ae0a0597da4",
+        "hostname": "gke-tpu-8770cb66-sddz",
+        "tpu_worker_id": 6,
+        "tpu_name": "tpu-worker-group-0",
+        "tpu_count": 4,
+        "chip_coords": [
+          [
+            2,
+            4,
+            0
+          ],
+          [
+            3,
+            4,
+            0
+          ],
+          [
+            2,
+            5,
+            0
+          ],
+          [
+            3,
+            5,
+            0
+          ]
+        ],
+        "jax_process_index": 5,
+        "jax_global_device_count": 32,
+        "chip_box": [
+          [
+            2,
+            3
+          ],
+          [
+            4,
+            5
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "host_grid_position": [
+          1,
+          2,
+          0
+        ]
+      },
+      {
+        "node_ip": "192.168.102.42",
+        "ray_node_id": "7503d989ada15c0e2504a27ca32b50d533b28bfa038fb09ce857a242",
+        "hostname": "gke-tpu-8770cb66-0vj5",
+        "tpu_worker_id": 5,
+        "tpu_name": "tpu-worker-group-0",
+        "tpu_count": 4,
+        "chip_coords": [
+          [
+            0,
+            6,
+            0
+          ],
+          [
+            1,
+            6,
+            0
+          ],
+          [
+            0,
+            7,
+            0
+          ],
+          [
+            1,
+            7,
+            0
+          ]
+        ],
+        "jax_process_index": 6,
+        "jax_global_device_count": 32,
+        "chip_box": [
+          [
+            0,
+            1
+          ],
+          [
+            6,
+            7
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "host_grid_position": [
+          0,
+          3,
+          0
+        ]
+      },
+      {
+        "node_ip": "192.168.102.41",
+        "ray_node_id": "460d3df7e6b8856962ae020f71da9a34a8d844cdd87cbad10df4b2b7",
+        "hostname": "gke-tpu-8770cb66-mg22",
+        "tpu_worker_id": 7,
+        "tpu_name": "tpu-worker-group-0",
+        "tpu_count": 4,
+        "chip_coords": [
+          [
+            2,
+            6,
+            0
+          ],
+          [
+            3,
+            6,
+            0
+          ],
+          [
+            2,
+            7,
+            0
+          ],
+          [
+            3,
+            7,
+            0
+          ]
+        ],
+        "jax_process_index": 7,
+        "jax_global_device_count": 32,
+        "chip_box": [
+          [
+            2,
+            3
+          ],
+          [
+            6,
+            7
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "host_grid_position": [
+          1,
+          3,
+          0
+        ]
+      }
+    ]
+  }
+}

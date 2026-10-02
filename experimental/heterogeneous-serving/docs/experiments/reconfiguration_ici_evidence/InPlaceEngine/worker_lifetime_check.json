@@ -1,0 +1,39 @@
+{
+  "run_id": "raysubmit_6Kx3zaVPJJwS7UvW",
+  "per_process": [
+    {
+      "process": 0,
+      "pids": [
+        422727
+      ],
+      "runtime_initializations": 1,
+      "initial_checkpoint_loads": 1
+    },
+    {
+      "process": 1,
+      "pids": [
+        335038
+      ],
+      "runtime_initializations": 1,
+      "initial_checkpoint_loads": 1
+    },
+    {
+      "process": 2,
+      "pids": [
+        403198
+      ],
+      "runtime_initializations": 1,
+      "initial_checkpoint_loads": 1
+    },
+    {
+      "process": 3,
+      "pids": [
+        326531
+      ],
+      "runtime_initializations": 1,
+      "initial_checkpoint_loads": 1
+    }
+  ],
+  "one_runtime_and_load_per_kept_process": true,
+  "scope": "Instrumented worker/runtime lifetime and checkpoint-loader entry; transitions attach the supplied resident model instead of the native builder."
+}

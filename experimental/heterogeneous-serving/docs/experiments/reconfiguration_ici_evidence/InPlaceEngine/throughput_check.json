@@ -1,0 +1,66 @@
+{
+  "run_id": "raysubmit_6Kx3zaVPJJwS7UvW",
+  "evidence_file": "results/ici/InPlaceEngine/run_mesh_cache_writer.json",
+  "status": "measured",
+  "in_runtime_TP8": [
+    {
+      "stage": "switch0_2TP8",
+      "engine": 0,
+      "batch_tokens_per_s": 320.5978497421743,
+      "decode_tokens_per_s": 354.4585540579836,
+      "decode_seconds": 5.650872230529785,
+      "output_tokens": 2035,
+      "decode_speed_ratio_to_standalone": 0.9459943760464538,
+      "decode_slowdown_percent": 5.4005623953546245
+    },
+    {
+      "stage": "switch0_2TP8",
+      "engine": 1,
+      "batch_tokens_per_s": 326.96450155278677,
+      "decode_tokens_per_s": 361.5159585594478,
+      "decode_seconds": 5.540557622909546,
+      "output_tokens": 2035,
+      "decode_speed_ratio_to_standalone": 0.9648294835405107,
+      "decode_slowdown_percent": 3.517051645948932
+    },
+    {
+      "stage": "switch2_2TP8",
+      "engine": 0,
+      "batch_tokens_per_s": 338.96128965438805,
+      "decode_tokens_per_s": 370.6944444530241,
+      "decode_seconds": 5.403372049331665,
+      "output_tokens": 2035,
+      "decode_speed_ratio_to_standalone": 0.9893254251295647,
+      "decode_slowdown_percent": 1.0674574870435327
+    },
+    {
+      "stage": "switch2_2TP8",
+      "engine": 1,
+      "batch_tokens_per_s": 341.80620976285553,
+      "decode_tokens_per_s": 373.48207335677404,
+      "decode_seconds": 5.363041877746582,
+      "output_tokens": 2035,
+      "decode_speed_ratio_to_standalone": 0.9967651701583179,
+      "decode_slowdown_percent": 0.32348298416821075
+    }
+  ],
+  "standalone_TP8": [
+    {
+      "stage": "initial_TP8",
+      "engine": 0,
+      "batch_tokens_per_s": 342.7285159963436,
+      "decode_tokens_per_s": 374.69414515903804,
+      "decode_seconds": 5.345693349838257,
+      "output_tokens": 2035
+    }
+  ],
+  "failure": null,
+  "decode_metric": "(output tokens - one first token/request) / wall time from first batch token to batch completion; includes remaining prefill and batch tail, not isolated steady-state kernel throughput",
+  "concurrency": "two TP8 engines serve concurrent batches in the resident runtime; standalone control runs one engine, both using the same synchronous prototype executor",
+  "reason": null,
+  "standalone_run_id": "raysubmit_dSDKwhfgqiejg4qN",
+  "standalone_evidence_file": "results/ici/InPlaceEngine/run_standalone8_corrected.json",
+  "control_token_identical": true,
+  "control_failure": null,
+  "qualification_limit": "One short fixed batch/control, not a sustained full-slice throughput qualification; no pass threshold imposed."
+}

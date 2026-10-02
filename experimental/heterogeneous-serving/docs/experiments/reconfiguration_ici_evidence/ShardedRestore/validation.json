@@ -1,0 +1,2461 @@
+{
+  "layouts": {
+    "S": {
+      "greedy_output_equality": true,
+      "every_worker_restored": true,
+      "cold_load_per_worker": {
+        "small_a": [
+          {
+            "executor_rank": 0,
+            "weight_snapshot": {
+              "mode": "off",
+              "restored": false,
+              "verified_checksums": true
+            },
+            "seconds": {
+              "init_device": 2.7813501358032227,
+              "load_model": 236.9228196144104,
+              "determine_available_memory": 0.00025534629821777344,
+              "initialize_from_config": 25.760603427886963,
+              "compile_or_warm_up_model": 62.20372295379639
+            }
+          },
+          {
+            "executor_rank": 1,
+            "weight_snapshot": {
+              "mode": "off",
+              "restored": false,
+              "verified_checksums": true
+            },
+            "seconds": {
+              "init_device": 2.7776060104370117,
+              "load_model": 234.31810069084167,
+              "determine_available_memory": 0.0005152225494384766,
+              "initialize_from_config": 25.762587070465088,
+              "compile_or_warm_up_model": 62.20460224151611
+            }
+          }
+        ],
+        "small_b": [
+          {
+            "executor_rank": 0,
+            "weight_snapshot": {
+              "mode": "off",
+              "restored": false,
+              "verified_checksums": true
+            },
+            "seconds": {
+              "init_device": 3.582277536392212,
+              "load_model": 234.4274799823761,
+              "determine_available_memory": 0.0002741813659667969,
+              "initialize_from_config": 25.499183177947998,
+              "compile_or_warm_up_model": 63.06889057159424
+            }
+          },
+          {
+            "executor_rank": 1,
+            "weight_snapshot": {
+              "mode": "off",
+              "restored": false,
+              "verified_checksums": true
+            },
+            "seconds": {
+              "init_device": 3.5709590911865234,
+              "load_model": 235.29205513000488,
+              "determine_available_memory": 0.00041365623474121094,
+              "initialize_from_config": 25.500139236450195,
+              "compile_or_warm_up_model": 63.07130765914917
+            }
+          }
+        ],
+        "small_c": [
+          {
+            "executor_rank": 0,
+            "weight_snapshot": {
+              "mode": "off",
+              "restored": false,
+              "verified_checksums": true
+            },
+            "seconds": {
+              "init_device": 2.771702527999878,
+              "load_model": 236.83232712745667,
+              "determine_available_memory": 0.0002257823944091797,
+              "initialize_from_config": 25.706950187683105,
+              "compile_or_warm_up_model": 63.4723846912384
+            }
+          },
+          {
+            "executor_rank": 1,
+            "weight_snapshot": {
+              "mode": "off",
+              "restored": false,
+              "verified_checksums": true
+            },
+            "seconds": {
+              "init_device": 2.762521266937256,
+              "load_model": 234.65619349479675,
+              "determine_available_memory": 0.0005247592926025391,
+              "initialize_from_config": 25.712270736694336,
+              "compile_or_warm_up_model": 63.47573256492615
+            }
+          }
+        ],
+        "small_d": [
+          {
+            "executor_rank": 0,
+            "weight_snapshot": {
+              "mode": "off",
+              "restored": false,
+              "verified_checksums": true
+            },
+            "seconds": {
+              "init_device": 3.6575353145599365,
+              "load_model": 236.40790939331055,
+              "determine_available_memory": 0.00023651123046875,
+              "initialize_from_config": 25.990265369415283,
+              "compile_or_warm_up_model": 64.03479313850403
+            }
+          },
+          {
+            "executor_rank": 1,
+            "weight_snapshot": {
+              "mode": "off",
+              "restored": false,
+              "verified_checksums": true
+            },
+            "seconds": {
+              "init_device": 3.6343159675598145,
+              "load_model": 236.23903632164001,
+              "determine_available_memory": 0.00046753883361816406,
+              "initialize_from_config": 25.989481925964355,
+              "compile_or_warm_up_model": 64.03609800338745
+            }
+          }
+        ]
+      },
+      "restore_per_worker": {
+        "small_a": [
+          {
+            "executor_rank": 0,
+            "weight_snapshot": {
+              "mode": "read",
+              "restored": true,
+              "verified_checksums": true
+            },
+            "seconds": {
+              "init_device": 3.9217565059661865,
+              "snapshot_manifest_verify": 0.10588431358337402,
+              "snapshot_read_tmpfs": 0.7498106956481934,
+              "snapshot_verify": 20.444342136383057,
+              "snapshot_device_placement": 1.4626491069793701,
+              "load_model": 39.74547743797302,
+              "determine_available_memory": 0.0002186298370361328,
+              "initialize_from_config": 25.77419686317444,
+              "compile_or_warm_up_model": 62.127175092697144
+            }
+          },
+          {
+            "executor_rank": 1,
+            "weight_snapshot": {
+              "mode": "read",
+              "restored": true,
+              "verified_checksums": true
+            },
+            "seconds": {
+              "init_device": 3.88852596282959,
+              "snapshot_manifest_verify": 0.10441827774047852,
+              "snapshot_read_tmpfs": 0.7599380016326904,
+              "snapshot_verify": 20.154492378234863,
+              "snapshot_device_placement": 1.4332995414733887,
+              "load_model": 39.755985736846924,
+              "determine_available_memory": 0.0004978179931640625,
+              "initialize_from_config": 25.768617391586304,
+              "compile_or_warm_up_model": 62.128363370895386
+            }
+          }
+        ],
+        "small_b": [
+          {
+            "executor_rank": 0,
+            "weight_snapshot": {
+              "mode": "read",
+              "restored": true,
+              "verified_checksums": true
+            },
+            "seconds": {
+              "init_device": 2.7862906455993652,
+              "snapshot_manifest_verify": 0.11116385459899902,
+              "snapshot_read_tmpfs": 0.7438874244689941,
+              "snapshot_verify": 20.27505874633789,
+              "snapshot_device_placement": 1.4443745613098145,
+              "load_model": 39.542322397232056,
+              "determine_available_memory": 0.0002231597900390625,
+              "initialize_from_config": 25.42319345474243,
+              "compile_or_warm_up_model": 62.22003483772278
+            }
+          },
+          {
+            "executor_rank": 1,
+            "weight_snapshot": {
+              "mode": "read",
+              "restored": true,
+              "verified_checksums": true
+            },
+            "seconds": {
+              "init_device": 2.7765426635742188,
+              "snapshot_manifest_verify": 0.10602426528930664,
+              "snapshot_read_tmpfs": 0.7583863735198975,
+              "snapshot_verify": 20.34052586555481,
+              "snapshot_device_placement": 2.3996520042419434,
+              "load_model": 40.54132962226868,
+              "determine_available_memory": 0.0005159378051757812,
+              "initialize_from_config": 25.42542815208435,
+              "compile_or_warm_up_model": 62.21757411956787
+            }
+          }
+        ],
+        "small_c": [
+          {
+            "executor_rank": 0,
+            "weight_snapshot": {
+              "mode": "read",
+              "restored": true,
+              "verified_checksums": true
+            },
+            "seconds": {
+              "init_device": 2.7728593349456787,
+              "snapshot_manifest_verify": 0.10901212692260742,
+              "snapshot_read_tmpfs": 0.757321834564209,
+              "snapshot_verify": 20.43976926803589,
+              "snapshot_device_placement": 1.4657881259918213,
+              "load_model": 39.37950587272644,
+              "determine_available_memory": 0.00023889541625976562,
+              "initialize_from_config": 25.474225759506226,
+              "compile_or_warm_up_model": 62.118335485458374
+            }
+          },
+          {
+            "executor_rank": 1,
+            "weight_snapshot": {
+              "mode": "read",
+              "restored": true,
+              "verified_checksums": true
+            },
+            "seconds": {
+              "init_device": 2.7987823486328125,
+              "snapshot_manifest_verify": 0.10668468475341797,
+              "snapshot_read_tmpfs": 0.7626111507415771,
+              "snapshot_verify": 20.16377353668213,
+              "snapshot_device_placement": 2.5158236026763916,
+              "load_model": 40.38185238838196,
+              "determine_available_memory": 0.00043654441833496094,
+              "initialize_from_config": 25.473530054092407,
+              "compile_or_warm_up_model": 62.12065553665161
+            }
+          }
+        ],
+        "small_d": [
+          {
+            "executor_rank": 0,
+            "weight_snapshot": {
+              "mode": "read",
+              "restored": true,
+              "verified_checksums": true
+            },
+            "seconds": {
+              "init_device": 3.6513423919677734,
+              "snapshot_manifest_verify": 0.10736513137817383,
+              "snapshot_read_tmpfs": 0.7513322830200195,
+              "snapshot_verify": 20.24887704849243,
+              "snapshot_device_placement": 1.4220631122589111,
+              "load_model": 39.818087100982666,
+              "determine_available_memory": 0.0002117156982421875,
+              "initialize_from_config": 25.887219429016113,
+              "compile_or_warm_up_model": 62.533472776412964
+            }
+          },
+          {
+            "executor_rank": 1,
+            "weight_snapshot": {
+              "mode": "read",
+              "restored": true,
+              "verified_checksums": true
+            },
+            "seconds": {
+              "init_device": 3.6390926837921143,
+              "snapshot_manifest_verify": 0.1058645248413086,
+              "snapshot_read_tmpfs": 0.7680180072784424,
+              "snapshot_verify": 20.4459068775177,
+              "snapshot_device_placement": 1.4525222778320312,
+              "load_model": 39.880014419555664,
+              "determine_available_memory": 0.0005137920379638672,
+              "initialize_from_config": 25.882814645767212,
+              "compile_or_warm_up_model": 62.534626483917236
+            }
+          }
+        ]
+      },
+      "snapshot": {
+        "ok": true,
+        "action": "snapshot",
+        "layout": "S",
+        "workers": {
+          "small_a": [
+            {
+              "executor_rank": 0,
+              "process_rank": 0,
+              "node_ip": "192.168.102.38",
+              "directory": "/dev/shm/omp_weights/S/small_a/rank0",
+              "bytes": 31448474464,
+              "snapshot_s": 51.544631004333496,
+              "arrays": 1028
+            },
+            {
+              "executor_rank": 1,
+              "process_rank": 1,
+              "node_ip": "192.168.102.45",
+              "directory": "/dev/shm/omp_weights/S/small_a/rank1",
+              "bytes": 31448474464,
+              "snapshot_s": 50.7300009727478,
+              "arrays": 1028
+            }
+          ],
+          "small_b": [
+            {
+              "executor_rank": 0,
+              "process_rank": 0,
+              "node_ip": "192.168.102.43",
+              "directory": "/dev/shm/omp_weights/S/small_b/rank0",
+              "bytes": 31448474464,
+              "snapshot_s": 50.99968242645264,
+              "arrays": 1028
+            },
+            {
+              "executor_rank": 1,
+              "process_rank": 1,
+              "node_ip": "192.168.102.40",
+              "directory": "/dev/shm/omp_weights/S/small_b/rank1",
+              "bytes": 31448474464,
+              "snapshot_s": 50.743170499801636,
+              "arrays": 1028
+            }
+          ],
+          "small_c": [
+            {
+              "executor_rank": 0,
+              "process_rank": 0,
+              "node_ip": "192.168.102.44",
+              "directory": "/dev/shm/omp_weights/S/small_c/rank0",
+              "bytes": 31448474464,
+              "snapshot_s": 51.039050579071045,
+              "arrays": 1028
+            },
+            {
+              "executor_rank": 1,
+              "process_rank": 1,
+              "node_ip": "192.168.102.42",
+              "directory": "/dev/shm/omp_weights/S/small_c/rank1",
+              "bytes": 31448474464,
+              "snapshot_s": 50.43243932723999,
+              "arrays": 1028
+            }
+          ],
+          "small_d": [
+            {
+              "executor_rank": 0,
+              "process_rank": 0,
+              "node_ip": "192.168.102.39",
+              "directory": "/dev/shm/omp_weights/S/small_d/rank0",
+              "bytes": 31448474464,
+              "snapshot_s": 51.26441311836243,
+              "arrays": 1028
+            },
+            {
+              "executor_rank": 1,
+              "process_rank": 1,
+              "node_ip": "192.168.102.41",
+              "directory": "/dev/shm/omp_weights/S/small_d/rank1",
+              "bytes": 31448474464,
+              "snapshot_s": 50.879555463790894,
+              "arrays": 1028
+            }
+          ]
+        }
+      },
+      "memory_after_snapshot": {
+        "ok": true,
+        "action": "memory",
+        "hosts": [
+          {
+            "host": "gke-tpu-8770cb66-8v5c",
+            "mem_available_bytes": 110709964800,
+            "tmpfs_free_bytes": 151198437376,
+            "reserve_bytes": 0,
+            "headroom_bytes": 40000000000,
+            "cleaned": false,
+            "snapshot_directory_bytes": 31451437497
+          },
+          {
+            "host": "gke-tpu-8770cb66-hsqj",
+            "mem_available_bytes": 109809819648,
+            "tmpfs_free_bytes": 151251251200,
+            "reserve_bytes": 0,
+            "headroom_bytes": 40000000000,
+            "cleaned": false,
+            "snapshot_directory_bytes": 31451437497
+          },
+          {
+            "host": "gke-tpu-8770cb66-j6g4",
+            "mem_available_bytes": 116373266432,
+            "tmpfs_free_bytes": 155892559872,
+            "reserve_bytes": 0,
+            "headroom_bytes": 40000000000,
+            "cleaned": false,
+            "snapshot_directory_bytes": 31451440529
+          },
+          {
+            "host": "gke-tpu-8770cb66-45jj",
+            "mem_available_bytes": 109073354752,
+            "tmpfs_free_bytes": 151239008256,
+            "reserve_bytes": 0,
+            "headroom_bytes": 40000000000,
+            "cleaned": false,
+            "snapshot_directory_bytes": 31451437497
+          },
+          {
+            "host": "gke-tpu-8770cb66-sddz",
+            "mem_available_bytes": 116971425792,
+            "tmpfs_free_bytes": 157673672704,
+            "reserve_bytes": 0,
+            "headroom_bytes": 40000000000,
+            "cleaned": false,
+            "snapshot_directory_bytes": 31451437497
+          },
+          {
+            "host": "gke-tpu-8770cb66-0vj5",
+            "mem_available_bytes": 116897042432,
+            "tmpfs_free_bytes": 156783849472,
+            "reserve_bytes": 0,
+            "headroom_bytes": 40000000000,
+            "cleaned": false,
+            "snapshot_directory_bytes": 31451440529
+          },
+          {
+            "host": "gke-tpu-8770cb66-mg22",
+            "mem_available_bytes": 118756179968,
+            "tmpfs_free_bytes": 157853429760,
+            "reserve_bytes": 0,
+            "headroom_bytes": 40000000000,
+            "cleaned": false,
+            "snapshot_directory_bytes": 31451440529
+          },
+          {
+            "host": "gke-tpu-8770cb66-m8vd",
+            "mem_available_bytes": 117082615808,
+            "tmpfs_free_bytes": 155892543488,
+            "reserve_bytes": 0,
+            "headroom_bytes": 40000000000,
+            "cleaned": false,
+            "snapshot_directory_bytes": 31451440529
+          }
+        ]
+      },
+      "greedy_reference_source": "S-reference.json",
+      "greedy_validation_source": "S-restored-validation.json",
+      "W0_after_restore": {
+        "arm": "S",
+        "workload": "W0",
+        "repetition": 1,
+        "manifest_sha256": "8a65e939b78fb20523249dcec6955c120218a449781d5ee19526f088e656318f",
+        "num_requests": 1763,
+        "expected_output_tokens": 721595,
+        "useful_output_tokens": 721595,
+        "makespan_s": 343.6686,
+        "useful_tokens_per_s": 2099.683,
+        "useful_tokens_per_s_per_chip": 65.6151,
+        "all_requests_complete": true,
+        "missing_requests": [],
+        "unexpected_requests": [],
+        "duplicate_requests": [],
+        "failed_requests": [],
+        "short_requests": {},
+        "replayed_tokens": 0,
+        "transferred_bytes": 0,
+        "replayed_token_fraction": 0.0,
+        "migrations_committed": 0,
+        "migrations_declined": 0,
+        "migration_handoff_s_p50": null,
+        "migration_handoff_s_max": null,
+        "counters": {
+          "proposals": 0,
+          "approved": 0,
+          "declined": 0,
+          "committed": 0,
+          "aborted": 0,
+          "released": 0
+        },
+        "initial_placement_counts": {
+          "small_c": 396,
+          "small_d": 495,
+          "small_b": 435,
+          "small_a": 437
+        },
+        "instances": [
+          "small_a",
+          "small_b",
+          "small_c",
+          "small_d"
+        ],
+        "iteration_capture_one_to_one": true,
+        "total_preemptions": 1510,
+        "iteration_stats": {
+          "path": "/tmp/omp_hetero/artifacts/rc-snapshot-S-restored-S-s1/W0_S_r1_iterations.csv.gz",
+          "rows": 27539,
+          "per_instance": {
+            "small_a": {
+              "capture_audit": {
+                "rows": 7360,
+                "retired_rows": 7360,
+                "open_rows": 0,
+                "unmatched_retirements": 0,
+                "inflight_batches": 0,
+                "latency_clock": "perf_counter",
+                "latency_scope": "host_schedule_return_to_retirement_including_queue"
+              },
+              "iterations": 7360,
+              "mixed_or_prefill_iterations": 434,
+              "decode_only_iterations": 6924,
+              "control_iterations": 2,
+              "preemptions": 379,
+              "emitted_output_tokens": 180300,
+              "iteration_latency_p50_s": 0.074441,
+              "iteration_latency_mean_s": 0.086967,
+              "scheduled_requests_p50": 26.0,
+              "scheduled_requests_max": 68
+            },
+            "small_b": {
+              "capture_audit": {
+                "rows": 5519,
+                "retired_rows": 5519,
+                "open_rows": 0,
+                "unmatched_retirements": 0,
+                "inflight_batches": 0,
+                "latency_clock": "perf_counter",
+                "latency_scope": "host_schedule_return_to_retirement_including_queue"
+              },
+              "iterations": 5519,
+              "mixed_or_prefill_iterations": 447,
+              "decode_only_iterations": 5070,
+              "control_iterations": 2,
+              "preemptions": 308,
+              "emitted_output_tokens": 167119,
+              "iteration_latency_p50_s": 0.091244,
+              "iteration_latency_mean_s": 0.105682,
+              "scheduled_requests_p50": 33,
+              "scheduled_requests_max": 72
+            },
+            "small_c": {
+              "capture_audit": {
+                "rows": 8029,
+                "retired_rows": 8029,
+                "open_rows": 0,
+                "unmatched_retirements": 0,
+                "inflight_batches": 0,
+                "latency_clock": "perf_counter",
+                "latency_scope": "host_schedule_return_to_retirement_including_queue"
+              },
+              "iterations": 8029,
+              "mixed_or_prefill_iterations": 436,
+              "decode_only_iterations": 7591,
+              "control_iterations": 2,
+              "preemptions": 484,
+              "emitted_output_tokens": 188773,
+              "iteration_latency_p50_s": 0.071217,
+              "iteration_latency_mean_s": 0.084682,
+              "scheduled_requests_p50": 24,
+              "scheduled_requests_max": 68
+            },
+            "small_d": {
+              "capture_audit": {
+                "rows": 6631,
+                "retired_rows": 6631,
+                "open_rows": 0,
+                "unmatched_retirements": 0,
+                "inflight_batches": 0,
+                "latency_clock": "perf_counter",
+                "latency_scope": "host_schedule_return_to_retirement_including_queue"
+              },
+              "iterations": 6631,
+              "mixed_or_prefill_iterations": 498,
+              "decode_only_iterations": 6131,
+              "control_iterations": 2,
+              "preemptions": 339,
+              "emitted_output_tokens": 185403,
+              "iteration_latency_p50_s": 0.089902,
+              "iteration_latency_mean_s": 0.097093,
+              "scheduled_requests_p50": 31,
+              "scheduled_requests_max": 67
+            }
+          },
+          "unmatched_retirements": 0,
+          "rows_without_retirement": 0,
+          "one_to_one": true
+        },
+        "client_delivery_matches": true,
+        "committed_prefix_preserved": true,
+        "progress": {
+          "native_output_tokens": 721595,
+          "admitted_cap": 256,
+          "boundary_definition": "start at ceil(10% of requests) client completions; end when remaining requests equal admitted cap; identical completion-count bounds in every arm",
+          "time_basis": "host Unix timestamps, not device kernel clocks",
+          "terminal_drain_s": 96.912358045578,
+          "terminal_drain_fraction": 0.2819936715949479,
+          "backlog_boundaries_completed_requests": [
+            177,
+            1507
+          ],
+          "available": true,
+          "deep_backlog_s": 215.66860222816467,
+          "deep_backlog_begin_s": 31.08759617805481,
+          "deep_backlog_end_s": 246.75619840621948,
+          "deep_backlog_native_output_tokens": 531940,
+          "deep_backlog_native_tokens_per_s": 2466.4693632002995,
+          "deep_backlog_instance_tokens": {
+            "small_a": 135584,
+            "small_b": 132100,
+            "small_c": 128965,
+            "small_d": 135291
+          }
+        },
+        "native_output_budget_exact": true,
+        "unfrozen_pilot": true,
+        "pilot_policy": {
+          "decode_length_blind": true
+        },
+        "evidence_scope": "UNFROZEN pilot; never cohort or headline evidence",
+        "request_id_namespace": "e892034e17f3435d8e4370d4ce0c6ad6",
+        "run_id": "rc-snapshot-S-restored-S-s1",
+        "ingress_url": "http://omp-router.llm-d-optimized-baseline.svc.cluster.local",
+        "request_path": "Envoy HTTP /v1/completions -> ExtProc gateway authority -> engine",
+        "ingress_protocol": "envoy-ext-proc-v3",
+        "warmup": {
+          "source_ids": [
+            "6QspWrE_0",
+            "a8qsLkK_0",
+            "ctHQQgz_0",
+            "gxVivje_0",
+            "lxM1EL1_0",
+            "lxM1EL1_11",
+            "lxM1EL1_21",
+            "lxM1EL1_33"
+          ],
+          "prompt_token_ids": [
+            [
+              6481,
+              236789,
+              236751,
+              1441,
+              496,
+              2290,
+              236761,
+              564,
+              236789,
+              236757,
+              1771,
+              531,
+              3442,
+              496,
+              2822,
+              3925,
+              236764,
+              532,
+              1308,
+              506,
+              3925,
+              236764,
+              993,
+              795,
+              577,
+              3131,
+              2653,
+              12871,
+              42096,
+              684,
+              4945,
+              236761,
+              1599,
+              740,
+              5347,
+              886,
+              529,
+              506,
+              12871,
+              236764,
+              532,
+              3442,
+              919,
+              529,
+              506,
+              3925,
+              1308,
+              600,
+              5313,
+              563,
+              1603,
+              236761,
+              5715,
+              563,
+              506,
+              3925,
+              236787,
+              108,
+              818,
+              5312,
+              38159,
+              563,
+              92956,
+              528,
+              496,
+              76060,
+              23844,
+              528,
+              630,
+              5258,
+              137654,
+              236761,
+              7904,
+              236804,
+              143044,
+              506,
+              6082,
+              31393,
+              607,
+              13492,
+              59486,
+              236787,
+              506,
+              795,
+              563,
+              1676,
+              3124,
+              236761,
+              2195,
+              659,
+              506,
+              1774,
+              531,
+              15074,
+              236761,
+              9963,
+              15036,
+              65937,
+              7666,
+              563,
+              3016,
+              1590,
+              236764,
+              103232,
+              38670,
+              532,
+              85917,
+              236761,
+              40436,
+              7261,
+              910,
+              5946,
+              1388,
+              236761,
+              749,
+              605,
+              532,
+              2876,
+              7785,
+              834,
+              1623,
+              990,
+              18494,
+              1091,
+              901,
+              2473,
+              618,
+              1388,
+              735,
+              1010,
+              910,
+              6296,
+              236761,
+              108,
+              37107,
+              5946,
+              691,
+              29627,
+              236743,
+              236770,
+              236778,
+              13872,
+              2175,
+              2175,
+              236764,
+              506,
+              102778,
+              53509,
+              529,
+              506,
+              1883,
+              529,
+              83254,
+              236772,
+              899,
+              25247,
+              236772,
+              624,
+              236772,
+              25714,
+              51202,
+              236772,
+              160489,
+              2794,
+              236772,
+              624,
+              236772,
+              39623,
+              695,
+              531,
+              2246,
+              5507,
+              623,
+              1437,
+              1691,
+              15738,
+              3056,
+              30502,
+              506,
+              3527,
+              36707,
+              236764,
+              625,
+              563,
+              2651,
+              531,
+              1523,
+              531,
+              1144,
+              1304,
+              4869,
+              236761,
+              53609,
+              711,
+              506,
+              4559,
+              18022,
+              236761,
+              640,
+              16833,
+              126555,
+              10012,
+              919,
+              5508,
+              531,
+              636,
+              119638,
+              1082,
+              3785,
+              236761,
+              2301,
+              28481,
+              1053,
+              1010,
+              25876,
+              2338,
+              506,
+              3527,
+              53509,
+              236761,
+              108,
+              38532,
+              1061,
+              37160,
+              1053,
+              4869,
+              236761,
+              108,
+              29213,
+              236804,
+              3305,
+              901,
+              964,
+              7759,
+              573,
+              672,
+              3479,
+              236761,
+              558,
+              35967,
+              236764,
+              47754,
+              236764,
+              2958,
+              236764,
+              2748,
+              236764,
+              4122,
+              236761,
+              669,
+              17620,
+              24676,
+              236761,
+              7904,
+              236804,
+              15249
+            ],
+            [
+              238945,
+              237534,
+              239744,
+              237323,
+              236812,
+              142073,
+              237613,
+              237842,
+              118852,
+              144289,
+              31781,
+              237430,
+              242332
+            ],
+            [
+              23391
+            ],
+            [
+              8574,
+              611,
+              8082,
+              1217,
+              531,
+              1161,
+              86852,
+              61708,
+              607,
+              53611,
+              17689,
+              25027,
+              531,
+              776,
+              3567,
+              522,
+              236764,
+              6440,
+              3731,
+              236764,
+              532,
+              1845,
+              496,
+              2016,
+              18922,
+              573,
+              1546,
+              9427,
+              236881
+            ],
+            [
+              43204,
+              496,
+              57728,
+              3925,
+              1003,
+              555,
+              966,
+              18694,
+              982,
+              23612,
+              135900,
+              528,
+              27910,
+              14627,
+              1491
+            ],
+            [
+              35155,
+              55325,
+              236789,
+              236751,
+              17410,
+              600,
+              6208,
+              506,
+              5442,
+              28682,
+              531,
+              3892,
+              580,
+              2601,
+              815,
+              8428,
+              532,
+              784,
+              506,
+              5442,
+              28682,
+              6299,
+              872
+            ],
+            [
+              74990,
+              3952,
+              1063,
+              699,
+              506,
+              6582,
+              236761,
+              126182,
+              15724,
+              531,
+              30656,
+              40587,
+              605,
+              699,
+              506,
+              4888,
+              855,
+              236761,
+              21340,
+              815,
+              3291,
+              614,
+              15620,
+              3334,
+              71923
+            ],
+            [
+              818,
+              861,
+              17748,
+              563,
+              506,
+              555,
+              966,
+              18694,
+              982,
+              18338,
+              68741,
+              6115,
+              1407
+            ]
+          ],
+          "max_tokens": 32,
+          "catalogue_sha256": "7b99d0f0a93d7ac0e4b8a6b6e9b02df47e2ad93f0589b7a53fd00032ace45b46"
+        },
+        "policy": {
+          "small_instances": [
+            "small_a",
+            "small_b",
+            "small_c",
+            "small_d"
+          ],
+          "large_instances": [],
+          "small_prompt_token_limit": 4096,
+          "large_fresh_traffic_share": 0.0,
+          "reserve_large_headroom_blocks": 16,
+          "long_reserve_tokens": 0,
+          "work_conserving_fallback": false,
+          "migration_enabled": false,
+          "migration_mechanism": "recompute",
+          "min_generated_tokens": 128,
+          "min_context_tokens": 1024,
+          "min_remaining_tokens": 256,
+          "max_migrations_per_request": 1,
+          "max_inflight_migrations_per_destination": 2,
+          "max_inflight_migrations_total": 3,
+          "destination_growth_allowance_blocks": 8,
+          "source_pressure_free_block_fraction": 0.12,
+          "decode_length_blind": true,
+          "admission_growth_blocks": 1,
+          "dispatch_order": "arrival",
+          "dynamic_long_reserve": false,
+          "steal_enabled": false
+        },
+        "epp_config": null,
+        "epp_capacity_retries": null,
+        "epp_placement_reset": null,
+        "epp_reservations_released": null,
+        "layout_id": "S",
+        "artifact_dir": "/tmp/omp_hetero/artifacts/rc-snapshot-S-restored-S-s1",
+        "started_wall": 1790924213.3744547,
+        "finished_wall": 1790924557.0430112,
+        "idle_before": {
+          "small_a": {
+            "instance_id": "small_a",
+            "idle": true,
+            "inflight": 0,
+            "num_running": 0,
+            "num_waiting": 0,
+            "free_blocks": 412,
+            "pending_batches": 0,
+            "scheduler_has_work": false,
+            "draining": false
+          },
+          "small_b": {
+            "instance_id": "small_b",
+            "idle": true,
+            "inflight": 0,
+            "num_running": 0,
+            "num_waiting": 0,
+            "free_blocks": 412,
+            "pending_batches": 0,
+            "scheduler_has_work": false,
+            "draining": false
+          },
+          "small_c": {
+            "instance_id": "small_c",
+            "idle": true,
+            "inflight": 0,
+            "num_running": 0,
+            "num_waiting": 0,
+            "free_blocks": 412,
+            "pending_batches": 0,
+            "scheduler_has_work": false,
+            "draining": false
+          },
+          "small_d": {
+            "instance_id": "small_d",
+            "idle": true,
+            "inflight": 0,
+            "num_running": 0,
+            "num_waiting": 0,
+            "free_blocks": 412,
+            "pending_batches": 0,
+            "scheduler_has_work": false,
+            "draining": false
+          }
+        },
+        "loaded_runtime": null,
+        "during_run": null
+      },
+      "W0_historical_comparison": {
+        "historical_makespan_s": 343.3,
+        "historical_repetitions_s": [
+          352.4,
+          334.2
+        ],
+        "restored_makespan_s": 343.6686,
+        "difference_s": 0.3686000000000149,
+        "ratio": 1.001073696475386
+      },
+      "unchecked_variant": {
+        "label": "SHA256 verification disabled; not used for transition costs",
+        "per_worker": {
+          "small_a": [
+            {
+              "executor_rank": 0,
+              "weight_snapshot": {
+                "mode": "read",
+                "restored": true,
+                "verified_checksums": false
+              },
+              "seconds": {
+                "init_device": 2.779301881790161,
+                "snapshot_manifest_verify": 0.10671448707580566,
+                "snapshot_read_tmpfs": 0.7460565567016602,
+                "snapshot_verify": 2.384185791015625e-07,
+                "snapshot_device_placement": 2.2840192317962646,
+                "load_model": 20.26200246810913,
+                "determine_available_memory": 0.0002651214599609375,
+                "initialize_from_config": 25.36857271194458,
+                "compile_or_warm_up_model": 61.95710802078247
+              }
+            },
+            {
+              "executor_rank": 1,
+              "weight_snapshot": {
+                "mode": "read",
+                "restored": true,
+                "verified_checksums": false
+              },
+              "seconds": {
+                "init_device": 2.795788049697876,
+                "snapshot_manifest_verify": 0.10473752021789551,
+                "snapshot_read_tmpfs": 0.760101318359375,
+                "snapshot_verify": 2.384185791015625e-07,
+                "snapshot_device_placement": 1.4266188144683838,
+                "load_model": 19.39581298828125,
+                "determine_available_memory": 0.0004837512969970703,
+                "initialize_from_config": 25.363620281219482,
+                "compile_or_warm_up_model": 61.95403218269348
+              }
+            }
+          ],
+          "small_b": [
+            {
+              "executor_rank": 0,
+              "weight_snapshot": {
+                "mode": "read",
+                "restored": true,
+                "verified_checksums": false
+              },
+              "seconds": {
+                "init_device": 2.762855052947998,
+                "snapshot_manifest_verify": 0.1068425178527832,
+                "snapshot_read_tmpfs": 0.7358026504516602,
+                "snapshot_verify": 2.384185791015625e-07,
+                "snapshot_device_placement": 1.4232642650604248,
+                "load_model": 19.252705097198486,
+                "determine_available_memory": 0.00020360946655273438,
+                "initialize_from_config": 25.589112043380737,
+                "compile_or_warm_up_model": 62.2357976436615
+              }
+            },
+            {
+              "executor_rank": 1,
+              "weight_snapshot": {
+                "mode": "read",
+                "restored": true,
+                "verified_checksums": false
+              },
+              "seconds": {
+                "init_device": 2.772305488586426,
+                "snapshot_manifest_verify": 0.10512018203735352,
+                "snapshot_read_tmpfs": 0.747265100479126,
+                "snapshot_verify": 2.384185791015625e-07,
+                "snapshot_device_placement": 2.3920321464538574,
+                "load_model": 20.196736335754395,
+                "determine_available_memory": 0.0005023479461669922,
+                "initialize_from_config": 25.593745708465576,
+                "compile_or_warm_up_model": 62.23686981201172
+              }
+            }
+          ],
+          "small_c": [
+            {
+              "executor_rank": 0,
+              "weight_snapshot": {
+                "mode": "read",
+                "restored": true,
+                "verified_checksums": false
+              },
+              "seconds": {
+                "init_device": 2.790160894393921,
+                "snapshot_manifest_verify": 0.10149860382080078,
+                "snapshot_read_tmpfs": 0.752760648727417,
+                "snapshot_verify": 0.0,
+                "snapshot_device_placement": 1.4117176532745361,
+                "load_model": 19.13139533996582,
+                "determine_available_memory": 0.0002913475036621094,
+                "initialize_from_config": 25.621702194213867,
+                "compile_or_warm_up_model": 61.950124979019165
+              }
+            },
+            {
+              "executor_rank": 1,
+              "weight_snapshot": {
+                "mode": "read",
+                "restored": true,
+                "verified_checksums": false
+              },
+              "seconds": {
+                "init_device": 2.788573980331421,
+                "snapshot_manifest_verify": 0.10538887977600098,
+                "snapshot_read_tmpfs": 0.7526113986968994,
+                "snapshot_verify": 2.384185791015625e-07,
+                "snapshot_device_placement": 1.4165019989013672,
+                "load_model": 19.128931045532227,
+                "determine_available_memory": 0.00046634674072265625,
+                "initialize_from_config": 25.620014429092407,
+                "compile_or_warm_up_model": 61.951091051101685
+              }
+            }
+          ],
+          "small_d": [
+            {
+              "executor_rank": 0,
+              "weight_snapshot": {
+                "mode": "read",
+                "restored": true,
+                "verified_checksums": false
+              },
+              "seconds": {
+                "init_device": 2.751607894897461,
+                "snapshot_manifest_verify": 0.107421875,
+                "snapshot_read_tmpfs": 0.7479028701782227,
+                "snapshot_verify": 2.384185791015625e-07,
+                "snapshot_device_placement": 1.4334123134613037,
+                "load_model": 19.37657356262207,
+                "determine_available_memory": 0.00019693374633789062,
+                "initialize_from_config": 25.690648555755615,
+                "compile_or_warm_up_model": 62.04277849197388
+              }
+            },
+            {
+              "executor_rank": 1,
+              "weight_snapshot": {
+                "mode": "read",
+                "restored": true,
+                "verified_checksums": false
+              },
+              "seconds": {
+                "init_device": 2.7830076217651367,
+                "snapshot_manifest_verify": 0.10631370544433594,
+                "snapshot_read_tmpfs": 0.7461724281311035,
+                "snapshot_verify": 2.384185791015625e-07,
+                "snapshot_device_placement": 1.4185054302215576,
+                "load_model": 19.311919689178467,
+                "determine_available_memory": 0.0005040168762207031,
+                "initialize_from_config": 25.686115026474,
+                "compile_or_warm_up_model": 62.04454255104065
+              }
+            }
+          ]
+        },
+        "greedy_output_equality": true
+      }
+    },
+    "H": {
+      "greedy_output_equality": true,
+      "every_worker_restored": true,
+      "cold_load_per_worker": {
+        "large_a": [
+          {
+            "executor_rank": 0,
+            "weight_snapshot": {
+              "mode": "off",
+              "restored": false,
+              "verified_checksums": true
+            },
+            "seconds": {
+              "init_device": 2.7815258502960205,
+              "load_model": 239.16697907447815,
+              "determine_available_memory": 0.0001842975616455078,
+              "initialize_from_config": 26.020672082901,
+              "compile_or_warm_up_model": 64.49673271179199
+            }
+          },
+          {
+            "executor_rank": 1,
+            "weight_snapshot": {
+              "mode": "off",
+              "restored": false,
+              "verified_checksums": true
+            },
+            "seconds": {
+              "init_device": 2.7956173419952393,
+              "load_model": 236.89327716827393,
+              "determine_available_memory": 0.0007948875427246094,
+              "initialize_from_config": 26.017533779144287,
+              "compile_or_warm_up_model": 64.49812245368958
+            }
+          },
+          {
+            "executor_rank": 2,
+            "weight_snapshot": {
+              "mode": "off",
+              "restored": false,
+              "verified_checksums": true
+            },
+            "seconds": {
+              "init_device": 2.792020320892334,
+              "load_model": 236.7149498462677,
+              "determine_available_memory": 0.0007622241973876953,
+              "initialize_from_config": 26.017000198364258,
+              "compile_or_warm_up_model": 64.49758386611938
+            }
+          },
+          {
+            "executor_rank": 3,
+            "weight_snapshot": {
+              "mode": "off",
+              "restored": false,
+              "verified_checksums": true
+            },
+            "seconds": {
+              "init_device": 2.7845611572265625,
+              "load_model": 237.9387664794922,
+              "determine_available_memory": 0.0009136199951171875,
+              "initialize_from_config": 26.01758646965027,
+              "compile_or_warm_up_model": 64.49932551383972
+            }
+          }
+        ],
+        "large_b": [
+          {
+            "executor_rank": 0,
+            "weight_snapshot": {
+              "mode": "off",
+              "restored": false,
+              "verified_checksums": true
+            },
+            "seconds": {
+              "init_device": 3.735229730606079,
+              "load_model": 237.09164237976074,
+              "determine_available_memory": 0.00021910667419433594,
+              "initialize_from_config": 25.786295175552368,
+              "compile_or_warm_up_model": 63.09401178359985
+            }
+          },
+          {
+            "executor_rank": 1,
+            "weight_snapshot": {
+              "mode": "off",
+              "restored": false,
+              "verified_checksums": true
+            },
+            "seconds": {
+              "init_device": 3.7372653484344482,
+              "load_model": 237.4447684288025,
+              "determine_available_memory": 0.0008761882781982422,
+              "initialize_from_config": 25.786953687667847,
+              "compile_or_warm_up_model": 63.09594798088074
+            }
+          },
+          {
+            "executor_rank": 2,
+            "weight_snapshot": {
+              "mode": "off",
+              "restored": false,
+              "verified_checksums": true
+            },
+            "seconds": {
+              "init_device": 3.764554500579834,
+              "load_model": 236.73451209068298,
+              "determine_available_memory": 0.0006310939788818359,
+              "initialize_from_config": 25.786460876464844,
+              "compile_or_warm_up_model": 63.09538245201111
+            }
+          },
+          {
+            "executor_rank": 3,
+            "weight_snapshot": {
+              "mode": "off",
+              "restored": false,
+              "verified_checksums": true
+            },
+            "seconds": {
+              "init_device": 3.736088991165161,
+              "load_model": 237.90348625183105,
+              "determine_available_memory": 0.0005018711090087891,
+              "initialize_from_config": 25.785476207733154,
+              "compile_or_warm_up_model": 63.09700059890747
+            }
+          }
+        ]
+      },
+      "restore_per_worker": {
+        "large_a": [
+          {
+            "executor_rank": 0,
+            "weight_snapshot": {
+              "mode": "read",
+              "restored": true,
+              "verified_checksums": true
+            },
+            "seconds": {
+              "init_device": 3.9314920902252197,
+              "snapshot_manifest_verify": 0.11212491989135742,
+              "snapshot_read_tmpfs": 0.7653157711029053,
+              "snapshot_verify": 10.314586639404297,
+              "snapshot_device_placement": 0.8293938636779785,
+              "load_model": 28.75161099433899,
+              "determine_available_memory": 0.0002117156982421875,
+              "initialize_from_config": 25.72259283065796,
+              "compile_or_warm_up_model": 63.20757269859314
+            }
+          },
+          {
+            "executor_rank": 1,
+            "weight_snapshot": {
+              "mode": "read",
+              "restored": true,
+              "verified_checksums": true
+            },
+            "seconds": {
+              "init_device": 3.9341721534729004,
+              "snapshot_manifest_verify": 0.11516642570495605,
+              "snapshot_read_tmpfs": 0.7596950531005859,
+              "snapshot_verify": 10.171540260314941,
+              "snapshot_device_placement": 0.8610196113586426,
+              "load_model": 28.79553985595703,
+              "determine_available_memory": 0.0007760524749755859,
+              "initialize_from_config": 25.722309350967407,
+              "compile_or_warm_up_model": 63.208683013916016
+            }
+          },
+          {
+            "executor_rank": 2,
+            "weight_snapshot": {
+              "mode": "read",
+              "restored": true,
+              "verified_checksums": true
+            },
+            "seconds": {
+              "init_device": 3.955826759338379,
+              "snapshot_manifest_verify": 0.11300516128540039,
+              "snapshot_read_tmpfs": 0.749901294708252,
+              "snapshot_verify": 10.215949296951294,
+              "snapshot_device_placement": 0.8745052814483643,
+              "load_model": 28.78580141067505,
+              "determine_available_memory": 0.0005395412445068359,
+              "initialize_from_config": 25.72617220878601,
+              "compile_or_warm_up_model": 63.20914149284363
+            }
+          },
+          {
+            "executor_rank": 3,
+            "weight_snapshot": {
+              "mode": "read",
+              "restored": true,
+              "verified_checksums": true
+            },
+            "seconds": {
+              "init_device": 3.955479145050049,
+              "snapshot_manifest_verify": 0.11391234397888184,
+              "snapshot_read_tmpfs": 0.7582814693450928,
+              "snapshot_verify": 10.213810682296753,
+              "snapshot_device_placement": 0.8180925846099854,
+              "load_model": 28.71449875831604,
+              "determine_available_memory": 0.0009496212005615234,
+              "initialize_from_config": 25.72239089012146,
+              "compile_or_warm_up_model": 63.208171129226685
+            }
+          }
+        ],
+        "large_b": [
+          {
+            "executor_rank": 0,
+            "weight_snapshot": {
+              "mode": "read",
+              "restored": true,
+              "verified_checksums": true
+            },
+            "seconds": {
+              "init_device": 3.7239067554473877,
+              "snapshot_manifest_verify": 0.1109609603881836,
+              "snapshot_read_tmpfs": 0.7404434680938721,
+              "snapshot_verify": 10.257670879364014,
+              "snapshot_device_placement": 0.8665175437927246,
+              "load_model": 28.428962230682373,
+              "determine_available_memory": 0.0002009868621826172,
+              "initialize_from_config": 25.85760235786438,
+              "compile_or_warm_up_model": 63.430869817733765
+            }
+          },
+          {
+            "executor_rank": 1,
+            "weight_snapshot": {
+              "mode": "read",
+              "restored": true,
+              "verified_checksums": true
+            },
+            "seconds": {
+              "init_device": 3.7255682945251465,
+              "snapshot_manifest_verify": 0.1147758960723877,
+              "snapshot_read_tmpfs": 0.7578847408294678,
+              "snapshot_verify": 10.313448905944824,
+              "snapshot_device_placement": 0.8257553577423096,
+              "load_model": 28.332759618759155,
+              "determine_available_memory": 0.0009801387786865234,
+              "initialize_from_config": 25.859968662261963,
+              "compile_or_warm_up_model": 63.429757595062256
+            }
+          },
+          {
+            "executor_rank": 2,
+            "weight_snapshot": {
+              "mode": "read",
+              "restored": true,
+              "verified_checksums": true
+            },
+            "seconds": {
+              "init_device": 3.6766467094421387,
+              "snapshot_manifest_verify": 0.11373090744018555,
+              "snapshot_read_tmpfs": 0.7670414447784424,
+              "snapshot_verify": 10.128854751586914,
+              "snapshot_device_placement": 0.854367733001709,
+              "load_model": 28.400763511657715,
+              "determine_available_memory": 0.000659942626953125,
+              "initialize_from_config": 25.85952663421631,
+              "compile_or_warm_up_model": 63.43055486679077
+            }
+          },
+          {
+            "executor_rank": 3,
+            "weight_snapshot": {
+              "mode": "read",
+              "restored": true,
+              "verified_checksums": true
+            },
+            "seconds": {
+              "init_device": 3.699802875518799,
+              "snapshot_manifest_verify": 0.11281752586364746,
+              "snapshot_read_tmpfs": 0.762047529220581,
+              "snapshot_verify": 10.218086004257202,
+              "snapshot_device_placement": 0.8555681705474854,
+              "load_model": 28.392600297927856,
+              "determine_available_memory": 0.00054168701171875,
+              "initialize_from_config": 25.857118129730225,
+              "compile_or_warm_up_model": 63.43146753311157
+            }
+          }
+        ]
+      },
+      "snapshot": {
+        "ok": true,
+        "action": "snapshot",
+        "layout": "H",
+        "workers": {
+          "large_a": [
+            {
+              "executor_rank": 0,
+              "process_rank": 0,
+              "node_ip": "192.168.102.38",
+              "directory": "/dev/shm/omp_weights/H/large_a/rank0",
+              "bytes": 15824457568,
+              "snapshot_s": 26.19288468360901,
+              "arrays": 1028
+            },
+            {
+              "executor_rank": 1,
+              "process_rank": 2,
+              "node_ip": "192.168.102.45",
+              "directory": "/dev/shm/omp_weights/H/large_a/rank2",
+              "bytes": 15824457568,
+              "snapshot_s": 26.297340154647827,
+              "arrays": 1028
+            },
+            {
+              "executor_rank": 2,
+              "process_rank": 1,
+              "node_ip": "192.168.102.43",
+              "directory": "/dev/shm/omp_weights/H/large_a/rank1",
+              "bytes": 15824457568,
+              "snapshot_s": 26.24299454689026,
+              "arrays": 1028
+            },
+            {
+              "executor_rank": 3,
+              "process_rank": 3,
+              "node_ip": "192.168.102.40",
+              "directory": "/dev/shm/omp_weights/H/large_a/rank3",
+              "bytes": 15824457568,
+              "snapshot_s": 26.204209566116333,
+              "arrays": 1028
+            }
+          ],
+          "large_b": [
+            {
+              "executor_rank": 0,
+              "process_rank": 0,
+              "node_ip": "192.168.102.44",
+              "directory": "/dev/shm/omp_weights/H/large_b/rank0",
+              "bytes": 15824457568,
+              "snapshot_s": 26.533445835113525,
+              "arrays": 1028
+            },
+            {
+              "executor_rank": 1,
+              "process_rank": 3,
+              "node_ip": "192.168.102.41",
+              "directory": "/dev/shm/omp_weights/H/large_b/rank3",
+              "bytes": 15824457568,
+              "snapshot_s": 26.61178207397461,
+              "arrays": 1028
+            },
+            {
+              "executor_rank": 2,
+              "process_rank": 2,
+              "node_ip": "192.168.102.42",
+              "directory": "/dev/shm/omp_weights/H/large_b/rank2",
+              "bytes": 15824457568,
+              "snapshot_s": 26.06901502609253,
+              "arrays": 1028
+            },
+            {
+              "executor_rank": 3,
+              "process_rank": 1,
+              "node_ip": "192.168.102.39",
+              "directory": "/dev/shm/omp_weights/H/large_b/rank1",
+              "bytes": 15824457568,
+              "snapshot_s": 26.364466428756714,
+              "arrays": 1028
+            }
+          ]
+        }
+      },
+      "memory_after_snapshot": {
+        "ok": true,
+        "action": "memory",
+        "hosts": [
+          {
+            "host": "gke-tpu-8770cb66-8v5c",
+            "mem_available_bytes": 110787346432,
+            "tmpfs_free_bytes": 135362269184,
+            "reserve_bytes": 0,
+            "headroom_bytes": 40000000000,
+            "cleaned": false,
+            "snapshot_directory_bytes": 47279671599
+          },
+          {
+            "host": "gke-tpu-8770cb66-hsqj",
+            "mem_available_bytes": 111504756736,
+            "tmpfs_free_bytes": 135415250944,
+            "reserve_bytes": 0,
+            "headroom_bytes": 40000000000,
+            "cleaned": false,
+            "snapshot_directory_bytes": 47279671934
+          },
+          {
+            "host": "gke-tpu-8770cb66-j6g4",
+            "mem_available_bytes": 116364685312,
+            "tmpfs_free_bytes": 140056735744,
+            "reserve_bytes": 0,
+            "headroom_bytes": 40000000000,
+            "cleaned": false,
+            "snapshot_directory_bytes": 47279681160
+          },
+          {
+            "host": "gke-tpu-8770cb66-45jj",
+            "mem_available_bytes": 109329494016,
+            "tmpfs_free_bytes": 135402835968,
+            "reserve_bytes": 0,
+            "headroom_bytes": 40000000000,
+            "cleaned": false,
+            "snapshot_directory_bytes": 47279671599
+          },
+          {
+            "host": "gke-tpu-8770cb66-sddz",
+            "mem_available_bytes": 118536925184,
+            "tmpfs_free_bytes": 141837668352,
+            "reserve_bytes": 0,
+            "headroom_bytes": 40000000000,
+            "cleaned": false,
+            "snapshot_directory_bytes": 47279671934
+          },
+          {
+            "host": "gke-tpu-8770cb66-0vj5",
+            "mem_available_bytes": 116819648512,
+            "tmpfs_free_bytes": 140948025344,
+            "reserve_bytes": 0,
+            "headroom_bytes": 40000000000,
+            "cleaned": false,
+            "snapshot_directory_bytes": 47279679205
+          },
+          {
+            "host": "gke-tpu-8770cb66-mg22",
+            "mem_available_bytes": 118728839168,
+            "tmpfs_free_bytes": 142017605632,
+            "reserve_bytes": 0,
+            "headroom_bytes": 40000000000,
+            "cleaned": false,
+            "snapshot_directory_bytes": 47279681160
+          },
+          {
+            "host": "gke-tpu-8770cb66-m8vd",
+            "mem_available_bytes": 117222170624,
+            "tmpfs_free_bytes": 140056719360,
+            "reserve_bytes": 0,
+            "headroom_bytes": 40000000000,
+            "cleaned": false,
+            "snapshot_directory_bytes": 47279679205
+          }
+        ]
+      },
+      "greedy_reference_source": "H-reference.json",
+      "greedy_validation_source": "H-restored-validation.json",
+      "W0_after_restore": {
+        "arm": "H",
+        "workload": "W0",
+        "repetition": 1,
+        "manifest_sha256": "8a65e939b78fb20523249dcec6955c120218a449781d5ee19526f088e656318f",
+        "num_requests": 1763,
+        "expected_output_tokens": 721595,
+        "useful_output_tokens": 721595,
+        "makespan_s": 490.9557,
+        "useful_tokens_per_s": 1469.776,
+        "useful_tokens_per_s_per_chip": 45.9305,
+        "all_requests_complete": true,
+        "missing_requests": [],
+        "unexpected_requests": [],
+        "duplicate_requests": [],
+        "failed_requests": [],
+        "short_requests": {},
+        "replayed_tokens": 0,
+        "transferred_bytes": 0,
+        "replayed_token_fraction": 0.0,
+        "migrations_committed": 0,
+        "migrations_declined": 0,
+        "migration_handoff_s_p50": null,
+        "migration_handoff_s_max": null,
+        "counters": {
+          "proposals": 0,
+          "approved": 0,
+          "declined": 0,
+          "committed": 0,
+          "aborted": 0,
+          "released": 0
+        },
+        "initial_placement_counts": {
+          "large_a": 899,
+          "large_b": 864
+        },
+        "instances": [
+          "large_a",
+          "large_b"
+        ],
+        "iteration_capture_one_to_one": true,
+        "total_preemptions": 557,
+        "iteration_stats": {
+          "path": "/tmp/omp_hetero/artifacts/rc-snapshot-H-restored-H-s1/W0_H_r1_iterations.csv.gz",
+          "rows": 11901,
+          "per_instance": {
+            "large_a": {
+              "capture_audit": {
+                "rows": 5554,
+                "retired_rows": 5554,
+                "open_rows": 0,
+                "unmatched_retirements": 0,
+                "inflight_batches": 0,
+                "latency_clock": "perf_counter",
+                "latency_scope": "host_schedule_return_to_retirement_including_queue"
+              },
+              "iterations": 5554,
+              "mixed_or_prefill_iterations": 900,
+              "decode_only_iterations": 4652,
+              "control_iterations": 2,
+              "preemptions": 272,
+              "emitted_output_tokens": 366217,
+              "iteration_latency_p50_s": 0.181365,
+              "iteration_latency_mean_s": 0.174523,
+              "scheduled_requests_p50": 72.0,
+              "scheduled_requests_max": 147
+            },
+            "large_b": {
+              "capture_audit": {
+                "rows": 6347,
+                "retired_rows": 6347,
+                "open_rows": 0,
+                "unmatched_retirements": 0,
+                "inflight_batches": 0,
+                "latency_clock": "perf_counter",
+                "latency_scope": "host_schedule_return_to_retirement_including_queue"
+              },
+              "iterations": 6347,
+              "mixed_or_prefill_iterations": 831,
+              "decode_only_iterations": 5514,
+              "control_iterations": 2,
+              "preemptions": 285,
+              "emitted_output_tokens": 355378,
+              "iteration_latency_p50_s": 0.166171,
+              "iteration_latency_mean_s": 0.15313,
+              "scheduled_requests_p50": 64,
+              "scheduled_requests_max": 130
+            }
+          },
+          "unmatched_retirements": 0,
+          "rows_without_retirement": 0,
+          "one_to_one": true
+        },
+        "client_delivery_matches": true,
+        "committed_prefix_preserved": true,
+        "progress": {
+          "native_output_tokens": 721595,
+          "admitted_cap": 256,
+          "boundary_definition": "start at ceil(10% of requests) client completions; end when remaining requests equal admitted cap; identical completion-count bounds in every arm",
+          "time_basis": "host Unix timestamps, not device kernel clocks",
+          "terminal_drain_s": 97.57933068275452,
+          "terminal_drain_fraction": 0.1987538577722488,
+          "backlog_boundaries_completed_requests": [
+            177,
+            1507
+          ],
+          "available": true,
+          "deep_backlog_s": 340.94396591186523,
+          "deep_backlog_begin_s": 52.43235969543457,
+          "deep_backlog_end_s": 393.3763256072998,
+          "deep_backlog_native_output_tokens": 529343,
+          "deep_backlog_native_tokens_per_s": 1552.5806376547996,
+          "deep_backlog_instance_tokens": {
+            "large_a": 266224,
+            "large_b": 263119
+          }
+        },
+        "native_output_budget_exact": true,
+        "unfrozen_pilot": true,
+        "pilot_policy": {
+          "decode_length_blind": true
+        },
+        "evidence_scope": "UNFROZEN pilot; never cohort or headline evidence",
+        "request_id_namespace": "a69eaa9e9a82482595c569b14eaff4cb",
+        "run_id": "rc-snapshot-H-restored-H-s1",
+        "ingress_url": "http://omp-router.llm-d-optimized-baseline.svc.cluster.local",
+        "request_path": "Envoy HTTP /v1/completions -> ExtProc gateway authority -> engine",
+        "ingress_protocol": "envoy-ext-proc-v3",
+        "warmup": {
+          "source_ids": [
+            "6QspWrE_0",
+            "a8qsLkK_0",
+            "ctHQQgz_0",
+            "gxVivje_0",
+            "lxM1EL1_0",
+            "lxM1EL1_11",
+            "lxM1EL1_21",
+            "lxM1EL1_33"
+          ],
+          "prompt_token_ids": [
+            [
+              6481,
+              236789,
+              236751,
+              1441,
+              496,
+              2290,
+              236761,
+              564,
+              236789,
+              236757,
+              1771,
+              531,
+              3442,
+              496,
+              2822,
+              3925,
+              236764,
+              532,
+              1308,
+              506,
+              3925,
+              236764,
+              993,
+              795,
+              577,
+              3131,
+              2653,
+              12871,
+              42096,
+              684,
+              4945,
+              236761,
+              1599,
+              740,
+              5347,
+              886,
+              529,
+              506,
+              12871,
+              236764,
+              532,
+              3442,
+              919,
+              529,
+              506,
+              3925,
+              1308,
+              600,
+              5313,
+              563,
+              1603,
+              236761,
+              5715,
+              563,
+              506,
+              3925,
+              236787,
+              108,
+              818,
+              5312,
+              38159,
+              563,
+              92956,
+              528,
+              496,
+              76060,
+              23844,
+              528,
+              630,
+              5258,
+              137654,
+              236761,
+              7904,
+              236804,
+              143044,
+              506,
+              6082,
+              31393,
+              607,
+              13492,
+              59486,
+              236787,
+              506,
+              795,
+              563,
+              1676,
+              3124,
+              236761,
+              2195,
+              659,
+              506,
+              1774,
+              531,
+              15074,
+              236761,
+              9963,
+              15036,
+              65937,
+              7666,
+              563,
+              3016,
+              1590,
+              236764,
+              103232,
+              38670,
+              532,
+              85917,
+              236761,
+              40436,
+              7261,
+              910,
+              5946,
+              1388,
+              236761,
+              749,
+              605,
+              532,
+              2876,
+              7785,
+              834,
+              1623,
+              990,
+              18494,
+              1091,
+              901,
+              2473,
+              618,
+              1388,
+              735,
+              1010,
+              910,
+              6296,
+              236761,
+              108,
+              37107,
+              5946,
+              691,
+              29627,
+              236743,
+              236770,
+              236778,
+              13872,
+              2175,
+              2175,
+              236764,
+              506,
+              102778,
+              53509,
+              529,
+              506,
+              1883,
+              529,
+              83254,
+              236772,
+              899,
+              25247,
+              236772,
+              624,
+              236772,
+              25714,
+              51202,
+              236772,
+              160489,
+              2794,
+              236772,
+              624,
+              236772,
+              39623,
+              695,
+              531,
+              2246,
+              5507,
+              623,
+              1437,
+              1691,
+              15738,
+              3056,
+              30502,
+              506,
+              3527,
+              36707,
+              236764,
+              625,
+              563,
+              2651,
+              531,
+              1523,
+              531,
+              1144,
+              1304,
+              4869,
+              236761,
+              53609,
+              711,
+              506,
+              4559,
+              18022,
+              236761,
+              640,
+              16833,
+              126555,
+              10012,
+              919,
+              5508,
+              531,
+              636,
+              119638,
+              1082,
+              3785,
+              236761,
+              2301,
+              28481,
+              1053,
+              1010,
+              25876,
+              2338,
+              506,
+              3527,
+              53509,
+              236761,
+              108,
+              38532,
+              1061,
+              37160,
+              1053,
+              4869,
+              236761,
+              108,
+              29213,
+              236804,
+              3305,
+              901,
+              964,
+              7759,
+              573,
+              672,
+              3479,
+              236761,
+              558,
+              35967,
+              236764,
+              47754,
+              236764,
+              2958,
+              236764,
+              2748,
+              236764,
+              4122,
+              236761,
+              669,
+              17620,
+              24676,
+              236761,
+              7904,
+              236804,
+              15249
+            ],
+            [
+              238945,
+              237534,
+              239744,
+              237323,
+              236812,
+              142073,
+              237613,
+              237842,
+              118852,
+              144289,
+              31781,
+              237430,
+              242332
+            ],
+            [
+              23391
+            ],
+            [
+              8574,
+              611,
+              8082,
+              1217,
+              531,
+              1161,
+              86852,
+              61708,
+              607,
+              53611,
+              17689,
+              25027,
+              531,
+              776,
+              3567,
+              522,
+              236764,
+              6440,
+              3731,
+              236764,
+              532,
+              1845,
+              496,
+              2016,
+              18922,
+              573,
+              1546,
+              9427,
+              236881
+            ],
+            [
+              43204,
+              496,
+              57728,
+              3925,
+              1003,
+              555,
+              966,
+              18694,
+              982,
+              23612,
+              135900,
+              528,
+              27910,
+              14627,
+              1491
+            ],
+            [
+              35155,
+              55325,
+              236789,
+              236751,
+              17410,
+              600,
+              6208,
+              506,
+              5442,
+              28682,
+              531,
+              3892,
+              580,
+              2601,
+              815,
+              8428,
+              532,
+              784,
+              506,
+              5442,
+              28682,
+              6299,
+              872
+            ],
+            [
+              74990,
+              3952,
+              1063,
+              699,
+              506,
+              6582,
+              236761,
+              126182,
+              15724,
+              531,
+              30656,
+              40587,
+              605,
+              699,
+              506,
+              4888,
+              855,
+              236761,
+              21340,
+              815,
+              3291,
+              614,
+              15620,
+              3334,
+              71923
+            ],
+            [
+              818,
+              861,
+              17748,
+              563,
+              506,
+              555,
+              966,
+              18694,
+              982,
+              18338,
+              68741,
+              6115,
+              1407
+            ]
+          ],
+          "max_tokens": 32,
+          "catalogue_sha256": "7b99d0f0a93d7ac0e4b8a6b6e9b02df47e2ad93f0589b7a53fd00032ace45b46"
+        },
+        "policy": {
+          "small_instances": [],
+          "large_instances": [
+            "large_a",
+            "large_b"
+          ],
+          "small_prompt_token_limit": 4096,
+          "large_fresh_traffic_share": 0.0,
+          "reserve_large_headroom_blocks": 16,
+          "long_reserve_tokens": 0,
+          "work_conserving_fallback": false,
+          "migration_enabled": false,
+          "migration_mechanism": "recompute",
+          "min_generated_tokens": 128,
+          "min_context_tokens": 1024,
+          "min_remaining_tokens": 256,
+          "max_migrations_per_request": 1,
+          "max_inflight_migrations_per_destination": 2,
+          "max_inflight_migrations_total": 3,
+          "destination_growth_allowance_blocks": 8,
+          "source_pressure_free_block_fraction": 0.12,
+          "decode_length_blind": true,
+          "admission_growth_blocks": 1,
+          "dispatch_order": "arrival",
+          "dynamic_long_reserve": false,
+          "steal_enabled": false
+        },
+        "epp_config": null,
+        "epp_capacity_retries": null,
+        "epp_placement_reset": null,
+        "epp_reservations_released": null,
+        "layout_id": "H",
+        "artifact_dir": "/tmp/omp_hetero/artifacts/rc-snapshot-H-restored-H-s1",
+        "started_wall": 1790926780.5001204,
+        "finished_wall": 1790927271.4557767,
+        "idle_before": {
+          "large_a": {
+            "instance_id": "large_a",
+            "idle": true,
+            "inflight": 0,
+            "num_running": 0,
+            "num_waiting": 0,
+            "free_blocks": 1134,
+            "pending_batches": 0,
+            "scheduler_has_work": false,
+            "draining": false
+          },
+          "large_b": {
+            "instance_id": "large_b",
+            "idle": true,
+            "inflight": 0,
+            "num_running": 0,
+            "num_waiting": 0,
+            "free_blocks": 1134,
+            "pending_batches": 0,
+            "scheduler_has_work": false,
+            "draining": false
+          }
+        },
+        "loaded_runtime": null,
+        "during_run": null
+      }
+    }
+  },
+  "local_verification": {
+    "test_command": "XLA_FLAGS=--xla_force_host_platform_device_count=8 .venv/bin/python -m pytest -q tests/test_weight_snapshot.py",
+    "tests_passed": 8,
+    "subtests_passed": 5,
+    "test_duration_s": 0.8,
+    "cpu_consumer_smoke": {
+      "host_devices": 8,
+      "dtype": "bfloat16",
+      "array_shape": [
+        32,
+        8
+      ],
+      "consumer": "jax.jit(lambda w: w @ jax.numpy.ones((8,4), dtype=jax.numpy.bfloat16))",
+      "restored_matmul_equal": true,
+      "restore_phases_s": {
+        "snapshot_verify": 0.00020170211791992188,
+        "snapshot_read_tmpfs": 0.0004093647003173828,
+        "snapshot_device_placement": 0.0007374286651611328
+      },
+      "note": "CPU smoke preceded separation of checksum verification from tmpfs mapping clocks; these CPU phase values are not TPU measurements."
+    }
+  },
+  "ok": true,
+  "cleanup": {
+    "ok": true,
+    "action": "cleanup",
+    "hosts": [
+      {
+        "host": "gke-tpu-8770cb66-8v5c",
+        "mem_available_bytes": 186014244864,
+        "tmpfs_free_bytes": 182655434752,
+        "reserve_bytes": 0,
+        "headroom_bytes": 40000000000,
+        "cleaned": true,
+        "snapshot_directory_bytes": 0
+      },
+      {
+        "host": "gke-tpu-8770cb66-hsqj",
+        "mem_available_bytes": 185193111552,
+        "tmpfs_free_bytes": 182708596736,
+        "reserve_bytes": 0,
+        "headroom_bytes": 40000000000,
+        "cleaned": true,
+        "snapshot_directory_bytes": 0
+      },
+      {
+        "host": "gke-tpu-8770cb66-j6g4",
+        "mem_available_bytes": 190156902400,
+        "tmpfs_free_bytes": 187350290432,
+        "reserve_bytes": 0,
+        "headroom_bytes": 40000000000,
+        "cleaned": true,
+        "snapshot_directory_bytes": 0
+      },
+      {
+        "host": "gke-tpu-8770cb66-45jj",
+        "mem_available_bytes": 184579104768,
+        "tmpfs_free_bytes": 182695985152,
+        "reserve_bytes": 0,
+        "headroom_bytes": 40000000000,
+        "cleaned": true,
+        "snapshot_directory_bytes": 0
+      },
+      {
+        "host": "gke-tpu-8770cb66-sddz",
+        "mem_available_bytes": 192383627264,
+        "tmpfs_free_bytes": 189131010048,
+        "reserve_bytes": 0,
+        "headroom_bytes": 40000000000,
+        "cleaned": true,
+        "snapshot_directory_bytes": 0
+      },
+      {
+        "host": "gke-tpu-8770cb66-0vj5",
+        "mem_available_bytes": 190690676736,
+        "tmpfs_free_bytes": 188241580032,
+        "reserve_bytes": 0,
+        "headroom_bytes": 40000000000,
+        "cleaned": true,
+        "snapshot_directory_bytes": 0
+      },
+      {
+        "host": "gke-tpu-8770cb66-mg22",
+        "mem_available_bytes": 192568602624,
+        "tmpfs_free_bytes": 189311160320,
+        "reserve_bytes": 0,
+        "headroom_bytes": 40000000000,
+        "cleaned": true,
+        "snapshot_directory_bytes": 0
+      },
+      {
+        "host": "gke-tpu-8770cb66-m8vd",
+        "mem_available_bytes": 191009099776,
+        "tmpfs_free_bytes": 187350274048,
+        "reserve_bytes": 0,
+        "headroom_bytes": 40000000000,
+        "cleaned": true,
+        "snapshot_directory_bytes": 0
+      }
+    ]
+  }
+}

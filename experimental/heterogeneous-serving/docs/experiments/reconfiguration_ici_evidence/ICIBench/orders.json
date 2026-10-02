@@ -1,0 +1,3576 @@
+{
+  "source": "results/ici/ICIBench/subgroup_corrected_run.json",
+  "submission_id": "raysubmit_FphtKh5zYWCXvj6A",
+  "ok": true,
+  "processes": [
+    {
+      "jax": "0.10.2",
+      "jaxlib": "0.10.2",
+      "libtpu": "0.0.43",
+      "process_index": 0,
+      "devices": [
+        {
+          "id": 0,
+          "coords": [
+            0,
+            0,
+            0
+          ],
+          "process_index": 0,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 1,
+          "coords": [
+            1,
+            0,
+            0
+          ],
+          "process_index": 0,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 4,
+          "coords": [
+            0,
+            1,
+            0
+          ],
+          "process_index": 0,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 5,
+          "coords": [
+            1,
+            1,
+            0
+          ],
+          "process_index": 0,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 2,
+          "coords": [
+            2,
+            0,
+            0
+          ],
+          "process_index": 1,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 3,
+          "coords": [
+            3,
+            0,
+            0
+          ],
+          "process_index": 1,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 6,
+          "coords": [
+            2,
+            1,
+            0
+          ],
+          "process_index": 1,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 7,
+          "coords": [
+            3,
+            1,
+            0
+          ],
+          "process_index": 1,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 8,
+          "coords": [
+            0,
+            2,
+            0
+          ],
+          "process_index": 2,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 9,
+          "coords": [
+            1,
+            2,
+            0
+          ],
+          "process_index": 2,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 12,
+          "coords": [
+            0,
+            3,
+            0
+          ],
+          "process_index": 2,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 13,
+          "coords": [
+            1,
+            3,
+            0
+          ],
+          "process_index": 2,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 10,
+          "coords": [
+            2,
+            2,
+            0
+          ],
+          "process_index": 3,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 11,
+          "coords": [
+            3,
+            2,
+            0
+          ],
+          "process_index": 3,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 14,
+          "coords": [
+            2,
+            3,
+            0
+          ],
+          "process_index": 3,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 15,
+          "coords": [
+            3,
+            3,
+            0
+          ],
+          "process_index": 3,
+          "kind": "TPU v5 lite"
+        }
+      ],
+      "orders": {
+        "a": [
+          {
+            "id": 0,
+            "coords": [
+              0,
+              0,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 1,
+            "coords": [
+              1,
+              0,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 4,
+            "coords": [
+              0,
+              1,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 5,
+            "coords": [
+              1,
+              1,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 13,
+            "coords": [
+              1,
+              3,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 12,
+            "coords": [
+              0,
+              3,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 9,
+            "coords": [
+              1,
+              2,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 8,
+            "coords": [
+              0,
+              2,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          }
+        ],
+        "b": [
+          {
+            "id": 2,
+            "coords": [
+              2,
+              0,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 3,
+            "coords": [
+              3,
+              0,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 6,
+            "coords": [
+              2,
+              1,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 7,
+            "coords": [
+              3,
+              1,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 15,
+            "coords": [
+              3,
+              3,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 14,
+            "coords": [
+              2,
+              3,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 11,
+            "coords": [
+              3,
+              2,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 10,
+            "coords": [
+              2,
+              2,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          }
+        ],
+        "h": [
+          {
+            "id": 0,
+            "coords": [
+              0,
+              0,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 1,
+            "coords": [
+              1,
+              0,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 2,
+            "coords": [
+              2,
+              0,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 3,
+            "coords": [
+              3,
+              0,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 7,
+            "coords": [
+              3,
+              1,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 6,
+            "coords": [
+              2,
+              1,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 5,
+            "coords": [
+              1,
+              1,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 9,
+            "coords": [
+              1,
+              2,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 10,
+            "coords": [
+              2,
+              2,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 11,
+            "coords": [
+              3,
+              2,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 15,
+            "coords": [
+              3,
+              3,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 14,
+            "coords": [
+              2,
+              3,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 13,
+            "coords": [
+              1,
+              3,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 12,
+            "coords": [
+              0,
+              3,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 8,
+            "coords": [
+              0,
+              2,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 4,
+            "coords": [
+              0,
+              1,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          }
+        ],
+        "interleaved": [
+          {
+            "id": 0,
+            "coords": [
+              0,
+              0,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 2,
+            "coords": [
+              2,
+              0,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 1,
+            "coords": [
+              1,
+              0,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 3,
+            "coords": [
+              3,
+              0,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 4,
+            "coords": [
+              0,
+              1,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 6,
+            "coords": [
+              2,
+              1,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 5,
+            "coords": [
+              1,
+              1,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 7,
+            "coords": [
+              3,
+              1,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 13,
+            "coords": [
+              1,
+              3,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 15,
+            "coords": [
+              3,
+              3,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 12,
+            "coords": [
+              0,
+              3,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 14,
+            "coords": [
+              2,
+              3,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 9,
+            "coords": [
+              1,
+              2,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 11,
+            "coords": [
+              3,
+              2,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 8,
+            "coords": [
+              0,
+              2,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 10,
+            "coords": [
+              2,
+              2,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          }
+        ],
+        "replicas": [
+          {
+            "id": 0,
+            "coords": [
+              0,
+              0,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 1,
+            "coords": [
+              1,
+              0,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 4,
+            "coords": [
+              0,
+              1,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 5,
+            "coords": [
+              1,
+              1,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 13,
+            "coords": [
+              1,
+              3,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 12,
+            "coords": [
+              0,
+              3,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 9,
+            "coords": [
+              1,
+              2,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 8,
+            "coords": [
+              0,
+              2,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 2,
+            "coords": [
+              2,
+              0,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 3,
+            "coords": [
+              3,
+              0,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 6,
+            "coords": [
+              2,
+              1,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 7,
+            "coords": [
+              3,
+              1,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 15,
+            "coords": [
+              3,
+              3,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 14,
+            "coords": [
+              2,
+              3,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 11,
+            "coords": [
+              3,
+              2,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 10,
+            "coords": [
+              2,
+              2,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          }
+        ]
+      }
+    },
+    {
+      "jax": "0.10.2",
+      "jaxlib": "0.10.2",
+      "libtpu": "0.0.43",
+      "process_index": 1,
+      "devices": [
+        {
+          "id": 0,
+          "coords": [
+            0,
+            0,
+            0
+          ],
+          "process_index": 0,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 1,
+          "coords": [
+            1,
+            0,
+            0
+          ],
+          "process_index": 0,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 4,
+          "coords": [
+            0,
+            1,
+            0
+          ],
+          "process_index": 0,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 5,
+          "coords": [
+            1,
+            1,
+            0
+          ],
+          "process_index": 0,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 2,
+          "coords": [
+            2,
+            0,
+            0
+          ],
+          "process_index": 1,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 3,
+          "coords": [
+            3,
+            0,
+            0
+          ],
+          "process_index": 1,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 6,
+          "coords": [
+            2,
+            1,
+            0
+          ],
+          "process_index": 1,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 7,
+          "coords": [
+            3,
+            1,
+            0
+          ],
+          "process_index": 1,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 8,
+          "coords": [
+            0,
+            2,
+            0
+          ],
+          "process_index": 2,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 9,
+          "coords": [
+            1,
+            2,
+            0
+          ],
+          "process_index": 2,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 12,
+          "coords": [
+            0,
+            3,
+            0
+          ],
+          "process_index": 2,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 13,
+          "coords": [
+            1,
+            3,
+            0
+          ],
+          "process_index": 2,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 10,
+          "coords": [
+            2,
+            2,
+            0
+          ],
+          "process_index": 3,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 11,
+          "coords": [
+            3,
+            2,
+            0
+          ],
+          "process_index": 3,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 14,
+          "coords": [
+            2,
+            3,
+            0
+          ],
+          "process_index": 3,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 15,
+          "coords": [
+            3,
+            3,
+            0
+          ],
+          "process_index": 3,
+          "kind": "TPU v5 lite"
+        }
+      ],
+      "orders": {
+        "a": [
+          {
+            "id": 0,
+            "coords": [
+              0,
+              0,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 1,
+            "coords": [
+              1,
+              0,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 4,
+            "coords": [
+              0,
+              1,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 5,
+            "coords": [
+              1,
+              1,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 13,
+            "coords": [
+              1,
+              3,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 12,
+            "coords": [
+              0,
+              3,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 9,
+            "coords": [
+              1,
+              2,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 8,
+            "coords": [
+              0,
+              2,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          }
+        ],
+        "b": [
+          {
+            "id": 2,
+            "coords": [
+              2,
+              0,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 3,
+            "coords": [
+              3,
+              0,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 6,
+            "coords": [
+              2,
+              1,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 7,
+            "coords": [
+              3,
+              1,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 15,
+            "coords": [
+              3,
+              3,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 14,
+            "coords": [
+              2,
+              3,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 11,
+            "coords": [
+              3,
+              2,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 10,
+            "coords": [
+              2,
+              2,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          }
+        ],
+        "h": [
+          {
+            "id": 0,
+            "coords": [
+              0,
+              0,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 1,
+            "coords": [
+              1,
+              0,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 2,
+            "coords": [
+              2,
+              0,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 3,
+            "coords": [
+              3,
+              0,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 7,
+            "coords": [
+              3,
+              1,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 6,
+            "coords": [
+              2,
+              1,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 5,
+            "coords": [
+              1,
+              1,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 9,
+            "coords": [
+              1,
+              2,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 10,
+            "coords": [
+              2,
+              2,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 11,
+            "coords": [
+              3,
+              2,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 15,
+            "coords": [
+              3,
+              3,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 14,
+            "coords": [
+              2,
+              3,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 13,
+            "coords": [
+              1,
+              3,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 12,
+            "coords": [
+              0,
+              3,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 8,
+            "coords": [
+              0,
+              2,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 4,
+            "coords": [
+              0,
+              1,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          }
+        ],
+        "interleaved": [
+          {
+            "id": 0,
+            "coords": [
+              0,
+              0,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 2,
+            "coords": [
+              2,
+              0,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 1,
+            "coords": [
+              1,
+              0,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 3,
+            "coords": [
+              3,
+              0,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 4,
+            "coords": [
+              0,
+              1,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 6,
+            "coords": [
+              2,
+              1,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 5,
+            "coords": [
+              1,
+              1,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 7,
+            "coords": [
+              3,
+              1,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 13,
+            "coords": [
+              1,
+              3,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 15,
+            "coords": [
+              3,
+              3,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 12,
+            "coords": [
+              0,
+              3,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 14,
+            "coords": [
+              2,
+              3,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 9,
+            "coords": [
+              1,
+              2,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 11,
+            "coords": [
+              3,
+              2,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 8,
+            "coords": [
+              0,
+              2,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 10,
+            "coords": [
+              2,
+              2,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          }
+        ],
+        "replicas": [
+          {
+            "id": 0,
+            "coords": [
+              0,
+              0,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 1,
+            "coords": [
+              1,
+              0,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 4,
+            "coords": [
+              0,
+              1,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 5,
+            "coords": [
+              1,
+              1,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 13,
+            "coords": [
+              1,
+              3,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 12,
+            "coords": [
+              0,
+              3,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 9,
+            "coords": [
+              1,
+              2,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 8,
+            "coords": [
+              0,
+              2,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 2,
+            "coords": [
+              2,
+              0,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 3,
+            "coords": [
+              3,
+              0,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 6,
+            "coords": [
+              2,
+              1,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 7,
+            "coords": [
+              3,
+              1,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 15,
+            "coords": [
+              3,
+              3,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 14,
+            "coords": [
+              2,
+              3,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 11,
+            "coords": [
+              3,
+              2,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 10,
+            "coords": [
+              2,
+              2,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          }
+        ]
+      }
+    },
+    {
+      "jax": "0.10.2",
+      "jaxlib": "0.10.2",
+      "libtpu": "0.0.43",
+      "process_index": 2,
+      "devices": [
+        {
+          "id": 0,
+          "coords": [
+            0,
+            0,
+            0
+          ],
+          "process_index": 0,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 1,
+          "coords": [
+            1,
+            0,
+            0
+          ],
+          "process_index": 0,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 4,
+          "coords": [
+            0,
+            1,
+            0
+          ],
+          "process_index": 0,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 5,
+          "coords": [
+            1,
+            1,
+            0
+          ],
+          "process_index": 0,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 2,
+          "coords": [
+            2,
+            0,
+            0
+          ],
+          "process_index": 1,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 3,
+          "coords": [
+            3,
+            0,
+            0
+          ],
+          "process_index": 1,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 6,
+          "coords": [
+            2,
+            1,
+            0
+          ],
+          "process_index": 1,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 7,
+          "coords": [
+            3,
+            1,
+            0
+          ],
+          "process_index": 1,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 8,
+          "coords": [
+            0,
+            2,
+            0
+          ],
+          "process_index": 2,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 9,
+          "coords": [
+            1,
+            2,
+            0
+          ],
+          "process_index": 2,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 12,
+          "coords": [
+            0,
+            3,
+            0
+          ],
+          "process_index": 2,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 13,
+          "coords": [
+            1,
+            3,
+            0
+          ],
+          "process_index": 2,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 10,
+          "coords": [
+            2,
+            2,
+            0
+          ],
+          "process_index": 3,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 11,
+          "coords": [
+            3,
+            2,
+            0
+          ],
+          "process_index": 3,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 14,
+          "coords": [
+            2,
+            3,
+            0
+          ],
+          "process_index": 3,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 15,
+          "coords": [
+            3,
+            3,
+            0
+          ],
+          "process_index": 3,
+          "kind": "TPU v5 lite"
+        }
+      ],
+      "orders": {
+        "a": [
+          {
+            "id": 0,
+            "coords": [
+              0,
+              0,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 1,
+            "coords": [
+              1,
+              0,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 4,
+            "coords": [
+              0,
+              1,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 5,
+            "coords": [
+              1,
+              1,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 13,
+            "coords": [
+              1,
+              3,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 12,
+            "coords": [
+              0,
+              3,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 9,
+            "coords": [
+              1,
+              2,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 8,
+            "coords": [
+              0,
+              2,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          }
+        ],
+        "b": [
+          {
+            "id": 2,
+            "coords": [
+              2,
+              0,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 3,
+            "coords": [
+              3,
+              0,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 6,
+            "coords": [
+              2,
+              1,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 7,
+            "coords": [
+              3,
+              1,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 15,
+            "coords": [
+              3,
+              3,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 14,
+            "coords": [
+              2,
+              3,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 11,
+            "coords": [
+              3,
+              2,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 10,
+            "coords": [
+              2,
+              2,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          }
+        ],
+        "h": [
+          {
+            "id": 0,
+            "coords": [
+              0,
+              0,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 1,
+            "coords": [
+              1,
+              0,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 2,
+            "coords": [
+              2,
+              0,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 3,
+            "coords": [
+              3,
+              0,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 7,
+            "coords": [
+              3,
+              1,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 6,
+            "coords": [
+              2,
+              1,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 5,
+            "coords": [
+              1,
+              1,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 9,
+            "coords": [
+              1,
+              2,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 10,
+            "coords": [
+              2,
+              2,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 11,
+            "coords": [
+              3,
+              2,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 15,
+            "coords": [
+              3,
+              3,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 14,
+            "coords": [
+              2,
+              3,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 13,
+            "coords": [
+              1,
+              3,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 12,
+            "coords": [
+              0,
+              3,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 8,
+            "coords": [
+              0,
+              2,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 4,
+            "coords": [
+              0,
+              1,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          }
+        ],
+        "interleaved": [
+          {
+            "id": 0,
+            "coords": [
+              0,
+              0,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 2,
+            "coords": [
+              2,
+              0,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 1,
+            "coords": [
+              1,
+              0,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 3,
+            "coords": [
+              3,
+              0,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 4,
+            "coords": [
+              0,
+              1,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 6,
+            "coords": [
+              2,
+              1,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 5,
+            "coords": [
+              1,
+              1,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 7,
+            "coords": [
+              3,
+              1,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 13,
+            "coords": [
+              1,
+              3,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 15,
+            "coords": [
+              3,
+              3,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 12,
+            "coords": [
+              0,
+              3,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 14,
+            "coords": [
+              2,
+              3,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 9,
+            "coords": [
+              1,
+              2,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 11,
+            "coords": [
+              3,
+              2,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 8,
+            "coords": [
+              0,
+              2,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 10,
+            "coords": [
+              2,
+              2,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          }
+        ],
+        "replicas": [
+          {
+            "id": 0,
+            "coords": [
+              0,
+              0,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 1,
+            "coords": [
+              1,
+              0,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 4,
+            "coords": [
+              0,
+              1,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 5,
+            "coords": [
+              1,
+              1,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 13,
+            "coords": [
+              1,
+              3,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 12,
+            "coords": [
+              0,
+              3,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 9,
+            "coords": [
+              1,
+              2,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 8,
+            "coords": [
+              0,
+              2,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 2,
+            "coords": [
+              2,
+              0,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 3,
+            "coords": [
+              3,
+              0,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 6,
+            "coords": [
+              2,
+              1,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 7,
+            "coords": [
+              3,
+              1,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 15,
+            "coords": [
+              3,
+              3,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 14,
+            "coords": [
+              2,
+              3,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 11,
+            "coords": [
+              3,
+              2,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 10,
+            "coords": [
+              2,
+              2,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          }
+        ]
+      }
+    },
+    {
+      "jax": "0.10.2",
+      "jaxlib": "0.10.2",
+      "libtpu": "0.0.43",
+      "process_index": 3,
+      "devices": [
+        {
+          "id": 0,
+          "coords": [
+            0,
+            0,
+            0
+          ],
+          "process_index": 0,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 1,
+          "coords": [
+            1,
+            0,
+            0
+          ],
+          "process_index": 0,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 4,
+          "coords": [
+            0,
+            1,
+            0
+          ],
+          "process_index": 0,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 5,
+          "coords": [
+            1,
+            1,
+            0
+          ],
+          "process_index": 0,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 2,
+          "coords": [
+            2,
+            0,
+            0
+          ],
+          "process_index": 1,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 3,
+          "coords": [
+            3,
+            0,
+            0
+          ],
+          "process_index": 1,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 6,
+          "coords": [
+            2,
+            1,
+            0
+          ],
+          "process_index": 1,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 7,
+          "coords": [
+            3,
+            1,
+            0
+          ],
+          "process_index": 1,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 8,
+          "coords": [
+            0,
+            2,
+            0
+          ],
+          "process_index": 2,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 9,
+          "coords": [
+            1,
+            2,
+            0
+          ],
+          "process_index": 2,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 12,
+          "coords": [
+            0,
+            3,
+            0
+          ],
+          "process_index": 2,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 13,
+          "coords": [
+            1,
+            3,
+            0
+          ],
+          "process_index": 2,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 10,
+          "coords": [
+            2,
+            2,
+            0
+          ],
+          "process_index": 3,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 11,
+          "coords": [
+            3,
+            2,
+            0
+          ],
+          "process_index": 3,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 14,
+          "coords": [
+            2,
+            3,
+            0
+          ],
+          "process_index": 3,
+          "kind": "TPU v5 lite"
+        },
+        {
+          "id": 15,
+          "coords": [
+            3,
+            3,
+            0
+          ],
+          "process_index": 3,
+          "kind": "TPU v5 lite"
+        }
+      ],
+      "orders": {
+        "a": [
+          {
+            "id": 0,
+            "coords": [
+              0,
+              0,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 1,
+            "coords": [
+              1,
+              0,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 4,
+            "coords": [
+              0,
+              1,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 5,
+            "coords": [
+              1,
+              1,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 13,
+            "coords": [
+              1,
+              3,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 12,
+            "coords": [
+              0,
+              3,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 9,
+            "coords": [
+              1,
+              2,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 8,
+            "coords": [
+              0,
+              2,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          }
+        ],
+        "b": [
+          {
+            "id": 2,
+            "coords": [
+              2,
+              0,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 3,
+            "coords": [
+              3,
+              0,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 6,
+            "coords": [
+              2,
+              1,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 7,
+            "coords": [
+              3,
+              1,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 15,
+            "coords": [
+              3,
+              3,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 14,
+            "coords": [
+              2,
+              3,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 11,
+            "coords": [
+              3,
+              2,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 10,
+            "coords": [
+              2,
+              2,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          }
+        ],
+        "h": [
+          {
+            "id": 0,
+            "coords": [
+              0,
+              0,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 1,
+            "coords": [
+              1,
+              0,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 2,
+            "coords": [
+              2,
+              0,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 3,
+            "coords": [
+              3,
+              0,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 7,
+            "coords": [
+              3,
+              1,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 6,
+            "coords": [
+              2,
+              1,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 5,
+            "coords": [
+              1,
+              1,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 9,
+            "coords": [
+              1,
+              2,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 10,
+            "coords": [
+              2,
+              2,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 11,
+            "coords": [
+              3,
+              2,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 15,
+            "coords": [
+              3,
+              3,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 14,
+            "coords": [
+              2,
+              3,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 13,
+            "coords": [
+              1,
+              3,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 12,
+            "coords": [
+              0,
+              3,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 8,
+            "coords": [
+              0,
+              2,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 4,
+            "coords": [
+              0,
+              1,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          }
+        ],
+        "interleaved": [
+          {
+            "id": 0,
+            "coords": [
+              0,
+              0,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 2,
+            "coords": [
+              2,
+              0,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 1,
+            "coords": [
+              1,
+              0,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 3,
+            "coords": [
+              3,
+              0,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 4,
+            "coords": [
+              0,
+              1,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 6,
+            "coords": [
+              2,
+              1,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 5,
+            "coords": [
+              1,
+              1,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 7,
+            "coords": [
+              3,
+              1,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 13,
+            "coords": [
+              1,
+              3,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 15,
+            "coords": [
+              3,
+              3,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 12,
+            "coords": [
+              0,
+              3,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 14,
+            "coords": [
+              2,
+              3,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 9,
+            "coords": [
+              1,
+              2,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 11,
+            "coords": [
+              3,
+              2,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 8,
+            "coords": [
+              0,
+              2,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 10,
+            "coords": [
+              2,
+              2,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          }
+        ],
+        "replicas": [
+          {
+            "id": 0,
+            "coords": [
+              0,
+              0,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 1,
+            "coords": [
+              1,
+              0,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 4,
+            "coords": [
+              0,
+              1,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 5,
+            "coords": [
+              1,
+              1,
+              0
+            ],
+            "process_index": 0,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 13,
+            "coords": [
+              1,
+              3,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 12,
+            "coords": [
+              0,
+              3,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 9,
+            "coords": [
+              1,
+              2,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 8,
+            "coords": [
+              0,
+              2,
+              0
+            ],
+            "process_index": 2,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 2,
+            "coords": [
+              2,
+              0,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 3,
+            "coords": [
+              3,
+              0,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 6,
+            "coords": [
+              2,
+              1,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 7,
+            "coords": [
+              3,
+              1,
+              0
+            ],
+            "process_index": 1,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 15,
+            "coords": [
+              3,
+              3,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 14,
+            "coords": [
+              2,
+              3,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 11,
+            "coords": [
+              3,
+              2,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          },
+          {
+            "id": 10,
+            "coords": [
+              2,
+              2,
+              0
+            ],
+            "process_index": 3,
+            "kind": "TPU v5 lite"
+          }
+        ]
+      }
+    }
+  ],
+  "instance": {
+    "instance_id": "large_a",
+    "tp_size": 16,
+    "coordinator_ip": "192.168.102.38",
+    "host_ips": [
+      "192.168.102.38",
+      "192.168.102.43",
+      "192.168.102.45",
+      "192.168.102.40"
+    ],
+    "chip_box": [
+      [
+        0,
+        3
+      ],
+      [
+        0,
+        3
+      ],
+      [
+        0,
+        0
+      ]
+    ],
+    "chip_dims": [
+      4,
+      4,
+      1
+    ],
+    "host_grid_dims": [
+      2,
+      2,
+      1
+    ],
+    "host_chip_dims": [
+      2,
+      2,
+      1
+    ],
+    "subslice_topology": "4x4",
+    "host_bounds": "2,2,1",
+    "chips_per_host_bounds": "2,2,1",
+    "process_addresses": "192.168.102.38:8471,192.168.102.43:8471,192.168.102.45:8471,192.168.102.40:8471",
+    "intended_runtime_env": {
+      "TPU_MULTIHOST_BACKEND": "ray",
+      "TPU_TOPOLOGY": "4x4",
+      "TPU_HOST_BOUNDS": "2,2,1",
+      "TPU_PROCESS_BOUNDS": "2,2,1",
+      "TPU_CHIPS_PER_HOST_BOUNDS": "2,2,1",
+      "TPU_CHIPS_PER_PROCESS_BOUNDS": "2,2,1",
+      "TPU_PROCESS_ADDRESSES": "192.168.102.38:8471,192.168.102.43:8471,192.168.102.45:8471,192.168.102.40:8471",
+      "TPU_PROCESS_PORT": "8471",
+      "JAX_PLATFORMS": "tpu,cpu",
+      "JAX_COMPILATION_CACHE_DIR": "/models/jax_cache",
+      "VLLM_ENABLE_V1_MULTIPROCESSING": "0",
+      "OMP_HETERO_INSTANCE_ID": "large_a"
+    },
+    "intended_process_env": {
+      "192.168.102.38": {
+        "TPU_MULTIHOST_BACKEND": "ray",
+        "TPU_TOPOLOGY": "4x4",
+        "TPU_HOST_BOUNDS": "2,2,1",
+        "TPU_PROCESS_BOUNDS": "2,2,1",
+        "TPU_CHIPS_PER_HOST_BOUNDS": "2,2,1",
+        "TPU_CHIPS_PER_PROCESS_BOUNDS": "2,2,1",
+        "TPU_PROCESS_ADDRESSES": "192.168.102.38:8471,192.168.102.43:8471,192.168.102.45:8471,192.168.102.40:8471",
+        "TPU_PROCESS_PORT": "8471",
+        "JAX_PLATFORMS": "tpu,cpu",
+        "JAX_COMPILATION_CACHE_DIR": "/models/jax_cache",
+        "VLLM_ENABLE_V1_MULTIPROCESSING": "0",
+        "OMP_HETERO_INSTANCE_ID": "large_a",
+        "CLOUD_TPU_TASK_ID": "0",
+        "TPU_WORKER_ID": "0"
+      },
+      "192.168.102.43": {
+        "TPU_MULTIHOST_BACKEND": "ray",
+        "TPU_TOPOLOGY": "4x4",
+        "TPU_HOST_BOUNDS": "2,2,1",
+        "TPU_PROCESS_BOUNDS": "2,2,1",
+        "TPU_CHIPS_PER_HOST_BOUNDS": "2,2,1",
+        "TPU_CHIPS_PER_PROCESS_BOUNDS": "2,2,1",
+        "TPU_PROCESS_ADDRESSES": "192.168.102.38:8471,192.168.102.43:8471,192.168.102.45:8471,192.168.102.40:8471",
+        "TPU_PROCESS_PORT": "8471",
+        "JAX_PLATFORMS": "tpu,cpu",
+        "JAX_COMPILATION_CACHE_DIR": "/models/jax_cache",
+        "VLLM_ENABLE_V1_MULTIPROCESSING": "0",
+        "OMP_HETERO_INSTANCE_ID": "large_a",
+        "CLOUD_TPU_TASK_ID": "1",
+        "TPU_WORKER_ID": "1"
+      },
+      "192.168.102.45": {
+        "TPU_MULTIHOST_BACKEND": "ray",
+        "TPU_TOPOLOGY": "4x4",
+        "TPU_HOST_BOUNDS": "2,2,1",
+        "TPU_PROCESS_BOUNDS": "2,2,1",
+        "TPU_CHIPS_PER_HOST_BOUNDS": "2,2,1",
+        "TPU_CHIPS_PER_PROCESS_BOUNDS": "2,2,1",
+        "TPU_PROCESS_ADDRESSES": "192.168.102.38:8471,192.168.102.43:8471,192.168.102.45:8471,192.168.102.40:8471",
+        "TPU_PROCESS_PORT": "8471",
+        "JAX_PLATFORMS": "tpu,cpu",
+        "JAX_COMPILATION_CACHE_DIR": "/models/jax_cache",
+        "VLLM_ENABLE_V1_MULTIPROCESSING": "0",
+        "OMP_HETERO_INSTANCE_ID": "large_a",
+        "CLOUD_TPU_TASK_ID": "2",
+        "TPU_WORKER_ID": "2"
+      },
+      "192.168.102.40": {
+        "TPU_MULTIHOST_BACKEND": "ray",
+        "TPU_TOPOLOGY": "4x4",
+        "TPU_HOST_BOUNDS": "2,2,1",
+        "TPU_PROCESS_BOUNDS": "2,2,1",
+        "TPU_CHIPS_PER_HOST_BOUNDS": "2,2,1",
+        "TPU_CHIPS_PER_PROCESS_BOUNDS": "2,2,1",
+        "TPU_PROCESS_ADDRESSES": "192.168.102.38:8471,192.168.102.43:8471,192.168.102.45:8471,192.168.102.40:8471",
+        "TPU_PROCESS_PORT": "8471",
+        "JAX_PLATFORMS": "tpu,cpu",
+        "JAX_COMPILATION_CACHE_DIR": "/models/jax_cache",
+        "VLLM_ENABLE_V1_MULTIPROCESSING": "0",
+        "OMP_HETERO_INSTANCE_ID": "large_a",
+        "CLOUD_TPU_TASK_ID": "3",
+        "TPU_WORKER_ID": "3"
+      }
+    },
+    "hosts": [
+      {
+        "node_ip": "192.168.102.38",
+        "ray_node_id": "7cbd00b45f9d0eafcaa2e995b8b70cac28d4aa2d0f5e8131c4f4f228",
+        "hostname": "gke-tpu-8770cb66-8v5c",
+        "physical_tpu_worker_id": 4,
+        "process_rank": 0,
+        "bundle_index": 0,
+        "chip_coords": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            1,
+            1,
+            0
+          ]
+        ],
+        "host_grid_position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "node_ip": "192.168.102.43",
+        "ray_node_id": "4096df7539468240aaa65aed3fa988b547fc08311354336fb0e3bf9e",
+        "hostname": "gke-tpu-8770cb66-hsqj",
+        "physical_tpu_worker_id": 0,
+        "process_rank": 1,
+        "bundle_index": 1,
+        "chip_coords": [
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            3,
+            0,
+            0
+          ],
+          [
+            2,
+            1,
+            0
+          ],
+          [
+            3,
+            1,
+            0
+          ]
+        ],
+        "host_grid_position": [
+          1,
+          0,
+          0
+        ]
+      },
+      {
+        "node_ip": "192.168.102.45",
+        "ray_node_id": "2f271beaf24768468e03d778813fc969f53b4962a42a791df3605e20",
+        "hostname": "gke-tpu-8770cb66-m8vd",
+        "physical_tpu_worker_id": 1,
+        "process_rank": 2,
+        "bundle_index": 2,
+        "chip_coords": [
+          [
+            0,
+            2,
+            0
+          ],
+          [
+            1,
+            2,
+            0
+          ],
+          [
+            0,
+            3,
+            0
+          ],
+          [
+            1,
+            3,
+            0
+          ]
+        ],
+        "host_grid_position": [
+          0,
+          1,
+          0
+        ]
+      },
+      {
+        "node_ip": "192.168.102.40",
+        "ray_node_id": "cfb9ec7efadbbf0f126eafd1d06a188c5f92f77df74cd0f885032cfd",
+        "hostname": "gke-tpu-8770cb66-j6g4",
+        "physical_tpu_worker_id": 2,
+        "process_rank": 3,
+        "bundle_index": 3,
+        "chip_coords": [
+          [
+            2,
+            2,
+            0
+          ],
+          [
+            3,
+            2,
+            0
+          ],
+          [
+            2,
+            3,
+            0
+          ],
+          [
+            3,
+            3,
+            0
+          ]
+        ],
+        "host_grid_position": [
+          1,
+          1,
+          0
+        ]
+      }
+    ]
+  },
+  "coordinator": "192.168.102.38:12355",
+  "controller_ids": {
+    "192.168.102.38": 0,
+    "192.168.102.43": 1,
+    "192.168.102.45": 2,
+    "192.168.102.40": 3
+  },
+  "matches_feasibility_inferred_order": {
+    "a": true,
+    "b": true,
+    "h": true
+  },
+  "inferred_source": "PathwaysReshard/feasibility.md lines95-106",
+  "native_S_process_groups": [
+    [
+      0,
+      2
+    ],
+    [
+      1,
+      3
+    ]
+  ]
+}

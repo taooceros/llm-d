@@ -1,0 +1,154 @@
+apiVersion: jobset.x-k8s.io/v1alpha2
+kind: JobSet
+metadata:
+  name: ici-pathways-trial
+  namespace: llm-d-optimized-baseline
+spec:
+  coordinator:
+    replicatedJob: pathways-head
+  network:
+    enableDNSHostnames: true
+    publishNotReadyAddresses: true
+  failurePolicy:
+    maxRestarts: 0
+  replicatedJobs:
+  - name: pathways-head
+    replicas: 1
+    template:
+      spec:
+        parallelism: 1
+        completions: 1
+        backoffLimit: 0
+        template:
+          spec:
+            hostNetwork: true
+            dnsPolicy: ClusterFirstWithHostNet
+            restartPolicy: OnFailure
+            nodeSelector:
+              node.kubernetes.io/instance-type: n2-standard-64
+            containers:
+            - name: pathways-proxy
+              image: us-docker.pkg.dev/cloud-tpu-v2-images/pathways/proxy_server:20261001-jax_0.10.2@sha256:99abf3bb5d536659fa50dfbecdf53c4e3dfd1a803406e560a2ce845e7289f401
+              args:
+              - --server_port=29000
+              - --resource_manager_address=$(PATHWAYS_HEAD):29001
+              - --gcs_scratch_location=gs://hongtaozhang-tpu-model-cache-us-west1/pathways-artifacts/ici-pathways-trial
+              env:
+              - name: PATHWAYS_HEAD
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.labels['jobset.sigs.k8s.io/coordinator']
+              resources:
+                requests:
+                  cpu: '16'
+                  memory: 100G
+                limits:
+                  cpu: '16'
+                  memory: 100G
+            - name: pathways-rm
+              image: us-docker.pkg.dev/cloud-tpu-v2-images/pathways/server:20261001-jax_0.10.2@sha256:3b2c87dccc93266d84e7fcf5be84fcbcf97d7f837b4e8a0f318eb52cef4c0836
+              args:
+              - --server_port=29001
+              - --gcs_scratch_location=gs://hongtaozhang-tpu-model-cache-us-west1/pathways-artifacts/ici-pathways-trial
+              - --node_type=resource_manager
+              - --instance_count=1
+              - --instance_type=tpuv5e:4x8
+              env:
+              - name: JOBSET_NAME
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.annotations['jobset.sigs.k8s.io/jobset-name']
+              - name: REPLICATED_JOB_NAME
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.annotations['jobset.sigs.k8s.io/replicatedjob-name']
+              - name: HOST_ADDRESS
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.labels['jobset.sigs.k8s.io/coordinator']
+              - name: TPU_SKIP_MDS_QUERY
+                value: 'true'
+              resources:
+                requests:
+                  cpu: '8'
+                  memory: 32G
+                limits:
+                  cpu: '8'
+                  memory: 32G
+  - name: worker
+    replicas: 1
+    template:
+      spec:
+        parallelism: 8
+        completions: 8
+        backoffLimit: 0
+        template:
+          spec:
+            hostNetwork: true
+            dnsPolicy: ClusterFirstWithHostNet
+            restartPolicy: OnFailure
+            terminationGracePeriodSeconds: 30
+            nodeSelector:
+              cloud.google.com/gke-tpu-accelerator: tpu-v5-lite-podslice
+              cloud.google.com/gke-tpu-topology: 4x8
+              cloud.google.com/gke-nodepool: tpu-v5e-4x8
+            tolerations:
+            - key: google.com/tpu
+              operator: Exists
+              effect: NoSchedule
+            containers:
+            - name: pathways-worker
+              image: us-docker.pkg.dev/cloud-tpu-v2-images/pathways/server:20261001-jax_0.10.2@sha256:3b2c87dccc93266d84e7fcf5be84fcbcf97d7f837b4e8a0f318eb52cef4c0836
+              args:
+              - --server_port=29005
+              - --resource_manager_address=$(PATHWAYS_HEAD):29001
+              - --gcs_scratch_location=gs://hongtaozhang-tpu-model-cache-us-west1/pathways-artifacts/ici-pathways-trial
+              env:
+              - name: JOBSET_NAME
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.annotations['jobset.sigs.k8s.io/jobset-name']
+              - name: REPLICATED_JOB_NAME
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.annotations['jobset.sigs.k8s.io/replicatedjob-name']
+              - name: XCLOUD_ENVIRONMENT
+                value: GCP
+              - name: TPU_MIN_LOG_LEVEL
+                value: '0'
+              - name: TF_CPP_MIN_LOG_LEVEL
+                value: '0'
+              - name: MEGASCALE_GRPC_ENABLE_XOR_TRACER
+                value: 'false'
+              - name: MEGASCALE_NUM_SLICES
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.labels['jobset.sigs.k8s.io/replicatedjob-replicas']
+              - name: MEGASCALE_SLICE_ID
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.labels['jobset.sigs.k8s.io/job-index']
+              - name: PATHWAYS_HEAD
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.labels['jobset.sigs.k8s.io/coordinator']
+              - name: MEGASCALE_COORDINATOR_ADDRESS
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.labels['jobset.sigs.k8s.io/coordinator']
+              resources:
+                requests:
+                  google.com/tpu: '4'
+                limits:
+                  google.com/tpu: '4'
+              volumeMounts:
+              - name: shared-tmp
+                mountPath: /tmp
+            volumes:
+            - name: shared-tmp
+              hostPath:
+                path: /tmp
+                type: Directory
+  startupPolicy:
+    startupPolicyOrder: InOrder
+  suspend: false

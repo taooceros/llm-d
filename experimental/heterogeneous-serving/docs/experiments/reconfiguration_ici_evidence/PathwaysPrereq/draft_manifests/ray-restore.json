@@ -1,0 +1,17 @@
+[
+  {
+    "op": "replace",
+    "path": "/spec/workerGroupSpecs/0/minReplicas",
+    "value": 1
+  },
+  {
+    "op": "replace",
+    "path": "/spec/workerGroupSpecs/0/maxReplicas",
+    "value": 1
+  },
+  {
+    "op": "replace",
+    "path": "/spec/workerGroupSpecs/0/replicas",
+    "value": 1
+  }
+]

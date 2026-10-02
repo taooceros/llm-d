@@ -1,0 +1,307 @@
+{
+  "sources": [
+    "results/ici/ICIBench/reshard_slice_complete_run.json.gz"
+  ],
+  "rows": [
+    {
+      "size": "model",
+      "route": "generic",
+      "direction": "S_to_H",
+      "submission_id": "raysubmit_VtvrR5PzNZiWgkkG",
+      "warm_repetitions": 10,
+      "controllers": 8,
+      "slowest_controller_latency_s": {
+        "median": 0.7514214880065992,
+        "min": 0.742707887024153,
+        "max": 0.7614497659960762
+      },
+      "all_controller_latency_s": {
+        "median": 0.7438963504973799,
+        "min": 0.7348295210395008,
+        "max": 0.7614497659960762
+      },
+      "cold_controller_latency_s": {
+        "median": 3.243544638506137,
+        "min": 3.2432933290256187,
+        "max": 3.2521898690029047
+      },
+      "logical_bytes_moved_per_box": 39060042240,
+      "logical_bytes_moved_total": 78120084480,
+      "effective_total_GB_s": {
+        "median": 103.96307001220293,
+        "min": 102.59387811067049,
+        "max": 105.18278564808013
+      },
+      "per_chip_lifetime_HBM_peak_bytes": {
+        "median": 9855524096.0,
+        "min": 7870299648,
+        "max": 11846860288
+      },
+      "HBM_peak_note": "device.memory_stats peak is cumulative since runtime start; may include earlier routes and verification",
+      "generation_compile_s_all_controllers": {
+        "median": 32.16487264819443,
+        "min": 31.61356373358285,
+        "max": 32.37943215324776
+      },
+      "explicit_route_compile_s_all_controllers": {
+        "median": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "native_cold_compilation": null,
+      "compile_note": "Generation/check/slice lowering measured separately. Native cold trace/lower/backend spans are host service times; backend includes compile or cache restore. Null native stats mean uninstrumented prior data, not zero. Spans cannot be subtracted to claim pure TPU transfer time. First route trial is cold-labelled; shared runtime caches remain intact.",
+      "verified": true,
+      "traffic_note": "Exact missing destination bytes; not measured wire bytes or multi-hop traffic"
+    },
+    {
+      "size": "model",
+      "route": "generic",
+      "direction": "H_to_S",
+      "submission_id": "raysubmit_VtvrR5PzNZiWgkkG",
+      "warm_repetitions": 10,
+      "controllers": 8,
+      "slowest_controller_latency_s": {
+        "median": 1.076300419459585,
+        "min": 1.070476675988175,
+        "max": 1.08221408596728
+      },
+      "all_controller_latency_s": {
+        "median": 1.0704425544827245,
+        "min": 1.062273551011458,
+        "max": 1.08221408596728
+      },
+      "cold_controller_latency_s": {
+        "median": 3.7001127130060922,
+        "min": 3.699069740017876,
+        "max": 3.7076491229818203
+      },
+      "logical_bytes_moved_per_box": 101556109824,
+      "logical_bytes_moved_total": 203112219648,
+      "effective_total_GB_s": {
+        "median": 188.71374586163176,
+        "min": 187.68210678616222,
+        "max": 189.73997678230936
+      },
+      "per_chip_lifetime_HBM_peak_bytes": {
+        "median": 11851908096.0,
+        "min": 11846752256,
+        "max": 11857066496
+      },
+      "HBM_peak_note": "device.memory_stats peak is cumulative since runtime start; may include earlier routes and verification",
+      "generation_compile_s_all_controllers": {
+        "median": 24.885270159546053,
+        "min": 24.54364731477108,
+        "max": 25.298430505674332
+      },
+      "explicit_route_compile_s_all_controllers": {
+        "median": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "native_cold_compilation": null,
+      "compile_note": "Generation/check/slice lowering measured separately. Native cold trace/lower/backend spans are host service times; backend includes compile or cache restore. Null native stats mean uninstrumented prior data, not zero. Spans cannot be subtracted to claim pure TPU transfer time. First route trial is cold-labelled; shared runtime caches remain intact.",
+      "verified": true,
+      "traffic_note": "Exact missing destination bytes; not measured wire bytes or multi-hop traffic"
+    },
+    {
+      "size": "model",
+      "route": "replica_aware",
+      "direction": "S_to_H",
+      "submission_id": "raysubmit_VtvrR5PzNZiWgkkG",
+      "warm_repetitions": 10,
+      "controllers": 8,
+      "slowest_controller_latency_s": {
+        "median": 0.7301570604904555,
+        "min": 0.6882651320192963,
+        "max": 0.7536895600496791
+      },
+      "all_controller_latency_s": {
+        "median": 0.7255875040136743,
+        "min": 0.6832499619922601,
+        "max": 0.7536895600496791
+      },
+      "cold_controller_latency_s": {
+        "median": 5.784298223501537,
+        "min": 5.784057597978972,
+        "max": 5.792957076977473
+      },
+      "logical_bytes_moved_per_box": 39060042240,
+      "logical_bytes_moved_total": 78120084480,
+      "effective_total_GB_s": {
+        "median": 106.99294642977168,
+        "min": 103.65021438647862,
+        "max": 113.50289422740919
+      },
+      "per_chip_lifetime_HBM_peak_bytes": {
+        "median": 13793558784.0,
+        "min": 11856958464,
+        "max": 15738002944
+      },
+      "HBM_peak_note": "device.memory_stats peak is cumulative since runtime start; may include earlier routes and verification",
+      "generation_compile_s_all_controllers": {
+        "median": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "explicit_route_compile_s_all_controllers": {
+        "median": 3.1932136483083013,
+        "min": 3.0837303526932374,
+        "max": 3.434609411051497
+      },
+      "native_cold_compilation": null,
+      "compile_note": "Generation/check/slice lowering measured separately. Native cold trace/lower/backend spans are host service times; backend includes compile or cache restore. Null native stats mean uninstrumented prior data, not zero. Spans cannot be subtracted to claim pure TPU transfer time. First route trial is cold-labelled; shared runtime caches remain intact.",
+      "verified": true,
+      "traffic_note": "Exact missing destination bytes; not measured wire bytes or multi-hop traffic"
+    },
+    {
+      "size": "model",
+      "route": "replica_aware",
+      "direction": "H_to_S",
+      "submission_id": "raysubmit_VtvrR5PzNZiWgkkG",
+      "warm_repetitions": 10,
+      "controllers": 8,
+      "slowest_controller_latency_s": {
+        "median": 1.2811154429800808,
+        "min": 1.23340556997573,
+        "max": 1.3271539459819905
+      },
+      "all_controller_latency_s": {
+        "median": 1.2707145200110972,
+        "min": 1.2065789780463092,
+        "max": 1.3271539459819905
+      },
+      "cold_controller_latency_s": {
+        "median": 1.257689370017033,
+        "min": 1.2518756240024231,
+        "max": 1.2754953450057656
+      },
+      "logical_bytes_moved_per_box": 101556109824,
+      "logical_bytes_moved_total": 203112219648,
+      "effective_total_GB_s": {
+        "median": 158.62349926842882,
+        "min": 153.04345080910173,
+        "max": 164.67593838740058
+      },
+      "per_chip_lifetime_HBM_peak_bytes": {
+        "median": 15737930752.0,
+        "min": 15737921536,
+        "max": 15738002944
+      },
+      "HBM_peak_note": "device.memory_stats peak is cumulative since runtime start; may include earlier routes and verification",
+      "generation_compile_s_all_controllers": {
+        "median": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "explicit_route_compile_s_all_controllers": {
+        "median": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "native_cold_compilation": null,
+      "compile_note": "Generation/check/slice lowering measured separately. Native cold trace/lower/backend spans are host service times; backend includes compile or cache restore. Null native stats mean uninstrumented prior data, not zero. Spans cannot be subtracted to claim pure TPU transfer time. First route trial is cold-labelled; shared runtime caches remain intact.",
+      "verified": true,
+      "traffic_note": "Exact missing destination bytes; not measured wire bytes or multi-hop traffic"
+    },
+    {
+      "size": "model",
+      "route": "interleaved",
+      "direction": "S_to_H",
+      "submission_id": "raysubmit_VtvrR5PzNZiWgkkG",
+      "warm_repetitions": 10,
+      "controllers": 8,
+      "slowest_controller_latency_s": {
+        "median": 0.23168868201901205,
+        "min": 0.21031916298670694,
+        "max": 0.3045690940343775
+      },
+      "all_controller_latency_s": {
+        "median": 0.20325255999341607,
+        "min": 0.18461477698292583,
+        "max": 0.3045690940343775
+      },
+      "cold_controller_latency_s": {
+        "median": 0.21109832750516944,
+        "min": 0.2062505659996532,
+        "max": 0.2543014190159738
+      },
+      "logical_bytes_moved_per_box": 0,
+      "logical_bytes_moved_total": 0,
+      "effective_total_GB_s": {
+        "median": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "per_chip_lifetime_HBM_peak_bytes": {
+        "median": 15737930752.0,
+        "min": 15737921536,
+        "max": 15738002944
+      },
+      "HBM_peak_note": "device.memory_stats peak is cumulative since runtime start; may include earlier routes and verification",
+      "generation_compile_s_all_controllers": {
+        "median": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "explicit_route_compile_s_all_controllers": {
+        "median": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "native_cold_compilation": null,
+      "compile_note": "Generation/check/slice lowering measured separately. Native cold trace/lower/backend spans are host service times; backend includes compile or cache restore. Null native stats mean uninstrumented prior data, not zero. Spans cannot be subtracted to claim pure TPU transfer time. First route trial is cold-labelled; shared runtime caches remain intact.",
+      "verified": true,
+      "traffic_note": "Exact missing destination bytes; not measured wire bytes or multi-hop traffic"
+    },
+    {
+      "size": "model",
+      "route": "interleaved",
+      "direction": "H_to_S",
+      "submission_id": "raysubmit_VtvrR5PzNZiWgkkG",
+      "warm_repetitions": 10,
+      "controllers": 8,
+      "slowest_controller_latency_s": {
+        "median": 0.43816614951356314,
+        "min": 0.38612926501082256,
+        "max": 0.5208880699938163
+      },
+      "all_controller_latency_s": {
+        "median": 0.4323621240328066,
+        "min": 0.37787177599966526,
+        "max": 0.5208880699938163
+      },
+      "cold_controller_latency_s": {
+        "median": 2.18985687798704,
+        "min": 2.1896355499629863,
+        "max": 2.1961990229901858
+      },
+      "logical_bytes_moved_per_box": 62496067584,
+      "logical_bytes_moved_total": 124992135168,
+      "effective_total_GB_s": {
+        "median": 285.2629646332269,
+        "min": 239.95968110669887,
+        "max": 323.70541809229786
+      },
+      "per_chip_lifetime_HBM_peak_bytes": {
+        "median": 15737930752.0,
+        "min": 15737921536,
+        "max": 15738002944
+      },
+      "HBM_peak_note": "device.memory_stats peak is cumulative since runtime start; may include earlier routes and verification",
+      "generation_compile_s_all_controllers": {
+        "median": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "explicit_route_compile_s_all_controllers": {
+        "median": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "native_cold_compilation": null,
+      "compile_note": "Generation/check/slice lowering measured separately. Native cold trace/lower/backend spans are host service times; backend includes compile or cache restore. Null native stats mean uninstrumented prior data, not zero. Spans cannot be subtracted to claim pure TPU transfer time. First route trial is cold-labelled; shared runtime caches remain intact.",
+      "verified": true,
+      "traffic_note": "Exact missing destination bytes; not measured wire bytes or multi-hop traffic"
+    }
+  ]
+}

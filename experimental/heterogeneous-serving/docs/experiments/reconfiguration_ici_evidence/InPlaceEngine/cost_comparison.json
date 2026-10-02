@@ -1,0 +1,105 @@
+{
+  "arms": [
+    {
+      "run_id": "raysubmit_eZ37RTqNQBVq2r5T",
+      "evidence_file": "results/ici/InPlaceEngine/run_parallel_warmup.json",
+      "cache_writer_patch": false,
+      "token_identical": true,
+      "transitions": [
+        {
+          "index": 0,
+          "target": "2TP8",
+          "C_s": 236.95071363449097,
+          "arithmetic_reduction_vs_419_s": 182.04928636550903,
+          "arithmetic_reduction_vs_restore_range_s": [
+            -15.550713634490961,
+            -8.350713634490972
+          ]
+        },
+        {
+          "index": 1,
+          "target": "TP16",
+          "C_s": 76.46588015556335,
+          "arithmetic_reduction_vs_419_s": 342.53411984443665,
+          "arithmetic_reduction_vs_restore_range_s": [
+            144.93411984443665,
+            152.13411984443664
+          ]
+        },
+        {
+          "index": 2,
+          "target": "2TP8",
+          "C_s": 229.49479913711548,
+          "arithmetic_reduction_vs_419_s": 189.50520086288452,
+          "arithmetic_reduction_vs_restore_range_s": [
+            -8.094799137115473,
+            -0.8947991371154842
+          ]
+        },
+        {
+          "index": 3,
+          "target": "TP16",
+          "C_s": 75.85522389411926,
+          "arithmetic_reduction_vs_419_s": 343.14477610588074,
+          "arithmetic_reduction_vs_restore_range_s": [
+            145.54477610588074,
+            152.74477610588073
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "raysubmit_6Kx3zaVPJJwS7UvW",
+      "evidence_file": "results/ici/InPlaceEngine/run_mesh_cache_writer.json",
+      "cache_writer_patch": true,
+      "token_identical": true,
+      "transitions": [
+        {
+          "index": 0,
+          "target": "2TP8",
+          "C_s": 241.9364938735962,
+          "arithmetic_reduction_vs_419_s": 177.0635061264038,
+          "arithmetic_reduction_vs_restore_range_s": [
+            -20.536493873596186,
+            -13.336493873596197
+          ]
+        },
+        {
+          "index": 1,
+          "target": "TP16",
+          "C_s": 77.44825744628906,
+          "arithmetic_reduction_vs_419_s": 341.55174255371094,
+          "arithmetic_reduction_vs_restore_range_s": [
+            143.95174255371094,
+            151.15174255371093
+          ]
+        },
+        {
+          "index": 2,
+          "target": "2TP8",
+          "C_s": 100.6244010925293,
+          "arithmetic_reduction_vs_419_s": 318.3755989074707,
+          "arithmetic_reduction_vs_restore_range_s": [
+            120.77559890747071,
+            127.9755989074707
+          ]
+        },
+        {
+          "index": 3,
+          "target": "TP16",
+          "C_s": 76.77766275405884,
+          "arithmetic_reduction_vs_419_s": 342.22233724594116,
+          "arithmetic_reduction_vs_restore_range_s": [
+            144.62233724594117,
+            151.82233724594116
+          ]
+        }
+      ]
+    }
+  ],
+  "baseline_sources": {
+    "restore": "results/restore/ShardedRestore/breakeven.json",
+    "full_419_s": "Prior measured median provided in assignment"
+  },
+  "comparability": "Arithmetic differences only: one-box drain-to-first-token vs historical 32-chip deployment/gateway endpoints. Not measured production full-slice savings."
+}

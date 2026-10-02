@@ -1,0 +1,71 @@
+{
+  "run_id": "raysubmit_6Kx3zaVPJJwS7UvW",
+  "status": "measured",
+  "all_reconfigured_token_identical": true,
+  "checks": [
+    {
+      "stage": "initial_TP16",
+      "engine": 0,
+      "tp": 16,
+      "token_identical": true,
+      "mismatching_prompt_indices": [],
+      "reference_file": "results/restore/ShardedRestore/H-reference.json"
+    },
+    {
+      "stage": "switch0_2TP8",
+      "engine": 0,
+      "tp": 8,
+      "token_identical": true,
+      "mismatching_prompt_indices": [],
+      "reference_file": "results/restore/ShardedRestore/S-reference.json"
+    },
+    {
+      "stage": "switch0_2TP8",
+      "engine": 1,
+      "tp": 8,
+      "token_identical": true,
+      "mismatching_prompt_indices": [],
+      "reference_file": "results/restore/ShardedRestore/S-reference.json"
+    },
+    {
+      "stage": "switch1_TP16",
+      "engine": 0,
+      "tp": 16,
+      "token_identical": true,
+      "mismatching_prompt_indices": [],
+      "reference_file": "results/restore/ShardedRestore/H-reference.json"
+    },
+    {
+      "stage": "switch2_2TP8",
+      "engine": 0,
+      "tp": 8,
+      "token_identical": true,
+      "mismatching_prompt_indices": [],
+      "reference_file": "results/restore/ShardedRestore/S-reference.json"
+    },
+    {
+      "stage": "switch2_2TP8",
+      "engine": 1,
+      "tp": 8,
+      "token_identical": true,
+      "mismatching_prompt_indices": [],
+      "reference_file": "results/restore/ShardedRestore/S-reference.json"
+    },
+    {
+      "stage": "switch3_TP16",
+      "engine": 0,
+      "tp": 16,
+      "token_identical": true,
+      "mismatching_prompt_indices": [],
+      "reference_file": "results/restore/ShardedRestore/H-reference.json"
+    }
+  ],
+  "prompt_count": 32,
+  "sampling": {
+    "temperature": 0,
+    "ignore_eos": false,
+    "max_tokens": 64
+  },
+  "manifest_sha256": "8a65e939b78fb20523249dcec6955c120218a449781d5ee19526f088e656318f",
+  "failure": null
+}

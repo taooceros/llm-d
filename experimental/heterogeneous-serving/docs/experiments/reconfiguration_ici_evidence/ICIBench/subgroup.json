@@ -1,0 +1,56 @@
+{
+  "source": "results/ici/ICIBench/subgroup_corrected_run.json",
+  "submission_id": "raysubmit_FphtKh5zYWCXvj6A",
+  "ok": true,
+  "processes": [
+    {
+      "process_index": 0,
+      "mesh": "a",
+      "collective_count": 2,
+      "elapsed_s": 0.3892548349685967,
+      "expected": 73,
+      "correct": true
+    },
+    {
+      "process_index": 1,
+      "mesh": "a",
+      "collective_count": 2,
+      "elapsed_s": 0.3769877229933627,
+      "expected": 73,
+      "correct": true
+    },
+    {
+      "process_index": 2,
+      "mesh": "b",
+      "collective_count": 5,
+      "elapsed_s": 0.375395565002691,
+      "expected": 37449,
+      "correct": true
+    },
+    {
+      "process_index": 3,
+      "mesh": "b",
+      "collective_count": 5,
+      "elapsed_s": 0.3687833839794621,
+      "expected": 37449,
+      "correct": true
+    }
+  ],
+  "all_results_correct": true,
+  "elapsed_s": {
+    "median": 0.37619164399802685,
+    "min": 0.3687833839794621,
+    "max": 0.3892548349685967
+  },
+  "tested_process_subsets": [
+    [
+      0,
+      1
+    ],
+    [
+      2,
+      3
+    ]
+  ],
+  "geometry_note": "Requested controller subsets are horizontal TP8s; native S boxes are vertical {0,2}/{1,3}"
+}
