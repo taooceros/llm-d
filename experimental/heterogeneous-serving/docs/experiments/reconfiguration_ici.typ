@@ -128,10 +128,13 @@ two ways.
   other route to in-place resharding, can't run here without changes outside the namespace.
 
 #note[
-  *Status.* Every number is measured on the cluster unless labelled [ESTIMATE] or [INFERENCE]. The
-  in-place results are from one 16-chip box, measured from drain to the first token on every new
-  engine. They are not directly comparable with the full-slice numbers, which also include the
-  gateway. None of this code is merged into `main`.
+  *Status.* Every number is measured on the cluster unless labelled [ESTIMATE] or [INFERENCE].
+  Full-slice C (full redeploy and restore) is the time from the last finished request of the old
+  layout to the first request dispatched on the new one, plus the ramp deficit: output lost in the
+  first 120 s against the run's median rate, in seconds of steady output. The in-place results are
+  from one 16-chip box, measured as wall time from drain to the first token on every new engine,
+  without gateway, ramp or the second box. The two are not directly comparable. None of this code
+  is merged into `main`.
 ]
 
 #figure(
@@ -143,9 +146,10 @@ two ways.
     ("In place, warm switch to 2×TP8", 100.6, good),
     ("In place, 2×TP8 → TP16", 77.4, good),
   )),
-  caption: [Reconfiguration cost C. Full redeploy and restore: full 32-chip slice, from the last
-    request drained to steady throughput. In place: one 16-chip box, from drain to the first token
-    on every new engine.],
+  caption: [Reconfiguration cost C. Full redeploy and restore: full 32-chip slice, last finished
+    request → first dispatch on the new layout, plus the ramp deficit (seconds of lost steady
+    output). In place: one 16-chip box, wall time from drain to the first token on every new
+    engine.],
 )
 
 = The approaches at a glance <sec-glance>
@@ -829,10 +833,11 @@ overlap forfeited by switching):
 
 = Threats to validity <sec-validity>
 
-- *Different measurement spans.* Restore and full redeploy are measured over the whole slice from
-  the last drained request to steady throughput, gateway included. In-place is one box, from drain
-  to the first token on every engine, without the gateway. The in-place break-even rows apply the
-  one-box cost to the slice.
+- *Different measurement spans.* Restore and full redeploy are measured over the whole slice, as
+  the gap from the last finished request to the first new dispatch plus the ramp deficit (seconds
+  of lost steady output), gateway included. In-place is one box, wall time from drain to the first
+  token on every engine, without gateway, ramp or the second box. The in-place break-even rows apply
+  the one-box cost to the slice.
 - *Repetitions.* Restore transitions: one per direction. In-place: two switches in each direction
   per arm, two arms. ICI transfer: 10 warm repetitions per route.
 - *Prototype patches.* The compile-cache fix wraps a JAX internal and refuses other JAX versions.
