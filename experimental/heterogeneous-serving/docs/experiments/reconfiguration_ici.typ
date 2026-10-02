@@ -148,6 +148,192 @@ two ways.
     on every new engine.],
 )
 
+= The approaches at a glance <sec-glance>
+
+A layout switch has to give each new engine its weights, a model graph, a KV cache, compiled code
+and a place in the gateway. The approaches differ in which of these survive the switch.
+@fig-paths shows how the weights travel; @fig-survive shows what each approach keeps.
+
+#figure(
+  svg-fig(```svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 420" font-family="Helvetica, Arial, 'DejaVu Sans', sans-serif" font-size="12" fill="#1f2328">
+<defs><marker id="ah59636e" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#59636e"/></marker><marker id="ah1a7f37" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1a7f37"/></marker></defs>
+<text x="10" y="20" font-weight="bold">How the new engines get their weights (TP8 timings, measured)</text>
+<text x="10" y="92" font-weight="bold" font-size="12.5">Full redeploy</text>
+<text x="10" y="217" font-weight="bold" font-size="12.5">Snapshot restore</text>
+<text x="10" y="342" font-weight="bold" font-size="12.5">In place over ICI</text>
+<rect x="170" y="60" width="150" height="56" rx="6" fill="#fff1e5" stroke="#e16f24" stroke-width="1.3"/>
+<text x="245.0" y="77.0" text-anchor="middle" font-size="11.5" fill="#1f2328" font-weight="bold">Checkpoint</text>
+<text x="245.0" y="92.0" text-anchor="middle" font-size="10.5" fill="#1f2328">/models (gcsfuse)</text>
+<text x="245.0" y="107.0" text-anchor="middle" font-size="10.5" fill="#1f2328">62.5 GB safetensors</text>
+<rect x="410" y="60" width="150" height="56" rx="6" fill="#fbe3cf" stroke="#e16f24" stroke-width="1.3"/>
+<text x="485.0" y="77.0" text-anchor="middle" font-size="11.5" fill="#1f2328" font-weight="bold">Host CPU</text>
+<text x="485.0" y="92.0" text-anchor="middle" font-size="10.5" fill="#1f2328">convert tensors 157 s</text>
+<text x="485.0" y="107.0" text-anchor="middle" font-size="10.5" fill="#1f2328">load-time JIT 75 s</text>
+<rect x="650" y="60" width="150" height="56" rx="6" fill="#ddf4ff" stroke="#0969da" stroke-width="1.3"/>
+<text x="725.0" y="84.5" text-anchor="middle" font-size="11.5" fill="#1f2328" font-weight="bold">New engine HBM</text>
+<text x="725.0" y="99.5" text-anchor="middle" font-size="10.5" fill="#1f2328">7.8 GB per chip</text>
+<line x1="320" y1="88" x2="408" y2="88" stroke="#59636e" stroke-width="1.6" marker-end="url(#ah59636e)"/>
+<text x="365.0" y="80" text-anchor="middle" font-size="10.5" fill="#59636e">read 0.2 s</text>
+<line x1="560" y1="88" x2="648" y2="88" stroke="#59636e" stroke-width="1.6" marker-end="url(#ah59636e)"/>
+<text x="605.0" y="67" text-anchor="middle" font-size="10.5" fill="#59636e">copy to chips</text>
+<text x="605.0" y="80" text-anchor="middle" font-size="10.5" fill="#59636e">3 s</text>
+<text x="170" y="136" font-size="10.5" fill="#59636e">Old processes are killed; new ones start (Ray workers 22 s), then load_model 237 s, KV 26 s, compile 64 s.</text>
+<rect x="170" y="185" width="150" height="56" rx="6" fill="#ddf4ff" stroke="#0969da" stroke-width="1.3"/>
+<text x="245.0" y="209.5" text-anchor="middle" font-size="11.5" fill="#1f2328" font-weight="bold">Old engine HBM</text>
+<text x="245.0" y="224.5" text-anchor="middle" font-size="10.5" fill="#1f2328">final shards</text>
+<rect x="410" y="185" width="150" height="56" rx="6" fill="#dafbe1" stroke="#1b7c83" stroke-width="1.3"/>
+<text x="485.0" y="202.0" text-anchor="middle" font-size="11.5" fill="#1f2328" font-weight="bold">Host RAM</text>
+<text x="485.0" y="217.0" text-anchor="middle" font-size="10.5" fill="#1f2328">/dev/shm per host</text>
+<text x="485.0" y="232.0" text-anchor="middle" font-size="10.5" fill="#1f2328">15.8–31.4 GB</text>
+<rect x="650" y="185" width="150" height="56" rx="6" fill="#ddf4ff" stroke="#0969da" stroke-width="1.3"/>
+<text x="725.0" y="209.5" text-anchor="middle" font-size="11.5" fill="#1f2328" font-weight="bold">New engine HBM</text>
+<text x="725.0" y="224.5" text-anchor="middle" font-size="10.5" fill="#1f2328">same layout as saved</text>
+<line x1="320" y1="213" x2="408" y2="213" stroke="#59636e" stroke-width="1.6" marker-end="url(#ah59636e)"/>
+<text x="365.0" y="192" text-anchor="middle" font-size="10.5" fill="#59636e">snapshot once</text>
+<text x="365.0" y="205" text-anchor="middle" font-size="10.5" fill="#59636e">26–52 s (idle)</text>
+<line x1="560" y1="213" x2="648" y2="213" stroke="#59636e" stroke-width="1.6" marker-end="url(#ah59636e)"/>
+<text x="605.0" y="179.0" text-anchor="middle" font-size="10.5" fill="#59636e">read 0.8 s</text>
+<text x="605.0" y="192.0" text-anchor="middle" font-size="10.5" fill="#59636e">verify 20 s</text>
+<text x="605.0" y="205.0" text-anchor="middle" font-size="10.5" fill="#59636e">place 1.5 s</text>
+<text x="170" y="261" font-size="10.5" fill="#59636e">Skips conversion and load-time JIT: load_model 40 s (TP8) / 28 s (TP16); ≈20 s without the checksum. Processes still restart.</text>
+<rect x="170" y="310" width="150" height="56" rx="6" fill="#ddf4ff" stroke="#0969da" stroke-width="1.3"/>
+<text x="245.0" y="334.5" text-anchor="middle" font-size="11.5" fill="#1f2328" font-weight="bold">HBM, 2 × TP8</text>
+<text x="245.0" y="349.5" text-anchor="middle" font-size="10.5" fill="#1f2328">weights stay resident</text>
+<rect x="650" y="310" width="150" height="56" rx="6" fill="#efe5ff" stroke="#8250df" stroke-width="1.3"/>
+<text x="725.0" y="334.5" text-anchor="middle" font-size="11.5" fill="#1f2328" font-weight="bold">HBM, 1 × TP16</text>
+<text x="725.0" y="349.5" text-anchor="middle" font-size="10.5" fill="#1f2328">same chips, new mesh</text>
+<line x1="320" y1="338" x2="648" y2="338" stroke="#1a7f37" stroke-width="3" marker-end="url(#ah1a7f37)"/>
+<text x="485.0" y="317" text-anchor="middle" font-size="10.5" fill="#1a7f37">ICI collective-permute, chip to chip, no host copy</text>
+<text x="485.0" y="330" text-anchor="middle" font-size="10.5" fill="#1a7f37">0.41 s per 16-chip box · 0.75–1.08 s for the slice</text>
+<text x="170" y="386" font-size="10.5" fill="#59636e">Processes, JAX runtime and weights survive; vLLM engines are rebuilt around them (≈97 s of the 101 s warm switch).</text>
+<line x1="10" y1="160" x2="810" y2="160" stroke="#d0d7de"/><line x1="10" y1="285" x2="810" y2="285" stroke="#d0d7de"/>
+</svg>
+```),
+  caption: [Weight path for each approach. Full redeploy reads the checkpoint and converts it on the
+    host; restore copies final shards back from host RAM; in-place keeps them on the chips and
+    moves them over ICI.],
+) <fig-paths>
+
+#figure(
+  svg-fig(```svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 534" font-family="Helvetica, Arial, 'DejaVu Sans', sans-serif" font-size="11" fill="#1f2328">
+<text x="10" y="20" font-weight="bold" font-size="12">What survives a layout switch</text>
+<text x="275.0" y="40" text-anchor="middle" font-weight="bold" font-size="12">Full redeploy</text>
+<text x="425.0" y="40" text-anchor="middle" font-weight="bold" font-size="12">Partial (S↔M)</text>
+<text x="575.0" y="40" text-anchor="middle" font-weight="bold" font-size="12">Snapshot restore</text>
+<text x="725.0" y="40" text-anchor="middle" font-weight="bold" font-size="12">In place (ICI)</text>
+<text x="190" y="70.5" text-anchor="end" font-size="11" fill="#1f2328" font-weight="bold">Worker processes,</text>
+<text x="190" y="83.5" text-anchor="end" font-size="11" fill="#1f2328" font-weight="bold">JAX runtime</text>
+<rect x="203" y="53" width="144" height="40" rx="5" fill="#ffebe9" stroke="#cf222e" stroke-width="1"/>
+<text x="275.0" y="70.5" text-anchor="middle" font-size="11" fill="#cf222e">recreated</text>
+<text x="275.0" y="83.5" text-anchor="middle" font-size="11" fill="#cf222e">(Ray workers 22 s)</text>
+<rect x="353" y="53" width="144" height="40" rx="5" fill="#fff8c5" stroke="#9a6700" stroke-width="1"/>
+<text x="425.0" y="70.5" text-anchor="middle" font-size="11" fill="#9a6700">kept on shared</text>
+<text x="425.0" y="83.5" text-anchor="middle" font-size="11" fill="#9a6700">engines only</text>
+<rect x="503" y="53" width="144" height="40" rx="5" fill="#ffebe9" stroke="#cf222e" stroke-width="1"/>
+<text x="575.0" y="70.5" text-anchor="middle" font-size="11" fill="#cf222e">recreated</text>
+<text x="575.0" y="83.5" text-anchor="middle" font-size="11" fill="#cf222e">(Ray workers 22 s)</text>
+<rect x="653" y="53" width="144" height="40" rx="5" fill="#dafbe1" stroke="#1a7f37" stroke-width="1"/>
+<text x="725.0" y="77.0" text-anchor="middle" font-size="11" fill="#1a7f37">kept</text>
+<text x="190" y="123.0" text-anchor="end" font-size="11" fill="#1f2328" font-weight="bold">Weights in HBM</text>
+<rect x="203" y="99" width="144" height="40" rx="5" fill="#ffebe9" stroke="#cf222e" stroke-width="1"/>
+<text x="275.0" y="116.5" text-anchor="middle" font-size="11" fill="#cf222e">reloaded from</text>
+<text x="275.0" y="129.5" text-anchor="middle" font-size="11" fill="#cf222e">checkpoint, 237 s</text>
+<rect x="353" y="99" width="144" height="40" rx="5" fill="#fff8c5" stroke="#9a6700" stroke-width="1"/>
+<text x="425.0" y="116.5" text-anchor="middle" font-size="11" fill="#9a6700">kept on shared;</text>
+<text x="425.0" y="129.5" text-anchor="middle" font-size="11" fill="#9a6700">reloaded on others</text>
+<rect x="503" y="99" width="144" height="40" rx="5" fill="#fff8c5" stroke="#9a6700" stroke-width="1"/>
+<text x="575.0" y="116.5" text-anchor="middle" font-size="11" fill="#9a6700">from /dev/shm</text>
+<text x="575.0" y="129.5" text-anchor="middle" font-size="11" fill="#9a6700">20–40 s</text>
+<rect x="653" y="99" width="144" height="40" rx="5" fill="#dafbe1" stroke="#1a7f37" stroke-width="1"/>
+<text x="725.0" y="116.5" text-anchor="middle" font-size="11" fill="#1a7f37">kept; resharded</text>
+<text x="725.0" y="129.5" text-anchor="middle" font-size="11" fill="#1a7f37">over ICI, 4 s</text>
+<text x="190" y="169.0" text-anchor="end" font-size="11" fill="#1f2328" font-weight="bold">Model graph</text>
+<rect x="203" y="145" width="144" height="40" rx="5" fill="#ffebe9" stroke="#cf222e" stroke-width="1"/>
+<text x="275.0" y="162.5" text-anchor="middle" font-size="11" fill="#cf222e">built inside</text>
+<text x="275.0" y="175.5" text-anchor="middle" font-size="11" fill="#cf222e">load_model</text>
+<rect x="353" y="145" width="144" height="40" rx="5" fill="#fff8c5" stroke="#9a6700" stroke-width="1"/>
+<text x="425.0" y="169.0" text-anchor="middle" font-size="11" fill="#9a6700">kept on shared</text>
+<rect x="503" y="145" width="144" height="40" rx="5" fill="#ffebe9" stroke="#cf222e" stroke-width="1"/>
+<text x="575.0" y="162.5" text-anchor="middle" font-size="11" fill="#cf222e">built inside</text>
+<text x="575.0" y="175.5" text-anchor="middle" font-size="11" fill="#cf222e">restore</text>
+<rect x="653" y="145" width="144" height="40" rx="5" fill="#ffebe9" stroke="#cf222e" stroke-width="1"/>
+<text x="725.0" y="169.0" text-anchor="middle" font-size="11" fill="#cf222e">rebuilt, 15 s</text>
+<text x="190" y="215.0" text-anchor="end" font-size="11" fill="#1f2328" font-weight="bold">KV cache</text>
+<rect x="203" y="191" width="144" height="40" rx="5" fill="#ffebe9" stroke="#cf222e" stroke-width="1"/>
+<text x="275.0" y="215.0" text-anchor="middle" font-size="11" fill="#cf222e">allocated, 26 s</text>
+<rect x="353" y="191" width="144" height="40" rx="5" fill="#fff8c5" stroke="#9a6700" stroke-width="1"/>
+<text x="425.0" y="215.0" text-anchor="middle" font-size="11" fill="#9a6700">kept on shared</text>
+<rect x="503" y="191" width="144" height="40" rx="5" fill="#ffebe9" stroke="#cf222e" stroke-width="1"/>
+<text x="575.0" y="215.0" text-anchor="middle" font-size="11" fill="#cf222e">allocated, 26 s</text>
+<rect x="653" y="191" width="144" height="40" rx="5" fill="#ffebe9" stroke="#cf222e" stroke-width="1"/>
+<text x="725.0" y="208.5" text-anchor="middle" font-size="11" fill="#cf222e">allocated,</text>
+<text x="725.0" y="221.5" text-anchor="middle" font-size="11" fill="#cf222e">12 s per engine</text>
+<text x="190" y="261.0" text-anchor="end" font-size="11" fill="#1f2328" font-weight="bold">Compiled code</text>
+<rect x="203" y="237" width="144" height="40" rx="5" fill="#fff8c5" stroke="#9a6700" stroke-width="1"/>
+<text x="275.0" y="254.5" text-anchor="middle" font-size="11" fill="#9a6700">disk cache</text>
+<text x="275.0" y="267.5" text-anchor="middle" font-size="11" fill="#9a6700">54–64 s</text>
+<rect x="353" y="237" width="144" height="40" rx="5" fill="#fff8c5" stroke="#9a6700" stroke-width="1"/>
+<text x="425.0" y="261.0" text-anchor="middle" font-size="11" fill="#9a6700">kept on shared</text>
+<rect x="503" y="237" width="144" height="40" rx="5" fill="#fff8c5" stroke="#9a6700" stroke-width="1"/>
+<text x="575.0" y="261.0" text-anchor="middle" font-size="11" fill="#9a6700">disk cache, 63 s</text>
+<rect x="653" y="237" width="144" height="40" rx="5" fill="#fff8c5" stroke="#9a6700" stroke-width="1"/>
+<text x="725.0" y="254.5" text-anchor="middle" font-size="11" fill="#9a6700">disk cache, 33 s</text>
+<text x="725.0" y="267.5" text-anchor="middle" font-size="11" fill="#9a6700">(needs writer patch)</text>
+<text x="190" y="300.5" text-anchor="end" font-size="11" fill="#1f2328" font-weight="bold">vLLM engine core,</text>
+<text x="190" y="313.5" text-anchor="end" font-size="11" fill="#1f2328" font-weight="bold">scheduler</text>
+<rect x="203" y="283" width="144" height="40" rx="5" fill="#ffebe9" stroke="#cf222e" stroke-width="1"/>
+<text x="275.0" y="307.0" text-anchor="middle" font-size="11" fill="#cf222e">recreated</text>
+<rect x="353" y="283" width="144" height="40" rx="5" fill="#fff8c5" stroke="#9a6700" stroke-width="1"/>
+<text x="425.0" y="307.0" text-anchor="middle" font-size="11" fill="#9a6700">kept on shared</text>
+<rect x="503" y="283" width="144" height="40" rx="5" fill="#ffebe9" stroke="#cf222e" stroke-width="1"/>
+<text x="575.0" y="307.0" text-anchor="middle" font-size="11" fill="#cf222e">recreated</text>
+<rect x="653" y="283" width="144" height="40" rx="5" fill="#ffebe9" stroke="#cf222e" stroke-width="1"/>
+<text x="725.0" y="307.0" text-anchor="middle" font-size="11" fill="#cf222e">recreated, ≈33 s</text>
+<text x="190" y="353.0" text-anchor="end" font-size="11" fill="#1f2328" font-weight="bold">Gateway</text>
+<rect x="203" y="329" width="144" height="40" rx="5" fill="#ffebe9" stroke="#cf222e" stroke-width="1"/>
+<text x="275.0" y="346.5" text-anchor="middle" font-size="11" fill="#cf222e">torn down,</text>
+<text x="275.0" y="359.5" text-anchor="middle" font-size="11" fill="#cf222e">rolled out 21 s</text>
+<rect x="353" y="329" width="144" height="40" rx="5" fill="#dafbe1" stroke="#1a7f37" stroke-width="1"/>
+<text x="425.0" y="346.5" text-anchor="middle" font-size="11" fill="#1a7f37">kept; retarget</text>
+<text x="425.0" y="359.5" text-anchor="middle" font-size="11" fill="#1a7f37">+ join, 9 s</text>
+<rect x="503" y="329" width="144" height="40" rx="5" fill="#ffebe9" stroke="#cf222e" stroke-width="1"/>
+<text x="575.0" y="353.0" text-anchor="middle" font-size="11" fill="#cf222e">rolled out, 22 s</text>
+<rect x="653" y="329" width="144" height="40" rx="5" fill="#f6f8fa" stroke="#8c959f" stroke-width="1"/>
+<text x="725.0" y="346.5" text-anchor="middle" font-size="11" fill="#59636e">not integrated</text>
+<text x="725.0" y="359.5" text-anchor="middle" font-size="11" fill="#59636e">(prototype)</text>
+<text x="190" y="392.5" text-anchor="end" font-size="11" fill="#1f2328" font-weight="bold">Serving during</text>
+<text x="190" y="405.5" text-anchor="end" font-size="11" fill="#1f2328" font-weight="bold">the switch</text>
+<rect x="203" y="375" width="144" height="40" rx="5" fill="#ffebe9" stroke="#cf222e" stroke-width="1"/>
+<text x="275.0" y="399.0" text-anchor="middle" font-size="11" fill="#cf222e">none</text>
+<rect x="353" y="375" width="144" height="40" rx="5" fill="#dafbe1" stroke="#1a7f37" stroke-width="1"/>
+<text x="425.0" y="392.5" text-anchor="middle" font-size="11" fill="#1a7f37">shared engines,</text>
+<text x="425.0" y="405.5" text-anchor="middle" font-size="11" fill="#1a7f37">67% of full rate</text>
+<rect x="503" y="375" width="144" height="40" rx="5" fill="#ffebe9" stroke="#cf222e" stroke-width="1"/>
+<text x="575.0" y="399.0" text-anchor="middle" font-size="11" fill="#cf222e">none</text>
+<rect x="653" y="375" width="144" height="40" rx="5" fill="#ffebe9" stroke="#cf222e" stroke-width="1"/>
+<text x="725.0" y="392.5" text-anchor="middle" font-size="11" fill="#cf222e">none: overlap</text>
+<text x="725.0" y="405.5" text-anchor="middle" font-size="11" fill="#cf222e">aborts the runtime</text>
+<line x1="200" y1="424" x2="800" y2="424" stroke="#1f2328" stroke-width="1"/>
+<text x="190" y="450.0" text-anchor="end" font-size="12" fill="#1f2328" font-weight="bold">Measured cost C</text>
+<text x="275.0" y="450.0" text-anchor="middle" font-size="12" fill="#1f2328" font-weight="bold">407–445 s</text>
+<text x="425.0" y="443.5" text-anchor="middle" font-size="12" fill="#1f2328" font-weight="bold">186 s effective</text>
+<text x="425.0" y="456.5" text-anchor="middle" font-size="12" fill="#1f2328" font-weight="bold">(mix A)</text>
+<text x="575.0" y="450.0" text-anchor="middle" font-size="12" fill="#1f2328" font-weight="bold">221–229 s</text>
+<text x="725.0" y="443.5" text-anchor="middle" font-size="12" fill="#1f2328" font-weight="bold">77–101 s</text>
+<text x="725.0" y="456.5" text-anchor="middle" font-size="12" fill="#1f2328" font-weight="bold">(one box, warm)</text>
+<rect x="200" y="470" width="12" height="12" rx="2" fill="#dafbe1" stroke="#1a7f37"/><text x="217" y="480" font-size="10.5" fill="#424a53">kept or better</text>
+<rect x="350" y="470" width="12" height="12" rx="2" fill="#fff8c5" stroke="#9a6700"/><text x="367" y="480" font-size="10.5" fill="#424a53">partly kept / fast path</text>
+<rect x="500" y="470" width="12" height="12" rx="2" fill="#ffebe9" stroke="#cf222e"/><text x="517" y="480" font-size="10.5" fill="#424a53">rebuilt or lost</text>
+<rect x="650" y="470" width="12" height="12" rx="2" fill="#f6f8fa" stroke="#8c959f"/><text x="667" y="480" font-size="10.5" fill="#424a53">not available</text>
+</svg>
+```),
+  caption: [State that survives a switch, and what rebuilding the rest costs. Partial
+    reconfiguration is from the break-even study; it keeps the two TP8 engines that M and S share
+    and pays full cost on the other half. Times measured; in-place on one box.],
+) <fig-survive>
+
 = Where weight loading spends its time <sec-load>
 
 The `LoadProfiler` agent added load-time-only instrumentation (off by default) to the engine
@@ -284,6 +470,101 @@ weight load.
 Today every engine is its own JAX runtime with its chips fixed at start-up, and two runtimes can't
 exchange device buffers. In-place resharding therefore needs one persistent JAX runtime that spans
 every engine of a box. Engines become groups of processes on sub-meshes of that runtime.
+
+#figure(
+  svg-fig(```svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 330" font-family="Helvetica, Arial, 'DejaVu Sans', sans-serif" font-size="12" fill="#1f2328">
+<defs><marker id="ah59636e" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#59636e"/></marker><marker id="ah1a7f37" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1a7f37"/></marker></defs>
+<text x="10" y="20" font-weight="bold">One 16-chip box (4 hosts × 4 chips): S halves vs one H engine</text>
+<text x="141" y="44" text-anchor="middle" font-weight="bold">S: small_a | small_b</text>
+<text x="141" y="59" text-anchor="middle" font-size="10.5" fill="#59636e">each TP8 engine = 2 hosts (x = 0–1, x = 2–3)</text>
+<rect x="60" y="70" width="38" height="38" rx="4" fill="#0969da"/>
+<text x="79.0" y="93.0" text-anchor="middle" font-size="10.5" fill="#fff">1/8</text>
+<rect x="103" y="70" width="38" height="38" rx="4" fill="#0969da"/>
+<text x="122.0" y="93.0" text-anchor="middle" font-size="10.5" fill="#fff">1/8</text>
+<rect x="146" y="70" width="38" height="38" rx="4" fill="#1a7f37"/>
+<text x="165.0" y="93.0" text-anchor="middle" font-size="10.5" fill="#fff">1/8</text>
+<rect x="189" y="70" width="38" height="38" rx="4" fill="#1a7f37"/>
+<text x="208.0" y="93.0" text-anchor="middle" font-size="10.5" fill="#fff">1/8</text>
+<rect x="60" y="113" width="38" height="38" rx="4" fill="#0969da"/>
+<text x="79.0" y="136.0" text-anchor="middle" font-size="10.5" fill="#fff">1/8</text>
+<rect x="103" y="113" width="38" height="38" rx="4" fill="#0969da"/>
+<text x="122.0" y="136.0" text-anchor="middle" font-size="10.5" fill="#fff">1/8</text>
+<rect x="146" y="113" width="38" height="38" rx="4" fill="#1a7f37"/>
+<text x="165.0" y="136.0" text-anchor="middle" font-size="10.5" fill="#fff">1/8</text>
+<rect x="189" y="113" width="38" height="38" rx="4" fill="#1a7f37"/>
+<text x="208.0" y="136.0" text-anchor="middle" font-size="10.5" fill="#fff">1/8</text>
+<rect x="60" y="156" width="38" height="38" rx="4" fill="#0969da"/>
+<text x="79.0" y="179.0" text-anchor="middle" font-size="10.5" fill="#fff">1/8</text>
+<rect x="103" y="156" width="38" height="38" rx="4" fill="#0969da"/>
+<text x="122.0" y="179.0" text-anchor="middle" font-size="10.5" fill="#fff">1/8</text>
+<rect x="146" y="156" width="38" height="38" rx="4" fill="#1a7f37"/>
+<text x="165.0" y="179.0" text-anchor="middle" font-size="10.5" fill="#fff">1/8</text>
+<rect x="189" y="156" width="38" height="38" rx="4" fill="#1a7f37"/>
+<text x="208.0" y="179.0" text-anchor="middle" font-size="10.5" fill="#fff">1/8</text>
+<rect x="60" y="199" width="38" height="38" rx="4" fill="#0969da"/>
+<text x="79.0" y="222.0" text-anchor="middle" font-size="10.5" fill="#fff">1/8</text>
+<rect x="103" y="199" width="38" height="38" rx="4" fill="#0969da"/>
+<text x="122.0" y="222.0" text-anchor="middle" font-size="10.5" fill="#fff">1/8</text>
+<rect x="146" y="199" width="38" height="38" rx="4" fill="#1a7f37"/>
+<text x="165.0" y="222.0" text-anchor="middle" font-size="10.5" fill="#fff">1/8</text>
+<rect x="189" y="199" width="38" height="38" rx="4" fill="#1a7f37"/>
+<text x="208.0" y="222.0" text-anchor="middle" font-size="10.5" fill="#fff">1/8</text>
+<rect x="57" y="67" width="87" height="87" rx="6" fill="none" stroke="#1f2328" stroke-width="1.2" stroke-dasharray="4 3"/>
+<rect x="57" y="153" width="87" height="87" rx="6" fill="none" stroke="#1f2328" stroke-width="1.2" stroke-dasharray="4 3"/>
+<rect x="143" y="67" width="87" height="87" rx="6" fill="none" stroke="#1f2328" stroke-width="1.2" stroke-dasharray="4 3"/>
+<rect x="143" y="153" width="87" height="87" rx="6" fill="none" stroke="#1f2328" stroke-width="1.2" stroke-dasharray="4 3"/>
+<text x="681" y="44" text-anchor="middle" font-weight="bold">H: large_a</text>
+<text x="681" y="59" text-anchor="middle" font-size="10.5" fill="#59636e">one TP16 engine = all 4 hosts</text>
+<rect x="600" y="70" width="38" height="38" rx="4" fill="#8250df"/>
+<text x="619.0" y="93.0" text-anchor="middle" font-size="10.5" fill="#fff">1/16</text>
+<rect x="643" y="70" width="38" height="38" rx="4" fill="#8250df"/>
+<text x="662.0" y="93.0" text-anchor="middle" font-size="10.5" fill="#fff">1/16</text>
+<rect x="686" y="70" width="38" height="38" rx="4" fill="#8250df"/>
+<text x="705.0" y="93.0" text-anchor="middle" font-size="10.5" fill="#fff">1/16</text>
+<rect x="729" y="70" width="38" height="38" rx="4" fill="#8250df"/>
+<text x="748.0" y="93.0" text-anchor="middle" font-size="10.5" fill="#fff">1/16</text>
+<rect x="600" y="113" width="38" height="38" rx="4" fill="#8250df"/>
+<text x="619.0" y="136.0" text-anchor="middle" font-size="10.5" fill="#fff">1/16</text>
+<rect x="643" y="113" width="38" height="38" rx="4" fill="#8250df"/>
+<text x="662.0" y="136.0" text-anchor="middle" font-size="10.5" fill="#fff">1/16</text>
+<rect x="686" y="113" width="38" height="38" rx="4" fill="#8250df"/>
+<text x="705.0" y="136.0" text-anchor="middle" font-size="10.5" fill="#fff">1/16</text>
+<rect x="729" y="113" width="38" height="38" rx="4" fill="#8250df"/>
+<text x="748.0" y="136.0" text-anchor="middle" font-size="10.5" fill="#fff">1/16</text>
+<rect x="600" y="156" width="38" height="38" rx="4" fill="#8250df"/>
+<text x="619.0" y="179.0" text-anchor="middle" font-size="10.5" fill="#fff">1/16</text>
+<rect x="643" y="156" width="38" height="38" rx="4" fill="#8250df"/>
+<text x="662.0" y="179.0" text-anchor="middle" font-size="10.5" fill="#fff">1/16</text>
+<rect x="686" y="156" width="38" height="38" rx="4" fill="#8250df"/>
+<text x="705.0" y="179.0" text-anchor="middle" font-size="10.5" fill="#fff">1/16</text>
+<rect x="729" y="156" width="38" height="38" rx="4" fill="#8250df"/>
+<text x="748.0" y="179.0" text-anchor="middle" font-size="10.5" fill="#fff">1/16</text>
+<rect x="600" y="199" width="38" height="38" rx="4" fill="#8250df"/>
+<text x="619.0" y="222.0" text-anchor="middle" font-size="10.5" fill="#fff">1/16</text>
+<rect x="643" y="199" width="38" height="38" rx="4" fill="#8250df"/>
+<text x="662.0" y="222.0" text-anchor="middle" font-size="10.5" fill="#fff">1/16</text>
+<rect x="686" y="199" width="38" height="38" rx="4" fill="#8250df"/>
+<text x="705.0" y="222.0" text-anchor="middle" font-size="10.5" fill="#fff">1/16</text>
+<rect x="729" y="199" width="38" height="38" rx="4" fill="#8250df"/>
+<text x="748.0" y="222.0" text-anchor="middle" font-size="10.5" fill="#fff">1/16</text>
+<rect x="597" y="67" width="87" height="87" rx="6" fill="none" stroke="#1f2328" stroke-width="1.2" stroke-dasharray="4 3"/>
+<rect x="597" y="153" width="87" height="87" rx="6" fill="none" stroke="#1f2328" stroke-width="1.2" stroke-dasharray="4 3"/>
+<rect x="683" y="67" width="87" height="87" rx="6" fill="none" stroke="#1f2328" stroke-width="1.2" stroke-dasharray="4 3"/>
+<rect x="683" y="153" width="87" height="87" rx="6" fill="none" stroke="#1f2328" stroke-width="1.2" stroke-dasharray="4 3"/>
+<line x1="260" y1="125" x2="588" y2="125" stroke="#1a7f37" stroke-width="2.5" marker-end="url(#ah1a7f37)"/>
+<text x="425.0" y="104" text-anchor="middle" font-size="10.5" fill="#1a7f37">S → H: 0.41 s native device order</text>
+<text x="425.0" y="117" text-anchor="middle" font-size="10.5" fill="#1a7f37">0.23 s interleaved order (no data moved)</text>
+<line x1="590" y1="175" x2="262" y2="175" stroke="#1a7f37" stroke-width="2.5" marker-end="url(#ah1a7f37)"/>
+<text x="425" y="195" text-anchor="middle" font-size="10.5" fill="#1a7f37">H → S: 0.42 s (each chip receives the half it lacks)</text>
+<text x="60" y="270" font-size="10.5" fill="#59636e">Numbers in chips: share of the model's weights each chip holds (TP8: 7.8 GB, TP16: 3.9 GB). Dashed squares: hosts. The other box</text>
+<text x="60" y="285" font-size="10.5" fill="#59636e">(S small_c/d, H large_b = M large) is identical. In S → H every chip already holds a superset of its TP16 share; with the native</text>
+<text x="60" y="300" font-size="10.5" fill="#59636e">TP16 device order the shares sit on other chips (5/8 of the weights move); an interleaved order moves nothing. Times: ICIBench, median of 10.</text>
+</svg>
+```),
+  caption: [Chip geometry of one box. The two layouts use the same chips, so switching only
+    regroups chips into a different mesh and moves each chip's share of the weights over ICI.],
+) <fig-geometry>
 
 == The transfer itself (ICIBench)
 
