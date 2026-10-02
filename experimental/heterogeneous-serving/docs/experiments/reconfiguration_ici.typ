@@ -458,9 +458,12 @@ model, missing shard or bad checksum) falls back to the normal loader and logs w
 output tokens identical to a normally loaded engine, and every worker took the restore path. A W0
 run after restore took 343.7 s on S (343.3 s before) and 491.0 s on H (497.2 s).
 
-*Snapshot cost.* Writing a snapshot takes 50–52 s per TP8 worker and 26 s per TP16 worker, once,
-while the engine is idle. Snapshots occupy 31.4 GB per host for S and 15.8 GB for H. Both together
-fit in the roughly 175 GB of free tmpfs per host.
+*Snapshot cost.* Writing a snapshot takes 50–52 s per TP8 worker and 26 s per TP16 worker, while
+the engine is idle. The validation harness snapshotted the engines one after another, so the whole
+S layout took 210.4 s and H 57.9 s. That time is not in the switch costs below, which assume the
+target layout's snapshot already exists; a job that has to snapshot the old layout right before
+switching away pays it on the critical path. Snapshots occupy 31.4 GB per host for S and 15.8 GB
+for H. Both together fit in the roughly 175 GB of free tmpfs per host.
 
 *Measured switch cost with restore* (full slice, same method as the break-even study):
 
