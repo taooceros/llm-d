@@ -110,13 +110,18 @@ Switching the slice between layouts (H = 2×TP16, S = 4×TP8, M = TP16 + 2×TP8)
 or more. This study attacks the largest part of that cost, getting weights into a new engine, in
 two ways.
 
-- *The 237 s weight load is not I/O.* Reading the checkpoint takes 0.2 s and the final copy to the
-  chips 2–3 s. The rest is host-side tensor conversion (157 s) and compiling during load (75 s).
+- *The 237 s weight load is not file I/O.* Iterating the checkpoint files takes 0.2 s and the
+  final copy to the chips 2–3 s. Most of the rest is host-side work: about 128 s converting
+  tensors, about 12 s in other host operations and about 17 s unattributed, plus 75 s compiling or
+  loading kernels from the cache.
+  [INFERENCE: page faults from reading the memory-mapped files land in the conversion time, so
+  some I/O may hide there.]
 - *Pre-sharded snapshot restore* saves each engine's final on-chip weight shards to host RAM and
   places them back directly, skipping vLLM's loader. Weight loading drops from 237 s to 28–40 s
-  (about 20 s without checksum verification). Greedy outputs stay token-identical, and a measured
-  full-slice switch costs #colored(good)[*221–229 s*], down from 419 s. It works with today's
-  deploy path.
+  (about 20 s without checksum verification, most of it model building, not data movement).
+  Greedy outputs stay token-identical, and a measured full-slice switch costs
+  #colored(good)[*221–229 s*], against 417–427 s for the same transitions with a full redeploy.
+  It works with today's deploy path.
 - *Moving weights over ICI is fast*: 0.41 s per 16-chip box and 0.75–1.08 s for the whole slice,
   for the full 62.5 GB of Gemma-4 31B-shaped weights.
 - *In-place reconfiguration of a real engine works on one box.* Four persistent processes share
@@ -172,13 +177,13 @@ and a place in the gateway. The approaches differ in which of these survive the 
 <text x="245.0" y="107.0" text-anchor="middle" font-size="10.5" fill="#1f2328">62.5 GB safetensors</text>
 <rect x="410" y="60" width="150" height="56" rx="6" fill="#fbe3cf" stroke="#e16f24" stroke-width="1.3"/>
 <text x="485.0" y="77.0" text-anchor="middle" font-size="11.5" fill="#1f2328" font-weight="bold">Host CPU</text>
-<text x="485.0" y="92.0" text-anchor="middle" font-size="10.5" fill="#1f2328">convert tensors 157 s</text>
-<text x="485.0" y="107.0" text-anchor="middle" font-size="10.5" fill="#1f2328">load-time JIT 75 s</text>
+<text x="485.0" y="92.0" text-anchor="middle" font-size="10.5" fill="#1f2328">host work 157 s</text>
+<text x="485.0" y="107.0" text-anchor="middle" font-size="10.5" fill="#1f2328">compile/cache-load 75 s</text>
 <rect x="650" y="60" width="150" height="56" rx="6" fill="#ddf4ff" stroke="#0969da" stroke-width="1.3"/>
 <text x="725.0" y="84.5" text-anchor="middle" font-size="11.5" fill="#1f2328" font-weight="bold">New engine HBM</text>
 <text x="725.0" y="99.5" text-anchor="middle" font-size="10.5" fill="#1f2328">7.8 GB per chip</text>
 <line x1="320" y1="88" x2="408" y2="88" stroke="#59636e" stroke-width="1.6" marker-end="url(#ah59636e)"/>
-<text x="365.0" y="80" text-anchor="middle" font-size="10.5" fill="#59636e">read 0.2 s</text>
+<text x="365.0" y="80" text-anchor="middle" font-size="10.5" fill="#59636e">iterate files 0.2 s</text>
 <line x1="560" y1="88" x2="648" y2="88" stroke="#59636e" stroke-width="1.6" marker-end="url(#ah59636e)"/>
 <text x="605.0" y="67" text-anchor="middle" font-size="10.5" fill="#59636e">copy to chips</text>
 <text x="605.0" y="80" text-anchor="middle" font-size="10.5" fill="#59636e">3 s</text>
@@ -358,9 +363,9 @@ is tpu-inference's native Flax loader (`get_flax_model`), not the torch wrapper.
 <rect x="709.9" y="36" width="6.7" height="30" fill="#0969da" stroke="#fff" stroke-width="1"/>
 <rect x="716.6" y="36" width="9.2" height="30" fill="#8c959f" stroke="#fff" stroke-width="1"/>
 <text x="731.8" y="55" font-weight="bold">239 s</text>
-<rect x="190.0" y="72" width="9" height="9" fill="#afb8c1"/><text x="202.0" y="81" font-size="10.5" fill="#424a53">file read 0.2 s</text>
-<rect x="306.0" y="72" width="9" height="9" fill="#e16f24"/><text x="318.0" y="81" font-size="10.5" fill="#424a53">host tensor conversion 157 s</text>
-<rect x="500.0" y="72" width="9" height="9" fill="#8250df"/><text x="512.0" y="81" font-size="10.5" fill="#424a53">load-time JIT / cache 75 s</text>
+<rect x="190.0" y="72" width="9" height="9" fill="#afb8c1"/><text x="202.0" y="81" font-size="10.5" fill="#424a53">file iteration 0.2 s</text>
+<rect x="306.0" y="72" width="9" height="9" fill="#e16f24"/><text x="318.0" y="81" font-size="10.5" fill="#424a53">host work (convert + other) 157 s</text>
+<rect x="500.0" y="72" width="9" height="9" fill="#8250df"/><text x="512.0" y="81" font-size="10.5" fill="#424a53">compile / cache-load 75 s</text>
 <rect x="190.0" y="87" width="9" height="9" fill="#0969da"/><text x="202.0" y="96" font-size="10.5" fill="#424a53">host→device 3.0 s</text>
 <rect x="306.0" y="87" width="9" height="9" fill="#8c959f"/><text x="318.0" y="96" font-size="10.5" fill="#424a53">post-load 4.1 s</text>
 <text x="180" y="131" text-anchor="end" font-weight="bold">Snapshot restore</text>
@@ -403,13 +408,15 @@ is tpu-inference's native Flax loader (`get_flax_model`), not the torch wrapper.
   align: (left, right, right),
   table.header[load_model part (median of 8 workers)][S / TP8][H / TP16],
   [Total `load_model`], [239.1 s], [240.0 s],
-  [Reading safetensors], [0.2 s], [0.2 s],
-  [Host tensor conversion], [157.0 s], [156.5 s],
-  [Compiling or loading kernels during load], [74.9 s], [76.8 s],
+  [Iterating safetensors files#super[b]], [0.2 s], [0.2 s],
+  [Host work (conversion ≈128 s, other ops ≈12 s, unattributed ≈17 s)], [157.0 s], [156.5 s],
+  [Compiling or loading kernels from cache during load], [74.9 s], [76.8 s],
   [Host → device], [3.0 s], [2.0 s],
   [Post-load processing], [4.1 s], [4.3 s],
   [Final shard bytes per host], [31.4 GB], [15.8 GB],
 )
+#footnote-text[b. Time spent in the file iterator only. The files are memory-mapped, so page faults
+on first access are counted in host work, not here.]
 
 - Halving the bytes per chip (TP8 → TP16) leaves the load time unchanged, so final transfer size
   doesn't drive it.
@@ -457,17 +464,19 @@ fit in the roughly 175 GB of free tmpfs per host.
   columns: (auto, auto, auto, auto, auto, auto, auto, auto),
   align: (left, right, right, right, right, right, right, right),
   table.header[Switch][Teardown][Deploy][of which restore][KV alloc][Compile + warm-up][1st dispatch + ramp][Cost C],
-  [S → H], [27.4 s], [165.0 s], [28.4 s], [25.8 s], [63.3 s], [29.0 s], [*221.4 s*],
-  [H → S], [26.3 s], [175.4 s], [39.8 s], [25.7 s], [62.6 s], [27.0 s], [*228.6 s*],
-  [S → H, full redeploy (before)#super[a]], [45.0 s], [376.2 s], [237.8 s], [26.2 s], [64.7 s], [23.8 s], [445.0 s],
+  [S → H], [27.4 s], [165.0 s], [28.4 s], [25.8 s], [63.3 s], [29.0 s#super[c]], [*221.4 s*],
+  [H → S], [26.3 s], [175.4 s], [39.8 s], [25.7 s], [62.6 s], [27.0 s#super[c]], [*228.6 s*],
+  [S → H, full redeploy (before)#super[a]], [45.0 s], [376.2 s], [237.8 s], [26.2 s], [64.7 s], [23.8 s], [445.0 s \ (427.0 s like-for-like)],
 )
-
-#footnote-text[a. From the break-even study; teardown here includes the 18 s before the deploy
-job started.]
+#footnote-text[a. From the break-even study. That campaign also tore down the not-yet-deployed
+target layout before deploying it, which added 18.0 s that the restore runs didn't pay (18.1 s
+for H → M). Without it the full-redeploy costs are 427.0 s (S → H) and 417.4 s (H → M).
+c. Includes a 6–7 s pre-serving diagnostic check that the restore runs added and the baseline
+didn't, so restore's C is overstated by that much.]
 
 Compile and warm-up (63 s), KV allocation (26 s) and orchestration (teardown, Ray workers, job
-submission, gateway: about 90 s) now dominate. Restore removes about 200 s, nearly all of the
-weight load.
+submission, gateway: about 90 s) now dominate. Restore removes about 206 s on the like-for-like
+S → H comparison (427.0 → 221.4 s), nearly all of it from the weight load.
 
 = Approach B: in-place resharding over ICI <sec-ici>
 
