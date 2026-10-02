@@ -808,24 +808,28 @@ checked what a trial would take, without changing the cluster.
 
 Using the measured per-phase gains from the break-even study (W0: S finishes 153.9 s sooner than H
 per 721,595-token manifest; mix A: 82 s gained per W0 copy after a W4 phase, with 115 s of phase
-overlap forfeited by switching):
+overlap forfeited by switching). A switch into S splits TP16 engines into TP8, so each row uses the
+cost measured in that direction (H → S or TP16 → 2×TP8); the opposite direction serves W0 more
+slowly and has no W0 break-even.
 
 #table(
   columns: (auto, auto, auto, auto, auto),
   align: (left, right, right, right, left),
-  table.header[Switch mechanism][Cost C][W0 H → S break-even][Mix A break-even (W0 copies)][Status],
+  table.header[Switch mechanism][Cost C used][W0 H → S break-even][Mix A break-even (W0 copies)][Status],
   [Full redeploy], [419 s (median)], [2.0M tokens (2.7 manifests)], [6.4], [measured],
   [Partial (keep shared TP8 engines)], [186 s effective], [–], [3.7], [measured],
-  [Snapshot restore], [221–229 s], [*1.0–1.1M tokens* (1.44–1.49)], [4.1–4.2], [C measured; break-even computed],
+  [Snapshot restore], [228.6 s (H → S)], [*1.07M tokens* (1.49)], [4.2], [C measured; break-even computed; mix A applies H → S cost to M → S],
   [Partial + restore], [100–103 s effective], [–], [2.6–2.7], [ESTIMATE],
-  [In place, first switch], [237–242 s], [1.1M tokens (1.5–1.6)], [–], [C measured on one box],
-  [In place, warm], [77–101 s], [*0.36–0.47M tokens* (0.50–0.65)], [2.3–2.6], [ESTIMATE: one-box C applied to the slice],
+  [In place, first switch], [237.0–241.9 s (TP16 → 2×TP8)], [1.11–1.13M tokens (1.54–1.57)], [–], [C measured on one box],
+  [In place, warm], [100.6 s (TP16 → 2×TP8)], [*0.47M tokens* (0.65)], [2.6], [ESTIMATE: one-box C, no gateway, ramp or second box],
 )
 
 - *Restore halves break-even with no change to the serving architecture.* A chat phase of about
-  1.5 W0 manifests (1.0–1.1M output tokens) now pays for H → S, against 2.7 before.
-- *In-place switching would halve it again*, but only once the shared-runtime abort is solved and
-  the gateway and full slice are integrated. Its first switch is no better than restore.
+  1.5 W0 manifests (1.07M output tokens) now pays for H → S, against 2.7 before.
+- *A warm in-place switch would more than halve it again* (0.65 manifests), but only once the
+  shared-runtime abort is solved and the gateway and full slice are integrated, which will add to
+  its 100.6 s. Its first switch is no better than restore. The faster 77 s direction (2×TP8 →
+  TP16) only helps phases that run better on H.
 - *Neither removes the remaining fixed cost.* Compile and warm-up (33–63 s), KV allocation
   (12–26 s) and orchestration dominate both. In the in-place prototype, rebuilding the model
   graph (15 s) and engine construction (about 33 s) are the next targets. Moving the weights is
