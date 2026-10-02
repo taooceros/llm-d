@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "baseline": {"branch": "audit/reconfig", "commit": "ab4f1b03361f7edc3446973e4f971de1d7b2fcaf", "preserved": true},
+  "followup_branch": "audit/reconfig-followup",
+  "scope": "Read-only source and archived raw-artifact audit; no cluster operations, peer-source edits, performance reruns, or project-wide tests. Subsequent completed owner results require a separately identified supplement, not retroactive reinterpretation of this cutoff.",
+  "computed_evidence": "results/audit/followup_computed.json",
+  "reproduction": "python3 results/audit/followup_audit.py",
+  "verification": "Executed local raw-artifact replay successfully, including source hash, every DMA byte-count/rate/freshness flag, all key pairs, all 32 threshold-worker settings, and exact source/file shard-record equality. This rechecks retained evidence, not the hardware experiment.",
+  "claims": [
+    {
+      "id": "pinned-runtime-dma",
+      "verdict": "SUPPORTED_WITH_BOUNDARIES",
+      "evidence": "SnapshotHelper/results/restore/SnapshotHelper/pinned-bandwidth.json; source scripts/snapshot_pinned_bandwidth.py:49-119,156-184",
+      "supported": "16 fresh-source synthetic BF16 cases complete and byte-verify. Four-chip 1 GiB/chip runtime-pinned donation yields 56.542324 and 58.293597 decimal GB/s; median 57.417960. Ordinary collector yields 11.793171 and 11.757941 GB/s; median 11.775556. 58.294 is the best observed case, not median or physical ceiling.",
+      "timer": "Pinned interval is compiled dispatch through block_until_ready(outputs). Source generation/readiness, destination initialization/page faulting, compilation, copied ndarray acquisition and verification are outside it. Ordinary collector interval includes copy_to_host_async plus blocking ndarray acquisition. All pinned destination pointers were reused; every post-timer ndarray acquisition copied and did not alias the pinned output.",
+      "unsupported": "Full snapshot-to-mmap bandwidth, snapshot/restore/reconfiguration savings, caller-provided pinned buffers, or a physical bandwidth ceiling. Dividing 31.448 GB by this rate is a DMA-component extrapolation, not a measured full snapshot.",
+      "provenance": "Executed source SHA256 matches current probe source: 3e34a088516a12abbfe3003fbfea8a1d6b564a4f13e2d28c63c53fc443414a65. Cleanup records actor kill/PG removal requests, not an independently observed empty resource inventory. Two repetitions per combination, not independent whole-job replications."
+    },
+    {
+      "id": "overlap-key-compatibility",
+      "verdict": "SUPPORTED_KEY_ONLY",
+      "commit": "b6fec88e20261b55ec4ef2919a974338c8441667",
+      "evidence": "OverlapHelper/results/overlap/OverlapHelper/key-only-s-20261002a/{result,summary}.json; scripts/overlap_key_only.py:25-93,114-194; scripts/recover_overlap_key_only.py:12-35",
+      "supported": "261 unique expected/actual keys match, covering 1,044 descriptor occurrences for captured S/TP8 inputs. Empty real-backend registries and empty temporary cache are observed; temporary directory removal recorded.",
+      "provenance": "Source verifies captured MLIR/options payload hashes and JAX version before calling the unmodified _get_cache_key with recorded device IDs/options/environment. Auditor checked raw returned key pairs and source, not remote-only MLIR/options payload files. The two zero compile/invocation fields are declared constants, not instrumented counters; no compile/invocation path is present in the inspected probe. Owner acknowledged this distinction.",
+      "completion": "Single original job SUCCEEDED. Outer queue-plus-shell timeout interrupted supervision; recovery attached to that same already-successful submission, with no new submission or stop request. Uninterrupted full-job lock/supervision is not established.",
+      "timer": "54.246431 s is key-audit wall time, not compilation time or savings. No inference-workload timing was taken.",
+      "unsupported": "Successful abstract TPU compilation, serialized executable safety/deserialization, actual future target cache hits, H/TP16 compatibility, production overlap, serving impact, or reconfiguration savings."
+    },
+    {
+      "id": "cache-threshold-ab",
+      "verdict": "INVALID_TREATMENT",
+      "commits": ["7093b2841515062627f3e6b4242a3177adb28b17", "2a3dd3773d38989537046ca19fe4aeb45dc8904b"],
+      "evidence": "WarmupSetFable/results/helper/WarmupSetFable/cache-threshold/ct-20261002a/*-deploy.json; hetero/compile_cache.py; hetero/tpu_worker.py:76-83,156-159,340; tests/test_compile_cache.py; results/helper/WarmupSetFable/analyze_cache_threshold.py:78-96",
+      "supported": "All four deployments have eight expected worker identities, and every recorded effective min_compile_time_secs equals 1.0. Requested-zero arms therefore did not receive their intended treatment. Effective listener boolean fields are absent in these old records; zero parsed events cannot prove zero misses.",
+      "correction": "Source at 2a3dd37 explicitly applies late runtime settings using jax.config.update and verifies them after device initialization and before later phases. Analyzer rejects missing ranks, incorrect threshold, or ineffective logging settings. Reviewed CPU tests cover late settings across threads, overrides and invalid evidence. No new CPU test run was needed for this evidence-only investigation, and no TPU performance inference follows from that source/test correction.",
+      "unsupported": "Any threshold-attributable improvement or regression, per-key cache-hit/miss claims from missing listeners, or full reconfiguration/makespan savings. Correlated ranks are not independent repetitions; one cold/one warm deployment per arm is not replicated A/B."
+    },
+    {
+      "id": "fast-snapshot-first-s",
+      "verdict": "SUPPORTED_COLD_BYTES_ONLY_RESTORE_UNQUALIFIED",
+      "archive_commit": "a5ebfdc94112b0e0bcbc2e39488ebdab7c8b2228",
+      "evidence": "FastSnapshot/results/restore/FastSnapshot/failed-S-first/{S-cold,S-reused,S-cold-file-fingerprint,S-source-fingerprint}.json; harness.log:690-755; hetero/weight_snapshot.py:153-297; scripts/fast_snapshot_sequence.sh:96-116",
+      "supported": "Independent replay finds exact identity/SHA256 shard-record equality between first cold files and later live sources: 32,896 shards, eight workers, 251,587,795,712 bytes. Cold worker snapshot_s spans 13.462909–15.509963 s with 4,112 new files per worker and zero counted Python cached bytes. Reused worker snapshot_s spans 3.536138–3.601856 s with 4,112 reused files per worker.",
+      "timer": "snapshot_s includes directory/metadata construction, submissions, allocation/mapping, blocking collector, strided-to-contiguous copy, flush and final manifest publication. Per-chip active sums/maxima overlap and are not additive wall phases. Worker extrema are not a measured full-slice RPC/reconfiguration wall clock. Python cache counters do not rule out PJRT caching, especially on repeated snapshots.",
+      "failure": "Archived host file-fingerprint envelope lacks layout; old consumer unconditionally accessed reference['layout'], producing KeyError before release-and-independent-restore qualification. SUCCEEDED remote source-fingerprint status does not mean its local consumer comparison or complete harness succeeded. Independent raw replay salvages the byte comparison only.",
+      "correction": "a5ebfdc supplies layout on host envelopes and rejects missing/mismatched layout at the consumer. Inspected corrected source. Owner's newly started S retry is not evidence of completion; its eventual results are outside this fixed archived-attempt verdict.",
+      "cleanup": "Archived cleanup-tmpfs reports SUCCEEDED and all eight hosts cleaned with zero snapshot directory bytes; release reports SUCCEEDED. No auditor cluster calls.",
+      "unsupported": "Independent restored-worker byte equality, restored 32-prompt token equality, H qualification, full transition savings, or fresh-DMA bandwidth inferred from the faster reused-file timing."
+    }
+  ],
+  "report_rule": "No new numerical end-to-end reconfiguration saving or break-even threshold is established by this follow-up set. Keep DMA extrapolation, key compatibility, invalid A/B, and snapshot byte correctness in separate evidence categories.",
+  "owner_coordination": "Material findings sent to Main, FastSnapshot, SnapshotHelper, OverlapHelper and RecoverWarmup. Owners were asked to deliver completed subsequent results directly; audit does not poll."
+}

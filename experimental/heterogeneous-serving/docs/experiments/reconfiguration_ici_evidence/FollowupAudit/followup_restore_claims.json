@@ -1,0 +1,155 @@
+{
+  "verdict": "SUPPORTED_S_INDEPENDENT_RESTORE_CORRECTNESS_COMPONENT_TIMING_ONLY",
+  "supersedes_gate_only": "Earlier failed-attempt snapshot verdict remains valid for that archive; this completed retry qualifies independent S restore.",
+  "scope": "Read-only local reanalysis; no cluster calls or reruns.",
+  "byte_equality": {
+    "workers": 8,
+    "shards": 32896,
+    "bytes": 251587795712,
+    "chain": "cold files == live source == independently restored live weights"
+  },
+  "greedy_equality": {
+    "prompts_per_engine": 32,
+    "engines": 4,
+    "comparisons": 128,
+    "tokens_compared": 8140,
+    "reference": "ShardedRestore/results/restore/ShardedRestore/S-reference.json",
+    "sampling": {
+      "temperature": 0,
+      "ignore_eos": false,
+      "max_tokens": 64
+    },
+    "scope": "Exact baseline token equality, not model quality or representative throughput."
+  },
+  "independence": {
+    "producer_release_saved_at": 1790973271.325777,
+    "all_eight_worker_pids_changed_on_same_hosts": true,
+    "producer_and_consumer_attached_existing_actor": false,
+    "both_drains_removed_four_actors_and_placement_groups": true,
+    "all_release_states_removed": true
+  },
+  "snapshots": {
+    "cold": {
+      "min_s": 14.00407795101637,
+      "max_s": 14.92496283800574,
+      "bytes_per_worker": [
+        31448474464
+      ]
+    },
+    "reused": {
+      "min_s": 3.5560460389824584,
+      "max_s": 3.6532493420527317,
+      "bytes_per_worker": [
+        31448474464
+      ]
+    }
+  },
+  "restore_phase_ranges": {
+    "snapshot_manifest_verify": {
+      "min_s": 0.11872601509094238,
+      "max_s": 0.12619280815124512
+    },
+    "snapshot_read_tmpfs": {
+      "min_s": 0.7315716743469238,
+      "max_s": 0.7830240726470947
+    },
+    "snapshot_verify": {
+      "min_s": 2.384185791015625e-07,
+      "max_s": 4.76837158203125e-07
+    },
+    "snapshot_generation_vote": {
+      "min_s": 0.038665771484375,
+      "max_s": 0.04079389572143555
+    },
+    "snapshot_device_placement": {
+      "min_s": 1.4146714210510254,
+      "max_s": 1.4801232814788818
+    },
+    "load_model": {
+      "min_s": 18.936181783676147,
+      "max_s": 19.288352727890015
+    }
+  },
+  "timers": "Snapshot includes publication. snapshot_device_placement includes chip grouping, device_put, all per-chip block_until_ready, array reconstruction and final readiness, but excludes earlier manifest verification, mmap preparation, generation vote and full load_model tail. Fingerprints/token qualification are outside those timers. Per-worker extrema are not full reconfiguration wall time.",
+  "checksum_policy": "All eight workers restore manifest v2 checksum_kind=none. checksums_requested=true but verified_checksums=false and verified_bytes=0. Independent outside-timer fingerprints establish byte correctness; no in-path checksum throughput is measured here.",
+  "cleanup": "Both four-engine generations removed; all eight host-local snapshot directories cleaned and zero bytes.",
+  "unsupported": [
+    "H restore qualification",
+    "full end-to-end transition savings",
+    "new makespan/break-even result",
+    "pure-DMA interpretation of reused snapshot",
+    "in-path byte checksum cost"
+  ],
+  "source_manifest": [
+    {
+      "path": "FastSnapshot/results/restore/FastSnapshot/S-cold-file-fingerprint.json",
+      "sha256": "e6298ac98f342f81dcc0cf7f4170f0875a3142985ca7ae57c4e5ef576c497e9e",
+      "bytes": 23336058
+    },
+    {
+      "path": "FastSnapshot/results/restore/FastSnapshot/S-source-fingerprint.json",
+      "sha256": "476cf3ed9bcd902b651a9daf2ada5132b031b96372755353e81cabcbaa59479a",
+      "bytes": 21841028
+    },
+    {
+      "path": "FastSnapshot/results/restore/FastSnapshot/S-restored-fingerprint.json",
+      "sha256": "02d199893ca22fb5b015432af3c7e83b993944e894e1d3090c647b56d0c07f8d",
+      "bytes": 21841014
+    },
+    {
+      "path": "FastSnapshot/results/restore/FastSnapshot/S-restored-validation.json",
+      "sha256": "dc6ff07301eb9496d936a5444dc5eab54886f00c89e2344e66667b5fb62ddefa",
+      "bytes": 241793
+    },
+    {
+      "path": "ShardedRestore/results/restore/ShardedRestore/S-reference.json",
+      "sha256": "fe7349d3f9b5732bc35fa9843c9df64ab8ef48d5fc6229fe20137ae5ffe5e28a",
+      "bytes": 229375
+    },
+    {
+      "path": "FastSnapshot/results/restore/FastSnapshot/S-normal-deploy.json",
+      "sha256": "7ab616184d9087101da2447084aa49f4015c180c1f238386d9797e148c59d192",
+      "bytes": 1080547
+    },
+    {
+      "path": "FastSnapshot/results/restore/FastSnapshot/S-restored-deploy.json",
+      "sha256": "d3fbd6bc8844c2f5027833288b88ce07c70310fb23dec70181dc13eb76686e73",
+      "bytes": 1095562
+    },
+    {
+      "path": "FastSnapshot/results/restore/FastSnapshot/S-normal-release.json",
+      "sha256": "b3dcdb8af74cc640b53beb293d6106c08313e87a6a4dce0cd4aa5f331e5f3aec",
+      "bytes": 187605
+    },
+    {
+      "path": "FastSnapshot/results/restore/FastSnapshot/S-restored-release.json",
+      "sha256": "52ba1b3df769f15e602247d391bc5b0890d4d69c571cc1075455429ad310cf0b",
+      "bytes": 190841
+    },
+    {
+      "path": "FastSnapshot/results/restore/FastSnapshot/S-normal-drain.json",
+      "sha256": "d5195026d88c01cdc45c90b2297ce5729bf62425d693023d9ee07f503d0fddc8",
+      "bytes": 103061
+    },
+    {
+      "path": "FastSnapshot/results/restore/FastSnapshot/S-restored-drain.json",
+      "sha256": "5f2db35210258c02846aff7a0c750017355182a49799e5a40847dfdfde505d54",
+      "bytes": 105910
+    },
+    {
+      "path": "FastSnapshot/results/restore/FastSnapshot/S-cold.json",
+      "sha256": "e01a2773168194dba63346a74ebb00a2aefa5da5cdc06f17931bfbcdbafb2417",
+      "bytes": 28709
+    },
+    {
+      "path": "FastSnapshot/results/restore/FastSnapshot/S-reused.json",
+      "sha256": "ba139ba1a771348e0ae8ae5def7b3a6d24636536ae4c8aac5f1e8812595535dd",
+      "bytes": 28878
+    },
+    {
+      "path": "FastSnapshot/results/restore/FastSnapshot/cleanup-tmpfs.json",
+      "sha256": "0adb9c41fcb367978c87bae091fc28bc6f2620fc324f9c002c65ede26e46e757",
+      "bytes": 2382
+    }
+  ]
+}

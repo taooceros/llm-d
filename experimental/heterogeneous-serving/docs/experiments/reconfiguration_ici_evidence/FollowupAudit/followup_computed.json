@@ -1,0 +1,297 @@
+{
+  "cutoff_baseline": "ab4f1b0",
+  "scope": "Local raw-artifact assertions; no cluster calls, no performance reruns, no peer edits.",
+  "pinned": {
+    "submission_id": "raysubmit_mcnhqyZtVsnCFwW6",
+    "source_sha256_verified": "3e34a088516a12abbfe3003fbfea8a1d6b564a4f13e2d28c63c53fc443414a65",
+    "cases_verified": 16,
+    "groups": [
+      {
+        "mechanism": "async_native_collector",
+        "bytes_per_chip": 268435456,
+        "chips": 1,
+        "seconds": [
+          0.05919062899192795,
+          0.05852906999643892
+        ],
+        "GBps": [
+          4.535100582164916,
+          4.58636120506156
+        ],
+        "median_GBps": 4.560730893613238
+      },
+      {
+        "mechanism": "preallocated_pinned_donation",
+        "bytes_per_chip": 268435456,
+        "chips": 1,
+        "seconds": [
+          0.019521539972629398,
+          0.018833309994079173
+        ],
+        "GBps": [
+          13.750731570171503,
+          14.253227716444476
+        ],
+        "median_GBps": 14.00197964330799
+      },
+      {
+        "mechanism": "async_native_collector",
+        "bytes_per_chip": 268435456,
+        "chips": 4,
+        "seconds": [
+          0.09515379898948595,
+          0.09451727900886908
+        ],
+        "GBps": [
+          11.284276985290344,
+          11.360270156520745
+        ],
+        "median_GBps": 11.322273570905544
+      },
+      {
+        "mechanism": "preallocated_pinned_donation",
+        "bytes_per_chip": 268435456,
+        "chips": 4,
+        "seconds": [
+          0.021093969990033656,
+          0.0190406899782829
+        ],
+        "GBps": [
+          50.90278522759417,
+          56.39195980947486
+        ],
+        "median_GBps": 53.64737251853452
+      },
+      {
+        "mechanism": "async_native_collector",
+        "bytes_per_chip": 1073741824,
+        "chips": 1,
+        "seconds": [
+          0.2333159790141508,
+          0.23750661901431158
+        ],
+        "GBps": [
+          4.602092957957572,
+          4.5208922111568555
+        ],
+        "median_GBps": 4.561492584557214
+      },
+      {
+        "mechanism": "preallocated_pinned_donation",
+        "bytes_per_chip": 1073741824,
+        "chips": 1,
+        "seconds": [
+          0.074249770026654,
+          0.07335736998356879
+        ],
+        "GBps": [
+          14.461214137290266,
+          14.63713631282727
+        ],
+        "median_GBps": 14.549175225058768
+      },
+      {
+        "mechanism": "async_native_collector",
+        "bytes_per_chip": 1073741824,
+        "chips": 4,
+        "seconds": [
+          0.3641910580336116,
+          0.365282277984079
+        ],
+        "GBps": [
+          11.793170648367791,
+          11.757940515765176
+        ],
+        "median_GBps": 11.775555582066485
+      },
+      {
+        "mechanism": "preallocated_pinned_donation",
+        "bytes_per_chip": 1073741824,
+        "chips": 4,
+        "seconds": [
+          0.07596021896461025,
+          0.07367820001672953
+        ],
+        "GBps": [
+          56.54232379189189,
+          58.29359695303055
+        ],
+        "median_GBps": 57.41796037246122
+      }
+    ],
+    "completion": "All timed transfers complete; full logical BF16 verification occurs outside timer.",
+    "boundary": "Pinned timer stops before copied ndarray acquisition; ordinary collector includes that acquisition. Allocation/faulting and compilation excluded. Runtime-owned pinned memory, not caller mmap or full snapshot.",
+    "cleanup": {
+      "actor_kill_requested": true,
+      "pg_remove_requested": true,
+      "tmpfs_files_created": false
+    }
+  },
+  "key_only": {
+    "submission_id": "raysubmit_iYjGTy27Ui5kiiPh",
+    "groups": 261,
+    "descriptor_occurrences": 1044,
+    "wall_s": 54.24643111228943,
+    "recovery": {
+      "reason": "outer 1800-second queue+shell timeout killed original supervisor",
+      "status_before_cleanup": "SUCCEEDED",
+      "stop_requested": false,
+      "new_cluster_submissions": 0
+    },
+    "boundary": "Key equality only. compile_calls/executable_invocations are source-initialized constants, not instrumentation. No compile/deserialization/target-hit/serving evidence."
+  },
+  "threshold": {
+    "arms": {
+      "default-1": {
+        "workers": 8,
+        "effective_thresholds": [
+          1.0
+        ],
+        "requested_threshold": 1.0,
+        "effective_log_compiles": [
+          null
+        ],
+        "effective_explain_cache_misses": [
+          null
+        ]
+      },
+      "default-2": {
+        "workers": 8,
+        "effective_thresholds": [
+          1.0
+        ],
+        "requested_threshold": 1.0,
+        "effective_log_compiles": [
+          null
+        ],
+        "effective_explain_cache_misses": [
+          null
+        ]
+      },
+      "min0-1": {
+        "workers": 8,
+        "effective_thresholds": [
+          1.0
+        ],
+        "requested_threshold": 0.0,
+        "effective_log_compiles": [
+          null
+        ],
+        "effective_explain_cache_misses": [
+          null
+        ]
+      },
+      "min0-2": {
+        "workers": 8,
+        "effective_thresholds": [
+          1.0
+        ],
+        "requested_threshold": 0.0,
+        "effective_log_compiles": [
+          null
+        ],
+        "effective_explain_cache_misses": [
+          null
+        ]
+      }
+    },
+    "contrast_valid": false,
+    "boundary": "Both requested-zero arms retained threshold 1.0. No causal performance estimate. Later source/CPU correction does not repair archived measurements."
+  },
+  "snapshot": {
+    "cold_file_live_source_exact_shard_equality": true,
+    "workers": 8,
+    "shards_compared": 32896,
+    "bytes_compared": 251587795712,
+    "statistics": {
+      "cold": {
+        "workers": 8,
+        "bytes_per_worker": [
+          31448474464
+        ],
+        "snapshot_s_min": 13.462908712972421,
+        "snapshot_s_max": 15.509962663985789,
+        "host_cache_bytes_before": [
+          0
+        ],
+        "new_files": [
+          4112
+        ],
+        "reused_files": [
+          0
+        ]
+      },
+      "reused": {
+        "workers": 8,
+        "bytes_per_worker": [
+          31448474464
+        ],
+        "snapshot_s_min": 3.536138174997177,
+        "snapshot_s_max": 3.6018557379720733,
+        "host_cache_bytes_before": [
+          0
+        ],
+        "new_files": [
+          0
+        ],
+        "reused_files": [
+          4112
+        ]
+      }
+    },
+    "missing_file_layout": true,
+    "boundary": "Raw equality independently recovered despite harness KeyError(layout). No independent restored-worker fingerprints/greedy qualification in this evidence set. Reused snapshots may benefit from PJRT caching; no fresh-DMA inference."
+  },
+  "source_manifest": [
+    {
+      "path": "SnapshotHelper/results/restore/SnapshotHelper/pinned-bandwidth.json",
+      "bytes": 489577,
+      "sha256": "f5fcf055a5cdf135d10112542d58cb04bb81f2213aeec76246048c06d7008c5d"
+    },
+    {
+      "path": "OverlapHelper/results/overlap/OverlapHelper/key-only-s-20261002a/result.json",
+      "bytes": 375094,
+      "sha256": "7de8795596f024a0cb005f541553f6852a3b2d4df791cf08eaed91e4174dc229"
+    },
+    {
+      "path": "WarmupSetFable/results/helper/WarmupSetFable/cache-threshold/ct-20261002a/default-1-deploy.json",
+      "bytes": 1087297,
+      "sha256": "6ceba62c5d8f9647b51b15417ce102266230d1c52bc20a2f7942aff8d15b14c0"
+    },
+    {
+      "path": "WarmupSetFable/results/helper/WarmupSetFable/cache-threshold/ct-20261002a/default-2-deploy.json",
+      "bytes": 1087292,
+      "sha256": "a5cb5adba1d66974509ec227f9584d21537370a9719f45f8a54157d3a41f03ee"
+    },
+    {
+      "path": "WarmupSetFable/results/helper/WarmupSetFable/cache-threshold/ct-20261002a/min0-1-deploy.json",
+      "bytes": 1090705,
+      "sha256": "cb76715f4a93173f6e2674e25081561a3484e7ece91950908ec658a0f2cd3e38"
+    },
+    {
+      "path": "WarmupSetFable/results/helper/WarmupSetFable/cache-threshold/ct-20261002a/min0-2-deploy.json",
+      "bytes": 1090700,
+      "sha256": "2325ad98cf2a16081fa07586e0e1ffd4d593b74ad5c4373e103c7149c1aed58b"
+    },
+    {
+      "path": "FastSnapshot/results/restore/FastSnapshot/failed-S-first/S-cold.json",
+      "bytes": 28738,
+      "sha256": "6be35bedec054bb5c2c1385bfe0e14289ccb4870206fc8aaad42705ec2a458d1"
+    },
+    {
+      "path": "FastSnapshot/results/restore/FastSnapshot/failed-S-first/S-reused.json",
+      "bytes": 28876,
+      "sha256": "6447368b5c65ddec249ea55ad68c01ce9175427a1bd3d289b663079438a3e244"
+    },
+    {
+      "path": "FastSnapshot/results/restore/FastSnapshot/failed-S-first/S-cold-file-fingerprint.json",
+      "bytes": 23336045,
+      "sha256": "7a3f8b279baa58e34a84fb67f2304f9f7c7739858cd7245e7816a511d0a4ae16"
+    },
+    {
+      "path": "FastSnapshot/results/restore/FastSnapshot/failed-S-first/S-source-fingerprint.json",
+      "bytes": 21840761,
+      "sha256": "3121727acb6e53f5ed5a8e20bfcddc0b18b3bdc971ad2e05d78a597a6e1e3168"
+    }
+  ]
+}

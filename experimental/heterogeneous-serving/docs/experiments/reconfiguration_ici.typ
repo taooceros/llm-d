@@ -485,6 +485,54 @@ Compile and warm-up (63 s), KV allocation (26 s) and orchestration (teardown, Ra
 submission, gateway: about 90 s) now dominate. Restore removes about 206 s on the like-for-like
 S → H comparison (427.0 → 221.4 s), nearly all of it from the weight load.
 
+== Follow-up: faster snapshots, independently restored <sec-fast-snapshot>
+
+FastSnapshot was qualified on S (four TP8 engines), not H. Each worker writes 31.45 GB.
+These are worker wall times, not full-layout transition costs:
+
+#table(
+  columns: (1fr, auto),
+  table.header[Measured component][Range across eight workers],
+  [Cold snapshot, including publication], [14.00–14.92 s],
+  [Repeated snapshot into reused files], [3.56–3.65 s],
+  [Restore device placement and completion], [1.41–1.48 s],
+  [Complete restore `load_model`], [18.94–19.29 s],
+)
+
+The repeated write can benefit from runtime host caching; it is not a fresh device-to-host
+snapshot rate. Timed manifests use `checksum_kind=none`: strong fingerprints were checked
+outside the timed path. Cold files, live source, and restored weights matched across 32,896
+shards (251.588 GB across eight workers). All 128 prompt comparisons and 8,140 output tokens
+matched the pinned reference. The producer actors and placement groups were removed before
+consumer initialization; all eight worker PIDs changed on the same hosts. Both generations
+were released and all snapshot directories cleaned. An earlier attempt failed in the
+validation harness with a missing `layout` field; its artifacts are retained, not counted
+as a successful restore.
+
+*Hardware versus collector.* A separate four-chip, 1 GiB-per-chip probe measured runtime-owned
+pinned-host donation at 56.54 and 58.29 GB/s (median 57.42). Its timer includes output readiness
+but excludes a subsequent copied host-array acquisition; the ordinary collector, at about
+11.8 GB/s, includes that acquisition. These are not interchangeable snapshot measurements.
+Dividing 31.45 GB by the best pinned rate gives 0.54 s: an extrapolated transfer component,
+not a measured full-model snapshot. The tested caller-mmap route did not eliminate the copy.
+
+*Cheap, weaker integrity check.* A synthetic four-chip probe at all 4,112 real shard shapes
+computed per-shard sum/XOR of BF16 bits. Enqueue through ready outputs took 0.266–0.273 s;
+including host readback took 0.733–0.735 s. Compilation and source generation were excluded.
+This reduction is position-insensitive and has demonstrated collisions: it is not a SHA-256
+replacement, nor an integrated snapshot checksum measurement.
+
+*No new switch-cost claim.* These results do not measure a new C or break-even point. The
+transition table above remains the earlier ShardedRestore campaign. Compilation-overlap key
+checks match all 261 distinct captured S executables, but key equality proves neither target
+cache hits nor serving-performance benefits. The initial cache-threshold A/B retained
+threshold 1.0 in every worker and is invalid, not a measured null effect.
+
+Evidence: `reconfiguration_ici_evidence/FollowupAudit/` contains independent source-hashed
+verdicts (commits `bae2c76`, `913fff5`, `7f46e9a`). Snapshot data path `1d591d8`, corrected
+validation harness `a5ebfdc`; helper branches `helper/snapshot-route` and `helper/overlap`.
+Further graph/cache/overlap measurements are not included until qualified.
+
 = Approach B: in-place resharding over ICI <sec-ici>
 
 Today every engine is its own JAX runtime with its chips fixed at start-up, and two runtimes can't

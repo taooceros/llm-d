@@ -1,0 +1,102 @@
+{
+  "verdict": "SUPPORTED_SYNTHETIC_WEAK_REDUCTION_COST_ONLY",
+  "source_commit": "3c5571e",
+  "evidence_commit": "b291f3b",
+  "submission_id": "raysubmit_BBEUD5etVsVAX6M3",
+  "independent_digest_reconstruction": {
+    "sha256": "0c7fb565f4d25ad10b14de941db77354ddc91dac8619190073467ae25b422eda",
+    "outputs_per_run": 4112,
+    "bytes": 32896,
+    "method": "Independent standard-library IEEE binary32-to-BF16 bit derivation, TP8 catalogue shapes, finite-period algebra; both remote output digests match."
+  },
+  "scope": "Four chips, 1,028 real TP8 shard shapes per chip, 31,448,474,464 synthetic source bytes; two repetitions over the same generated arrays, not live model weights or independent experiment repeats.",
+  "runs": [
+    {
+      "repetition": 0,
+      "enqueue_s": 0.2650829359772615,
+      "kernel_ready_wall_s_including_enqueue": 0.27257891598856077,
+      "wait_after_enqueue_s": 0.0074959800112992525,
+      "small_output_readback_s": 0.4602483339840546,
+      "checksum_outputs": 4112,
+      "checksum_output_bytes": 32896,
+      "verified_outputs": 4112,
+      "mismatch_indices": [],
+      "checksum_output_sha256": "0c7fb565f4d25ad10b14de941db77354ddc91dac8619190073467ae25b422eda",
+      "enqueue_through_host_readback_s": 0.7328272499726154
+    },
+    {
+      "repetition": 1,
+      "enqueue_s": 0.2566203460446559,
+      "kernel_ready_wall_s_including_enqueue": 0.26567890599835664,
+      "wait_after_enqueue_s": 0.009058559953700751,
+      "small_output_readback_s": 0.4692966930451803,
+      "checksum_outputs": 4112,
+      "checksum_output_bytes": 32896,
+      "verified_outputs": 4112,
+      "mismatch_indices": [],
+      "checksum_output_sha256": "0c7fb565f4d25ad10b14de941db77354ddc91dac8619190073467ae25b422eda",
+      "enqueue_through_host_readback_s": 0.7349755990435369
+    }
+  ],
+  "compile_excluded_s": 31.04692212503869,
+  "source_and_reference_preparation_excluded_s": 0.9266026570112444,
+  "timer_boundaries": "Kernel-ready wall includes Python enqueue and waits for all 4,112 outputs. The following ndarray conversion/list materialization and readback is separately timed and required for host consumption. The excluded compile interval includes both generators and reducers together, not checksum-only compile cost. Analytic comparison and output-digest hashing occur after the readback timer.",
+  "integrity": {
+    "algorithm": "uint32 modular sum of BF16 uint16 words plus XOR",
+    "position_sensitive": false,
+    "cryptographic": false,
+    "explicit_nonpermutation_collision_uint16": [
+      [
+        16256,
+        16259
+      ],
+      [
+        16257,
+        16258
+      ]
+    ],
+    "collision_checksum": [
+      32515,
+      3
+    ],
+    "single_bit_scope": "For faithfully preserved uint16 input bits, one bit changes modular sum by +/-2^k with k<16, hence cannot preserve it. Native evidence covers finite integer patterns only, not all NaN/special-value preservation behavior.",
+    "sha256_equivalence": false,
+    "digest_caveat": "SHA256 of the 32,896 output bytes authenticates this retained weak-checksum vector; it does not turn the reduction into SHA256 of source weights."
+  },
+  "cleanup_record": {
+    "actor_kill_requested": true,
+    "pg_remove_requested": true,
+    "tmpfs_files_created": false
+  },
+  "cleanup_limit": "Artifact records actor-kill/placement-group-removal requests and no tmpfs creation, not an independently observed empty cluster resource inventory.",
+  "unsupported": [
+    "snapshot or restore integrated checksum overhead",
+    "cryptographic/source-SHA-equivalent integrity",
+    "physical memory bandwidth",
+    "checksum-only cold compilation cost",
+    "full reconfiguration savings or new C/breakeven"
+  ],
+  "verification": "Executed this read-only local replay; no TPU operations, framework benchmarks, or peer edits.",
+  "source_manifest": [
+    {
+      "path": "SnapshotHelper/results/restore/SnapshotHelper/checksum-probe.json",
+      "bytes": 4056425,
+      "sha256": "8df23663a18f1661c73883eb68fb5d3f4148cbf453cf11489a66411e5c198bf7"
+    },
+    {
+      "path": "SnapshotHelper/results/restore/SnapshotHelper/checksum-probe-summary.json",
+      "bytes": 2667,
+      "sha256": "3ff0f815ee2408f364d0dfd273d8c6f0feef797056935da9a56908ed3a7c3628"
+    },
+    {
+      "path": "SnapshotHelper/scripts/snapshot_checksum_probe.py",
+      "bytes": 13028,
+      "sha256": "742d2f2384de8ff49c8e10077270b97834a69f0ba61bcbe9bb910521ba9318e2"
+    },
+    {
+      "path": "ICIBench/results/ici/ICIBench/parameter_catalogue.json",
+      "bytes": 224531,
+      "sha256": "1059fc610de30ae60058021fd5a1cf3e808f9c5bb9bf6202e968ee8323eb5ded"
+    }
+  ]
+}
