@@ -819,7 +819,7 @@ overlap forfeited by switching):
 )
 
 - *Restore halves break-even with no change to the serving architecture.* A chat phase of about
-  one W0 manifest is now enough to pay for H → S.
+  1.5 W0 manifests (1.0–1.1M output tokens) now pays for H → S, against 2.7 before.
 - *In-place switching would halve it again*, but only once the shared-runtime abort is solved and
   the gateway and full slice are integrated. Its first switch is no better than restore.
 - *Neither removes the remaining fixed cost.* Compile and warm-up (33–63 s), KV allocation
