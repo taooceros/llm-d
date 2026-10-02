@@ -1,0 +1,18 @@
+{
+ "W0": {"output_tokens": 721595, "requests": 1763, "makespan_s": {
+   "H": {"value": 497.2, "source": "measured rc-bab4f9e-H s1,s4 (500.0, 494.4) blind"},
+   "S": {"value": 343.3, "source": "measured rc-bab4f9e-S s1,s4 (352.4, 334.2) blind"},
+   "M": {"value": 467.7, "source": "measured rc-bab4f9e-M s1,s4 (482.5, 452.9) blind"}}},
+ "W3": {"output_tokens": 1079823, "requests": 160, "makespan_s": {
+   "H": {"value": 1284.0, "source": "measured w3-c7edd5a-r1 blind (1 rep)"},
+   "S": {"value": 1354.0, "source": "measured w3-c7edd5a-r1 blind (1 rep)"},
+   "M": {"value": 1382.0, "source": "measured w3-c7edd5a-r1 blind (1 rep)"}}},
+ "W4": {"output_tokens": 387975, "requests": 904, "makespan_s": {
+   "H": {"value": 347.1, "source": "measured w4 plain (347.2, 346.9)"},
+   "S": null,
+   "M": {"value": 311.9, "source": "measured w4 reserve (304.1, 319.6)"}}},
+ "W5": {"output_tokens": 982899, "requests": 250, "makespan_s": {
+   "H": {"value": 1372.4, "source": "measured rc-bab4f9e-H s2,s3 (1375.1, 1369.7) blind"},
+   "S": {"value": 1450.7, "source": "measured rc-bab4f9e-S s2,s3 (1455.4, 1446.1) blind"},
+   "M": {"value": 1409.6, "source": "measured rc-bab4f9e-M s2,s3 (1395.3, 1423.9) blind"}}}
+}

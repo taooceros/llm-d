@@ -1,0 +1,93 @@
+[
+ {
+  "layout": "S",
+  "previous": null,
+  "previous_drained_t": null,
+  "teardown_s": null,
+  "deploy_wall_s": 378.3,
+  "deploy_stage_clocks": {
+   "backend_s": 1.45,
+   "placement_s": 0.09,
+   "actor_s": 0.41,
+   "engine_init_s": 360.29,
+   "serving_endpoint_s": 1.08
+  },
+  "slowest_engine_init": {
+   "instance": "small_c",
+   "executor_startup_s": 21.7,
+   "init_device_s": 3.6,
+   "load_model_s": 233.6,
+   "initialize_from_config_s": 25.8,
+   "compile_or_warm_up_model_s": 63.4,
+   "engine_init_s": 351.8
+  },
+  "deploy_end_to_first_dispatch_s": 14.6,
+  "steady_tokens_per_s": 2392.7,
+  "ramp_deficit_s": 5.9,
+  "cost_s": null
+ },
+ {
+  "layout": "H",
+  "previous": "S",
+  "previous_drained_t": 1790838578.7406902,
+  "teardown_s": {
+   "teardown_start": 7.2,
+   "drained": 14.7,
+   "gateway_down": 20.8,
+   "released": 27.0
+  },
+  "deploy_wall_s": 376.2,
+  "deploy_stage_clocks": {
+   "backend_s": 1.51,
+   "placement_s": 0.05,
+   "actor_s": 0.45,
+   "engine_init_s": 363.29,
+   "serving_endpoint_s": 0.54
+  },
+  "slowest_engine_init": {
+   "instance": "large_b",
+   "executor_startup_s": 21.9,
+   "init_device_s": 3.6,
+   "load_model_s": 237.8,
+   "initialize_from_config_s": 26.2,
+   "compile_or_warm_up_model_s": 64.7,
+   "engine_init_s": 354.8
+  },
+  "deploy_end_to_first_dispatch_s": 14.5,
+  "steady_tokens_per_s": 1526.8,
+  "ramp_deficit_s": 9.3,
+  "cost_s": 445.0
+ },
+ {
+  "layout": "M",
+  "previous": "H",
+  "previous_drained_t": 1790842823.61159,
+  "teardown_s": {
+   "teardown_start": 7.7,
+   "drained": 13.6,
+   "gateway_down": 19.5,
+   "released": 24.0
+  },
+  "deploy_wall_s": 374.8,
+  "deploy_stage_clocks": {
+   "backend_s": 1.47,
+   "placement_s": 0.07,
+   "actor_s": 0.43,
+   "engine_init_s": 362.37,
+   "serving_endpoint_s": 0.8
+  },
+  "slowest_engine_init": {
+   "instance": "large",
+   "executor_startup_s": 22.1,
+   "init_device_s": 3.9,
+   "load_model_s": 236.7,
+   "initialize_from_config_s": 26.0,
+   "compile_or_warm_up_model_s": 63.9,
+   "engine_init_s": 353.8
+  },
+  "deploy_end_to_first_dispatch_s": 14.1,
+  "steady_tokens_per_s": 1614.0,
+  "ramp_deficit_s": 4.5,
+  "cost_s": 435.5
+ }
+]

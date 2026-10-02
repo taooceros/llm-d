@@ -87,46 +87,51 @@ figcaption { font-size: .9em; color: #59636e; margin-top: .5em; }
 
 
 
+
 #context if is-html() {
   html.elem("h1", title)
   html.elem("p", attrs: (class: "subtitle"))[Gemma-4 31B on TPU v5e 4×8 (32 chips) · runs of
-    2026-10-01 · branch `research/heterogeneous-tpu-20260918`]
+    2026-10-01/02 · branch `research/heterogeneous-tpu-20260918`]
 } else {
   align(center)[
     #text(size: 16pt, weight: "bold", title)
     #v(2pt)
-    Gemma-4 31B on TPU v5e 4×8 (32 chips) · runs of 2026-10-01 · branch `research/heterogeneous-tpu-20260918`
+    Gemma-4 31B on TPU v5e 4×8 (32 chips) · runs of 2026-10-01/02 · branch `research/heterogeneous-tpu-20260918`
   ]
 }
 
 = Summary
 
-Switching the slice between layouts H (2×TP16), S (4×TP8) and M (TP16 + 2×TP8) costs
-*about 440 s of lost slice time* per transition with today's full redeploy (measured: 445 s
-S→H, 436 s H→M). Two thirds of that is loading the 62.5 GB checkpoint from the gcsfuse
-`/models` mount (236–238 s per engine); XLA compile is only 64 s because the compilation cache
-is already persistent.
+- *A full reconfiguration costs 400–445 s of lost slice time* (six measured transitions, median
+  413 s). The engines' start-up is 355 s of it, and 237 s of that is loading weights.
+  Staging the checkpoint in host RAM changes nothing (load 234–239 s from tmpfs vs 234–237 s from
+  gcsfuse): the time is spent processing weights on the host, not reading them. The XLA cache is
+  already persistent, so compile is only 64 s.
+- *Per-phase gains are small next to that.* Only chat shows a large gap (S finishes W0 31% sooner
+  than H); on the long-context workloads the best layout beats the worst by 3–7%. With a full
+  redeploy, a switch pays only for phases of *2.0M output tokens or more* (W0, H→S), and
+  4.6–16M tokens for every other transition. At single-manifest size (0.4–1.1M tokens) nothing pays.
+- *Measured end to end*, a 3.27M-token job (W4 long documents, then four W0 chat backlogs) took
+  1,755 s on a static M layout, *1,962 s (+11.8%) with a full M→S redeploy* and
+  #colored(good)[*1,723 s (−1.8%) with a partial M→S reconfiguration*], which keeps the two shared
+  TP8 engines serving while the other half restarts. The control job (W4 then W5, M→H) lost 24%,
+  as predicted.
+- *Partial reconfiguration halves the cost*: effective C falls from 413 s to 186 s because the
+  kept TP8 pair delivers 67% of the full slice's chat throughput during the 363 s restart. That
+  moves the break-even for the W4→chat job from 6.4 to 3.7 W0 backlogs (4.7M → 2.7M chat tokens).
+  It only exists where layouts share engines chip for chip (S↔M, H↔M), and it needed one bug fix
+  after two of four cluster attempts failed (@sec-validity).
 
-The per-phase gains reconfiguration can buy are small next to that cost. The largest measured
-gap is chat (W0): S finishes in 343 s against 497 s on H and 468 s on M. On the long-context
-workloads the best layout beats the worst by only 6–7% (W3, W5). With the measured cost, a
-switch pays only once the phase it serves is *2.0M output tokens or more* (W0 on H→S, 2.7× a W0
-phase), and 4.6–16M tokens for every other transition. At the size of a single manifest (0.4–1.1M
-tokens), no switch pays.
-
-#note[
-  *Status.* Measured so far: per-layout throughput on W0 and W5 (2 repetitions each) and two
-  instrumented full transitions. End-to-end mixed jobs, partial reconfiguration and warm start
-  are prepared (code in `~/hetero-research`) but not yet run on the cluster; their sections below
-  state predictions only, labelled as such.
-]
+The hypothesis (gains of 10–35%, break-even near 10⁶ tokens) is partly falsified: break-even is
+2–5M tokens for the useful transitions, under the 10⁷ falsification line, and reconfiguration
+beat the best static layout only with partial reconfiguration and only by 1.8%.
 
 = Setup
 
 All runs use the same 32 chips, the same Gemma-4 31B checkpoint (`/models/gemma-4-31b`) and the
 same vLLM + tpu-inference stack behind the Python gateway. Every request runs with `ignore_eos`
-and `max_tokens` fixed to its reference output length, so a workload's useful output is identical
-in every arm. Routing is output-length-blind.
+and `max_tokens` fixed to its reference output length, so useful output is identical in every arm
+of a comparison. Routing is output-length-blind.
 
 #table(
   columns: (auto, auto, auto, auto, 1fr),
@@ -140,13 +145,16 @@ in every arm. Routing is output-length-blind.
 
 W5 is new in this study: prompts are full English TED transcripts and the output length is the
 length of the talk's real published translation (IWSLT `ted_talks_iwslt`, WIT3 2015-05-30).
+Multi-phase jobs are composite manifests (`MIX_W4_W0x4`, `MIX_W4_W5`, `W0x4`) built from the frozen
+parts; W0×4 repeats the W0 prompts under new request ids, and prefix caching is off, so a repeat
+costs as much as the first pass.
 
 = Cost of one reconfiguration <sec-cost>
 
 A transition is measured from the last request of the old phase finishing to the new layout
-reaching steady throughput. The campaign script (`scripts/reconfig_measure.sh`) stamps every
-boundary; each engine worker records wall-clock start and end of its start-up phases
-(`HeteroTPUWorker`), and the first run on the new layout gives the ramp.
+serving at steady throughput. The campaign scripts stamp every boundary, each engine worker
+records the wall-clock start and end of its start-up phases (`HeteroTPUWorker`), and the first run
+on the new layout gives the ramp.
 
 #figure(
   svg-fig(```svg
@@ -197,9 +205,9 @@ boundary; each engine worker records wall-clock start and end of its start-up ph
 <path d="M92.9,200 v6 h573.9 v-6" fill="none" stroke="#1f2328"/><text x="379.8" y="222" text-anchor="middle" font-size="11.5">engine start-up 354 s (slowest engine; all engines start in parallel)</text>
 </svg>
 ```),
-  caption: [Measured S→H transition, one wall clock. Engines start in parallel; the bar shows the
-    slowest one. Ramp = output the first 120 s lost against the run's median rate, in seconds of
-    steady output.],
+  caption: [Measured S→H transition, on one wall clock. Engines start in parallel; the bar shows
+    the slowest one. Ramp = output the first 120 s lost against the run's median rate, in seconds
+    of steady output.],
 ) <fig-timeline>
 
 #table(
@@ -208,18 +216,39 @@ boundary; each engine worker records wall-clock start and end of its start-up ph
   table.header[Transition][Teardown#super[a]][Deploy][of which load weights][compile + warm-up][1st dispatch][Ramp][Cost C],
   [S→H], [27.0 s], [376.2 s], [237.8 s], [64.7 s], [14.5 s], [9.3 s], [*445.0 s*],
   [H→M], [24.0 s], [374.8 s], [236.7 s], [63.9 s], [14.1 s], [4.5 s], [*435.5 s*],
+  [M→S (in mix A, 2×)], table.cell(colspan: 5)[last W4 request → first W0 dispatch], [–], [*413.6, 412.9 s*],
+  [M→H (control, 2×)], table.cell(colspan: 5)[last W4 request → first W5 dispatch], [–], [*402.9, 405.5 s*],
   [(cold) →S], [–], [378.3 s], [233.6 s], [63.4 s], [14.6 s], [5.9 s], [–],
 )
 #footnote-text[a. From the last finished request: 7 s of result writing by the finished run, then
 drain, gateway-down and release, each a separate cluster job (about 6 s each, almost all job
-submission). The remaining gap to the deploy (about 18 s) is the deploy job's own start-up.]
+submission). The remaining gap before the deploy (about 18 s) is the deploy job's own start-up.
+The mix runs measure the same span without the ramp; their phase 2 starts at full throughput
+within 1 s of the standalone runs, so the ramp is already inside the phase-2 time there.]
 
 Inside the deploy, the slowest engine spends 22 s starting Ray worker processes, 4 s initialising
 TPU devices, *236–238 s loading weights*, 26 s profiling and allocating the KV cache and 64 s
-compiling and warming up; registry, endpoints and gateway roll-out add about 21 s. The three
-deploys agree to within 4 s, so C is not a sampling artefact. Of the 445 s, about 360 s is engine
-start-up that any redeploy pays; about 70 s is orchestration overhead (job submissions, result
-writing) that a purpose-built controller could remove.
+compiling and warming up; registry, endpoints and gateway roll-out add about 21 s. All 16 deploys
+took 363–380 s. About 360 s of C is engine start-up that any redeploy pays; about 50–80 s is
+orchestration overhead (job submissions, result writing) that a purpose-built controller could
+remove.
+
+*Warm start does not help.* Copying the 62.5 GB checkpoint into `/dev/shm` on all eight hosts
+takes 25 s per host (about 2.5 GB/s), so the gcsfuse mount is not the bottleneck. Deploying S from
+the tmpfs copy gave the same load time as from gcsfuse:
+
+#table(
+  columns: (auto, auto, auto, auto, auto),
+  align: (left, right, right, right, right),
+  table.header[Weights from][load_model (8 workers)][compile + warm-up][Engine init][W0 makespan after deploy],
+  [gcsfuse `/models`], [233.6–236.9 s], [63.4–64.0 s], [349.7–351.8 s], [352.4 s],
+  [tmpfs `/dev/shm`], [234.3–238.8 s], [61.3–64.0 s], [347.8–352.0 s], [340.6 s],
+)
+
+The 210 s left after reading the files is host-side weight processing and transfer to the TPUs
+[INFERENCE: dtype handling and sharding in the tpu-inference loader; not profiled]. Cutting it
+would need the weights to stay resident on the devices, which a layout change by definition
+does not allow for the engines that change shape.
 
 = Throughput per layout
 
@@ -236,9 +265,10 @@ writing) that a purpose-built controller could remove.
     [measured, `rc-bab4f9e-*`, blind; simulator said 1374 / 1508 / 1374],
 )
 
-Every value is a makespan for the whole manifest; per-repetition values in parentheses. The
-simulator was within 5% everywhere except W0 on M (+7%) and W5 on S (+4%), and it ranked the
-layouts correctly on both new workloads.
+Every value is the makespan of one whole manifest, with per-repetition values in parentheses.
+The simulator was within 5% everywhere except W0 on M (+7%) and W5 on S (+4%), and it ranked the
+layouts correctly on both new workloads. Every number in this report is measured; the simulator
+only chose which runs to do.
 
 = Break-even phase size
 
@@ -247,7 +277,7 @@ Switching from layout A to B for a phase pays when the time it saves exceeds C:
 $ N / r_A - N / r_B > C quad <==> quad N > C dot r_A r_B / (r_B - r_A) $
 
 With makespans $T$ for one manifest of $N_0$ tokens, the break-even multiple of that manifest is
-simply $k = C / (T_A - T_B)$. The table uses $C = 420$ s (midpoint) and gives the range over both
+$k = C / (T_A - T_B)$. The table uses $C = 420$ s (midpoint) and gives the range over both
 repetitions of each layout and $C in [395, 445]$ s.
 
 #table(
@@ -266,83 +296,155 @@ repetitions of each layout and $C in [395, 445]$ s.
   [W3], [M → S], [28.0 s], [15.0 (14.1–15.9)], [16.2M (15.2–17.2M)], [2,400],
 )
 
-The hypothesis predicted 10–35% per-phase gains and break-even near 10⁶ tokens. Only chat
-reaches that gain (31% S over H); the long-context phases differ by 3–7%. Break-even is therefore
-2–5M tokens for the useful transitions, above the predicted 10⁶ but below the 10⁷ falsification
-line, and the W3/W5 M→S and H↔M switches sit at or beyond 10⁷.
+The table is per phase. A whole job pays only if every switch does, and the static layout keeps
+one more advantage the formula ignores: in one continuous backlog the next phase starts while the
+previous one drains, whereas a reconfiguration must wait for the drain. In mix A that overlap was
+worth 115 s (@sec-e2e).
 
-A whole job only gains if *every* switch pays: a job that changes layout once must make the
-gain on its second phase exceed C, while the best static layout already captures whichever phase
-dominates. With today's C that requires multi-hour phases (a 2M-token chat phase is about 16 min
-on S; a 5M-token W5 phase is about 2 hours on H).
+= End-to-end mixed jobs <sec-e2e>
 
-= End-to-end mixed jobs (prepared, not yet run)
-
-Chosen from the break-even table (`results/reconfig/breakeven_ranges.json`):
+Two jobs, chosen from the break-even table before running: mix A (W4, then W0×4: 3.27M tokens) was
+the one most likely to benefit; the control (W4, then W5: 1.37M tokens) should not. W4 needs a
+TP16 engine, so S cannot run either job statically. Every arm starts from a fresh deploy of its
+first layout and ends released; arms alternated order across the two repetitions. Routing is the
+W4 "reserve" policy in every phase (on S it reduces to the blind policy, since S has no TP16
+engine).
 
 #table(
-  columns: (auto, auto, auto, 1fr),
-  align: (left, left, left, left),
-  table.header[Mix][Phases][Arms][Prediction from measured phases (not a result)],
-  [A (should benefit)], [W4, then W0 ×4 (3.27M tokens)], [static M; M → S full; M → S partial],
-    [static M ≈ 2,183 s#super[b]; full redeploy ≈ 2,125 s (−2.7%); partial ≈ 1,900 s if the kept TP8 pair serves at half S's rate during the boot],
-  [C (control)], [W4, then W5], [static M; M → H full],
-    [static M ≈ 1,722 s; M → H ≈ 2,124 s (+23%): one W5 phase saves 37 s against C ≈ 440 s],
+  columns: (auto, auto, auto, auto, auto, auto),
+  align: (left, left, right, right, right, right),
+  table.header[Job][Arm][Rep 1][Rep 2][Mean][vs static M],
+  [Mix A], [static M], [1,752.6 s], [1,757.1 s], [1,754.9 s], [baseline],
+  [Mix A], [M → S full redeploy], [1,966.3 s], [1,957.0 s], [1,961.7 s], colored(bad)[+11.8%],
+  [Mix A], [*M → S partial*], [1,715.8 s], [1,730.2 s], [*1,723.0 s*], colored(good)[*−1.8%*],
+  [Control], [static M], [1,771.7 s], [1,818.5 s], [1,795.1 s], [baseline],
+  [Control], [M → H full redeploy], [2,243.7 s], [2,222.5 s], [2,233.1 s], colored(bad)[+24.4%],
 )
-#footnote-text[b. Uses W0 on M from the blind runs (467.7 s); in the mix M runs with long-context
-TP16 settings and the reserve policy, which the static arm will measure directly.]
 
-Mix A's composite manifest repeats the frozen W0 manifest four times under new request ids
-(prefix caching is off, so repeats cost the same as the first pass). Runner:
-`scripts/reconfig_mix.sh static:M:MIX_W4_W0x4 reconf:M:W4:S:W0x4`, two repetitions per arm in
-alternating order.
+#figure(
+  bars((
+    ("A: M → S partial", 1723.0, good),
+    ("A: static M", 1754.9, luma(90)),
+    ("A: M → S full", 1961.7, bad),
+    ("Control: static M", 1795.1, luma(140)),
+    ("Control: M → H full", 2233.1, bad.lighten(30%)),
+  )),
+  caption: [Job wall time from first dispatch to last finished request, including transitions.
+    Mean of two repetitions.],
+)
 
-= Partial reconfiguration and warm start (prepared, not yet run)
+#table(
+  columns: (auto, auto, auto, auto, auto),
+  align: (left, right, right, right, right),
+  table.header[Mix A arm (means)][W4 phase][Transition gap][W0×4 phase][Job],
+  [static M (one backlog)], [0–1,039 s#super[c]], [–], [196–1,755 s], [1,754.9 s],
+  [M → S full], [316.7 s], [413.2 s], [1,231.7 s], [1,961.7 s],
+  [M → S partial], [305.6 s], [9.3 s], [1,408.1 s], [1,723.0 s],
+  [static S, W0×4 alone (reference)], [–], [–], [1,229.4 s], [–],
+)
+#footnote-text[c. In one backlog the phases overlap: W0 requests start at about 196 s while
+long documents are still running; the last W4 request finished at 752 s and 1,326 s in the two
+repetitions.]
 
-*Partial.* M and S share their two TP8 engines chip for chip, and M's TP16 engine sits on the same
-hosts as H's second engine. A partial M→S switch keeps `small_a`/`small_b` serving phase 2 while
-the TP16 engine is released and `small_c`/`small_d` start, then joins them to the gateway. It
-cannot shorten the 355 s start-up (engines already start in parallel); it only keeps half the
-slice busy during it. If the kept pair runs at half of S's rate, the effective cost drops to about
-$355 dot 0.5 + 30 approx 210$ s, which would halve every break-even size for S↔M (W0 M→S: about
-1.2M tokens). S↔H shares no engine, so it gets nothing. Status: driver under implementation
-(`hetero/transition.py`), not measured.
+*Why full redeploy loses mix A.* S serves a W0 backlog at 307.7 s per copy against 389.7 s for M
+inside the mixed backlog, so the four copies save 328 s. The redeploy costs 413 s, and switching
+also forfeits the 115 s of overlap the static backlog gets. Fitting those measured terms, full
+redeploy breaks even at *6.4 W0 copies (4.7M chat tokens)* after a W4 phase.
 
-*Warm start.* The compile cache is already persistent (`/models/jax_cache`), so the remaining
-lever is weights. Each host has 175 GB of free tmpfs; staging the checkpoint into `/dev/shm`
-(`scripts/reconfig_warm_stage.sh`) and deploying with `--model /dev/shm/gemma-4-31b` would replace
-the gcsfuse read. If load time fell from 237 s to the order of 30 s, C would drop to about 230 s
-with today's orchestration and about 160 s without it, roughly halving all break-even sizes.
-Status: not measured.
+*Why partial wins it.* The transition gap shrinks to 9 s (drain, re-label, retarget). During the
+363 s while `small_c`/`small_d` start, `small_a`/`small_b` serve 1,344 and 1,358 requests (561k and
+566k tokens), 67% of the full slice's chat rate on half the chips. The W0×4 phase then takes 177 s
+longer than on a fully started S, so the effective cost is $9 + 177 approx 186$ s. Break-even
+moves to *3.7 W0 copies (2.7M chat tokens)*; at four copies partial wins by 32 s.
 
-= Threats to validity
+*Control.* The W5 phase ran 43–104 s faster on H than inside the static M backlog (37 s in the
+blind single-manifest runs), against C ≈ 404 s, so M→H loses by 438 s.
+Part of that loss is policy: on H, the reserve policy holds 36,864 KV tokens per engine for long
+prompts that W5 does not have, and W5 took 1,504–1,523 s on H instead of 1,372 s under the blind
+policy. Even at 1,372 s the switch would lose about 290 s.
 
-- *Two repetitions.* W0 on M varies by 30 s between repetitions (482.5 vs 452.9 s); break-even
-  ranges above include that spread. W3 values are single runs from an earlier campaign.
-- *Orchestration overhead is in C.* About 70 s of the 440 s is job submission and result
-  writing. A controller that calls the deploy API directly would pay about 370 s.
-- *Routing is fixed per arm*, length-blind. Length-aware scheduling would shift the per-layout
-  gaps (simulated 3–13%) and therefore break-even; it is not credited to reconfiguration here.
-- *Manifest size.* Real bulk jobs are larger than one manifest; break-even is reported as a
-  multiple so it can be applied to any phase size with the same request mix.
-- *Unfrozen pilots.* None of these runs is bound to a source freeze.
+*Model check.* Before the runs, the per-manifest numbers predicted static M ≈ 2,183 s and full
+redeploy ≈ 2,125 s for mix A. The full-redeploy arm came close (1,962 s), but static M was far
+better (1,755 s): with the reserve policy and work-conserving fallback, M serves chat at 1,852
+tok/s inside the backlog, against 1,543 tok/s in the blind single-manifest runs used for the
+prediction. The prediction got the ordering of the full-redeploy arm wrong by assuming a weaker
+static baseline; the break-even values above are refitted on the measured arms.
+
+= Partial reconfiguration
+
+M and S share their two TP8 engines chip for chip, and M's TP16 engine sits on the same hosts, in
+the same order, as H's second engine. The new `run-transition` command (`hetero/transition.py`)
+keeps the shared engines loaded: it adopts them into the target layout in place, releases only the
+engines that change, fences the joiners out of discovery, starts them in the background while
+phase 2 runs on the kept engines, and joins them to the gateway once they are up.
+
+#table(
+  columns: (auto, auto, auto, auto, auto, auto),
+  align: (left, right, right, right, right, left),
+  table.header[Run][Drain][Joiner start-up][Join][Phase-2 requests before join][Outcome],
+  [smoke (W0 only)], [1.1 s], [361.7 s], [0.7 s], [1,312 (547k tok)], [completed],
+  [mix A rep 1], [1.0 s], [363.7 s], [0.7 s], [1,344 (561k tok)], [completed],
+  [mix A rep 2], [1.2 s], [364.7 s], [failed], [–], colored(bad)[join failed; 5,669 requests got 503],
+  [mix A rep 2b], [1.1 s], [364.2 s], [failed], [–], colored(bad)[same failure],
+  [mix A rep 2c (after fix)], [1.0 s], [362.7 s], [9.4 s], [1,358 (566k tok)], [completed],
+)
+
+The two failures had one cause. A joiner's coordinator pod reported `Ready=False` for a few seconds
+after its engine was up; the join labelled it anyway, discovery saw an unready labelled endpoint
+and failed closed, and the gateway answered 503 for about 40 s, which failed the whole remaining
+backlog. The fix (commit `2d003a4`) waits for the joiner pods to be Ready before labelling them
+(outside the administration lock, so discovery keeps its health lease) and withdraws the labels if
+a join still fails; rep 2c's 9.4 s join is that wait. A regression test reproduces the unready
+pod.
+
+Partial reconfiguration does not apply to S↔H, which share no engine, and H↔M would also need the
+kept TP16 engine renamed (`large_b` → `large`), which is not implemented.
+
+= Threats to validity <sec-validity>
+
+- *Two repetitions.* Spreads: W0 on M 30 s, static M control 47 s, everything else under 25 s.
+  The partial arm's second repetition is the run after the fix, so partial has two successful
+  repetitions out of four attempts; the failed attempts are reported, not averaged in.
+- *In-sample break-even for mix A.* The 6.4 / 3.7 copy break-evens are fitted on the same arms
+  they describe. The per-manifest table is independent of the mix runs.
+- *Policy confound in the control.* The reserve policy, chosen for W4, slows W5 on H by about
+  10%; the control would lose even without it.
+- *Orchestration overhead is in C.* About 50–80 s of the 400–445 s is job submission and result
+  writing; a controller calling the deploy API directly would pay about 370 s, which would move
+  the full-redeploy break-evens down by about 10%, not change their order of magnitude.
+- *Repeated prompts.* W0×4 reuses W0's prompts; prefix caching is off, so the compute is the same,
+  but a real chat backlog of that size would have more varied lengths.
+- *Unfrozen pilots.* None of these runs is bound to a source freeze, and the partial driver
+  (unit-tested, 164 tests pass) changed once during the campaign.
 
 = Reproduction
 
-Workspace `~/hetero-research`: commits `22e8b6f`, `bab4f9e` (W5 workload, worker phase clocks,
-campaign), `d83fdc9` (timeline analysis), `9c4e1b9` (composite manifests, mix runner, warm-start
-staging).
+Workspace `~/hetero-research`. Commits: `22e8b6f`/`bab4f9e` (W5 workload, worker phase clocks,
+measurement campaign), `9c4e1b9` (composite manifests, mix runner, warm-start staging),
+`4fcfb97`/`297ce98` (partial reconfiguration, `run-transition`), `2d003a4` (join readiness fix),
+`583f2da` (end-to-end summariser), `fe5325d` (namespace-scoped cluster credentials).
 
 ```sh
-# W5 catalogue (TED talks; Gemma tokenizer)
-scripts/build_translation_catalogue.py <xml-20150616 dir> tokenizer.json data/workloads/translation_ted.json
-# per-layout throughput + instrumented transitions (S, then H, then M), under the cluster lock
+# per-layout throughput + instrumented full transitions (S, then H, then M)
 flock /tmp/hetero-cluster.lock scripts/reconfig_measure.sh S H M
-# transition costs and break-even
+# warm start: stage weights in /dev/shm, deploy S from it, remove the copies
+scripts/reconfig_warm_stage.sh stage && MODEL=/dev/shm/gemma-4-31b ORDER=W0 scripts/reconfig_measure.sh S
+scripts/reconfig_warm_stage.sh remove
+# end-to-end arms
+scripts/reconfig_mix.sh static:M:MIX_W4_W0x4 reconf:M:W4:S:W0x4 static:S:W0x4 \
+  static:M:MIX_W4_W5 reconf:M:W4:H:W5
+scripts/reconfig_partial.sh W4 W0x4 mixA-r1
+# analysis
 scripts/reconfig_timeline.py bab4f9e --json results/reconfig/timeline-bab4f9e.json
 scripts/reconfig_breakeven.py --table results/reconfig/throughput_table_measured.json --cost 395 440
+scripts/summarize_reconfig.py <run dirs> --json results/reconfig/e2e.json
 ```
 
-Evidence: `results/reconfig/` (timeline JSONL, deploy outputs with per-worker phase clocks,
-throughput tables, break-even JSON) and `results/hetero/artifacts/rc-bab4f9e-*` (per-request
-records and per-step iterations).
+Run ids (`results/hetero/artifacts/`): `rc-bab4f9e-{S,H,M}-s{1..4}` (throughput),
+`rc-73e3679-S-s1` (warm start), `mix-b2458d2-*`, `mix-583f2da-*`, `mix-fe5325d-*`, `mix-985594e-*`
+(end-to-end), `partial-73e3679-smoke`, `partial-b2458d2-mixA-r1`, `partial-2d003a4-mixA-r2c`
+(completed), `partial-fe5325d-mixA-r2`, `partial-985594e-mixA-r2b` (failed joins).
+
+Machine-readable evidence is committed next to this report in `reconfiguration_evidence/`:
+throughput table, break-even tables, transition timelines, warm-start phase clocks, end-to-end
+per-phase results (`e2e.json`), the mix-A model fit and every transition report.

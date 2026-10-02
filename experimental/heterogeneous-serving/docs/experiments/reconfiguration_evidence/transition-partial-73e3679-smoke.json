@@ -1,0 +1,2286 @@
+{
+  "plan": {
+    "from_layout": "M",
+    "to_layout": "S",
+    "kept": [
+      "small_a",
+      "small_b"
+    ],
+    "release": [
+      "large"
+    ],
+    "join": [
+      "small_c",
+      "small_d"
+    ]
+  },
+  "run_id": "partial-73e3679-smoke",
+  "steps": [
+    "prepared",
+    "drain_begin",
+    "drain_end",
+    "adopted",
+    "retargeted",
+    "phase2_begin",
+    "phase2_end"
+  ],
+  "timestamps": {
+    "prepared": 1790880519.0075448,
+    "drain_begin": 1790880519.0076234,
+    "drain_end": 1790880520.1111903,
+    "adopted": 1790880520.12771,
+    "retargeted": 1790880520.5849478,
+    "deploy_begin": 1790880520.5850372,
+    "phase2_begin": 1790880520.5868075,
+    "deploy_ready": 1790880882.3279023,
+    "phase2_end": 1790881058.6479928
+  },
+  "completed": true,
+  "drain": {
+    "layout_id": "M",
+    "drained": [
+      {
+        "instance_id": "large",
+        "generation": 1790880148,
+        "actor_found": true,
+        "drain": {
+          "instance_id": "large",
+          "drained": true,
+          "inflight": 0
+        },
+        "native_idle": {
+          "instance_id": "large",
+          "idle": true,
+          "inflight": 0,
+          "num_running": 0,
+          "num_waiting": 0,
+          "free_blocks": 282,
+          "pending_batches": 0,
+          "scheduler_has_work": false,
+          "draining": true
+        },
+        "idle_snapshot": {
+          "instance_id": "large",
+          "num_running": 0,
+          "num_waiting": 0,
+          "free_blocks": 282,
+          "total_blocks": 283,
+          "all_blocks_free": true,
+          "inflight": 0
+        },
+        "stop_serving": {
+          "instance_id": "large",
+          "endpoint_stopped": true
+        },
+        "shutdown": {
+          "instance_id": "large",
+          "served": 0
+        },
+        "actor_removed": true,
+        "placement_group_removed": true,
+        "withdrawn": true
+      }
+    ],
+    "maintenance": {
+      "id": "bb9aa22a781f4fbcbff59f79272e4e89",
+      "reason": "explicit deployment drain",
+      "instances": {
+        "large": {
+          "instance_id": "large",
+          "layout_id": "M",
+          "generation": 1790880148,
+          "config_digest": "3caf88dec949c8577ca57a488828ef893cafd4e39d202fbdb13162f3b9f9d247",
+          "ray_namespace": "omp_hetero",
+          "engine_actor_name": "omp-hetero-engine--M--large",
+          "placement_group_name": "omp-hetero--M--large",
+          "placement_group_id": "7998abf211ecf0092844be385ab3d3000000",
+          "host_chip_rank_map": [
+            {
+              "node_ip": "192.168.102.44",
+              "ray_node_id": "0b1e112c8a703272b896df9ac46a94ee1d9a2fe0b5198a5b142fab93",
+              "hostname": "gke-tpu-8770cb66-45jj",
+              "physical_tpu_worker_id": 3,
+              "process_rank": 0,
+              "bundle_index": 0,
+              "chip_coords": [
+                [
+                  0,
+                  4,
+                  0
+                ],
+                [
+                  1,
+                  4,
+                  0
+                ],
+                [
+                  0,
+                  5,
+                  0
+                ],
+                [
+                  1,
+                  5,
+                  0
+                ]
+              ],
+              "host_grid_position": [
+                0,
+                2,
+                0
+              ]
+            },
+            {
+              "node_ip": "192.168.102.39",
+              "ray_node_id": "d117c321900e6242d54e11c0865258a27f726baa5eb52ae0a0597da4",
+              "hostname": "gke-tpu-8770cb66-sddz",
+              "physical_tpu_worker_id": 6,
+              "process_rank": 1,
+              "bundle_index": 1,
+              "chip_coords": [
+                [
+                  2,
+                  4,
+                  0
+                ],
+                [
+                  3,
+                  4,
+                  0
+                ],
+                [
+                  2,
+                  5,
+                  0
+                ],
+                [
+                  3,
+                  5,
+                  0
+                ]
+              ],
+              "host_grid_position": [
+                1,
+                2,
+                0
+              ]
+            },
+            {
+              "node_ip": "192.168.102.42",
+              "ray_node_id": "7503d989ada15c0e2504a27ca32b50d533b28bfa038fb09ce857a242",
+              "hostname": "gke-tpu-8770cb66-0vj5",
+              "physical_tpu_worker_id": 5,
+              "process_rank": 2,
+              "bundle_index": 2,
+              "chip_coords": [
+                [
+                  0,
+                  6,
+                  0
+                ],
+                [
+                  1,
+                  6,
+                  0
+                ],
+                [
+                  0,
+                  7,
+                  0
+                ],
+                [
+                  1,
+                  7,
+                  0
+                ]
+              ],
+              "host_grid_position": [
+                0,
+                3,
+                0
+              ]
+            },
+            {
+              "node_ip": "192.168.102.41",
+              "ray_node_id": "460d3df7e6b8856962ae020f71da9a34a8d844cdd87cbad10df4b2b7",
+              "hostname": "gke-tpu-8770cb66-mg22",
+              "physical_tpu_worker_id": 7,
+              "process_rank": 3,
+              "bundle_index": 3,
+              "chip_coords": [
+                [
+                  2,
+                  6,
+                  0
+                ],
+                [
+                  3,
+                  6,
+                  0
+                ],
+                [
+                  2,
+                  7,
+                  0
+                ],
+                [
+                  3,
+                  7,
+                  0
+                ]
+              ],
+              "host_grid_position": [
+                1,
+                3,
+                0
+              ]
+            }
+          ],
+          "endpoint_host": "192.168.102.44",
+          "endpoint_port": 8000,
+          "completions_path": "/v1/completions",
+          "metrics_path": "/metrics",
+          "control_path": "/control",
+          "model": "/models/gemma-4-31b",
+          "model_build": "{\"activation_dtype\":\"float32\",\"kv_cache_dtype\":\"float32\",\"matmul_precision\":\"highest\",\"native_backend\":\"148b4295bf83c0eaa473b11fff5c7c643092f1873200cef1f52b07a2265861ed\",\"parameter_dtype\":\"torch.bfloat16\",\"runtime_revision\":\"0593917bbb0fe7e27c5f537339474c6e935d2999795efe4ee09422b52b7e7d6c\",\"vllm\":\"0.23.1rc1.dev1474+g0ba2aa35a\"}",
+          "tp_size": 16,
+          "max_model_len": 36864,
+          "kv_block_size": 256,
+          "kv_usable_blocks": 282,
+          "kv_usable_tokens": 72192,
+          "max_num_seqs": 512,
+          "continuation_modes": [
+            "recompute"
+          ],
+          "transport_modes": [
+            "gateway_replay"
+          ],
+          "state": "ready",
+          "registered_at": 1790880509.2008266,
+          "health_at": 1790880509.2008271,
+          "last_error": null,
+          "endpoint": "192.168.102.44:8000",
+          "routable": true,
+          "health_age_s": 2.088
+        }
+      },
+      "drained": {}
+    },
+    "gateway_reconcile": {
+      "instances": [
+        "small_a",
+        "small_b"
+      ],
+      "registry_rows": 2,
+      "discovery": {
+        "pool": "omp-hetero",
+        "target_port": 8000,
+        "ready": true,
+        "selector": "omp.llm-d.ai/instance=true",
+        "endpoint_picker": {
+          "failureMode": "FailClose",
+          "group": "",
+          "kind": "Service",
+          "name": "omp-gateway",
+          "port": {
+            "number": 9002
+          }
+        },
+        "protocol": "envoy-ext-proc-v3",
+        "response_mode": "ImmediateResponse",
+        "resolved": [
+          {
+            "instance_id": "small_a",
+            "generation": 1790880148,
+            "layout_id": "M",
+            "endpoint": "192.168.102.38:8000",
+            "pod": "tpu-ray-cluster-vllm-tpu-tpu-worker-group-worker-g8lnn",
+            "pod_ready": true,
+            "identity_matches": true,
+            "registry_state": "ready",
+            "routable": true,
+            "tp_size": 8,
+            "kv_usable_blocks": 412
+          },
+          {
+            "instance_id": "small_b",
+            "generation": 1790880148,
+            "layout_id": "M",
+            "endpoint": "192.168.102.43:8000",
+            "pod": "tpu-ray-cluster-vllm-tpu-tpu-worker-group-worker-wrn2v",
+            "pod_ready": true,
+            "identity_matches": true,
+            "registry_state": "ready",
+            "routable": true,
+            "tp_size": 8,
+            "kv_usable_blocks": 412
+          }
+        ],
+        "registry_without_pod_endpoint": [],
+        "pod_endpoints_without_instance": [],
+        "identity_mismatches": [],
+        "logical_instance_count": 2,
+        "pod_endpoint_count": 2,
+        "maintenance_instances": [
+          "large"
+        ],
+        "labels": {
+          "applied": [],
+          "removed_stale": []
+        }
+      }
+    },
+    "registry_snapshot": [
+      {
+        "instance_id": "small_a",
+        "layout_id": "M",
+        "generation": 1790880148,
+        "config_digest": "3caf88dec949c8577ca57a488828ef893cafd4e39d202fbdb13162f3b9f9d247",
+        "ray_namespace": "omp_hetero",
+        "engine_actor_name": "omp-hetero-engine--M--small_a",
+        "placement_group_name": "omp-hetero--M--small_a",
+        "placement_group_id": "fb06f096dc4c3d1ee49330bbf6a3d3000000",
+        "host_chip_rank_map": [
+          {
+            "node_ip": "192.168.102.38",
+            "ray_node_id": "7cbd00b45f9d0eafcaa2e995b8b70cac28d4aa2d0f5e8131c4f4f228",
+            "hostname": "gke-tpu-8770cb66-8v5c",
+            "physical_tpu_worker_id": 4,
+            "process_rank": 0,
+            "bundle_index": 0,
+            "chip_coords": [
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                1,
+                0,
+                0
+              ],
+              [
+                0,
+                1,
+                0
+              ],
+              [
+                1,
+                1,
+                0
+              ]
+            ],
+            "host_grid_position": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "node_ip": "192.168.102.45",
+            "ray_node_id": "2f271beaf24768468e03d778813fc969f53b4962a42a791df3605e20",
+            "hostname": "gke-tpu-8770cb66-m8vd",
+            "physical_tpu_worker_id": 1,
+            "process_rank": 1,
+            "bundle_index": 1,
+            "chip_coords": [
+              [
+                0,
+                2,
+                0
+              ],
+              [
+                1,
+                2,
+                0
+              ],
+              [
+                0,
+                3,
+                0
+              ],
+              [
+                1,
+                3,
+                0
+              ]
+            ],
+            "host_grid_position": [
+              0,
+              1,
+              0
+            ]
+          }
+        ],
+        "endpoint_host": "192.168.102.38",
+        "endpoint_port": 8000,
+        "completions_path": "/v1/completions",
+        "metrics_path": "/metrics",
+        "control_path": "/control",
+        "model": "/models/gemma-4-31b",
+        "model_build": "{\"activation_dtype\":\"float32\",\"kv_cache_dtype\":\"float32\",\"matmul_precision\":\"highest\",\"native_backend\":\"148b4295bf83c0eaa473b11fff5c7c643092f1873200cef1f52b07a2265861ed\",\"parameter_dtype\":\"torch.bfloat16\",\"runtime_revision\":\"0593917bbb0fe7e27c5f537339474c6e935d2999795efe4ee09422b52b7e7d6c\",\"vllm\":\"0.23.1rc1.dev1474+g0ba2aa35a\"}",
+        "tp_size": 8,
+        "max_model_len": 16384,
+        "kv_block_size": 64,
+        "kv_usable_blocks": 412,
+        "kv_usable_tokens": 26368,
+        "max_num_seqs": 512,
+        "continuation_modes": [
+          "recompute"
+        ],
+        "transport_modes": [
+          "gateway_replay"
+        ],
+        "state": "ready",
+        "registered_at": 1790880509.1921918,
+        "health_at": 1790880518.6455827,
+        "last_error": null,
+        "endpoint": "192.168.102.38:8000",
+        "routable": true,
+        "health_age_s": 1.454
+      },
+      {
+        "instance_id": "small_b",
+        "layout_id": "M",
+        "generation": 1790880148,
+        "config_digest": "3caf88dec949c8577ca57a488828ef893cafd4e39d202fbdb13162f3b9f9d247",
+        "ray_namespace": "omp_hetero",
+        "engine_actor_name": "omp-hetero-engine--M--small_b",
+        "placement_group_name": "omp-hetero--M--small_b",
+        "placement_group_id": "1a5c2a676ae934faeee84774dcd1d3000000",
+        "host_chip_rank_map": [
+          {
+            "node_ip": "192.168.102.43",
+            "ray_node_id": "4096df7539468240aaa65aed3fa988b547fc08311354336fb0e3bf9e",
+            "hostname": "gke-tpu-8770cb66-hsqj",
+            "physical_tpu_worker_id": 0,
+            "process_rank": 0,
+            "bundle_index": 0,
+            "chip_coords": [
+              [
+                2,
+                0,
+                0
+              ],
+              [
+                3,
+                0,
+                0
+              ],
+              [
+                2,
+                1,
+                0
+              ],
+              [
+                3,
+                1,
+                0
+              ]
+            ],
+            "host_grid_position": [
+              1,
+              0,
+              0
+            ]
+          },
+          {
+            "node_ip": "192.168.102.40",
+            "ray_node_id": "cfb9ec7efadbbf0f126eafd1d06a188c5f92f77df74cd0f885032cfd",
+            "hostname": "gke-tpu-8770cb66-j6g4",
+            "physical_tpu_worker_id": 2,
+            "process_rank": 1,
+            "bundle_index": 1,
+            "chip_coords": [
+              [
+                2,
+                2,
+                0
+              ],
+              [
+                3,
+                2,
+                0
+              ],
+              [
+                2,
+                3,
+                0
+              ],
+              [
+                3,
+                3,
+                0
+              ]
+            ],
+            "host_grid_position": [
+              1,
+              1,
+              0
+            ]
+          }
+        ],
+        "endpoint_host": "192.168.102.43",
+        "endpoint_port": 8000,
+        "completions_path": "/v1/completions",
+        "metrics_path": "/metrics",
+        "control_path": "/control",
+        "model": "/models/gemma-4-31b",
+        "model_build": "{\"activation_dtype\":\"float32\",\"kv_cache_dtype\":\"float32\",\"matmul_precision\":\"highest\",\"native_backend\":\"148b4295bf83c0eaa473b11fff5c7c643092f1873200cef1f52b07a2265861ed\",\"parameter_dtype\":\"torch.bfloat16\",\"runtime_revision\":\"0593917bbb0fe7e27c5f537339474c6e935d2999795efe4ee09422b52b7e7d6c\",\"vllm\":\"0.23.1rc1.dev1474+g0ba2aa35a\"}",
+        "tp_size": 8,
+        "max_model_len": 16384,
+        "kv_block_size": 64,
+        "kv_usable_blocks": 412,
+        "kv_usable_tokens": 26368,
+        "max_num_seqs": 512,
+        "continuation_modes": [
+          "recompute"
+        ],
+        "transport_modes": [
+          "gateway_replay"
+        ],
+        "state": "ready",
+        "registered_at": 1790880509.1966956,
+        "health_at": 1790880518.9175541,
+        "last_error": null,
+        "endpoint": "192.168.102.43:8000",
+        "routable": true,
+        "health_age_s": 1.182
+      }
+    ],
+    "owned_placement_groups": [
+      {
+        "pg_id": "0db2a9e5d566aef26c809af5536c69000000",
+        "name": "omp-hetero--M--large",
+        "layout_id": "M",
+        "instance_id": "large",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "CPU": 8.0,
+            "node:192.168.102.44": 0.001,
+            "TPU": 4.0
+          },
+          "1": {
+            "node:192.168.102.39": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          },
+          "2": {
+            "node:192.168.102.42": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          },
+          "3": {
+            "CPU": 8.0,
+            "node:192.168.102.41": 0.001,
+            "TPU": 4.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "0b1e112c8a703272b896df9ac46a94ee1d9a2fe0b5198a5b142fab93",
+          "1": "d117c321900e6242d54e11c0865258a27f726baa5eb52ae0a0597da4",
+          "2": "7503d989ada15c0e2504a27ca32b50d533b28bfa038fb09ce857a242",
+          "3": "460d3df7e6b8856962ae020f71da9a34a8d844cdd87cbad10df4b2b7"
+        }
+      },
+      {
+        "pg_id": "bb44a049a11b40f5b4a8c8e013ec96000000",
+        "name": "omp-hetero--M--large",
+        "layout_id": "M",
+        "instance_id": "large",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "CPU": 8.0,
+            "node:192.168.102.44": 0.001,
+            "TPU": 4.0
+          },
+          "1": {
+            "node:192.168.102.39": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          },
+          "2": {
+            "node:192.168.102.42": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          },
+          "3": {
+            "TPU": 4.0,
+            "node:192.168.102.41": 0.001,
+            "CPU": 8.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "0b1e112c8a703272b896df9ac46a94ee1d9a2fe0b5198a5b142fab93",
+          "1": "d117c321900e6242d54e11c0865258a27f726baa5eb52ae0a0597da4",
+          "2": "7503d989ada15c0e2504a27ca32b50d533b28bfa038fb09ce857a242",
+          "3": "460d3df7e6b8856962ae020f71da9a34a8d844cdd87cbad10df4b2b7"
+        }
+      },
+      {
+        "pg_id": "c0f5b0d960a2e4c39f2c3aafef260e000000",
+        "name": "omp-hetero--M--large",
+        "layout_id": "M",
+        "instance_id": "large",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "CPU": 8.0,
+            "node:192.168.102.44": 0.001,
+            "TPU": 4.0
+          },
+          "1": {
+            "node:192.168.102.39": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          },
+          "2": {
+            "node:192.168.102.42": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          },
+          "3": {
+            "TPU": 4.0,
+            "node:192.168.102.41": 0.001,
+            "CPU": 8.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "0b1e112c8a703272b896df9ac46a94ee1d9a2fe0b5198a5b142fab93",
+          "1": "d117c321900e6242d54e11c0865258a27f726baa5eb52ae0a0597da4",
+          "2": "7503d989ada15c0e2504a27ca32b50d533b28bfa038fb09ce857a242",
+          "3": "460d3df7e6b8856962ae020f71da9a34a8d844cdd87cbad10df4b2b7"
+        }
+      },
+      {
+        "pg_id": "c31c9a3b52bfbffa142963f0a06c4c000000",
+        "name": "omp-hetero--M--large",
+        "layout_id": "M",
+        "instance_id": "large",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "TPU": 4.0,
+            "node:192.168.102.44": 0.001,
+            "CPU": 8.0
+          },
+          "1": {
+            "node:192.168.102.39": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          },
+          "2": {
+            "node:192.168.102.42": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          },
+          "3": {
+            "TPU": 4.0,
+            "node:192.168.102.41": 0.001,
+            "CPU": 8.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "0b1e112c8a703272b896df9ac46a94ee1d9a2fe0b5198a5b142fab93",
+          "1": "d117c321900e6242d54e11c0865258a27f726baa5eb52ae0a0597da4",
+          "2": "7503d989ada15c0e2504a27ca32b50d533b28bfa038fb09ce857a242",
+          "3": "460d3df7e6b8856962ae020f71da9a34a8d844cdd87cbad10df4b2b7"
+        }
+      },
+      {
+        "pg_id": "247600411adcf6b1b54f70fa73a338000000",
+        "name": "omp-hetero--M--large",
+        "layout_id": "M",
+        "instance_id": "large",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "CPU": 8.0,
+            "node:192.168.102.44": 0.001,
+            "TPU": 4.0
+          },
+          "1": {
+            "node:192.168.102.39": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          },
+          "2": {
+            "node:192.168.102.42": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          },
+          "3": {
+            "TPU": 4.0,
+            "node:192.168.102.41": 0.001,
+            "CPU": 8.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "0b1e112c8a703272b896df9ac46a94ee1d9a2fe0b5198a5b142fab93",
+          "1": "d117c321900e6242d54e11c0865258a27f726baa5eb52ae0a0597da4",
+          "2": "7503d989ada15c0e2504a27ca32b50d533b28bfa038fb09ce857a242",
+          "3": "460d3df7e6b8856962ae020f71da9a34a8d844cdd87cbad10df4b2b7"
+        }
+      },
+      {
+        "pg_id": "b9cbbf40583390bb51149ff306aa3d000000",
+        "name": "omp-hetero--M--large",
+        "layout_id": "M",
+        "instance_id": "large",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "CPU": 8.0,
+            "node:192.168.102.44": 0.001,
+            "TPU": 4.0
+          },
+          "1": {
+            "node:192.168.102.39": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          },
+          "2": {
+            "node:192.168.102.42": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          },
+          "3": {
+            "CPU": 8.0,
+            "node:192.168.102.41": 0.001,
+            "TPU": 4.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "0b1e112c8a703272b896df9ac46a94ee1d9a2fe0b5198a5b142fab93",
+          "1": "d117c321900e6242d54e11c0865258a27f726baa5eb52ae0a0597da4",
+          "2": "7503d989ada15c0e2504a27ca32b50d533b28bfa038fb09ce857a242",
+          "3": "460d3df7e6b8856962ae020f71da9a34a8d844cdd87cbad10df4b2b7"
+        }
+      },
+      {
+        "pg_id": "02040d5ce8fbb8694c55ea1ba7a043000000",
+        "name": "omp-hetero--M--large",
+        "layout_id": "M",
+        "instance_id": "large",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "TPU": 4.0,
+            "node:192.168.102.44": 0.001,
+            "CPU": 8.0
+          },
+          "1": {
+            "node:192.168.102.39": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          },
+          "2": {
+            "node:192.168.102.42": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          },
+          "3": {
+            "TPU": 4.0,
+            "node:192.168.102.41": 0.001,
+            "CPU": 8.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "0b1e112c8a703272b896df9ac46a94ee1d9a2fe0b5198a5b142fab93",
+          "1": "d117c321900e6242d54e11c0865258a27f726baa5eb52ae0a0597da4",
+          "2": "7503d989ada15c0e2504a27ca32b50d533b28bfa038fb09ce857a242",
+          "3": "460d3df7e6b8856962ae020f71da9a34a8d844cdd87cbad10df4b2b7"
+        }
+      },
+      {
+        "pg_id": "7998abf211ecf0092844be385ab3d3000000",
+        "name": "omp-hetero--M--large",
+        "layout_id": "M",
+        "instance_id": "large",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "TPU": 4.0,
+            "node:192.168.102.44": 0.001,
+            "CPU": 8.0
+          },
+          "1": {
+            "node:192.168.102.39": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          },
+          "2": {
+            "node:192.168.102.42": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          },
+          "3": {
+            "TPU": 4.0,
+            "node:192.168.102.41": 0.001,
+            "CPU": 8.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "0b1e112c8a703272b896df9ac46a94ee1d9a2fe0b5198a5b142fab93",
+          "1": "d117c321900e6242d54e11c0865258a27f726baa5eb52ae0a0597da4",
+          "2": "7503d989ada15c0e2504a27ca32b50d533b28bfa038fb09ce857a242",
+          "3": "460d3df7e6b8856962ae020f71da9a34a8d844cdd87cbad10df4b2b7"
+        }
+      },
+      {
+        "pg_id": "04e055c6665c77041b7f3149755018000000",
+        "name": "omp-hetero--M--large",
+        "layout_id": "M",
+        "instance_id": "large",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "TPU": 4.0,
+            "node:192.168.102.44": 0.001,
+            "CPU": 8.0
+          },
+          "1": {
+            "node:192.168.102.39": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          },
+          "2": {
+            "node:192.168.102.42": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          },
+          "3": {
+            "TPU": 4.0,
+            "node:192.168.102.41": 0.001,
+            "CPU": 8.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "0b1e112c8a703272b896df9ac46a94ee1d9a2fe0b5198a5b142fab93",
+          "1": "d117c321900e6242d54e11c0865258a27f726baa5eb52ae0a0597da4",
+          "2": "7503d989ada15c0e2504a27ca32b50d533b28bfa038fb09ce857a242",
+          "3": "460d3df7e6b8856962ae020f71da9a34a8d844cdd87cbad10df4b2b7"
+        }
+      },
+      {
+        "pg_id": "ce04df89c05d9d6d66018b12c23653000000",
+        "name": "omp-hetero--M--large",
+        "layout_id": "M",
+        "instance_id": "large",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "CPU": 8.0,
+            "node:192.168.102.44": 0.001,
+            "TPU": 4.0
+          },
+          "1": {
+            "node:192.168.102.39": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          },
+          "2": {
+            "node:192.168.102.42": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          },
+          "3": {
+            "TPU": 4.0,
+            "node:192.168.102.41": 0.001,
+            "CPU": 8.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "0b1e112c8a703272b896df9ac46a94ee1d9a2fe0b5198a5b142fab93",
+          "1": "d117c321900e6242d54e11c0865258a27f726baa5eb52ae0a0597da4",
+          "2": "7503d989ada15c0e2504a27ca32b50d533b28bfa038fb09ce857a242",
+          "3": "460d3df7e6b8856962ae020f71da9a34a8d844cdd87cbad10df4b2b7"
+        }
+      },
+      {
+        "pg_id": "64be5ce695fc4aad5f0edec9a70933000000",
+        "name": "omp-hetero--M--large",
+        "layout_id": "M",
+        "instance_id": "large",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "TPU": 4.0,
+            "node:192.168.102.44": 0.001,
+            "CPU": 8.0
+          },
+          "1": {
+            "node:192.168.102.39": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          },
+          "2": {
+            "node:192.168.102.42": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          },
+          "3": {
+            "CPU": 8.0,
+            "node:192.168.102.41": 0.001,
+            "TPU": 4.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "0b1e112c8a703272b896df9ac46a94ee1d9a2fe0b5198a5b142fab93",
+          "1": "d117c321900e6242d54e11c0865258a27f726baa5eb52ae0a0597da4",
+          "2": "7503d989ada15c0e2504a27ca32b50d533b28bfa038fb09ce857a242",
+          "3": "460d3df7e6b8856962ae020f71da9a34a8d844cdd87cbad10df4b2b7"
+        }
+      },
+      {
+        "pg_id": "e2e059ac09d5ea8c87cfe8602a7227000000",
+        "name": "omp-hetero--M--large",
+        "layout_id": "M",
+        "instance_id": "large",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "TPU": 4.0,
+            "node:192.168.102.44": 0.001,
+            "CPU": 8.0
+          },
+          "1": {
+            "node:192.168.102.39": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          },
+          "2": {
+            "node:192.168.102.42": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          },
+          "3": {
+            "CPU": 8.0,
+            "node:192.168.102.41": 0.001,
+            "TPU": 4.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "0b1e112c8a703272b896df9ac46a94ee1d9a2fe0b5198a5b142fab93",
+          "1": "d117c321900e6242d54e11c0865258a27f726baa5eb52ae0a0597da4",
+          "2": "7503d989ada15c0e2504a27ca32b50d533b28bfa038fb09ce857a242",
+          "3": "460d3df7e6b8856962ae020f71da9a34a8d844cdd87cbad10df4b2b7"
+        }
+      },
+      {
+        "pg_id": "eea9fa3099c49927fcbba367b1ae13000000",
+        "name": "omp-hetero--M--large",
+        "layout_id": "M",
+        "instance_id": "large",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "TPU": 4.0,
+            "node:192.168.102.44": 0.001,
+            "CPU": 8.0
+          },
+          "1": {
+            "node:192.168.102.39": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          },
+          "2": {
+            "node:192.168.102.42": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          },
+          "3": {
+            "TPU": 4.0,
+            "node:192.168.102.41": 0.001,
+            "CPU": 8.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "0b1e112c8a703272b896df9ac46a94ee1d9a2fe0b5198a5b142fab93",
+          "1": "d117c321900e6242d54e11c0865258a27f726baa5eb52ae0a0597da4",
+          "2": "7503d989ada15c0e2504a27ca32b50d533b28bfa038fb09ce857a242",
+          "3": "460d3df7e6b8856962ae020f71da9a34a8d844cdd87cbad10df4b2b7"
+        }
+      },
+      {
+        "pg_id": "75ea4da4d8fcd1fd3a729934fa39ba000000",
+        "name": "omp-hetero--M--large",
+        "layout_id": "M",
+        "instance_id": "large",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "CPU": 8.0,
+            "node:192.168.102.44": 0.001,
+            "TPU": 4.0
+          },
+          "1": {
+            "node:192.168.102.39": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          },
+          "2": {
+            "node:192.168.102.42": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          },
+          "3": {
+            "CPU": 8.0,
+            "node:192.168.102.41": 0.001,
+            "TPU": 4.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "0b1e112c8a703272b896df9ac46a94ee1d9a2fe0b5198a5b142fab93",
+          "1": "d117c321900e6242d54e11c0865258a27f726baa5eb52ae0a0597da4",
+          "2": "7503d989ada15c0e2504a27ca32b50d533b28bfa038fb09ce857a242",
+          "3": "460d3df7e6b8856962ae020f71da9a34a8d844cdd87cbad10df4b2b7"
+        }
+      },
+      {
+        "pg_id": "a259777dcfd80e906ffb21ddf2c422000000",
+        "name": "omp-hetero--M--large",
+        "layout_id": "M",
+        "instance_id": "large",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "TPU": 4.0,
+            "node:192.168.102.44": 0.001,
+            "CPU": 8.0
+          },
+          "1": {
+            "node:192.168.102.39": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          },
+          "2": {
+            "node:192.168.102.42": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          },
+          "3": {
+            "TPU": 4.0,
+            "node:192.168.102.41": 0.001,
+            "CPU": 8.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "0b1e112c8a703272b896df9ac46a94ee1d9a2fe0b5198a5b142fab93",
+          "1": "d117c321900e6242d54e11c0865258a27f726baa5eb52ae0a0597da4",
+          "2": "7503d989ada15c0e2504a27ca32b50d533b28bfa038fb09ce857a242",
+          "3": "460d3df7e6b8856962ae020f71da9a34a8d844cdd87cbad10df4b2b7"
+        }
+      },
+      {
+        "pg_id": "3314969d0603314599721e605a2b08000000",
+        "name": "omp-hetero--M--large",
+        "layout_id": "M",
+        "instance_id": "large",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "CPU": 8.0,
+            "node:192.168.102.44": 0.001,
+            "TPU": 4.0
+          },
+          "1": {
+            "node:192.168.102.39": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          },
+          "2": {
+            "node:192.168.102.42": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          },
+          "3": {
+            "CPU": 8.0,
+            "node:192.168.102.41": 0.001,
+            "TPU": 4.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "0b1e112c8a703272b896df9ac46a94ee1d9a2fe0b5198a5b142fab93",
+          "1": "d117c321900e6242d54e11c0865258a27f726baa5eb52ae0a0597da4",
+          "2": "7503d989ada15c0e2504a27ca32b50d533b28bfa038fb09ce857a242",
+          "3": "460d3df7e6b8856962ae020f71da9a34a8d844cdd87cbad10df4b2b7"
+        }
+      },
+      {
+        "pg_id": "e310e6c20613c461a0f8de5ca55d7c000000",
+        "name": "omp-hetero--M--large",
+        "layout_id": "M",
+        "instance_id": "large",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "CPU": 8.0,
+            "node:192.168.102.44": 0.001,
+            "TPU": 4.0
+          },
+          "1": {
+            "node:192.168.102.39": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          },
+          "2": {
+            "node:192.168.102.42": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          },
+          "3": {
+            "TPU": 4.0,
+            "node:192.168.102.41": 0.001,
+            "CPU": 8.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "0b1e112c8a703272b896df9ac46a94ee1d9a2fe0b5198a5b142fab93",
+          "1": "d117c321900e6242d54e11c0865258a27f726baa5eb52ae0a0597da4",
+          "2": "7503d989ada15c0e2504a27ca32b50d533b28bfa038fb09ce857a242",
+          "3": "460d3df7e6b8856962ae020f71da9a34a8d844cdd87cbad10df4b2b7"
+        }
+      },
+      {
+        "pg_id": "25ca4feb59c3d7109031d1329af447000000",
+        "name": "omp-hetero--M--large",
+        "layout_id": "M",
+        "instance_id": "large",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "CPU": 8.0,
+            "node:192.168.102.44": 0.001,
+            "TPU": 4.0
+          },
+          "1": {
+            "node:192.168.102.39": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          },
+          "2": {
+            "node:192.168.102.42": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          },
+          "3": {
+            "TPU": 4.0,
+            "node:192.168.102.41": 0.001,
+            "CPU": 8.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "0b1e112c8a703272b896df9ac46a94ee1d9a2fe0b5198a5b142fab93",
+          "1": "d117c321900e6242d54e11c0865258a27f726baa5eb52ae0a0597da4",
+          "2": "7503d989ada15c0e2504a27ca32b50d533b28bfa038fb09ce857a242",
+          "3": "460d3df7e6b8856962ae020f71da9a34a8d844cdd87cbad10df4b2b7"
+        }
+      },
+      {
+        "pg_id": "53e8b43c2ba24f1d5c2e160d7d6c4c000000",
+        "name": "omp-hetero--M--small_a",
+        "layout_id": "M",
+        "instance_id": "small_a",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "node:192.168.102.38": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          },
+          "1": {
+            "node:192.168.102.45": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "7cbd00b45f9d0eafcaa2e995b8b70cac28d4aa2d0f5e8131c4f4f228",
+          "1": "2f271beaf24768468e03d778813fc969f53b4962a42a791df3605e20"
+        }
+      },
+      {
+        "pg_id": "1bd36b001530e7f4a90f2eef3c2043000000",
+        "name": "omp-hetero--M--small_a",
+        "layout_id": "M",
+        "instance_id": "small_a",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "node:192.168.102.38": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          },
+          "1": {
+            "node:192.168.102.45": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "7cbd00b45f9d0eafcaa2e995b8b70cac28d4aa2d0f5e8131c4f4f228",
+          "1": "2f271beaf24768468e03d778813fc969f53b4962a42a791df3605e20"
+        }
+      },
+      {
+        "pg_id": "168ee96637551ce09a6158ad918396000000",
+        "name": "omp-hetero--M--small_a",
+        "layout_id": "M",
+        "instance_id": "small_a",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "node:192.168.102.38": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          },
+          "1": {
+            "node:192.168.102.45": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "7cbd00b45f9d0eafcaa2e995b8b70cac28d4aa2d0f5e8131c4f4f228",
+          "1": "2f271beaf24768468e03d778813fc969f53b4962a42a791df3605e20"
+        }
+      },
+      {
+        "pg_id": "5bcb3df3618e25d8ebeff5f077ef18000000",
+        "name": "omp-hetero--M--small_a",
+        "layout_id": "M",
+        "instance_id": "small_a",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "node:192.168.102.38": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          },
+          "1": {
+            "node:192.168.102.45": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "7cbd00b45f9d0eafcaa2e995b8b70cac28d4aa2d0f5e8131c4f4f228",
+          "1": "2f271beaf24768468e03d778813fc969f53b4962a42a791df3605e20"
+        }
+      },
+      {
+        "pg_id": "58ad99f70dcd93fc58a4db095f61ba000000",
+        "name": "omp-hetero--M--small_a",
+        "layout_id": "M",
+        "instance_id": "small_a",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "node:192.168.102.38": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          },
+          "1": {
+            "node:192.168.102.45": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "7cbd00b45f9d0eafcaa2e995b8b70cac28d4aa2d0f5e8131c4f4f228",
+          "1": "2f271beaf24768468e03d778813fc969f53b4962a42a791df3605e20"
+        }
+      },
+      {
+        "pg_id": "a977c89794bc4b1810628aa86b793d000000",
+        "name": "omp-hetero--M--small_a",
+        "layout_id": "M",
+        "instance_id": "small_a",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "node:192.168.102.38": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          },
+          "1": {
+            "node:192.168.102.45": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "7cbd00b45f9d0eafcaa2e995b8b70cac28d4aa2d0f5e8131c4f4f228",
+          "1": "2f271beaf24768468e03d778813fc969f53b4962a42a791df3605e20"
+        }
+      },
+      {
+        "pg_id": "d07598da4b03957018f52b971b4247000000",
+        "name": "omp-hetero--M--small_a",
+        "layout_id": "M",
+        "instance_id": "small_a",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "node:192.168.102.38": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          },
+          "1": {
+            "node:192.168.102.45": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "7cbd00b45f9d0eafcaa2e995b8b70cac28d4aa2d0f5e8131c4f4f228",
+          "1": "2f271beaf24768468e03d778813fc969f53b4962a42a791df3605e20"
+        }
+      },
+      {
+        "pg_id": "7ace21cbfc09d3bc8ee942cfd00627000000",
+        "name": "omp-hetero--M--small_a",
+        "layout_id": "M",
+        "instance_id": "small_a",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "node:192.168.102.38": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          },
+          "1": {
+            "node:192.168.102.45": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "7cbd00b45f9d0eafcaa2e995b8b70cac28d4aa2d0f5e8131c4f4f228",
+          "1": "2f271beaf24768468e03d778813fc969f53b4962a42a791df3605e20"
+        }
+      },
+      {
+        "pg_id": "3cbed07448b5c15585508bc8dfe169000000",
+        "name": "omp-hetero--M--small_a",
+        "layout_id": "M",
+        "instance_id": "small_a",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "node:192.168.102.38": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          },
+          "1": {
+            "node:192.168.102.45": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "7cbd00b45f9d0eafcaa2e995b8b70cac28d4aa2d0f5e8131c4f4f228",
+          "1": "2f271beaf24768468e03d778813fc969f53b4962a42a791df3605e20"
+        }
+      },
+      {
+        "pg_id": "e502a23cfb8305a0bf869e8b1eee7c000000",
+        "name": "omp-hetero--M--small_a",
+        "layout_id": "M",
+        "instance_id": "small_a",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "node:192.168.102.38": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          },
+          "1": {
+            "node:192.168.102.45": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "7cbd00b45f9d0eafcaa2e995b8b70cac28d4aa2d0f5e8131c4f4f228",
+          "1": "2f271beaf24768468e03d778813fc969f53b4962a42a791df3605e20"
+        }
+      },
+      {
+        "pg_id": "7a3ae6947f80769928b5866e5e8022000000",
+        "name": "omp-hetero--M--small_a",
+        "layout_id": "M",
+        "instance_id": "small_a",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "node:192.168.102.38": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          },
+          "1": {
+            "node:192.168.102.45": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "7cbd00b45f9d0eafcaa2e995b8b70cac28d4aa2d0f5e8131c4f4f228",
+          "1": "2f271beaf24768468e03d778813fc969f53b4962a42a791df3605e20"
+        }
+      },
+      {
+        "pg_id": "5a43b0d2845f88e9ea0a9c5d29bb13000000",
+        "name": "omp-hetero--M--small_a",
+        "layout_id": "M",
+        "instance_id": "small_a",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "node:192.168.102.38": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          },
+          "1": {
+            "node:192.168.102.45": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "7cbd00b45f9d0eafcaa2e995b8b70cac28d4aa2d0f5e8131c4f4f228",
+          "1": "2f271beaf24768468e03d778813fc969f53b4962a42a791df3605e20"
+        }
+      },
+      {
+        "pg_id": "edbde289fa2c7cd85515a37a808a53000000",
+        "name": "omp-hetero--M--small_a",
+        "layout_id": "M",
+        "instance_id": "small_a",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "node:192.168.102.38": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          },
+          "1": {
+            "node:192.168.102.45": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "7cbd00b45f9d0eafcaa2e995b8b70cac28d4aa2d0f5e8131c4f4f228",
+          "1": "2f271beaf24768468e03d778813fc969f53b4962a42a791df3605e20"
+        }
+      },
+      {
+        "pg_id": "8bf32a4cbda3197ccd7355bc75e60e000000",
+        "name": "omp-hetero--M--small_a",
+        "layout_id": "M",
+        "instance_id": "small_a",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "node:192.168.102.38": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          },
+          "1": {
+            "node:192.168.102.45": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "7cbd00b45f9d0eafcaa2e995b8b70cac28d4aa2d0f5e8131c4f4f228",
+          "1": "2f271beaf24768468e03d778813fc969f53b4962a42a791df3605e20"
+        }
+      },
+      {
+        "pg_id": "57a631c8e6c088926b69cb2eb64c38000000",
+        "name": "omp-hetero--M--small_a",
+        "layout_id": "M",
+        "instance_id": "small_a",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "node:192.168.102.38": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          },
+          "1": {
+            "node:192.168.102.45": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "7cbd00b45f9d0eafcaa2e995b8b70cac28d4aa2d0f5e8131c4f4f228",
+          "1": "2f271beaf24768468e03d778813fc969f53b4962a42a791df3605e20"
+        }
+      },
+      {
+        "pg_id": "d6c8f472c0071d78339d02548c7933000000",
+        "name": "omp-hetero--M--small_a",
+        "layout_id": "M",
+        "instance_id": "small_a",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "node:192.168.102.38": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          },
+          "1": {
+            "node:192.168.102.45": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "7cbd00b45f9d0eafcaa2e995b8b70cac28d4aa2d0f5e8131c4f4f228",
+          "1": "2f271beaf24768468e03d778813fc969f53b4962a42a791df3605e20"
+        }
+      },
+      {
+        "pg_id": "9a445bf62ca4480563515458447a08000000",
+        "name": "omp-hetero--M--small_a",
+        "layout_id": "M",
+        "instance_id": "small_a",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "node:192.168.102.38": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          },
+          "1": {
+            "node:192.168.102.45": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "7cbd00b45f9d0eafcaa2e995b8b70cac28d4aa2d0f5e8131c4f4f228",
+          "1": "2f271beaf24768468e03d778813fc969f53b4962a42a791df3605e20"
+        }
+      },
+      {
+        "pg_id": "fb06f096dc4c3d1ee49330bbf6a3d3000000",
+        "name": "omp-hetero--M--small_a",
+        "layout_id": "M",
+        "instance_id": "small_a",
+        "state": "CREATED",
+        "bundles": {
+          "0": {
+            "node:192.168.102.38": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          },
+          "1": {
+            "node:192.168.102.45": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "7cbd00b45f9d0eafcaa2e995b8b70cac28d4aa2d0f5e8131c4f4f228",
+          "1": "2f271beaf24768468e03d778813fc969f53b4962a42a791df3605e20"
+        }
+      },
+      {
+        "pg_id": "1a5c2a676ae934faeee84774dcd1d3000000",
+        "name": "omp-hetero--M--small_b",
+        "layout_id": "M",
+        "instance_id": "small_b",
+        "state": "CREATED",
+        "bundles": {
+          "0": {
+            "node:192.168.102.43": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          },
+          "1": {
+            "node:192.168.102.40": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "4096df7539468240aaa65aed3fa988b547fc08311354336fb0e3bf9e",
+          "1": "cfb9ec7efadbbf0f126eafd1d06a188c5f92f77df74cd0f885032cfd"
+        }
+      },
+      {
+        "pg_id": "4e398534f9d4ea9806e23e6de0f847000000",
+        "name": "omp-hetero--M--small_b",
+        "layout_id": "M",
+        "instance_id": "small_b",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "node:192.168.102.43": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          },
+          "1": {
+            "node:192.168.102.40": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "4096df7539468240aaa65aed3fa988b547fc08311354336fb0e3bf9e",
+          "1": "cfb9ec7efadbbf0f126eafd1d06a188c5f92f77df74cd0f885032cfd"
+        }
+      },
+      {
+        "pg_id": "8d69be11b86c3930452debe4970718000000",
+        "name": "omp-hetero--M--small_b",
+        "layout_id": "M",
+        "instance_id": "small_b",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "node:192.168.102.43": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          },
+          "1": {
+            "node:192.168.102.40": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "4096df7539468240aaa65aed3fa988b547fc08311354336fb0e3bf9e",
+          "1": "cfb9ec7efadbbf0f126eafd1d06a188c5f92f77df74cd0f885032cfd"
+        }
+      },
+      {
+        "pg_id": "873b91d1f5311fd90dfda7bf0ab996000000",
+        "name": "omp-hetero--M--small_b",
+        "layout_id": "M",
+        "instance_id": "small_b",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "node:192.168.102.43": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          },
+          "1": {
+            "node:192.168.102.40": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "4096df7539468240aaa65aed3fa988b547fc08311354336fb0e3bf9e",
+          "1": "cfb9ec7efadbbf0f126eafd1d06a188c5f92f77df74cd0f885032cfd"
+        }
+      },
+      {
+        "pg_id": "d51317919ecfb071368f7790b4ca38000000",
+        "name": "omp-hetero--M--small_b",
+        "layout_id": "M",
+        "instance_id": "small_b",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "node:192.168.102.43": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          },
+          "1": {
+            "node:192.168.102.40": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "4096df7539468240aaa65aed3fa988b547fc08311354336fb0e3bf9e",
+          "1": "cfb9ec7efadbbf0f126eafd1d06a188c5f92f77df74cd0f885032cfd"
+        }
+      },
+      {
+        "pg_id": "8b83030e139e5af398fa4d11d266ba000000",
+        "name": "omp-hetero--M--small_b",
+        "layout_id": "M",
+        "instance_id": "small_b",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "node:192.168.102.43": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          },
+          "1": {
+            "node:192.168.102.40": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "4096df7539468240aaa65aed3fa988b547fc08311354336fb0e3bf9e",
+          "1": "cfb9ec7efadbbf0f126eafd1d06a188c5f92f77df74cd0f885032cfd"
+        }
+      },
+      {
+        "pg_id": "0049bfd5c0c0952a0824df645fb37c000000",
+        "name": "omp-hetero--M--small_b",
+        "layout_id": "M",
+        "instance_id": "small_b",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "node:192.168.102.43": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          },
+          "1": {
+            "node:192.168.102.40": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "4096df7539468240aaa65aed3fa988b547fc08311354336fb0e3bf9e",
+          "1": "cfb9ec7efadbbf0f126eafd1d06a188c5f92f77df74cd0f885032cfd"
+        }
+      },
+      {
+        "pg_id": "6ac8e6fc75d3794f41daef8d8bb453000000",
+        "name": "omp-hetero--M--small_b",
+        "layout_id": "M",
+        "instance_id": "small_b",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "node:192.168.102.43": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          },
+          "1": {
+            "node:192.168.102.40": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "4096df7539468240aaa65aed3fa988b547fc08311354336fb0e3bf9e",
+          "1": "cfb9ec7efadbbf0f126eafd1d06a188c5f92f77df74cd0f885032cfd"
+        }
+      },
+      {
+        "pg_id": "bdddbb15a15511a879505d7e7c8e43000000",
+        "name": "omp-hetero--M--small_b",
+        "layout_id": "M",
+        "instance_id": "small_b",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "node:192.168.102.43": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          },
+          "1": {
+            "node:192.168.102.40": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "4096df7539468240aaa65aed3fa988b547fc08311354336fb0e3bf9e",
+          "1": "cfb9ec7efadbbf0f126eafd1d06a188c5f92f77df74cd0f885032cfd"
+        }
+      },
+      {
+        "pg_id": "bed33054bf3b5dcd6449be7203b54c000000",
+        "name": "omp-hetero--M--small_b",
+        "layout_id": "M",
+        "instance_id": "small_b",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "node:192.168.102.43": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          },
+          "1": {
+            "node:192.168.102.40": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "4096df7539468240aaa65aed3fa988b547fc08311354336fb0e3bf9e",
+          "1": "cfb9ec7efadbbf0f126eafd1d06a188c5f92f77df74cd0f885032cfd"
+        }
+      },
+      {
+        "pg_id": "3f72c65d1d4d5deddfe1ecdc630933000000",
+        "name": "omp-hetero--M--small_b",
+        "layout_id": "M",
+        "instance_id": "small_b",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "node:192.168.102.43": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          },
+          "1": {
+            "node:192.168.102.40": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "4096df7539468240aaa65aed3fa988b547fc08311354336fb0e3bf9e",
+          "1": "cfb9ec7efadbbf0f126eafd1d06a188c5f92f77df74cd0f885032cfd"
+        }
+      },
+      {
+        "pg_id": "d86bb4ea3723c3b4386b9773c45c27000000",
+        "name": "omp-hetero--M--small_b",
+        "layout_id": "M",
+        "instance_id": "small_b",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "node:192.168.102.43": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          },
+          "1": {
+            "node:192.168.102.40": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "4096df7539468240aaa65aed3fa988b547fc08311354336fb0e3bf9e",
+          "1": "cfb9ec7efadbbf0f126eafd1d06a188c5f92f77df74cd0f885032cfd"
+        }
+      },
+      {
+        "pg_id": "f2fe52e284850d26ab34be2d60eb08000000",
+        "name": "omp-hetero--M--small_b",
+        "layout_id": "M",
+        "instance_id": "small_b",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "node:192.168.102.43": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          },
+          "1": {
+            "node:192.168.102.40": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "4096df7539468240aaa65aed3fa988b547fc08311354336fb0e3bf9e",
+          "1": "cfb9ec7efadbbf0f126eafd1d06a188c5f92f77df74cd0f885032cfd"
+        }
+      },
+      {
+        "pg_id": "14b8e7f0b4ad3599182f416b4f0369000000",
+        "name": "omp-hetero--M--small_b",
+        "layout_id": "M",
+        "instance_id": "small_b",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "node:192.168.102.43": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          },
+          "1": {
+            "node:192.168.102.40": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "4096df7539468240aaa65aed3fa988b547fc08311354336fb0e3bf9e",
+          "1": "cfb9ec7efadbbf0f126eafd1d06a188c5f92f77df74cd0f885032cfd"
+        }
+      },
+      {
+        "pg_id": "65503806d69f98540ba856c65a033d000000",
+        "name": "omp-hetero--M--small_b",
+        "layout_id": "M",
+        "instance_id": "small_b",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "node:192.168.102.43": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          },
+          "1": {
+            "node:192.168.102.40": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "4096df7539468240aaa65aed3fa988b547fc08311354336fb0e3bf9e",
+          "1": "cfb9ec7efadbbf0f126eafd1d06a188c5f92f77df74cd0f885032cfd"
+        }
+      },
+      {
+        "pg_id": "8bfd19112c9d3aabd6fdb080c25b13000000",
+        "name": "omp-hetero--M--small_b",
+        "layout_id": "M",
+        "instance_id": "small_b",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "node:192.168.102.43": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          },
+          "1": {
+            "node:192.168.102.40": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "4096df7539468240aaa65aed3fa988b547fc08311354336fb0e3bf9e",
+          "1": "cfb9ec7efadbbf0f126eafd1d06a188c5f92f77df74cd0f885032cfd"
+        }
+      },
+      {
+        "pg_id": "45a61f2bccc7f7d67be65967f32c22000000",
+        "name": "omp-hetero--M--small_b",
+        "layout_id": "M",
+        "instance_id": "small_b",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "node:192.168.102.43": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          },
+          "1": {
+            "node:192.168.102.40": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "4096df7539468240aaa65aed3fa988b547fc08311354336fb0e3bf9e",
+          "1": "cfb9ec7efadbbf0f126eafd1d06a188c5f92f77df74cd0f885032cfd"
+        }
+      },
+      {
+        "pg_id": "f305215713b0d1928fa0b513b9dc0e000000",
+        "name": "omp-hetero--M--small_b",
+        "layout_id": "M",
+        "instance_id": "small_b",
+        "state": "REMOVED",
+        "bundles": {
+          "0": {
+            "node:192.168.102.43": 0.001,
+            "TPU": 4.0,
+            "CPU": 8.0
+          },
+          "1": {
+            "node:192.168.102.40": 0.001,
+            "CPU": 8.0,
+            "TPU": 4.0
+          }
+        },
+        "bundles_to_node_id": {
+          "0": "4096df7539468240aaa65aed3fa988b547fc08311354336fb0e3bf9e",
+          "1": "cfb9ec7efadbbf0f126eafd1d06a188c5f92f77df74cd0f885032cfd"
+        }
+      }
+    ]
+  },
+  "retarget": {
+    "instances": [
+      "small_a",
+      "small_b"
+    ],
+    "registry_rows": 2,
+    "discovery": {
+      "pool": "omp-hetero",
+      "target_port": 8000,
+      "ready": true,
+      "selector": "omp.llm-d.ai/instance=true",
+      "endpoint_picker": {
+        "failureMode": "FailClose",
+        "group": "",
+        "kind": "Service",
+        "name": "omp-gateway",
+        "port": {
+          "number": 9002
+        }
+      },
+      "protocol": "envoy-ext-proc-v3",
+      "response_mode": "ImmediateResponse",
+      "resolved": [
+        {
+          "instance_id": "small_a",
+          "generation": 1790880148,
+          "layout_id": "S",
+          "endpoint": "192.168.102.38:8000",
+          "pod": "tpu-ray-cluster-vllm-tpu-tpu-worker-group-worker-g8lnn",
+          "pod_ready": true,
+          "identity_matches": true,
+          "registry_state": "ready",
+          "routable": true,
+          "tp_size": 8,
+          "kv_usable_blocks": 412
+        },
+        {
+          "instance_id": "small_b",
+          "generation": 1790880148,
+          "layout_id": "S",
+          "endpoint": "192.168.102.43:8000",
+          "pod": "tpu-ray-cluster-vllm-tpu-tpu-worker-group-worker-wrn2v",
+          "pod_ready": true,
+          "identity_matches": true,
+          "registry_state": "ready",
+          "routable": true,
+          "tp_size": 8,
+          "kv_usable_blocks": 412
+        }
+      ],
+      "registry_without_pod_endpoint": [],
+      "pod_endpoints_without_instance": [],
+      "identity_mismatches": [],
+      "logical_instance_count": 2,
+      "pod_endpoint_count": 2,
+      "maintenance_instances": [
+        "small_c",
+        "small_d"
+      ],
+      "labels": {
+        "applied": [
+          {
+            "instance_id": "small_a",
+            "pod": "tpu-ray-cluster-vllm-tpu-tpu-worker-group-worker-g8lnn",
+            "generation": 1790880148,
+            "labelled": true
+          },
+          {
+            "instance_id": "small_b",
+            "pod": "tpu-ray-cluster-vllm-tpu-tpu-worker-group-worker-wrn2v",
+            "generation": 1790880148,
+            "labelled": true
+          }
+        ],
+        "removed_stale": []
+      }
+    },
+    "layout_id": "S",
+    "joining": [
+      "small_c",
+      "small_d"
+    ],
+    "retargeted_at": 1790880520.582887
+  },
+  "phase2": {
+    "makespan_s": 521.9984,
+    "useful_tokens_per_s": 1382.37,
+    "useful_output_tokens": 721595,
+    "all_requests_complete": true,
+    "started_wall": 1790880532.4110196,
+    "finished_wall": 1790881054.4094725,
+    "artifact_dir": "/tmp/omp_hetero/artifacts/partial-73e3679-smoke",
+    "instances": [
+      "small_a",
+      "small_b",
+      "small_c",
+      "small_d"
+    ],
+    "layout_id": "S"
+  },
+  "during_run": {
+    "result": {
+      "join_called_at": 1790880882.4693432,
+      "join_returned_at": 1790880883.1530933,
+      "receipt": {
+        "instances": [
+          "small_a",
+          "small_b",
+          "small_c",
+          "small_d"
+        ],
+        "registry_rows": 4,
+        "discovery": {
+          "pool": "omp-hetero",
+          "target_port": 8000,
+          "ready": true,
+          "selector": "omp.llm-d.ai/instance=true",
+          "endpoint_picker": {
+            "failureMode": "FailClose",
+            "group": "",
+            "kind": "Service",
+            "name": "omp-gateway",
+            "port": {
+              "number": 9002
+            }
+          },
+          "protocol": "envoy-ext-proc-v3",
+          "response_mode": "ImmediateResponse",
+          "resolved": [
+            {
+              "instance_id": "small_a",
+              "generation": 1790880148,
+              "layout_id": "S",
+              "endpoint": "192.168.102.38:8000",
+              "pod": "tpu-ray-cluster-vllm-tpu-tpu-worker-group-worker-g8lnn",
+              "pod_ready": true,
+              "identity_matches": true,
+              "registry_state": "ready",
+              "routable": true,
+              "tp_size": 8,
+              "kv_usable_blocks": 412
+            },
+            {
+              "instance_id": "small_b",
+              "generation": 1790880148,
+              "layout_id": "S",
+              "endpoint": "192.168.102.43:8000",
+              "pod": "tpu-ray-cluster-vllm-tpu-tpu-worker-group-worker-wrn2v",
+              "pod_ready": true,
+              "identity_matches": true,
+              "registry_state": "ready",
+              "routable": true,
+              "tp_size": 8,
+              "kv_usable_blocks": 412
+            },
+            {
+              "instance_id": "small_c",
+              "generation": 1790880523,
+              "layout_id": "S",
+              "endpoint": "192.168.102.44:8000",
+              "pod": "tpu-ray-cluster-vllm-tpu-tpu-worker-group-worker-nsrx5",
+              "pod_ready": true,
+              "identity_matches": true,
+              "registry_state": "ready",
+              "routable": true,
+              "tp_size": 8,
+              "kv_usable_blocks": 412
+            },
+            {
+              "instance_id": "small_d",
+              "generation": 1790880523,
+              "layout_id": "S",
+              "endpoint": "192.168.102.39:8000",
+              "pod": "tpu-ray-cluster-vllm-tpu-tpu-worker-group-worker-c6bll",
+              "pod_ready": true,
+              "identity_matches": true,
+              "registry_state": "ready",
+              "routable": true,
+              "tp_size": 8,
+              "kv_usable_blocks": 412
+            }
+          ],
+          "registry_without_pod_endpoint": [],
+          "pod_endpoints_without_instance": [],
+          "identity_mismatches": [],
+          "logical_instance_count": 4,
+          "pod_endpoint_count": 4,
+          "maintenance_instances": [],
+          "labels": {
+            "applied": [
+              {
+                "instance_id": "small_c",
+                "pod": "tpu-ray-cluster-vllm-tpu-tpu-worker-group-worker-nsrx5",
+                "generation": 1790880523,
+                "labelled": true
+              },
+              {
+                "instance_id": "small_d",
+                "pod": "tpu-ray-cluster-vllm-tpu-tpu-worker-group-worker-c6bll",
+                "generation": 1790880523,
+                "labelled": true
+              }
+            ],
+            "removed_stale": []
+          }
+        },
+        "joined": [
+          "small_c",
+          "small_d"
+        ],
+        "joined_at": 1790880883.1516194,
+        "policy_roles": {
+          "small_instances": [
+            "small_a",
+            "small_b",
+            "small_c",
+            "small_d"
+          ],
+          "large_instances": []
+        },
+        "remaining_joining": []
+      }
+    }
+  },
+  "join_partition": {
+    "join_started_at": 1790880882.4693432,
+    "join_finished_at": 1790880883.1530933,
+    "pre_join": {
+      "requests": 1312,
+      "errors": 0,
+      "useful_output_tokens": 547121,
+      "initial_placement": {
+        "small_a": 628,
+        "small_b": 585,
+        "small_c": 52,
+        "small_d": 47
+      },
+      "first_admitted_at": 1790880532.4449282,
+      "last_finished_at": 1790881011.000043
+    },
+    "during_join": {
+      "requests": 2,
+      "errors": 0,
+      "useful_output_tokens": 307,
+      "initial_placement": {
+        "small_a": 1,
+        "small_d": 1
+      },
+      "first_admitted_at": 1790880882.5485477,
+      "last_finished_at": 1790880928.9773877
+    },
+    "post_join": {
+      "requests": 449,
+      "errors": 0,
+      "useful_output_tokens": 174167,
+      "initial_placement": {
+        "small_a": 65,
+        "small_b": 114,
+        "small_c": 121,
+        "small_d": 149
+      },
+      "first_admitted_at": 1790880883.4901114,
+      "last_finished_at": 1790881054.3896542
+    }
+  },
+  "timeline": {
+    "phase1_drained_at": null,
+    "drain_s": 1.1,
+    "deploy_s": 361.74,
+    "join_s": 0.68,
+    "phase2_first_dispatch": 1790880532.4110196,
+    "phase2_last_finish": 1790881054.4094725,
+    "join_after_phase2_start_s": 350.74
+  }
+}

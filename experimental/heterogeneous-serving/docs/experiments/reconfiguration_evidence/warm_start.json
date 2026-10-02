@@ -1,0 +1,204 @@
+{
+ "gcsfuse /models": {
+  "commit": "bab4f9e",
+  "model": "/models/gemma-4-31b",
+  "stage_clocks": {
+   "backend_s": 1.45,
+   "placement_s": 0.09,
+   "actor_s": 0.41,
+   "engine_init_s": 360.29,
+   "serving_endpoint_s": 1.08
+  },
+  "workers": [
+   {
+    "instance": "small_a",
+    "rank": 0,
+    "init_device_s": 3.66,
+    "load_model_s": 235.91,
+    "determine_available_memory_s": 0.0,
+    "initialize_from_config_s": 25.7,
+    "compile_or_warm_up_model_s": 63.71,
+    "engine_init_s": 351.46
+   },
+   {
+    "instance": "small_a",
+    "rank": 1,
+    "init_device_s": 3.67,
+    "load_model_s": 235.23,
+    "determine_available_memory_s": 0.0,
+    "initialize_from_config_s": 25.7,
+    "compile_or_warm_up_model_s": 63.72,
+    "engine_init_s": 351.46
+   },
+   {
+    "instance": "small_b",
+    "rank": 0,
+    "init_device_s": 2.76,
+    "load_model_s": 233.76,
+    "determine_available_memory_s": 0.0,
+    "initialize_from_config_s": 25.68,
+    "compile_or_warm_up_model_s": 63.95,
+    "engine_init_s": 349.67
+   },
+   {
+    "instance": "small_b",
+    "rank": 1,
+    "init_device_s": 2.76,
+    "load_model_s": 235.52,
+    "determine_available_memory_s": 0.0,
+    "initialize_from_config_s": 25.68,
+    "compile_or_warm_up_model_s": 63.95,
+    "engine_init_s": 349.67
+   },
+   {
+    "instance": "small_c",
+    "rank": 0,
+    "init_device_s": 3.61,
+    "load_model_s": 236.85,
+    "determine_available_memory_s": 0.0,
+    "initialize_from_config_s": 25.76,
+    "compile_or_warm_up_model_s": 63.38,
+    "engine_init_s": 351.83
+   },
+   {
+    "instance": "small_c",
+    "rank": 1,
+    "init_device_s": 3.61,
+    "load_model_s": 233.6,
+    "determine_available_memory_s": 0.0,
+    "initialize_from_config_s": 25.77,
+    "compile_or_warm_up_model_s": 63.38,
+    "engine_init_s": 351.83
+   },
+   {
+    "instance": "small_d",
+    "rank": 0,
+    "init_device_s": 2.8,
+    "load_model_s": 235.66,
+    "determine_available_memory_s": 0.0,
+    "initialize_from_config_s": 25.81,
+    "compile_or_warm_up_model_s": 64.03,
+    "engine_init_s": 350.33
+   },
+   {
+    "instance": "small_d",
+    "rank": 1,
+    "init_device_s": 2.75,
+    "load_model_s": 235.7,
+    "determine_available_memory_s": 0.0,
+    "initialize_from_config_s": 25.81,
+    "compile_or_warm_up_model_s": 64.03,
+    "engine_init_s": 350.33
+   }
+  ],
+  "load_model_s_range": [
+   233.6,
+   236.85
+  ]
+ },
+ "tmpfs /dev/shm": {
+  "commit": "73e3679",
+  "model": "/dev/shm/gemma-4-31b",
+  "stage_clocks": {
+   "backend_s": 1.49,
+   "placement_s": 0.1,
+   "actor_s": 0.4,
+   "engine_init_s": 360.47,
+   "serving_endpoint_s": 1.08
+  },
+  "workers": [
+   {
+    "instance": "small_a",
+    "rank": 0,
+    "init_device_s": 2.8,
+    "load_model_s": 237.81,
+    "determine_available_memory_s": 0.0,
+    "initialize_from_config_s": 25.84,
+    "compile_or_warm_up_model_s": 64.02,
+    "engine_init_s": 352.03
+   },
+   {
+    "instance": "small_a",
+    "rank": 1,
+    "init_device_s": 2.79,
+    "load_model_s": 235.7,
+    "determine_available_memory_s": 0.0,
+    "initialize_from_config_s": 25.84,
+    "compile_or_warm_up_model_s": 64.02,
+    "engine_init_s": 352.03
+   },
+   {
+    "instance": "small_b",
+    "rank": 0,
+    "init_device_s": 2.74,
+    "load_model_s": 238.76,
+    "determine_available_memory_s": 0.0,
+    "initialize_from_config_s": 25.98,
+    "compile_or_warm_up_model_s": 61.34,
+    "engine_init_s": 349.83
+   },
+   {
+    "instance": "small_b",
+    "rank": 1,
+    "init_device_s": 2.78,
+    "load_model_s": 236.75,
+    "determine_available_memory_s": 0.0,
+    "initialize_from_config_s": 25.97,
+    "compile_or_warm_up_model_s": 61.34,
+    "engine_init_s": 349.83
+   },
+   {
+    "instance": "small_c",
+    "rank": 0,
+    "init_device_s": 2.74,
+    "load_model_s": 234.59,
+    "determine_available_memory_s": 0.0,
+    "initialize_from_config_s": 25.61,
+    "compile_or_warm_up_model_s": 63.31,
+    "engine_init_s": 347.78
+   },
+   {
+    "instance": "small_c",
+    "rank": 1,
+    "init_device_s": 2.78,
+    "load_model_s": 234.28,
+    "determine_available_memory_s": 0.0,
+    "initialize_from_config_s": 25.61,
+    "compile_or_warm_up_model_s": 63.31,
+    "engine_init_s": 347.78
+   },
+   {
+    "instance": "small_d",
+    "rank": 0,
+    "init_device_s": 3.55,
+    "load_model_s": 237.19,
+    "determine_available_memory_s": 0.0,
+    "initialize_from_config_s": 25.48,
+    "compile_or_warm_up_model_s": 61.8,
+    "engine_init_s": 350.29
+   },
+   {
+    "instance": "small_d",
+    "rank": 1,
+    "init_device_s": 3.57,
+    "load_model_s": 237.82,
+    "determine_available_memory_s": 0.0,
+    "initialize_from_config_s": 25.48,
+    "compile_or_warm_up_model_s": 61.81,
+    "engine_init_s": 350.29
+   }
+  ],
+  "load_model_s_range": [
+   234.28,
+   238.76
+  ]
+ },
+ "tmpfs staging": {
+  "bytes_per_host": 62578684606,
+  "copy_s_range": [
+   24.74,
+   25.55
+  ],
+  "hosts": 8
+ }
+}

@@ -1,0 +1,33 @@
+{
+ "T_M_W4_s": 311.125,
+ "T_S_W0x4_s": 1230.9333333333334,
+ "per_W0_copy_S_s": 307.73333333333335,
+ "per_W0_copy_M_in_backlog_s": 389.7,
+ "static_overlap_forfeited_s": 115.07500000000005,
+ "C_full_s": 413.25,
+ "C_partial_effective_s": 186.4666666666667,
+ "gain_per_W0_copy_s": 81.96666666666664,
+ "breakeven_W0_copies_full": 6.4456079707198075,
+ "breakeven_W0_copies_partial": 3.678832858885728,
+ "breakeven_tokens_full": 4651118.48363156,
+ "breakeven_tokens_partial": 2654627.396807647,
+ "predicted_k4": {
+  "static": 1754.85,
+  "full": 1955.3083333333334,
+  "partial": 1728.525
+ },
+ "measured_k4": {
+  "static": [
+   1752.6,
+   1757.1
+  ],
+  "full": [
+   1966.3,
+   1957.0
+  ],
+  "partial": [
+   1715.8,
+   1730.2
+  ]
+ }
+}
