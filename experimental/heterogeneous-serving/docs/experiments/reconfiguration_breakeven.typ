@@ -337,7 +337,7 @@ engine).
   columns: (auto, auto, auto, auto, auto),
   align: (left, right, right, right, right),
   table.header[Mix A arm (means)][W4 phase][Transition gap][W0×4 phase][Job],
-  [static M (one backlog)], [0–1,039 s#super[c]], [–], [196–1,755 s], [1,754.9 s],
+  [static M (one backlog)], [overlaps#super[c]], [–], [1,558.8 s (from 196 s)], [1,754.9 s],
   [M → S full], [316.7 s], [413.2 s], [1,231.7 s], [1,961.7 s],
   [M → S partial], [305.6 s], [9.3 s], [1,408.1 s], [1,723.0 s],
   [static S, W0×4 alone (reference)], [–], [–], [1,229.4 s], [–],
