@@ -278,7 +278,7 @@ and a place in the gateway. The approaches differ in which of these survive the 
 <text x="575.0" y="215.0" text-anchor="middle" font-size="11" fill="#cf222e">allocated, 26 s</text>
 <rect x="653" y="191" width="144" height="40" rx="5" fill="#ffebe9" stroke="#cf222e" stroke-width="1"/>
 <text x="725.0" y="208.5" text-anchor="middle" font-size="11" fill="#cf222e">allocated,</text>
-<text x="725.0" y="221.5" text-anchor="middle" font-size="11" fill="#cf222e">12 s per engine</text>
+<text x="725.0" y="221.5" text-anchor="middle" font-size="11" fill="#cf222e">2 × 12 s in turn</text>
 <text x="190" y="261.0" text-anchor="end" font-size="11" fill="#1f2328" font-weight="bold">Compiled code</text>
 <rect x="203" y="237" width="144" height="40" rx="5" fill="#fff8c5" stroke="#9a6700" stroke-width="1"/>
 <text x="275.0" y="254.5" text-anchor="middle" font-size="11" fill="#9a6700">disk cache</text>
@@ -299,7 +299,7 @@ and a place in the gateway. The approaches differ in which of these survive the 
 <rect x="503" y="283" width="144" height="40" rx="5" fill="#ffebe9" stroke="#cf222e" stroke-width="1"/>
 <text x="575.0" y="307.0" text-anchor="middle" font-size="11" fill="#cf222e">recreated</text>
 <rect x="653" y="283" width="144" height="40" rx="5" fill="#ffebe9" stroke="#cf222e" stroke-width="1"/>
-<text x="725.0" y="307.0" text-anchor="middle" font-size="11" fill="#cf222e">recreated, ≈33 s</text>
+<text x="725.0" y="307.0" text-anchor="middle" font-size="11" fill="#cf222e">recreated, ≈20 s</text>
 <text x="190" y="353.0" text-anchor="end" font-size="11" fill="#1f2328" font-weight="bold">Gateway</text>
 <rect x="203" y="329" width="144" height="40" rx="5" fill="#ffebe9" stroke="#cf222e" stroke-width="1"/>
 <text x="275.0" y="346.5" text-anchor="middle" font-size="11" fill="#cf222e">torn down,</text>
@@ -364,10 +364,10 @@ is tpu-inference's native Flax loader (`get_flax_model`), not the torch wrapper.
 <rect x="716.6" y="36" width="9.2" height="30" fill="#8c959f" stroke="#fff" stroke-width="1"/>
 <text x="731.8" y="55" font-weight="bold">239 s</text>
 <rect x="190.0" y="72" width="9" height="9" fill="#afb8c1"/><text x="202.0" y="81" font-size="10.5" fill="#424a53">file iteration 0.2 s</text>
-<rect x="306.0" y="72" width="9" height="9" fill="#e16f24"/><text x="318.0" y="81" font-size="10.5" fill="#424a53">host work (convert + other) 157 s</text>
-<rect x="500.0" y="72" width="9" height="9" fill="#8250df"/><text x="512.0" y="81" font-size="10.5" fill="#424a53">compile / cache-load 75 s</text>
+<rect x="336.0" y="72" width="9" height="9" fill="#e16f24"/><text x="348.0" y="81" font-size="10.5" fill="#424a53">host work (convert + other) 157 s</text>
+<rect x="560.0" y="72" width="9" height="9" fill="#8250df"/><text x="572.0" y="81" font-size="10.5" fill="#424a53">compile / cache-load 75 s</text>
 <rect x="190.0" y="87" width="9" height="9" fill="#0969da"/><text x="202.0" y="96" font-size="10.5" fill="#424a53">host→device 3.0 s</text>
-<rect x="306.0" y="87" width="9" height="9" fill="#8c959f"/><text x="318.0" y="96" font-size="10.5" fill="#424a53">post-load 4.1 s</text>
+<rect x="318.0" y="87" width="9" height="9" fill="#8c959f"/><text x="330.0" y="96" font-size="10.5" fill="#424a53">post-load 4.1 s</text>
 <text x="180" y="131" text-anchor="end" font-weight="bold">Snapshot restore</text>
 <text x="180" y="145" text-anchor="end" font-size="10.5" fill="#59636e">SHA-256 verified</text>
 <rect x="190.0" y="118" width="0.8" height="30" fill="#afb8c1" stroke="#fff" stroke-width="1"/>
@@ -602,8 +602,10 @@ first, cold repetition took 3.3 s (S → H) and 3.7 s (H → S) on the slice bec
 Every shard checksum matched.]
 
 - *Bandwidth.* On the slice, `device_put` moved 78 GB (S → H) and 203 GB (H → S) of logical data,
-  104 and 189 GB/s in total. A profile shows 1,768 TPU collective-permute operations per process
-  and no host copies, so the data went over ICI and not through host memory.
+  104 and 189 GB/s in total. A profile of one 16-chip box (`device_put`, S → H, first repetition)
+  shows 1,768 TPU collective-permute operations per process and no host copies, so that transfer
+  went over ICI and not through host memory. The other routes and the 32-chip runs were not
+  profiled.
 - *Memory.* `device_put` peaks at 11.8 GB of the 16 GB per chip. Assembling from local shards
   peaks at 15.7 GB, too close to the limit for a real engine that also needs KV cache.
 - *Device order matters.* With an interleaved TP16 device order, S → H needs no data movement
@@ -639,7 +641,7 @@ TP16 → 2×TP8 → TP16. It serves the same 32 greedy W0 prompts after each swi
 
 #figure(
   svg-fig(```svg
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 337" font-family="Helvetica, Arial, 'DejaVu Sans', sans-serif" font-size="12" fill="#1f2328">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 367" font-family="Helvetica, Arial, 'DejaVu Sans', sans-serif" font-size="12" fill="#1f2328">
 <text x="10" y="18" font-weight="bold">Reconfiguration cost C, broken down (measured)</text>
 <text x="180" y="49" text-anchor="end" font-weight="bold">Full redeploy</text>
 <text x="180" y="63" text-anchor="end" font-size="10.5" fill="#59636e">S→H, full slice</text>
@@ -658,83 +660,84 @@ TP16 → 2×TP8 → TP16. It serves the same 32 greedy W0 prompts after each swi
 <text x="700.1" y="55" text-anchor="middle" fill="#fff" font-size="11">21</text>
 <rect x="713.4" y="36" width="18.0" height="30" fill="#afb8c1" stroke="#fff" stroke-width="1"/>
 <rect x="731.5" y="36" width="11.6" height="30" fill="#1a7f37" stroke="#fff" stroke-width="1"/>
-<text x="749.0" y="55" font-weight="bold">445 s</text>
+<text x="749.0" y="55" font-weight="bold">444 s</text>
 <rect x="190.0" y="72" width="9" height="9" fill="#8c959f"/><text x="202.0" y="81" font-size="10.5" fill="#424a53">teardown + job start 45 s</text>
 <rect x="366.0" y="72" width="9" height="9" fill="#54aeff"/><text x="378.0" y="81" font-size="10.5" fill="#424a53">Ray workers 22 s</text>
 <rect x="488.0" y="72" width="9" height="9" fill="#0969da"/><text x="500.0" y="81" font-size="10.5" fill="#424a53">TPU init 3.6 s</text>
-<rect x="586.0" y="72" width="9" height="9" fill="#e16f24"/><text x="598.0" y="81" font-size="10.5" fill="#424a53">load weights 238 s</text>
+<rect x="598.0" y="72" width="9" height="9" fill="#e16f24"/><text x="610.0" y="81" font-size="10.5" fill="#424a53">load weights 238 s</text>
 <rect x="190.0" y="87" width="9" height="9" fill="#bf8700"/><text x="202.0" y="96" font-size="10.5" fill="#424a53">KV alloc 26 s</text>
 <rect x="294.0" y="87" width="9" height="9" fill="#8250df"/><text x="306.0" y="96" font-size="10.5" fill="#424a53">compile + warm-up 65 s</text>
 <rect x="452.0" y="87" width="9" height="9" fill="#6e7781"/><text x="464.0" y="96" font-size="10.5" fill="#424a53">gateway 21 s</text>
 <rect x="550.0" y="87" width="9" height="9" fill="#afb8c1"/><text x="562.0" y="96" font-size="10.5" fill="#424a53">1st dispatch 14 s</text>
-<rect x="678.0" y="87" width="9" height="9" fill="#1a7f37"/><text x="690.0" y="96" font-size="10.5" fill="#424a53">ramp 9.3 s</text>
-<text x="180" y="131" text-anchor="end" font-weight="bold">Snapshot restore</text>
-<text x="180" y="145" text-anchor="end" font-size="10.5" fill="#59636e">S→H, full slice</text>
-<rect x="190.0" y="118" width="34.1" height="30" fill="#8c959f" stroke="#fff" stroke-width="1"/>
-<text x="207.0" y="137" text-anchor="middle" fill="#fff" font-size="11">27</text>
-<rect x="224.1" y="118" width="26.9" height="30" fill="#54aeff" stroke="#fff" stroke-width="1"/>
-<text x="237.5" y="137" text-anchor="middle" fill="#fff" font-size="11">22</text>
-<rect x="251.0" y="118" width="4.9" height="30" fill="#0969da" stroke="#fff" stroke-width="1"/>
-<rect x="255.8" y="118" width="35.3" height="30" fill="#e16f24" stroke="#fff" stroke-width="1"/>
-<text x="273.5" y="137" text-anchor="middle" fill="#fff" font-size="11">28</text>
-<rect x="291.2" y="118" width="32.1" height="30" fill="#bf8700" stroke="#fff" stroke-width="1"/>
-<text x="307.2" y="137" text-anchor="middle" fill="#fff" font-size="11">26</text>
-<rect x="323.3" y="118" width="78.8" height="30" fill="#8250df" stroke="#fff" stroke-width="1"/>
-<text x="362.7" y="137" text-anchor="middle" fill="#fff" font-size="11">63</text>
-<rect x="402.1" y="118" width="27.4" height="30" fill="#6e7781" stroke="#fff" stroke-width="1"/>
-<text x="415.7" y="137" text-anchor="middle" fill="#fff" font-size="11">22</text>
-<rect x="429.4" y="118" width="26.0" height="30" fill="#afb8c1" stroke="#fff" stroke-width="1"/>
-<text x="442.4" y="137" text-anchor="middle" fill="#fff" font-size="11">21</text>
-<rect x="455.4" y="118" width="10.1" height="30" fill="#1a7f37" stroke="#fff" stroke-width="1"/>
-<text x="471.5" y="137" font-weight="bold">221 s</text>
-<rect x="190.0" y="154" width="9" height="9" fill="#8c959f"/><text x="202.0" y="163" font-size="10.5" fill="#424a53">teardown 27 s</text>
-<rect x="294.0" y="154" width="9" height="9" fill="#54aeff"/><text x="306.0" y="163" font-size="10.5" fill="#424a53">Ray workers 22 s</text>
-<rect x="416.0" y="154" width="9" height="9" fill="#0969da"/><text x="428.0" y="163" font-size="10.5" fill="#424a53">TPU init 3.9 s</text>
-<rect x="514.0" y="154" width="9" height="9" fill="#e16f24"/><text x="526.0" y="163" font-size="10.5" fill="#424a53">restore weights 28 s</text>
-<rect x="190.0" y="169" width="9" height="9" fill="#bf8700"/><text x="202.0" y="178" font-size="10.5" fill="#424a53">KV alloc 26 s</text>
-<rect x="294.0" y="169" width="9" height="9" fill="#8250df"/><text x="306.0" y="178" font-size="10.5" fill="#424a53">compile + warm-up 63 s</text>
-<rect x="452.0" y="169" width="9" height="9" fill="#6e7781"/><text x="464.0" y="178" font-size="10.5" fill="#424a53">deploy/gateway 22 s</text>
-<rect x="592.0" y="169" width="9" height="9" fill="#afb8c1"/><text x="604.0" y="178" font-size="10.5" fill="#424a53">1st dispatch 21 s</text>
-<rect x="190.0" y="184" width="9" height="9" fill="#1a7f37"/><text x="202.0" y="193" font-size="10.5" fill="#424a53">ramp 8.1 s</text>
-<text x="180" y="228" text-anchor="end" font-weight="bold">In place (ICI)</text>
-<text x="180" y="242" text-anchor="end" font-size="10.5" fill="#59636e">TP16→2×TP8, one box, warm</text>
-<rect x="190.0" y="215" width="1.9" height="30" fill="#8c959f" stroke="#fff" stroke-width="1"/>
-<rect x="191.9" y="215" width="0.8" height="30" fill="#bf3989" stroke="#fff" stroke-width="1"/>
-<rect x="192.6" y="215" width="19.2" height="30" fill="#1b7c83" stroke="#fff" stroke-width="1"/>
-<rect x="211.8" y="215" width="4.9" height="30" fill="#e16f24" stroke="#fff" stroke-width="1"/>
-<rect x="216.6" y="215" width="1.0" height="30" fill="#0969da" stroke="#fff" stroke-width="1"/>
-<rect x="217.6" y="215" width="15.2" height="30" fill="#bf8700" stroke="#fff" stroke-width="1"/>
-<rect x="232.8" y="215" width="41.6" height="30" fill="#8250df" stroke="#fff" stroke-width="1"/>
-<text x="253.6" y="234" text-anchor="middle" fill="#fff" font-size="11">33</text>
-<rect x="274.4" y="215" width="40.8" height="30" fill="#6e7781" stroke="#fff" stroke-width="1"/>
-<text x="294.8" y="234" text-anchor="middle" fill="#fff" font-size="11">33</text>
-<text x="321.2" y="234" font-weight="bold">101 s</text>
-<rect x="190.0" y="251" width="9" height="9" fill="#8c959f"/><text x="202.0" y="260" font-size="10.5" fill="#424a53">free KV + runner 1.5 s</text>
-<rect x="336.0" y="251" width="9" height="9" fill="#bf3989"/><text x="348.0" y="260" font-size="10.5" fill="#424a53">repack 0.6 s</text>
-<rect x="434.0" y="251" width="9" height="9" fill="#1b7c83"/><text x="446.0" y="260" font-size="10.5" fill="#424a53">graph rebuild 15 s</text>
-<rect x="568.0" y="251" width="9" height="9" fill="#e16f24"/><text x="580.0" y="260" font-size="10.5" fill="#424a53">reshard 3.9 s</text>
-<rect x="190.0" y="266" width="9" height="9" fill="#0969da"/><text x="202.0" y="275" font-size="10.5" fill="#424a53">functions 0.8 s</text>
-<rect x="306.0" y="266" width="9" height="9" fill="#bf8700"/><text x="318.0" y="275" font-size="10.5" fill="#424a53">KV alloc 12 s</text>
-<rect x="410.0" y="266" width="9" height="9" fill="#8250df"/><text x="422.0" y="275" font-size="10.5" fill="#424a53">warm-up 33 s</text>
-<rect x="508.0" y="266" width="9" height="9" fill="#6e7781"/><text x="520.0" y="275" font-size="10.5" fill="#424a53">engine core + binding 33 s</text>
-<line x1="190" y1="297" x2="750" y2="297" stroke="#59636e"/>
-<line x1="190.0" y1="297" x2="190.0" y2="302" stroke="#59636e"/><text x="190.0" y="314" text-anchor="middle" font-size="10" fill="#59636e">0</text>
-<line x1="252.2" y1="297" x2="252.2" y2="302" stroke="#59636e"/><text x="252.2" y="314" text-anchor="middle" font-size="10" fill="#59636e">50</text>
-<line x1="314.4" y1="297" x2="314.4" y2="302" stroke="#59636e"/><text x="314.4" y="314" text-anchor="middle" font-size="10" fill="#59636e">100</text>
-<line x1="376.7" y1="297" x2="376.7" y2="302" stroke="#59636e"/><text x="376.7" y="314" text-anchor="middle" font-size="10" fill="#59636e">150</text>
-<line x1="438.9" y1="297" x2="438.9" y2="302" stroke="#59636e"/><text x="438.9" y="314" text-anchor="middle" font-size="10" fill="#59636e">200</text>
-<line x1="501.1" y1="297" x2="501.1" y2="302" stroke="#59636e"/><text x="501.1" y="314" text-anchor="middle" font-size="10" fill="#59636e">250</text>
-<line x1="563.3" y1="297" x2="563.3" y2="302" stroke="#59636e"/><text x="563.3" y="314" text-anchor="middle" font-size="10" fill="#59636e">300</text>
-<line x1="625.6" y1="297" x2="625.6" y2="302" stroke="#59636e"/><text x="625.6" y="314" text-anchor="middle" font-size="10" fill="#59636e">350</text>
-<line x1="687.8" y1="297" x2="687.8" y2="302" stroke="#59636e"/><text x="687.8" y="314" text-anchor="middle" font-size="10" fill="#59636e">400</text>
-<line x1="750.0" y1="297" x2="750.0" y2="302" stroke="#59636e"/><text x="750.0" y="314" text-anchor="middle" font-size="10" fill="#59636e">450</text>
-<text x="750" y="329" text-anchor="end" font-size="10.5" fill="#59636e">seconds</text>
+<rect x="190.0" y="102" width="9" height="9" fill="#1a7f37"/><text x="202.0" y="111" font-size="10.5" fill="#424a53">ramp 9.3 s</text>
+<text x="180" y="146" text-anchor="end" font-weight="bold">Snapshot restore</text>
+<text x="180" y="160" text-anchor="end" font-size="10.5" fill="#59636e">S→H, full slice</text>
+<rect x="190.0" y="133" width="34.1" height="30" fill="#8c959f" stroke="#fff" stroke-width="1"/>
+<text x="207.0" y="152" text-anchor="middle" fill="#fff" font-size="11">27</text>
+<rect x="224.1" y="133" width="26.9" height="30" fill="#54aeff" stroke="#fff" stroke-width="1"/>
+<text x="237.5" y="152" text-anchor="middle" fill="#fff" font-size="11">22</text>
+<rect x="251.0" y="133" width="4.9" height="30" fill="#0969da" stroke="#fff" stroke-width="1"/>
+<rect x="255.8" y="133" width="35.3" height="30" fill="#e16f24" stroke="#fff" stroke-width="1"/>
+<text x="273.5" y="152" text-anchor="middle" fill="#fff" font-size="11">28</text>
+<rect x="291.2" y="133" width="32.1" height="30" fill="#bf8700" stroke="#fff" stroke-width="1"/>
+<text x="307.2" y="152" text-anchor="middle" fill="#fff" font-size="11">26</text>
+<rect x="323.3" y="133" width="78.8" height="30" fill="#8250df" stroke="#fff" stroke-width="1"/>
+<text x="362.7" y="152" text-anchor="middle" fill="#fff" font-size="11">63</text>
+<rect x="402.1" y="133" width="27.4" height="30" fill="#6e7781" stroke="#fff" stroke-width="1"/>
+<text x="415.7" y="152" text-anchor="middle" fill="#fff" font-size="11">22</text>
+<rect x="429.4" y="133" width="26.0" height="30" fill="#afb8c1" stroke="#fff" stroke-width="1"/>
+<text x="442.4" y="152" text-anchor="middle" fill="#fff" font-size="11">21</text>
+<rect x="455.4" y="133" width="10.1" height="30" fill="#1a7f37" stroke="#fff" stroke-width="1"/>
+<text x="471.5" y="152" font-weight="bold">221 s</text>
+<rect x="190.0" y="169" width="9" height="9" fill="#8c959f"/><text x="202.0" y="178" font-size="10.5" fill="#424a53">teardown 27 s</text>
+<rect x="294.0" y="169" width="9" height="9" fill="#54aeff"/><text x="306.0" y="178" font-size="10.5" fill="#424a53">Ray workers 22 s</text>
+<rect x="416.0" y="169" width="9" height="9" fill="#0969da"/><text x="428.0" y="178" font-size="10.5" fill="#424a53">TPU init 3.9 s</text>
+<rect x="526.0" y="169" width="9" height="9" fill="#e16f24"/><text x="538.0" y="178" font-size="10.5" fill="#424a53">restore weights 28 s</text>
+<rect x="190.0" y="184" width="9" height="9" fill="#bf8700"/><text x="202.0" y="193" font-size="10.5" fill="#424a53">KV alloc 26 s</text>
+<rect x="294.0" y="184" width="9" height="9" fill="#8250df"/><text x="306.0" y="193" font-size="10.5" fill="#424a53">compile + warm-up 63 s</text>
+<rect x="452.0" y="184" width="9" height="9" fill="#6e7781"/><text x="464.0" y="193" font-size="10.5" fill="#424a53">deploy/gateway 22 s</text>
+<rect x="592.0" y="184" width="9" height="9" fill="#afb8c1"/><text x="604.0" y="193" font-size="10.5" fill="#424a53">1st dispatch 21 s</text>
+<rect x="190.0" y="199" width="9" height="9" fill="#1a7f37"/><text x="202.0" y="208" font-size="10.5" fill="#424a53">ramp 8.1 s</text>
+<text x="180" y="243" text-anchor="end" font-weight="bold">In place (ICI)</text>
+<text x="180" y="257" text-anchor="end" font-size="10.5" fill="#59636e">TP16→2×TP8, one box, warm</text>
+<rect x="190.0" y="230" width="1.9" height="30" fill="#8c959f" stroke="#fff" stroke-width="1"/>
+<rect x="191.9" y="230" width="0.8" height="30" fill="#bf3989" stroke="#fff" stroke-width="1"/>
+<rect x="192.6" y="230" width="19.2" height="30" fill="#1b7c83" stroke="#fff" stroke-width="1"/>
+<rect x="211.8" y="230" width="4.9" height="30" fill="#e16f24" stroke="#fff" stroke-width="1"/>
+<rect x="216.6" y="230" width="1.0" height="30" fill="#0969da" stroke="#fff" stroke-width="1"/>
+<rect x="217.6" y="230" width="30.4" height="30" fill="#bf8700" stroke="#fff" stroke-width="1"/>
+<text x="232.8" y="249" text-anchor="middle" fill="#fff" font-size="11">24</text>
+<rect x="248.0" y="230" width="41.6" height="30" fill="#8250df" stroke="#fff" stroke-width="1"/>
+<text x="268.8" y="249" text-anchor="middle" fill="#fff" font-size="11">33</text>
+<rect x="289.6" y="230" width="25.6" height="30" fill="#6e7781" stroke="#fff" stroke-width="1"/>
+<text x="302.4" y="249" text-anchor="middle" fill="#fff" font-size="11">21</text>
+<text x="321.2" y="249" font-weight="bold">101 s</text>
+<rect x="190.0" y="266" width="9" height="9" fill="#8c959f"/><text x="202.0" y="275" font-size="10.5" fill="#424a53">free KV + runner 1.5 s</text>
+<rect x="348.0" y="266" width="9" height="9" fill="#bf3989"/><text x="360.0" y="275" font-size="10.5" fill="#424a53">repack 0.6 s</text>
+<rect x="446.0" y="266" width="9" height="9" fill="#1b7c83"/><text x="458.0" y="275" font-size="10.5" fill="#424a53">graph rebuild 15 s</text>
+<rect x="580.0" y="266" width="9" height="9" fill="#e16f24"/><text x="592.0" y="275" font-size="10.5" fill="#424a53">reshard 3.9 s</text>
+<rect x="190.0" y="281" width="9" height="9" fill="#0969da"/><text x="202.0" y="290" font-size="10.5" fill="#424a53">functions 0.8 s</text>
+<rect x="306.0" y="281" width="9" height="9" fill="#bf8700"/><text x="318.0" y="290" font-size="10.5" fill="#424a53">KV alloc, 2 engines in turn 24 s</text>
+<rect x="524.0" y="281" width="9" height="9" fill="#8250df"/><text x="536.0" y="290" font-size="10.5" fill="#424a53">warm-up 33 s</text>
+<rect x="190.0" y="296" width="9" height="9" fill="#6e7781"/><text x="202.0" y="305" font-size="10.5" fill="#424a53">engine core, binding, 1st token 21 s</text>
+<line x1="190" y1="327" x2="750" y2="327" stroke="#59636e"/>
+<line x1="190.0" y1="327" x2="190.0" y2="332" stroke="#59636e"/><text x="190.0" y="344" text-anchor="middle" font-size="10" fill="#59636e">0</text>
+<line x1="252.2" y1="327" x2="252.2" y2="332" stroke="#59636e"/><text x="252.2" y="344" text-anchor="middle" font-size="10" fill="#59636e">50</text>
+<line x1="314.4" y1="327" x2="314.4" y2="332" stroke="#59636e"/><text x="314.4" y="344" text-anchor="middle" font-size="10" fill="#59636e">100</text>
+<line x1="376.7" y1="327" x2="376.7" y2="332" stroke="#59636e"/><text x="376.7" y="344" text-anchor="middle" font-size="10" fill="#59636e">150</text>
+<line x1="438.9" y1="327" x2="438.9" y2="332" stroke="#59636e"/><text x="438.9" y="344" text-anchor="middle" font-size="10" fill="#59636e">200</text>
+<line x1="501.1" y1="327" x2="501.1" y2="332" stroke="#59636e"/><text x="501.1" y="344" text-anchor="middle" font-size="10" fill="#59636e">250</text>
+<line x1="563.3" y1="327" x2="563.3" y2="332" stroke="#59636e"/><text x="563.3" y="344" text-anchor="middle" font-size="10" fill="#59636e">300</text>
+<line x1="625.6" y1="327" x2="625.6" y2="332" stroke="#59636e"/><text x="625.6" y="344" text-anchor="middle" font-size="10" fill="#59636e">350</text>
+<line x1="687.8" y1="327" x2="687.8" y2="332" stroke="#59636e"/><text x="687.8" y="344" text-anchor="middle" font-size="10" fill="#59636e">400</text>
+<line x1="750.0" y1="327" x2="750.0" y2="332" stroke="#59636e"/><text x="750.0" y="344" text-anchor="middle" font-size="10" fill="#59636e">450</text>
+<text x="750" y="359" text-anchor="end" font-size="10.5" fill="#59636e">seconds</text>
 </svg>
 ```),
   caption: [Where the switch cost goes, measured. Top two rows: full 32-chip slice, S → H. Bottom
-    row: one box, TP16 → 2×TP8, second switch with the compile-cache fix. "Engine core +
-    binding" is engine-core construction, executor attachment and first tokens, which the
-    prototype doesn't time separately.],
+    row: one box, TP16 → 2×TP8, second switch with the compile-cache fix, in a smaller engine
+    configuration (`max_model_len` 4096). "Engine core, binding, 1st token" is the untimed
+    remainder.],
 ) <fig-cost>
 
 #table(
@@ -751,22 +754,29 @@ TP16 → 2×TP8 → TP16. It serves the same 32 greedy W0 prompts after each swi
 - Each of the four processes kept its PID and ran exactly one runtime initialisation and one
   checkpoint load.
 
-*What the warm 100.6 s contains* (per process, warm switch to 2×TP8, cache fix on):
+*What the warm 100.6 s contains* (warm switch to 2×TP8, cache fix on; the two TP8 engines are
+built one after the other):
 
 #table(
   columns: (auto, auto),
   align: (left, right),
-  table.header[Step][Time],
+  table.header[Step][Time on the critical path],
   [Drain], [0.002 s],
   [Free KV cache and runner], [1.4–1.5 s],
   [Repack fused gate/up and QKV weights on device], [0.6 s],
   [Rebuild the model graph for the new mesh], [15.0–15.4 s],
   [Reshard weights (`device_put` + sub-mesh handles)], [3.4–3.9 s],
   [Rebuild model functions], [0.4–0.8 s],
-  [KV cache allocation, per engine], [12.2 s],
-  [Compile + warm-up], [33.4 s],
-  [Not timed separately: engine-core construction, executor attachment, first tokens], [about 33 s],
+  [KV cache allocation: engine A, then engine B (12.2 s each)], [24.4 s],
+  [Compile + warm-up (both engines together)], [33.4 s],
+  [Not timed separately: engine-core construction, executor attachment, first tokens], [about 20 s],
 )
+
+*Not a like-for-like configuration.* The prototype ran with `max_model_len` 4096, 32 sequences
+and 1,024 batched tokens per step, against 16,384, 512 and 2,048 in the deployed engines. Its
+shorter warm-up (33 s against 63 s) and KV allocation (12 s against 26 s per engine) therefore
+come partly from the smaller configuration, not only from keeping the weights resident. The weight
+steps (repack, reshard) don't depend on these settings.
 
 *Three problems the prototype had to solve:*
 + *Fused weights depend on the TP size.* The fused gate/up and QKV weights store per-projection
@@ -840,9 +850,9 @@ slowly and has no W0 break-even.
   its 100.6 s. Its first switch is no better than restore. The faster 77 s direction (2×TP8 →
   TP16) only helps phases that run better on H.
 - *Neither removes the remaining fixed cost.* Compile and warm-up (33–63 s), KV allocation
-  (12–26 s) and orchestration dominate both. In the in-place prototype, rebuilding the model
-  graph (15 s) and engine construction (about 33 s) are the next targets. Moving the weights is
-  already 4 s.
+  (12–26 s per engine) and orchestration dominate both. In the in-place prototype, building the two
+  TP8 engines one after the other (24 s of KV allocation), rebuilding the model graph (15 s) and
+  engine construction (about 20 s) are the next targets. Moving the weights is already 4 s.
 
 = Threats to validity <sec-validity>
 
