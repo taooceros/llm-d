@@ -305,10 +305,16 @@ worth 115 s (@sec-e2e).
 
 Two jobs, chosen from the break-even table before running: mix A (W4, then W0×4: 3.27M tokens) was
 the one most likely to benefit; the control (W4, then W5: 1.37M tokens) should not. W4 needs a
-TP16 engine, so S cannot run either job statically. Every arm starts from a fresh deploy of its
-first layout and ends released; arms alternated order across the two repetitions. Routing is the
-W4 "reserve" policy in every phase (on S it reduces to the blind policy, since S has no TP16
-engine).
+TP16 engine, so S cannot run either job statically. Static H was not run end to end. Summing its
+measured single-manifest makespans under the same reserve policy, less the phase overlap static M
+showed, gives about 2,240 s for mix A (W4 371 s + 4 × W0 ≈ 497 s − 115 s), far above static M, and
+about 1,730–1,880 s for the control (W4 371 s + W5 1,514 s, with or without about 150 s of
+overlap), which may beat static M (1,795 s) by up to 65 s. The control's reconfigured arm loses
+to either by more than 350 s [estimate from measured parts; no conclusion depends on it]. Every
+arm starts from a fresh deploy of its first layout and ends released; arms alternated order
+across the two
+repetitions. Routing is the W4 "reserve" policy in every phase (on S it reduces to the blind
+policy, since S has no TP16 engine).
 
 #table(
   columns: (auto, auto, auto, auto, auto, auto),
