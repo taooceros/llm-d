@@ -118,9 +118,11 @@ two ways.
   some I/O may hide there.]
 - *Pre-sharded snapshot restore* saves each engine's final on-chip weight shards to host RAM and
   places them back directly, skipping vLLM's loader. Weight loading drops from 237 s to 28–40 s
-  (about 20 s without checksum verification, most of it model building, not data movement).
+  (about 20 s without checksum verification, measured on S/TP8 only; most of it model building,
+  not data movement).
   Greedy outputs stay token-identical, and a measured full-slice switch costs
-  #colored(good)[*221–229 s*], against 417–427 s for the same transitions with a full redeploy.
+  #colored(good)[*221–229 s*], against 417–427 s for the same transitions with a full redeploy
+  (407–445 s raw).
   It works with today's deploy path.
 - *Moving weights over ICI is fast*: 0.41 s per 16-chip box and 0.75–1.08 s for the whole slice,
   for the full 62.5 GB of Gemma-4 31B-shaped weights.
@@ -347,7 +349,8 @@ and a place in the gateway. The approaches differ in which of these survive the 
 
 The `LoadProfiler` agent added load-time-only instrumentation (off by default) to the engine
 worker and profiled all 8 workers of one S deploy and one H deploy. The load path for this model
-is tpu-inference's native Flax loader (`get_flax_model`), not the torch wrapper.
+is tpu-inference's native Flax loader (`get_flax_model`), not the torch wrapper. The profiler's own
+overhead was not measured, so the split below is approximate.
 
 #figure(
   svg-fig(```svg
@@ -425,8 +428,9 @@ on first access are counted in host work, not here.]
   fast bfloat16 path and falls back to a slow conversion].
 - The loader makes 3,365 compile-or-cache calls and clears its caches 333 times, once per module
   [INFERENCE: the clearing prevents reuse of kernels with the same shape].
-- The raw copy of final shards to the chips runs at 9.7–11.9 GB/s. That puts the floor for any
-  restore at about 2.6 s (TP8) and 1.6 s (TP16) per worker.
+- The copies of final shards to the chips, measured per array, ran at 9.7–11.9 GB/s: 2.6 s (TP8)
+  and 1.6 s (TP16) of put time per worker. That is a per-array rate, not a measured floor for a
+  whole restore.
 
 = Approach A: pre-sharded snapshot restore <sec-restore>
 
@@ -470,7 +474,7 @@ fit in the roughly 175 GB of free tmpfs per host.
 )
 #footnote-text[a. From the break-even study. That campaign also tore down the not-yet-deployed
 target layout before deploying it, which added 18.0 s that the restore runs didn't pay (18.1 s
-for H → M). Without it the full-redeploy costs are 427.0 s (S → H) and 417.4 s (H → M).
+for H → M). Without it the full-redeploy costs are 427.0 s (S → H) and 417.5 s (H → M).
 c. Includes a 6–7 s pre-serving diagnostic check that the restore runs added and the baseline
 didn't, so restore's C is overstated by that much.]
 
