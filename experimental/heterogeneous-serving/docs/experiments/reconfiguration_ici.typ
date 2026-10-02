@@ -531,7 +531,45 @@ threshold 1.0 in every worker and is invalid, not a measured null effect.
 Evidence: `reconfiguration_ici_evidence/FollowupAudit/` contains independent source-hashed
 verdicts (commits `bae2c76`, `913fff5`, `7f46e9a`). Snapshot data path `1d591d8`, corrected
 validation harness `a5ebfdc`; helper branches `helper/snapshot-route` and `helper/overlap`.
-Further graph/cache/overlap measurements are not included until qualified.
+Further cache/overlap measurements are not included until qualified.
+
+*Checksum-matched comparison.* The 50–52 s to 14–15 s snapshot comparison changes both the
+copy implementation and checksum policy. It is not a 3.5× gain at equal integrity guarantees.
+The earlier checksum-disabled restore already took 19.1–20.3 s, close to FastSnapshot
+restore at 18.94–19.29 s. The approximately 20 s SHA cost was directly measured on restore;
+its contribution to the old snapshot writer was inferred, not separately measured.
+
+== Follow-up: removing graph-construction overhead <sec-fast-graph>
+
+A separate S-only four-arm experiment tested an opt-in workaround for expensive diagnostic
+formatting in JAX tracer sharding access during abstract model construction. It temporarily
+replaces the process-global `Tracer.sharding` property during `load_model`, restoring the
+original in `finally`. It does not alter the inference step or device executable. The patch
+is not thread-local; concurrent-initializer safety has not been established.
+
+#table(
+  columns: (1fr, auto, auto),
+  table.header[Component, median across eight workers][Baseline][Fast graph],
+  [Normal-loader graph construction], [14.739 s], [1.790 s],
+  [Normal-loader complete `load_model`], [234.675 s], [222.587 s],
+  [Restore graph construction], [14.631 s], [1.767 s],
+  [Restore complete `load_model`], [39.436 s], [26.455 s],
+  [Restore SHA-256 verification], [20.280 s], [20.292 s],
+)
+
+Both restore arms used the original v1 snapshot path with full SHA-256 verification, not
+FastSnapshot with checksums disabled. All four arms matched 128 reference outputs / 8,140
+tokens each. Frozen source identities matched and each arm was released before the next;
+final snapshot cleanup left zero bytes on all eight hosts.
+
+This is one fixed-order sequence, not eight independent repetitions. Normal loading does
+not imply cold filesystem or compile caches; snapshots were resident for the normal-fast
+arm but not the normal baseline. Total-load differences are observations with these
+confounds, and concurrent worker savings must not be summed. No combined FastSnapshot,
+cache-threshold, full-transition C, H qualification, or inference-throughput gain is claimed.
+
+Evidence: runtime `df46a72` on `restore/fast-graph`, results `f317e57`, independent audit
+`46c1461` in `reconfiguration_ici_evidence/FollowupAudit/followup_graph_claims.json`.
 
 = Approach B: in-place resharding over ICI <sec-ici>
 

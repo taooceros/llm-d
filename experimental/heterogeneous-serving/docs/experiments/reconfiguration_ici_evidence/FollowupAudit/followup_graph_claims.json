@@ -1,0 +1,282 @@
+{
+  "verdict": "SUPPORTED_S_FOUR_ARM_OBSERVED_STARTUP_AND_GREEDY_CORRECTNESS",
+  "runtime_commit": "df46a72",
+  "owner_result_commit": "f317e57",
+  "arms": {
+    "S-cold-base": {
+      "mode": "off",
+      "fast_graph": false,
+      "workers": 8,
+      "outputs": 128,
+      "tokens": 8140,
+      "all_outputs_equal_reference": true,
+      "phases": {
+        "graph_build": {
+          "min_s": 14.625610113143921,
+          "median_s": 14.738641858100891,
+          "max_s": 14.825071573257446
+        },
+        "load_model": {
+          "min_s": 228.74923872947693,
+          "median_s": 234.67527413368225,
+          "max_s": 237.68673586845398
+        },
+        "compile_or_warm_up_model": {
+          "min_s": 63.53254961967468,
+          "median_s": 64.03116524219513,
+          "max_s": 64.20299577713013
+        }
+      },
+      "checksum_execution": "None: verified_checksums flag records configuration, not executed hashing in normal-loader arms.",
+      "all_four_actors_removed": true,
+      "all_historical_placement_groups_removed": true
+    },
+    "S-cold-fast": {
+      "mode": "off",
+      "fast_graph": true,
+      "workers": 8,
+      "outputs": 128,
+      "tokens": 8140,
+      "all_outputs_equal_reference": true,
+      "phases": {
+        "graph_build": {
+          "min_s": 1.7667841911315918,
+          "median_s": 1.7903660535812378,
+          "max_s": 1.8132832050323486
+        },
+        "load_model": {
+          "min_s": 216.72187757492065,
+          "median_s": 222.586718916893,
+          "max_s": 223.17071914672852
+        },
+        "compile_or_warm_up_model": {
+          "min_s": 61.80470299720764,
+          "median_s": 62.61580312252045,
+          "max_s": 63.23316287994385
+        }
+      },
+      "checksum_execution": "None: verified_checksums flag records configuration, not executed hashing in normal-loader arms.",
+      "all_four_actors_removed": true,
+      "all_historical_placement_groups_removed": true
+    },
+    "S-restore-base": {
+      "mode": "read",
+      "fast_graph": false,
+      "workers": 8,
+      "outputs": 128,
+      "tokens": 8140,
+      "all_outputs_equal_reference": true,
+      "phases": {
+        "graph_build": {
+          "min_s": 14.456827402114868,
+          "median_s": 14.630518913269043,
+          "max_s": 14.870969533920288
+        },
+        "load_model": {
+          "min_s": 39.26932501792908,
+          "median_s": 39.43646550178528,
+          "max_s": 40.30187392234802
+        },
+        "snapshot_verify": {
+          "min_s": 20.175863027572632,
+          "median_s": 20.279847025871277,
+          "max_s": 20.33978819847107
+        },
+        "snapshot_device_placement": {
+          "min_s": 1.4034790992736816,
+          "median_s": 1.446719765663147,
+          "max_s": 2.4749903678894043
+        },
+        "compile_or_warm_up_model": {
+          "min_s": 61.64587092399597,
+          "median_s": 62.224254727363586,
+          "max_s": 62.325321197509766
+        }
+      },
+      "checksum_execution": "Full SHA256 verification required by v1 prepare path; successful restored=true after prepare and nonzero verify timer.",
+      "all_four_actors_removed": true,
+      "all_historical_placement_groups_removed": true
+    },
+    "S-restore-fast": {
+      "mode": "read",
+      "fast_graph": true,
+      "workers": 8,
+      "outputs": 128,
+      "tokens": 8140,
+      "all_outputs_equal_reference": true,
+      "phases": {
+        "graph_build": {
+          "min_s": 1.7158184051513672,
+          "median_s": 1.766849398612976,
+          "max_s": 1.869170904159546
+        },
+        "load_model": {
+          "min_s": 26.226789236068726,
+          "median_s": 26.45467245578766,
+          "max_s": 27.352158308029175
+        },
+        "snapshot_verify": {
+          "min_s": 20.17677402496338,
+          "median_s": 20.292038202285767,
+          "max_s": 20.434582471847534
+        },
+        "snapshot_device_placement": {
+          "min_s": 1.405768871307373,
+          "median_s": 1.423209547996521,
+          "max_s": 2.2701518535614014
+        },
+        "compile_or_warm_up_model": {
+          "min_s": 61.47205972671509,
+          "median_s": 62.3584178686142,
+          "max_s": 62.47501087188721
+        }
+      },
+      "checksum_execution": "Full SHA256 verification required by v1 prepare path; successful restored=true after prepare and nonzero verify timer.",
+      "all_four_actors_removed": true,
+      "all_historical_placement_groups_removed": true
+    }
+  },
+  "source_identity": {
+    "all_four_deploy_digest_maps_identical": true,
+    "frozen_sources_match_commit_and_current_files": {
+      "hetero/restore_graph.py": "844c977db66303024e8e4d32098d5409833b332dfbbd92b8d5805a531b344a63",
+      "hetero/tpu_worker.py": "414a0fc11cdf7973f605d4d8947dd653931fb00aba02b828099bb630bd2f0685",
+      "hetero/engine_actor.py": "c575e2b89080aaefc04bb9cac6067e22c42cd39946e202de79a2752a83c605f7",
+      "scripts/fast_graph_ab.sh": "2d9d8cb3ec8c1bbe66513fbc5cd90641c4d278b9095ff7752c83981c76bfe013",
+      "scripts/fast_graph_summary.py": "35bbbf9392087532be89d4bc02f0d2d0590f140a28f38a6c72da3309034c26ba",
+      "hetero/weight_snapshot.py": "6e4eed7d4add3a968b785d3daa72391af406c8b07e66a90cd203359069cb0368"
+    }
+  },
+  "patch_scope": "fast_graph replaces process-global core.Tracer.sharding property with a cheaper AttributeError only for the load_model context, restoring original in finally. Normal loader also temporarily wraps nnx.eval_shape for graph timing and restores it in finally. Scope is whole load_model, not solely graph_build. No device executable or inference-step patch. This is not a thread-local patch or a general concurrent-initializer safety proof.",
+  "timers": "graph_build times nnx.eval_shape of model constructor, nested within load_model. Normal graph timer excludes checkpoint loading. load_model excludes subsequent precision inspection, cache initialization and warm-up. Restore remains sequential SHA verify then abstract graph then validation/placement/update; unused overlap helpers are not evidence of overlap in this campaign.",
+  "lifecycle": "Each arm newly creates four instances/eight workers; prior arm release precedes next initialization. Each arm drain removes four actors and placement groups. Eight tmpfs directories are empty after final cleanup.",
+  "checksum_distinction": "Both restore arms use older v1 full-SHA path, not FastSnapshot v2 checksum_kind=none. verified_checksums alone is a requested-setting field; successful restored status plus inspected v1 prepare loop supports actual verification. No per-shard fingerprint dump is claimed for this campaign.",
+  "confounds": [
+    "One fixed-order S sequence: normal-base, normal-fast, restore-base, restore-fast.",
+    "cold label means normal checkpoint loader, not cold filesystem or compilation caches.",
+    "Snapshot files are created after first arm; normal-fast runs with snapshots resident unlike normal-base.",
+    "Eight worker clocks are correlated and concurrent, not eight independent trials or additive savings.",
+    "Total-load differences are observations, not fully isolated causal estimates; no confidence interval.",
+    "Standalone branch does not combine FastSnapshot, corrected threshold, or production overlap changes."
+  ],
+  "unsupported": [
+    "H qualification",
+    "new C or break-even result",
+    "inference throughput benefit",
+    "additive worker savings",
+    "combined optimization speedup"
+  ],
+  "verification": "Executed independent raw-artifact replay; no cluster calls, performance reruns, peer edits or project-wide tests.",
+  "source_manifest": [
+    {
+      "path": "FastGraph/results/restore/FastGraph/source.json",
+      "sha256": "bcc3148330181202fa72beffbbb4214ef2a0668b243bd6fd93ce986799fa9630",
+      "bytes": 1701
+    },
+    {
+      "path": "FastGraph/results/restore/FastGraph/qualification.json",
+      "sha256": "15db88216552df3af581eb3a26c9d8eee8c8c4613a8e39fd3e8fd4d07b672f00",
+      "bytes": 2268
+    },
+    {
+      "path": "FastGraph/results/restore/FastGraph/summary.json",
+      "sha256": "60b12e91d30407dc6c89a85e51e6d8c58ef36216e7ca2b8402ca643b8339c5c1",
+      "bytes": 31663
+    },
+    {
+      "path": "ShardedRestore/results/restore/ShardedRestore/S-reference.json",
+      "sha256": "fe7349d3f9b5732bc35fa9843c9df64ab8ef48d5fc6229fe20137ae5ffe5e28a",
+      "bytes": 229375
+    },
+    {
+      "path": "FastGraph/results/restore/FastGraph/S-cold-base-deploy.json",
+      "sha256": "9bd8afe3e339925b1ada5577fe37e3399a58fac22e566d898e5f55596668f22c",
+      "bytes": 1086382
+    },
+    {
+      "path": "FastGraph/results/restore/FastGraph/S-cold-base-validation.json",
+      "sha256": "0ac9e5137f8d06aa596e8d78161b28b680894721f5ed119e6f1ffeb3037930fd",
+      "bytes": 234959
+    },
+    {
+      "path": "FastGraph/results/restore/FastGraph/S-cold-base-drain.json",
+      "sha256": "07d92816dc3d7c1d9b886dae10649cff9f4a344e49670df0287588236ee04a05",
+      "bytes": 108846
+    },
+    {
+      "path": "FastGraph/results/restore/FastGraph/S-cold-base-release.json",
+      "sha256": "23530f24800c2d033ccc5afaeda3485c80f544b9ece191161850a4f85bbbbbc0",
+      "bytes": 194177
+    },
+    {
+      "path": "FastGraph/results/restore/FastGraph/S-cold-fast-deploy.json",
+      "sha256": "e2c03701c5b45e1167650b83bc5f79721270f25c96f39b44da2116d094f30854",
+      "bytes": 1086371
+    },
+    {
+      "path": "FastGraph/results/restore/FastGraph/S-cold-fast-validation.json",
+      "sha256": "f3b39c10f47a5dc5429065f4ea253c38f9c8776cd9a768ed6aededb8ee0b947e",
+      "bytes": 234962
+    },
+    {
+      "path": "FastGraph/results/restore/FastGraph/S-cold-fast-drain.json",
+      "sha256": "22ca0ba46921c769e8e51ad541a0aba528d1dbeb18b00d282dc913690bb50eba",
+      "bytes": 111686
+    },
+    {
+      "path": "FastGraph/results/restore/FastGraph/S-cold-fast-release.json",
+      "sha256": "123e7ecf81160711b998ed2c89b8444706f081c3e4b9ee6de9670c506d64663f",
+      "bytes": 197413
+    },
+    {
+      "path": "FastGraph/results/restore/FastGraph/S-restore-base-deploy.json",
+      "sha256": "dd842db43ebb413143a4f21e518b55ff34c662c75eba666fafb3ec5af6205061",
+      "bytes": 1097609
+    },
+    {
+      "path": "FastGraph/results/restore/FastGraph/S-restore-base-validation.json",
+      "sha256": "b45b3f96683ea54d417a61119808837e9c07441996b38f543652245327ce6671",
+      "bytes": 244447
+    },
+    {
+      "path": "FastGraph/results/restore/FastGraph/S-restore-base-drain.json",
+      "sha256": "1737c56693d0177a56da1f8cd5f46da7bfefbfea36033b31b6a9fbb077b9f7d3",
+      "bytes": 114527
+    },
+    {
+      "path": "FastGraph/results/restore/FastGraph/S-restore-base-release.json",
+      "sha256": "0d467c6f5af3541c38e9ffb90280b26eb5681a45a6648ba611121c22f35ac3ad",
+      "bytes": 200649
+    },
+    {
+      "path": "FastGraph/results/restore/FastGraph/S-restore-fast-deploy.json",
+      "sha256": "46dd424825ae674df1207cc690b43f3c12bb9613ed074499d1284300c25caf33",
+      "bytes": 1097594
+    },
+    {
+      "path": "FastGraph/results/restore/FastGraph/S-restore-fast-validation.json",
+      "sha256": "f5d926d49040ac3b991238e60f22acdab755c9f6435c58493174692406ffa672",
+      "bytes": 244444
+    },
+    {
+      "path": "FastGraph/results/restore/FastGraph/S-restore-fast-drain.json",
+      "sha256": "316534fbae6f3dfa9542fecae4dbc4811b22bde828d924272ab1161e0c75cbd2",
+      "bytes": 117368
+    },
+    {
+      "path": "FastGraph/results/restore/FastGraph/S-restore-fast-release.json",
+      "sha256": "2a340e830622ccf020e839eaa5f39edb2d7b5998fc20770a9313549750148000",
+      "bytes": 203884
+    },
+    {
+      "path": "FastGraph/results/restore/FastGraph/S-snapshot.json",
+      "sha256": "f1bff09748c8f2483f055f05d1a0e02a2c5a06c36cd5a8df59347dbc931f8b6d",
+      "bytes": 2552
+    },
+    {
+      "path": "FastGraph/results/restore/FastGraph/cleanup-tmpfs.json",
+      "sha256": "799dac034782bee0810bfacc44a05de6c0bed8b574373a41991aa64aecd08bcd",
+      "bytes": 2363
+    }
+  ]
+}
