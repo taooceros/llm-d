@@ -571,6 +571,43 @@ cache-threshold, full-transition C, H qualification, or inference-throughput gai
 Evidence: runtime `df46a72` on `restore/fast-graph`, results `f317e57`, independent audit
 `46c1461` in `reconfiguration_ici_evidence/FollowupAudit/followup_graph_claims.json`.
 
+== Follow-up: persist the small compilations <sec-cache-threshold>
+
+The corrected S experiment compared a persistent-cache minimum compile time of 1 s with
+0 s; both used entry-size threshold zero. Applying environment variables after JAX import
+was insufficient, so the worker now updates JAX configuration explicitly before constructing
+the runner and verifies the effective settings. The original failed contrast remains excluded.
+
+Each setting had one first deployment and one reuse deployment. In the reuse comparison:
+
+#table(
+  columns: (1fr, auto, auto),
+  table.header[Observed warm-start metric][Threshold 1 s][Threshold 0 s],
+  [Harness deployment wall time], [383.867 s], [275.387 s],
+  [Remote controller elapsed], [377.860 s], [269.314 s],
+  [`load_model`, per-engine max-rank range], [236.50–240.05 s], [171.76–174.45 s],
+  [Initialize + compile/warm-up, same scope], [96.29–98.41 s], [54.13–54.81 s],
+  [Cache entries per worker], [12], [344],
+  [Startup persistent-hit events], [96], [29,008],
+  [Startup persistent-miss events], [28,912], [0],
+)
+
+Independent replay verified all 32 effective-worker configurations across the four arms,
+matching source maps and all 64 matched worker logs, plus release and cleanup. The observed
+deployment difference is 108.479 s. These are startup-only observations: no workload or
+token-correctness test, full reconfiguration C, or break-even measurement was performed.
+Fixed order and correlated workers preclude treating the worker spread as independent trials.
+
+Hit counts are events, including CPU loader work, not distinct executables: the union of
+distinct hit keys across workers was 12 versus 381. Zero misses refers only to captured
+startup logs. JAX messages labelled “Finished XLA compilation” also follow cache hits; their
+durations are not pure compiler time. This result is separate from FastGraph and FastSnapshot;
+their savings cannot simply be added.
+
+Evidence: `helper/warmup-set`, runtime `2a3dd37`, results `0ebdf22`, run
+`ct-20261002b-configfix`; independent audit `87f83d3` in
+`reconfiguration_ici_evidence/FollowupAudit/followup_threshold_claims.json`.
+
 = Approach B: in-place resharding over ICI <sec-ici>
 
 Today every engine is its own JAX runtime with its chips fixed at start-up, and two runtimes can't
