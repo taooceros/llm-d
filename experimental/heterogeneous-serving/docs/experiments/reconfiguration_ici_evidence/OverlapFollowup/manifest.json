@@ -1,0 +1,66 @@
+{
+  "launcher_source_commit": "9009fc7",
+  "runtime_equivalence_established": false,
+  "evidence": [
+    {
+      "file": "warmup_split.json.gz",
+      "source": "warmup_split.json",
+      "source_bytes": 9275807,
+      "source_sha256": "4c6a6665b4295c3482a6ae55bc388b687780f3df32105cc717564c21ac054a9f",
+      "published_sha256": "1ed164815947e52e006c421b82be3bebbdb8aaef751fd44d6a288492ff4a323e"
+    },
+    {
+      "file": "kv_split.json.gz",
+      "source": "kv_split.json",
+      "source_bytes": 3076917,
+      "source_sha256": "36df3768655e109106927e90c467556922eb537e549d45f2668c7b73b76e8061",
+      "published_sha256": "fc893e86f5a410d27ad7e7195dca1fea32e88355fc2a5a5c3de695fc1fbede5e"
+    },
+    {
+      "file": "overlap_switch.json",
+      "source": "overlap_switch.json",
+      "source_bytes": 8826,
+      "source_sha256": "80d8ff1c7f5718815719533fe44f4aaa276b4f72399be366d21f7c7904906abe",
+      "published_sha256": "80d8ff1c7f5718815719533fe44f4aaa276b4f72399be366d21f7c7904906abe"
+    },
+    {
+      "file": "serving_impact.json",
+      "source": "serving_impact.json",
+      "source_bytes": 15816,
+      "source_sha256": "f46a71331a9fd966acc2d5a1732c2da0e317902a267233675dbf4fd8e3738161",
+      "published_sha256": "f46a71331a9fd966acc2d5a1732c2da0e317902a267233675dbf4fd8e3738161"
+    },
+    {
+      "file": "breakeven.json",
+      "source": "breakeven.json",
+      "source_bytes": 936,
+      "source_sha256": "cc9c60212e2c7bf947521bd34610f1ea4cb2af47c50274fecaa0d326c881d49d",
+      "published_sha256": "cc9c60212e2c7bf947521bd34610f1ea4cb2af47c50274fecaa0d326c881d49d"
+    },
+    {
+      "file": "startup_projection.json",
+      "source": "startup_projection.json",
+      "source_bytes": 566333,
+      "source_sha256": "2a6b3a3968ae6c7f8e0ea7d043f74a9ee097586a7a42d9166dca72bf7984896f",
+      "published_sha256": "2a6b3a3968ae6c7f8e0ea7d043f74a9ee097586a7a42d9166dca72bf7984896f"
+    },
+    {
+      "file": "failure-observed.json",
+      "source": "controlled-hs-overlap-20261002b/failure-observed.json",
+      "source_bytes": 3323,
+      "source_sha256": "50523f2de795ad243c42fa0ace9d24caf5431277bd3782ca95272750c7c0677d"
+    },
+    {
+      "file": "background-topology-error.log",
+      "source": "controlled-hs-overlap-20261002b/background-topology-error.log",
+      "source_bytes": 1318,
+      "source_sha256": "f3e425279c9fff982dd55771b73ffe47f44029c38a7d5e2ebcf2a21e720fcf16"
+    },
+    {
+      "file": "physical-gate-startup-error.log",
+      "source": "controlled-hs-overlap-20261002b/physical-gate-startup-error.log",
+      "source_bytes": 394,
+      "source_sha256": "34d2db393a7c484ab810f576cfa8a7d2b1a567a6cdb8464d513fe0427fb67762"
+    }
+  ]
+}

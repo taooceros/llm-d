@@ -1,0 +1,18 @@
+{
+  "schema": "overlap-final-observation-v1",
+  "status": "not_measured",
+  "reason": "No accepted overlap C; loaded runtime equivalence unverified; historical catalogue mismatch.",
+  "actual_catalogue_sha256": "7b99d0f0a93d7ac0e4b8a6b6e9b02df47e2ad93f0589b7a53fd00032ace45b46",
+  "historical_catalogue_sha256": "8832576dbb16d5b1cf21288354cab78407752372562bf6aae2cbb39001c7941b",
+  "manifest_sha256": "8a65e939b78fb20523249dcec6955c120218a449781d5ee19526f088e656318f",
+  "same_workload_historical_crossover_eligible": false,
+  "measurements": [],
+  "breakeven_tokens": null,
+  "breakeven_requests": null,
+  "current_rate_crossover_observed": false,
+  "limitations": [
+    "Loaded backend revision UNFROZEN and loaded_runtime null; runtime equivalence not established.",
+    "Actual catalogue differs from historical catalogue; no same-workload historical crossover.",
+    "No supported S/H phase-specific TPU device attribution."
+  ]
+}

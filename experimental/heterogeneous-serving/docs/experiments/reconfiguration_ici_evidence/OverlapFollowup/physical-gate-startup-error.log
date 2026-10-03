@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/tmp/overlap_physical_cache_gate.py", line 56, in <module>
+    if __name__=='__main__': main()
+                             ~~~~^^
+  File "/tmp/overlap_physical_cache_gate.py", line 33, in main
+    result=evidence['measurements']['pilot']['during_run']['result']
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+KeyError: 'result'

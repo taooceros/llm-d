@@ -1,0 +1,40 @@
+{
+  "status": "failed",
+  "stage": "live-serving background topology/plugin initialization",
+  "source": {
+    "path": "results/overlap/OverlapCompile/controlled-hs-overlap-20261002b/source-overlap-pilot.json",
+    "sha256": "fe05bd94a9bdaa113fd9de8eb04dcb84b618e785d2bbe12db24661212f667bb6"
+  },
+  "stacktrace": {
+    "path": "results/overlap/OverlapCompile/controlled-hs-overlap-20261002b/background-topology-error.log",
+    "sha256": "f3e425279c9fff982dd55771b73ffe47f44029c38a7d5e2ebcf2a21e720fcf16"
+  },
+  "failed_at": 1790991247.8463426,
+  "error": "RayTaskError(JaxRuntimeError): \u001b[36mray::compile_task()\u001b[39m (pid=572460, ip=192.168.102.38)\n  File \"/tmp/ray/session_2026-09-28_03-31-54_913383_1/runtime_resources/working_dir_files/_ray_pkg_812d7ee19720b949/scripts/overlap_pilot.py\", line 72, in compile_task\n    result = replay(destination, cache_dir, topology, enabled=True)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/tmp/ray/session_2026-09-28_03-31-54_913383_1/runtime_resources/working_dir_files/_ray_pkg_812d7ee19720b949/scripts/overlap_replay.py\", line 109, in replay\n    else topologies.get_topology_desc(platform=\"tpu\", topology_name=topology_name))\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/site-packages/jax/experimental/topologies.py\", line 41, in get_topology_desc\n    xb.make_pjrt_tpu_topology(\n  File \"/usr/local/lib/python3.12/site-packages/jax/_src/xla_bridge.py\", line 1207, in make_pjrt_tpu_topology\n    xla_client.initialize_pjrt_plugin(\"tpu\")\n  File \"/usr/local/lib/python3.12/site-packages/jaxlib/xla_client.py\", line 134, in initialize_pjrt_plugin\n    _xla.initialize_pjrt_plugin(plugin_name)\njax.errors.JaxRuntimeError: ABORTED: The TPU is already in use by process with pid 570736. Not attempting to load libtpu.so in this process.",
+  "background_result": null,
+  "compiled_key_proof": "not_measured",
+  "target_cache_deserialization_listener_proof": "not_measured",
+  "target_deployment": "not_measured",
+  "overlap_C_s": null,
+  "gate_error": {
+    "path": "results/overlap/OverlapCompile/controlled-hs-overlap-20261002b/physical-gate-startup-error.log",
+    "sha256": "34d2db393a7c484ab810f576cfa8a7d2b1a567a6cdb8464d513fe0427fb67762"
+  },
+  "supervisor": {
+    "daemon_pid": 4133323,
+    "observed_state": "Zs",
+    "parent_client_pid": 4133322,
+    "observed_parent_tree": "flock4124139/bash4124147/coordinator4124198/wrapper4124199/bash4124200/client4133322/zombie4133323",
+    "recovery": "SIGTERM only to owned stuck client4133322; existing EXIT cleanup completed; coordinator exited1 before S-to-H."
+  },
+  "incidental_source_attempt": {
+    "control_makespan_s": 490.7819,
+    "failed_attempt_makespan_s": 502.8775,
+    "delta_s": 12.09559999999999,
+    "fractional_change": 0.02464557066998596,
+    "scope": "Completed W0 during a FAILED attempt; NOT successful-compile interference or causal slowdown.",
+    "successful_compile_interference_s": null
+  },
+  "isolated_replay_scope": "Separate idle-slice actual-key/persistence proof; not proof that topology initialization coexists with live serving.",
+  "future_arms": "S-to-H cold/warm/overlap not measured; cancelled on explicit Main instruction; no runtime fix or TPU rerun."
+}

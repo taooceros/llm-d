@@ -1,0 +1,205 @@
+{
+  "schema": "overlap-final-observation-v1",
+  "status": "blocked",
+  "reason": "Live-serving topology/plugin ownership failure; experiment closed without mechanism speedup.",
+  "transitions": [
+    {
+      "from": "H",
+      "to": "S",
+      "treatment": "cold",
+      "status": "observed_only",
+      "source": "overlap-controlled-hs-baseline-20261002b-source-cold-control",
+      "previous_run_id": "overlap-controlled-hs-baseline-20261002b-source-cold-control",
+      "target": "overlap-controlled-hs-baseline-20261002b-target-cold",
+      "target_run_id": "overlap-controlled-hs-baseline-20261002b-target-cold",
+      "last_finished_request": 1790985657.0718324,
+      "first_dispatch": 1790986108.4816616,
+      "dispatch_gap_s": 451.4098291397095,
+      "ramp_deficit_s": 6.886726893676165,
+      "cost_s": 458.2965560333856,
+      "provisioning": {
+        "start": 1790983853.5055287,
+        "end": 1790984774.3078675,
+        "charged_s": 920.8023388385773,
+        "normal_deploy_s": 532.1935238838196,
+        "reference_snapshot_release_s": 388.6088149547577,
+        "scope": "joint prior target graph/bundle, reference generation, weight snapshot and release; not pure compile"
+      },
+      "first_use_including_provisioning_s": 1379.0988948719628,
+      "post_W0_output_equality": true,
+      "source_qualified": false,
+      "runtime_equivalence_established": false,
+      "evidence": {
+        "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/cold-transition-observed.json",
+        "sha256": "bd035d76bba80b8909f6c2810a99e1459cbb8f045d59458fb299cc05ef160b07"
+      },
+      "limitations": [
+        "Loaded backend revision UNFROZEN and loaded_runtime null; runtime equivalence not established.",
+        "Actual catalogue differs from historical catalogue; no same-workload historical crossover.",
+        "No supported S/H phase-specific TPU device attribution.",
+        "Observed baseline C only; no accepted overlap speedup comparison."
+      ]
+    },
+    {
+      "from": "H",
+      "to": "S",
+      "treatment": "warm",
+      "status": "observed_only",
+      "source": "overlap-controlled-hs-baseline-20261002b-source-warm-control",
+      "previous_run_id": "overlap-controlled-hs-baseline-20261002b-source-warm-control",
+      "target": "overlap-controlled-hs-baseline-20261002b-target-warm",
+      "target_run_id": "overlap-controlled-hs-baseline-20261002b-target-warm",
+      "last_finished_request": 1790987301.9246552,
+      "first_dispatch": 1790987520.6408875,
+      "dispatch_gap_s": 218.7162322998047,
+      "ramp_deficit_s": 6.544147676223147,
+      "cost_s": 225.26037997602782,
+      "provisioning": {
+        "start": 1790983853.5055287,
+        "end": 1790984774.3078675,
+        "charged_s": 920.8023388385773,
+        "normal_deploy_s": 532.1935238838196,
+        "reference_snapshot_release_s": 388.6088149547577,
+        "scope": "joint prior target graph/bundle, reference generation, weight snapshot and release; not pure compile"
+      },
+      "first_use_including_provisioning_s": 1146.062718814605,
+      "post_W0_output_equality": true,
+      "source_qualified": false,
+      "runtime_equivalence_established": false,
+      "evidence": {
+        "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/warm-transition-observed.json",
+        "sha256": "d2015f9854017fa9b463733fbe8ec5479522542f9676148b200f656d64071ad1"
+      },
+      "limitations": [
+        "Loaded backend revision UNFROZEN and loaded_runtime null; runtime equivalence not established.",
+        "Actual catalogue differs from historical catalogue; no same-workload historical crossover.",
+        "No supported S/H phase-specific TPU device attribution.",
+        "Observed baseline C only; no accepted overlap speedup comparison."
+      ]
+    },
+    {
+      "from": "H",
+      "to": "S",
+      "treatment": "overlap",
+      "status": "failed",
+      "source": "overlap-controlled-hs-overlap-20261002b-source-overlap",
+      "previous_run_id": "overlap-controlled-hs-overlap-20261002b-source-overlap",
+      "target": null,
+      "target_run_id": null,
+      "last_finished_request": 1790991667.3465297,
+      "first_dispatch": null,
+      "dispatch_gap_s": null,
+      "ramp_deficit_s": null,
+      "cost_s": null,
+      "provisioning": {
+        "start": 1790989339.850475,
+        "end": 1790990282.2657132,
+        "charged_s": 942.4152381420135,
+        "normal_deploy_s": 555.1448159217834,
+        "reference_snapshot_release_s": 387.2704222202301,
+        "scope": "joint prior target graph/bundle, reference generation, weight snapshot and release; not pure compile"
+      },
+      "first_use_including_provisioning_s": null,
+      "source_qualified": false,
+      "runtime_equivalence_established": false,
+      "limitations": [
+        "Loaded backend revision UNFROZEN and loaded_runtime null; runtime equivalence not established.",
+        "Actual catalogue differs from historical catalogue; no same-workload historical crossover.",
+        "No supported S/H phase-specific TPU device attribution.",
+        "FAILED: TPU topology/plugin initialization refused while serving PID570736 owned TPU; no replay result.",
+        "No target deploy, target deserialization/listener proof, overlap C or post-W0 target output comparison.",
+        "12.0956s W0 attempt delta is incidental, NOT successful-compile interference."
+      ]
+    },
+    {
+      "from": "S",
+      "to": "H",
+      "treatment": "cold",
+      "status": "not_measured",
+      "source": null,
+      "previous_run_id": null,
+      "target": null,
+      "target_run_id": null,
+      "last_finished_request": null,
+      "first_dispatch": null,
+      "dispatch_gap_s": null,
+      "ramp_deficit_s": null,
+      "cost_s": null,
+      "provisioning": null,
+      "first_use_including_provisioning_s": null,
+      "source_qualified": false,
+      "runtime_equivalence_established": false,
+      "limitations": [
+        "Loaded backend revision UNFROZEN and loaded_runtime null; runtime equivalence not established.",
+        "Actual catalogue differs from historical catalogue; no same-workload historical crossover.",
+        "No supported S/H phase-specific TPU device attribution.",
+        "NOT_MEASURED: dependent S-to-H arms cancelled after observed live-serving mechanism blocker."
+      ]
+    },
+    {
+      "from": "S",
+      "to": "H",
+      "treatment": "warm",
+      "status": "not_measured",
+      "source": null,
+      "previous_run_id": null,
+      "target": null,
+      "target_run_id": null,
+      "last_finished_request": null,
+      "first_dispatch": null,
+      "dispatch_gap_s": null,
+      "ramp_deficit_s": null,
+      "cost_s": null,
+      "provisioning": null,
+      "first_use_including_provisioning_s": null,
+      "source_qualified": false,
+      "runtime_equivalence_established": false,
+      "limitations": [
+        "Loaded backend revision UNFROZEN and loaded_runtime null; runtime equivalence not established.",
+        "Actual catalogue differs from historical catalogue; no same-workload historical crossover.",
+        "No supported S/H phase-specific TPU device attribution.",
+        "NOT_MEASURED: dependent S-to-H arms cancelled after observed live-serving mechanism blocker."
+      ]
+    },
+    {
+      "from": "S",
+      "to": "H",
+      "treatment": "overlap",
+      "status": "not_measured",
+      "source": null,
+      "previous_run_id": null,
+      "target": null,
+      "target_run_id": null,
+      "last_finished_request": null,
+      "first_dispatch": null,
+      "dispatch_gap_s": null,
+      "ramp_deficit_s": null,
+      "cost_s": null,
+      "provisioning": null,
+      "first_use_including_provisioning_s": null,
+      "source_qualified": false,
+      "runtime_equivalence_established": false,
+      "limitations": [
+        "Loaded backend revision UNFROZEN and loaded_runtime null; runtime equivalence not established.",
+        "Actual catalogue differs from historical catalogue; no same-workload historical crossover.",
+        "No supported S/H phase-specific TPU device attribution.",
+        "NOT_MEASURED: dependent S-to-H arms cancelled after observed live-serving mechanism blocker."
+      ]
+    }
+  ],
+  "failure": {
+    "path": "results/overlap/OverlapCompile/controlled-hs-overlap-20261002b/failure-observed.json",
+    "sha256": "50523f2de795ad243c42fa0ace9d24caf5431277bd3782ca95272750c7c0677d"
+  },
+  "warm_control_proof": {
+    "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/warm-control-qualification.json",
+    "sha256": "3adfc5d0c8a55a23aaffd29fdb1be74ee883dd6698e0347885d5d355d31eeeb6"
+  },
+  "claims": {
+    "overlap_switch_savings_s": null,
+    "overlap_C_s": null,
+    "accepted_speedup": false
+  },
+  "launcher_source_commit": "9009fc7",
+  "runtime_equivalence_established": false
+}

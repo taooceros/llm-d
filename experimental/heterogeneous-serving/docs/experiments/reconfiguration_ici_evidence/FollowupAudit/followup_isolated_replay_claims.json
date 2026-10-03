@@ -1,0 +1,153 @@
+{
+  "verdict": "SUPPORTED_ISOLATED_REPLAY_PHYSICAL_PERSISTENCE_AND_OWNED_EXIT_SMOKE_ONLY",
+  "launcher_source_commit": "9009fc7",
+  "loaded_backend_equivalence": "UNFROZEN/not established",
+  "layouts": {
+    "S": {
+      "replay_pid": 561150,
+      "initialized_requested_cache_dir": "/models/jax_cache_overlap_isolated_s_20261002c",
+      "effective_config": {
+        "jax_compilation_cache_dir": "/models/jax_cache_overlap_isolated_s_20261002c",
+        "jax_persistent_cache_min_compile_time_secs": 0.0,
+        "jax_persistent_cache_min_entry_size_bytes": 0,
+        "jax_log_compiles": false,
+        "jax_explain_cache_misses": false
+      },
+      "unique_actual_keys_matched": 261,
+      "physical_unique_hosts": 8,
+      "actual_keys_physically_present_each_host": 261,
+      "identical_recorded_per_key_bytes_and_sha256": true,
+      "bytes_visible_each_host": 149288718,
+      "diagnostic_compile_task_wall_s": 270.86358666419983,
+      "diagnostic_process_cpu_s": 618.3244291459999,
+      "source_descriptor_occurrences": 1044
+    },
+    "H": {
+      "replay_pid": 561151,
+      "initialized_requested_cache_dir": "/models/jax_cache_overlap_isolated_h_20261002c",
+      "effective_config": {
+        "jax_compilation_cache_dir": "/models/jax_cache_overlap_isolated_h_20261002c",
+        "jax_persistent_cache_min_compile_time_secs": 0.0,
+        "jax_persistent_cache_min_entry_size_bytes": 0,
+        "jax_log_compiles": false,
+        "jax_explain_cache_misses": false
+      },
+      "unique_actual_keys_matched": 261,
+      "physical_unique_hosts": 8,
+      "actual_keys_physically_present_each_host": 261,
+      "identical_recorded_per_key_bytes_and_sha256": true,
+      "bytes_visible_each_host": 86753187,
+      "diagnostic_compile_task_wall_s": 234.06188082695007,
+      "diagnostic_process_cpu_s": 654.860318551,
+      "source_descriptor_occurrences": 522
+    }
+  },
+  "standalone_qualification_wall_s": 533.8479301929474,
+  "timer_scope": "Standalone two-target qualification includes setup, sequential replay tasks and distributed hash inventory. Compile-task clocks include descriptor staging and replay setup, not pure backend compilation. This533.847930s is separate experimental admission cost, not a measured transition C or an optimization saving. Operational wrapper inserts actual treatment physical gate after source-overlap pilot and before teardown; its future completed timestamps must remain charged.",
+  "physical_proof_scope": "Source reads actual key-cache files on eight node-affined hosts, SHA256-hashes contents and records bytes. Auditor independently checks all returned key/size/digest tables. This proves recorded all-host visibility then, not eight independent copies, validity on a target runtime, or auditor rehash of subsequently deleted cache binaries.",
+  "raw_capture_bundle_status": {
+    "archive_present_at_audit": false,
+    "descriptor_payload_integrity_verified_by_this_audit": false,
+    "reason": "Only the future offline verification script is retained so far; owned raw graph-bundle archive not delivered. Runtime9009fc7 does not enforce descriptor payload SHA checks. No payload-integrity credit from actual-key match alone."
+  },
+  "cleanup": {
+    "s": {
+      "submission_id": "raysubmit_NQSytHDzFadjcjhd",
+      "root": "/models/jax_cache_overlap_isolated_s_20261002c",
+      "existed": true,
+      "removed": true
+    },
+    "h": {
+      "submission_id": "raysubmit_PFn5Dc733hXyy5kt",
+      "root": "/models/jax_cache_overlap_isolated_h_20261002c",
+      "existed": true,
+      "removed": true
+    }
+  },
+  "final_retained_rcm": {
+    "daemon_pid": null,
+    "alive": false,
+    "zombie": false
+  },
+  "barrier_smoke": {
+    "daemon_pid": 4124154,
+    "cli_success_to_exit_observed_s": 0.07495737075805664,
+    "pidfd_wait_s": 0.07495427131652832,
+    "exit_code": 0,
+    "matching_owned_pid_metadata_cleared": true
+  },
+  "barrier_source_scope": "Adapter opens Linux pidfd for exact daemon before native stream return, waits up to60s for exit on terminal code0/1, then calls owned Popen.wait(timeout=1) and conditionally clears only matching completed PID metadata. Thus60s pidfd wait plus up to1s reaping, not a proven universal60s end-to-end bound. Smoke exercises successful cleanup only; timeout/error branches are not newly tested.",
+  "preserved_failure": "Original replay evidence byte-identical to archived pre-recovery artifact. Original first S cleanup succeeded but next admission saw daemon4120367still running. H-only recovery is separate; no retroactive uninterrupted-run claim.",
+  "unsupported": [
+    "raw captured MLIR/options byte-integrity qualification until archive delivery",
+    "target deserialization or target listener hit",
+    "W0 correctness for overlap treatment",
+    "source-serving slowdown",
+    "matched switch C or savings",
+    "active continuation completion"
+  ],
+  "source_hashes": {
+    "scripts/overlap_replay.py": "3a5d4b4a4d8e2537b577453c288562d562e0a2e5800c41859a0b9b3873612b74",
+    "scripts/overlap_pilot.py": "b798bf2633ad9d393511b81bcaf75ef24d5e1c21c5a1431accb8ec08bfb478ed",
+    "hetero/compile_overlap.py": "4a8f0eb46b8cc56ccce3506e2363ebbb17c0a8ef4cc7ab80cdc7eae4cf17f922"
+  },
+  "operational_archive_member_hashes": {
+    "operational-c-final-admission-scripts.tar.gz:overlap_isolated_replay_preflight.py": "ac7852520d071a56bef8247713944b4c3f70c105349d8df8fe8f956a1fe4767e",
+    "operational-c-final-admission-scripts.tar.gz:overlap_physical_cache_gate.py": "9b9d2896eae8fd8b4370af730b9e82f71116cd81136bdc74d069f5ea79b98bc5",
+    "operational-d-exit-barrier-scripts.tar.gz:overlap_rcm_exec_barrier.py": "da2a2dd3854de1d5603db14a7f22c71fdbc9b1ee65928f9298b8b446cd624284",
+    "operational-d-exit-barrier-scripts.tar.gz:overlap_gated_switch_physical.py": "3e68ba9fe597df806b8df48501b953a4c698e0c44d640eda5bb5eed7a3089f54"
+  },
+  "verification": "Executed local JSON/profile/key/hash-table/archive/source/smoke-receipt replay; no cluster operations or optional experiments.",
+  "source_manifest": [
+    {
+      "path": "results/overlap/OverlapCompile/replay-preflight-isolated.json",
+      "bytes": 2332509,
+      "sha256": "9980f5c5c8c9fd9a52dc62ecfecefd654dfe7ed282ce602cac7ef6d3933a1a29"
+    },
+    {
+      "path": "results/overlap/OverlapCompile/replay-preflight-isolated-summary.json",
+      "bytes": 2746,
+      "sha256": "5fbfdf8802de7b90be59311fc1a2a56c78323ffa2a90ae4df49305a168cf04a2"
+    },
+    {
+      "path": "results/overlap/OverlapCompile/isolated-cleanup-admission-failure.tar.gz",
+      "bytes": 480627,
+      "sha256": "be2a842d2cb223592a636662ae3e5fa8440abb491e224c66f35d060bb79029de"
+    },
+    {
+      "path": "results/overlap/OverlapCompile/replay-isolated-cleanup-s.json",
+      "bytes": 250,
+      "sha256": "d2b0bf9a1575a48ec2ecad9e7ab60bc99b89eac4f4f5cf4c432086b739de4d12"
+    },
+    {
+      "path": "results/overlap/OverlapCompile/replay-isolated-cleanup-h.json",
+      "bytes": 250,
+      "sha256": "c9d27023f31f80dc791258bcb2296a4bf529dd58c07fd9f3451a1dbd766431db"
+    },
+    {
+      "path": "results/overlap/OverlapCompile/replay-isolated-final-rcm-recovery.json",
+      "bytes": 7950,
+      "sha256": "70b9ca514adb7f9cd5023f1e083c3c56ed4acc8d72ec11e81f4190423faeef5f"
+    },
+    {
+      "path": "results/overlap/OverlapCompile/rcm-exit-barrier-cleanup-smoke.json",
+      "bytes": 902,
+      "sha256": "5d4f6cd46b343b4a0a4554b7f95c542df1b96f99ce2eb0731fb2bb9659ef49b4"
+    },
+    {
+      "path": "results/overlap/OverlapCompile/rcm-process-exit-barriers.jsonl",
+      "bytes": 1170,
+      "sha256": "e8eb2316cbccc03f0f035a5e4dd36ddff2a978e94d6c874fe2c7deb03ff4edf7"
+    },
+    {
+      "path": "results/overlap/OverlapCompile/operational-c-final-admission-scripts.tar.gz",
+      "bytes": 7539,
+      "sha256": "7a038e232aabae219d2569b837a20e0808f2ae2b4848b147bcad0234c19e2b6e"
+    },
+    {
+      "path": "results/overlap/OverlapCompile/operational-d-exit-barrier-scripts.tar.gz",
+      "bytes": 2893,
+      "sha256": "bdb4b6bbd5a52f8dfbfda996effc77ef9379bbc8b0235b4719616aae76a8075b"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+RayTaskError(JaxRuntimeError): [36mray::compile_task()[39m (pid=572460, ip=192.168.102.38)
+  File "/tmp/ray/session_2026-09-28_03-31-54_913383_1/runtime_resources/working_dir_files/_ray_pkg_812d7ee19720b949/scripts/overlap_pilot.py", line 72, in compile_task
+    result = replay(destination, cache_dir, topology, enabled=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/ray/session_2026-09-28_03-31-54_913383_1/runtime_resources/working_dir_files/_ray_pkg_812d7ee19720b949/scripts/overlap_replay.py", line 109, in replay
+    else topologies.get_topology_desc(platform="tpu", topology_name=topology_name))
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/jax/experimental/topologies.py", line 41, in get_topology_desc
+    xb.make_pjrt_tpu_topology(
+  File "/usr/local/lib/python3.12/site-packages/jax/_src/xla_bridge.py", line 1207, in make_pjrt_tpu_topology
+    xla_client.initialize_pjrt_plugin("tpu")
+  File "/usr/local/lib/python3.12/site-packages/jaxlib/xla_client.py", line 134, in initialize_pjrt_plugin
+    _xla.initialize_pjrt_plugin(plugin_name)
+jax.errors.JaxRuntimeError: ABORTED: The TPU is already in use by process with pid 570736. Not attempting to load libtpu.so in this process.

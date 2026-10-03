@@ -133,6 +133,15 @@ two ways.
 - *Not ready for the full slice or for M.* When one box computed while the other resharded, the
   TPU runtime aborted. That blocks keeping half the slice serving during a switch. Pathways, the
   other route to in-place resharding, can't run here without changes outside the namespace.
+- *Separate startup follow-ups improved measured components.* Cold TP8 snapshot writes take
+  14–15 s rather than 50–52 s, but the new timing excludes SHA-256. A graph-construction fix
+  reduces checksum-enabled restore `load_model` from 39.44 s to 26.45 s. Persisting small
+  compilations reduces observed warm deployment from 383.9 s to 275.4 s. These are separate
+  experiments, not additive savings or a measured combined switch.
+- *Compilation overlap was blocked in the live-serving test.* Offline replay produced valid
+  persistent cache files with the slice idle. With serving active, topology discovery tried
+  to initialize the TPU plugin and failed because another process owned the devices. No
+  overlap switch cost, successful-compile serving slowdown, or new crossover is established.
 
 #note[
   *Status.* Every number is measured on the cluster unless labelled [ESTIMATE] or [INFERENCE].
@@ -608,7 +617,7 @@ Evidence: `helper/warmup-set`, runtime `2a3dd37`, results `0ebdf22`, run
 `ct-20261002b-configfix`; independent audit `87f83d3` in
 `reconfiguration_ici_evidence/FollowupAudit/followup_threshold_claims.json`.
 
-== Compilation overlap: qualified observations, not yet a saving <sec-overlap-followup>
+== Compilation overlap: blocked with live serving <sec-overlap-followup>
 
 Offline replay compiled 261 distinct captured executable groups for each of S and H, with
 actual keys matching their captures. This proves CPU-hosted compilation and key agreement,
@@ -617,6 +626,12 @@ cache directory was absent at cleanup. A source-matched JAX 0.10.2 reproduction 
 changing configuration is insufficient: an initialized process-global cache retains its
 original directory. A fresh process uses the new directory correctly. Remote H file placement
 was not independently observed, so it is not inferred from that reproduction.
+
+An isolated-process retry removed that cache-directory ambiguity. It produced 261 physical
+cache files per layout, with SHA-256/byte inventories identical across eight hosts: 149.289 MB
+for S and 86.753 MB for H. That standalone qualification took 533.848 s including inventories,
+outside C; both cache roots were subsequently removed. It proved persistence with the slice
+idle, not compatibility with a live serving runtime.
 
 The later H-to-S baseline completed a closed cold-switch interval. It is explicitly an
 *unfrozen pilot*, with the runtime cohort check bypassed, not frozen/cohort headline evidence.
@@ -663,12 +678,47 @@ These cold/warm observations are a fixed-order, single unfrozen-pilot sequence, 
 result or independent repeated trials. Device/host execution attribution remains unsupported
 because the S/H traces lacked required phase markers.
 
-No warm-versus-overlap saving or new break-even conclusion follows from these observations.
+*Live-serving attempt failed before compilation.* During H serving,
+`topologies.get_topology_desc(platform="tpu", ...)` initialized the TPU plugin and aborted because
+the serving process already owned the TPU devices. The background task returned no replay
+result. The source workload still completed, but no treated target was deployed and no overlap
+C was measured. Its 502.878 s makespan versus the 490.782 s control is an incidental failed-attempt
+difference, not measured successful-compile interference.
+
+The subsequent physical-cache check assumed a replay result existed, raised `KeyError` before
+the supervised stage, and left the client waiting on a zombie daemon. Only that owned stuck
+client was terminated to trigger existing cleanup. Dependent S-to-H cold/warm/overlap runs
+were not submitted. This is a blocker of the tested topology-initialization path, not proof
+that all CPU-hosted precompilation is impossible. The earlier empty-slice preflight did not
+test coexistence with active serving.
+
+No warm-versus-overlap saving or new break-even conclusion is established. The final reducer
+retains only the two observed baseline C values; failed/unmeasured transition costs remain
+null. Six historical direction-matched crossover candidates are suppressed because workload
+and runtime eligibility are not established.
+
+*Archive and closure.* The independent audit matched the serving-owner PID in the failure
+to the deployed engine on the same host. It streamed and verified the 67,423,350-byte bundle
+archive: 14,094 files and 4,698 descriptors, all MLIR/options hashes matching, with no duplicate-key
+payload variants. This qualifies the retained payloads after the run; it does not retroactively
+add runtime hash enforcement or make the failed overlap successful.
+
+Final inventory found all 32 TPU chips available, no live placement groups or actors in the
+296 retained experiment groups, zero snapshot bytes on all eight hosts, all 24 owned paths
+absent on every host, and all 13 owned local processes gone. RCM was neither alive nor zombie,
+and the blocking cluster lock was acquired and released. The pre-existing shared registry
+and the inventory job’s own supervisor were not experiment leaks. No dependent S-to-H arm
+was submitted.
+
 Evidence: launcher/worktree revision `9009fc7` (not a loaded-backend verification), baseline
 `controlled-hs-baseline-20261002b`, independent audits
-`6530457` (replay), `9be7555` (cache path), `93670de` (cold interval), and `ee0d5e8`
-(warm interval and startup reuse), archived under
-`reconfiguration_ici_evidence/FollowupAudit/`.
+`6530457` (replay), `9be7555` (cache path), `93670de` (cold interval), `ee0d5e8`
+(warm interval and startup reuse), `6837f56` (isolated physical persistence), and `b6b5a24`
+(final failure, archive and cleanup), archived under `reconfiguration_ici_evidence/FollowupAudit/`.
+The compact final reports and generated tables are under
+`reconfiguration_ici_evidence/OverlapFollowup/`; `manifest.json` records source hashes and
+compression boundaries. Table generator `helper/results-analysis` commit `39d09ca` passed
+21 tests plus 8 subtests; no measured overlap benefit or historical crossover is emitted.
 
 = Approach B: in-place resharding over ICI <sec-ici>
 

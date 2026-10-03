@@ -1,0 +1,260 @@
+{
+  "verdict": "FAILED_LIVE_SERVING_OVERLAP_WITH_VERIFIED_ARCHIVE_AND_FINAL_CLOSURE",
+  "background_failure": {
+    "job": "raysubmit_69VBfS2EwyGPMt5B",
+    "failed_at": 1790991247.8463426,
+    "background_pid": 572460,
+    "serving_owner_pid": 570736,
+    "same_node": "192.168.102.38",
+    "owner_instance": "large_a",
+    "owner_rank": 0,
+    "call_path": "replay \u2192 get_topology_desc(platform=tpu) \u2192 make_pjrt_tpu_topology \u2192 initialize_pjrt_plugin(tpu) \u2192 ABORTED TPU already in use",
+    "stage": "Before replay compile/profile loop; no background result was returned.",
+    "scope": "Actual installed error plus raw serving-worker identity, not an inferred API guarantee. Checking an empty backend-client registry or setting JAX_PLATFORMS=cpu did not establish plugin non-initialization/coexistence."
+  },
+  "source_workload_only": {
+    "control_makespan_s": 490.7819,
+    "failed_attempt_makespan_s": 502.8775,
+    "incidental_delta_s": 12.09559999999999,
+    "incidental_fractional_change": 0.024645570669985975,
+    "completed_requests_each": 1763,
+    "exact_output_tokens_each": 721595,
+    "interpretation": "Not successful-compile interference, causal slowdown, or an optimization saving. Top-level pilot SUCCEEDED refers to completed W0, not its failed during_run operation."
+  },
+  "subsequent_gate_failure": "physical gate accessed missing during_run.result and raised KeyError before StageRunner; retained process tree shows owned daemon4133323zombie under client4133322. Recorded recovery terminates only that client to trigger existing cleanup; no accepted physical gate or target deployment.",
+  "not_measured": [
+    "live-serving compiled-key proof",
+    "overlap target deserialization/listener/output proof",
+    "overlap target deployment",
+    "overlap switch C",
+    "successful compile source slowdown",
+    "all dependent S-to-H cold/warm/overlap arms",
+    "crossover or saving from overlap"
+  ],
+  "raw_bundle_archive": {
+    "file": "results/overlap/OverlapCompile/pre-sh-owned-bundle-graphs.tar.gz",
+    "bytes": 67423350,
+    "sha256": "b6c3539ea40deeb66dfd5865d99d26e095b01552dc1ca56ea35a72c4129161b2",
+    "verified_files": 14094,
+    "verified_descriptors": 4698,
+    "roots": {
+      "omp_overlap_controlled-h-20261002a_bundle": {
+        "descriptors": 522,
+        "unique_keys": 261
+      },
+      "omp_overlap_controlled-hs-baseline-20261002a_bundle": {
+        "descriptors": 1044,
+        "unique_keys": 261
+      },
+      "omp_overlap_controlled-hs-baseline-20261002b_bundle": {
+        "descriptors": 1044,
+        "unique_keys": 261
+      },
+      "omp_overlap_controlled-hs-overlap-20261002b_bundle": {
+        "descriptors": 1044,
+        "unique_keys": 261
+      },
+      "omp_overlap_controlled-s-20261002a_bundle": {
+        "descriptors": 1044,
+        "unique_keys": 261
+      }
+    },
+    "all_member_bytes_and_hashes_equal_remote_manifest": true,
+    "all_MLIR_options_hashes_equal_descriptors": true,
+    "same_root_same_key_payload_variants": 0,
+    "global_cross_root_same_key_payload_variants": 0,
+    "isolated_S_H_archive_keys_and_descriptor_counts_match_replay": true,
+    "scope": "Post-run byte preservation now qualifies payload integrity that6837f56left pending. Runtime9009fc7did not perform these SHA checks. Byte integrity does not turn failed live-serving replay into compile/target-hit proof."
+  },
+  "archive_boundary": {
+    "batch": "pre-sh",
+    "previous_case": "controlled-hs-overlap-20261002b",
+    "started_at": 1790991942.6978092,
+    "previous_rcm_idle": true,
+    "previous_release_and_cleanup_receipts_passed": true,
+    "before_next_frozen_shell": true,
+    "scope": "Artifact preservation outside all measured W0, switch C and next provisioning intervals; no new capture or replay.",
+    "returncode": 0,
+    "finished_at": 1790993031.1367383,
+    "final_rcm_alive": false
+  },
+  "archive_scope": "Preservation is after last measured W0 and failed-case cleanup, separate from any C. pre-sh is a historical archive label; no S-to-H experiment followed. All5owned roots were archived before removal.",
+  "final_cleanup": {
+    "retained_groups_checked": 296,
+    "live_retained_groups": 0,
+    "actors_in_retained_groups": 0,
+    "remaining_actor_classes": [
+      "JobSupervisor",
+      "ServingInstanceRegistry"
+    ],
+    "available_TPU_equals_total": 32,
+    "hosts": 8,
+    "owned_paths_absent_per_host": 24,
+    "tmpfs_snapshot_bytes_each": 0,
+    "owned_local_processes_absent": 13,
+    "rcm_alive": false,
+    "rcm_zombie": false,
+    "blocking_flock_acquired_then_released": true,
+    "no_more_arms": true,
+    "scope": "Retained final read-only inventory and closure receipts, not continuous cluster monitoring; registry and proof-job supervisor legitimately remained during observation."
+  },
+  "preserved_prior_verdicts": [
+    "6530457original sequential preflight anomaly",
+    "9be7555exact-version local cache-path behavior",
+    "6837f56isolated idle-slice persistence",
+    "93670de/ee0d5e8UNFROZEN cold/warm baseline observations"
+  ],
+  "verification": "Independent local raw record assertions, full streaming tar member hashing and descriptor checks, ownership stack/source receipt matching, and final cleanup replay; no cluster calls or new experiments.",
+  "source_manifest": [
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-overlap-20261002b/failure-observed.json",
+      "bytes": 3323,
+      "sha256": "50523f2de795ad243c42fa0ace9d24caf5431277bd3782ca95272750c7c0677d"
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-overlap-20261002b/source-overlap-pilot.json",
+      "bytes": 18121,
+      "sha256": "fe05bd94a9bdaa113fd9de8eb04dcb84b618e785d2bbe12db24661212f667bb6"
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-overlap-20261002b/source-undisturbed-pilot.json",
+      "bytes": 16708,
+      "sha256": "976f6e8fa9b7171c8961b1cc5f974ba64d1856a5cd42a0acf5018e158f1f67d9"
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-overlap-20261002b/source-overlap-pilot.json",
+      "bytes": 18121,
+      "sha256": "fe05bd94a9bdaa113fd9de8eb04dcb84b618e785d2bbe12db24661212f667bb6"
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-overlap-20261002b/background-topology-error.log",
+      "bytes": 1318,
+      "sha256": "f3e425279c9fff982dd55771b73ffe47f44029c38a7d5e2ebcf2a21e720fcf16"
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-overlap-20261002b/physical-gate-startup-error.log",
+      "bytes": 394,
+      "sha256": "34d2db393a7c484ab810f576cfa8a7d2b1a567a6cdb8464d513fe0427fb67762"
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-overlap-20261002b/physical-gate-startup-error.log",
+      "bytes": 394,
+      "sha256": "34d2db393a7c484ab810f576cfa8a7d2b1a567a6cdb8464d513fe0427fb67762"
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-overlap-20261002b/physical-gate-zombie-process-tree.log",
+      "bytes": 665,
+      "sha256": "98d865541f9341b4572c7c9decfc4e17464124406a27e3e7c8a4182abc7a1243"
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-overlap-20261002b/source-provision-deploy.json",
+      "bytes": 160537929,
+      "sha256": "22cbb7e55d445e98ab4f8aa05a5c990f56509d12f42231df97ebd8a17f5234d4"
+    },
+    {
+      "path": "data/manifests/W0.json",
+      "bytes": 2588846,
+      "sha256": "d73599947c9935c95bf9247df6b66e5049885aac3e016e1f2de9442f3f772914"
+    },
+    {
+      "path": "results/hetero/artifacts/overlap-controlled-hs-overlap-20261002b-source-undisturbed/W0_H_r1_records.json.gz",
+      "bytes": 461079,
+      "sha256": "5df09d62d6f0a9689aa919d4d515b23d0bb04137b6d000e0c18b867109a084a7"
+    },
+    {
+      "path": "results/hetero/artifacts/overlap-controlled-hs-overlap-20261002b-source-overlap/W0_H_r1_records.json.gz",
+      "bytes": 459453,
+      "sha256": "40444484efc2b2877a4ecc4d9cd28f03355d8edb9e5c6e750cd7dc7239840ba9"
+    },
+    {
+      "path": "results/overlap/OverlapCompile/pre-sh-owned-bundle-compact-manifest.json",
+      "bytes": 1329,
+      "sha256": "a1bfbbe5729e8dc50410c1053da2e684b13a83064595c7d104bee95e26982306"
+    },
+    {
+      "path": "results/overlap/OverlapCompile/pre-sh-owned-bundle-archive.json",
+      "bytes": 4127365,
+      "sha256": "f7a4cfd1e050ecbd848d56dd37bf61a231786f0047855b54dc40d8459280543f"
+    },
+    {
+      "path": "results/overlap/OverlapCompile/pre-sh-owned-bundle-graphs.tar.gz",
+      "bytes": 67423350,
+      "sha256": "b6c3539ea40deeb66dfd5865d99d26e095b01552dc1ca56ea35a72c4129161b2"
+    },
+    {
+      "path": "results/overlap/OverlapCompile/replay-preflight-isolated.json",
+      "bytes": 2332509,
+      "sha256": "9980f5c5c8c9fd9a52dc62ecfecefd654dfe7ed282ce602cac7ef6d3933a1a29"
+    },
+    {
+      "path": "results/overlap/OverlapCompile/pre-sh-archive-boundary.json",
+      "bytes": 448,
+      "sha256": "8d762e9a2284771a9af4d9a893df3b3a9f47aaad748d4e3217914c5bbbdd0f4b"
+    },
+    {
+      "path": "results/overlap/OverlapCompile/pre-sh-owned-bundle-cleanup.json",
+      "bytes": 844,
+      "sha256": "8dc91a7339664109ee7f018b6e2dc6a93ea849935f494aa0bb590a18004b2f43"
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-overlap-20261002b/target-provision-drain.json",
+      "bytes": 148711,
+      "sha256": "d55881b9f10bace2d4de469a9b8f087de6b7878b7ccd74eaf86a8f533f1c8a23"
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-overlap-20261002b/target-provision-release.json",
+      "bytes": 247998,
+      "sha256": "0243bccb450a40d7ead4c06a6fe4844e73159370d9ce8d13ee0fa28def50a0a7"
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-overlap-20261002b/cleanup-drain.json",
+      "bytes": 55096,
+      "sha256": "75a2359b5a0ba19e2bd3f675f7e4c9a4fe34b4b862f7186f1f3467fbed83004a"
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-overlap-20261002b/cleanup-release.json",
+      "bytes": 229512,
+      "sha256": "bc0f94faa9fc87689b701d24ae4f92f8e28c3cf2d910e5eccbba41a2293a9140"
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-overlap-20261002b/cleanup-jax_cache_overlap_controlled-hs-overlap-20261002b_normal.json",
+      "bytes": 268,
+      "sha256": "c33d3cb51894e161d7372fcd60e35825b93bcbfa7783371a6b0ebe0a3322363c"
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-overlap-20261002b/cleanup-jax_cache_overlap_controlled-hs-overlap-20261002b_cold.json",
+      "bytes": 267,
+      "sha256": "98cff50661d7bd792a4aec8fc0902aefd10d50898a871441dd33467e4ce3b053"
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-overlap-20261002b/cleanup-jax_cache_overlap_controlled-hs-overlap-20261002b_background.json",
+      "bytes": 273,
+      "sha256": "1023bf66e4dc83b261cbdb76b1a2df73120cb707854b8548976516ce257708a1"
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-overlap-20261002b/cleanup-tmpfs.json",
+      "bytes": 2363,
+      "sha256": "a30044b8b1edf214432343fd6f56c425bcbc01a49acc0e2e8bc507a274eb65c4"
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-overlap-20261002b/final-rcm-status.json",
+      "bytes": 8199,
+      "sha256": "f6c6e4b5ea3bc78daaafe0b311ff91864ce5f8874623fe6e150fa40dd00bbabb"
+    },
+    {
+      "path": "results/overlap/OverlapCompile/final-operational-scripts-and-logs.tar.gz",
+      "bytes": 24591,
+      "sha256": "a2f1c1f62dc3014d2247f07d13e6fb1f48fdc72d41eef61a3d60aa64746575b4"
+    },
+    {
+      "path": "results/overlap/OverlapCompile/final-local-closure.json",
+      "bytes": 1484,
+      "sha256": "d63dcd17b5c8f8bfeafab94a3812d2e20fcc023bb5153d4dd3d3811efca0ff36"
+    },
+    {
+      "path": "results/overlap/OverlapCompile/final-cluster-cleanup-proof.json",
+      "bytes": 42808,
+      "sha256": "92e97a380820e9e9284315fc4c1e7c22ef0e415f801b37bd3f55afc551318463"
+    }
+  ]
+}
