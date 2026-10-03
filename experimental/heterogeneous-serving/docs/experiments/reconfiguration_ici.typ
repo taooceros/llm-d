@@ -608,6 +608,52 @@ Evidence: `helper/warmup-set`, runtime `2a3dd37`, results `0ebdf22`, run
 `ct-20261002b-configfix`; independent audit `87f83d3` in
 `reconfiguration_ici_evidence/FollowupAudit/followup_threshold_claims.json`.
 
+== Compilation overlap: qualified observations, not yet a saving <sec-overlap-followup>
+
+Offline replay compiled 261 distinct captured executable groups for each of S and H, with
+actual keys matching their captures. This proves CPU-hosted compilation and key agreement,
+not target cache reuse. The sequential S/H preflight ran in one process; its requested H
+cache directory was absent at cleanup. A source-matched JAX 0.10.2 reproduction showed why
+changing configuration is insufficient: an initialized process-global cache retains its
+original directory. A fresh process uses the new directory correctly. Remote H file placement
+was not independently observed, so it is not inferred from that reproduction.
+
+The later H-to-S baseline completed a closed cold-switch interval. It is explicitly an
+*unfrozen pilot*, with the runtime cohort check bypassed, not frozen/cohort headline evidence.
+Both layouts completed 1,763 W0 requests and 721,595 output tokens. Their measured makespans
+were 497.533 s (H) and 332.000 s (S), with identical actual input hashes. The actual catalogue
+differs from historical provenance; these rates must not be combined with historical
+crossover inputs. Independent post-W0 greedy outputs matched the target reference.
+
+#table(
+  columns: (1fr, auto),
+  table.header[Closed cold-pilot accounting][Observed time],
+  [Last source completion to first measured target dispatch], [451.410 s],
+  [First-120-s positive output-deficit equivalent], [6.887 s],
+  [Sum: descriptive harness-inclusive C], [458.297 s],
+  [Prior target provisioning: deploy, reference, snapshot, release], [920.802 s],
+  [C plus that target provisioning], [1,379.099 s],
+)
+
+The gap charges source artifact export, teardown, target deployment and controls/restore
+checks, plus pilot setup and internal warmup. Its endpoint is the first *measured client
+dispatch*, not the first-ever serving request. The ramp term is an output-deficit estimate,
+not another literal no-serving interval. Post-W0 equality, later cache inventories and process
+holds are outside this closed interval. The last row adds the stated target provisioning only,
+not the initial source deployment or useful source workload.
+
+“Cold” names the initially empty target cache, not an all-miss startup: replicas share it and
+can hit each other’s entries. Cache-write ESTALE warnings were retained. Successful deployment
+alone does not prove complete persistence, nor does a post-workload inventory prove startup
+hits. Warm-control coverage must be established from its actual startup reads and successful
+deserializations before measuring an overlap benefit. Device/host execution attribution also
+remains unsupported because the S/H traces lacked required phase markers.
+
+No warm-versus-overlap saving or new break-even conclusion follows from these observations.
+Evidence: runtime `9009fc7`, baseline `controlled-hs-baseline-20261002b`, independent audits
+`6530457` (replay), `9be7555` (cache path), and `93670de` (closed cold interval), archived under
+`reconfiguration_ici_evidence/FollowupAudit/`.
+
 = Approach B: in-place resharding over ICI <sec-ici>
 
 Today every engine is its own JAX runtime with its chips fixed at start-up, and two runtimes can't

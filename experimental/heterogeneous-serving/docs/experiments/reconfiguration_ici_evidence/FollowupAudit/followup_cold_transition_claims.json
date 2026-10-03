@@ -1,0 +1,571 @@
+{
+  "verdict": "SUPPORTED_CLOSED_H_TO_S_COLD_OBSERVATION_ONLY_UNFROZEN_PILOT",
+  "runtime_source_commit": "9009fc7",
+  "pilots": {
+    "source": {
+      "layout": "H",
+      "run_id": "overlap-controlled-hs-baseline-20261002b-source-cold-control",
+      "requests": 1763,
+      "useful_output_tokens": 721595,
+      "first_client_dispatch": 1790985159.5923834,
+      "last_client_completion": 1790985657.0718324,
+      "measured_dispatch_interval_s": 497.4794490337372,
+      "reported_makespan_s": 497.5326,
+      "started_wall": 1790985159.55948,
+      "finished_wall": 1790985657.092081,
+      "ten_second_output_rates": [
+        421.4,
+        1186.9,
+        1362.7,
+        1649.4,
+        1586.2,
+        1621.6,
+        1624.0,
+        1689.8,
+        1701.0,
+        1640.4,
+        1721.2,
+        1607.7,
+        1677.4,
+        1734.2,
+        1608.5,
+        1719.1,
+        1720.6,
+        1616.4,
+        1473.2,
+        1553.0,
+        1572.9,
+        1423.4,
+        1595.7,
+        1535.1,
+        1557.8,
+        1731.6,
+        1517.2,
+        1414.4,
+        1395.3,
+        1339.6,
+        1442.5,
+        1505.1,
+        1408.4,
+        1509.9,
+        1383.7,
+        1460.6,
+        1449.3,
+        1559.7,
+        1483.4,
+        1550.1,
+        1566.7,
+        1645.7,
+        1652.1,
+        1604.2,
+        1450.7,
+        1275.4,
+        1007.8,
+        703.2,
+        412.1,
+        91.2
+      ],
+      "middle_60_percent_median_tokens_per_s": 1542.6,
+      "positive_first_120s_ramp_deficit_s": 10.74030856994684,
+      "all_completed_exact_budget": true,
+      "unfrozen_pilot": true,
+      "loaded_runtime": null,
+      "evidence_scope": "UNFROZEN pilot; never cohort or headline evidence"
+    },
+    "target": {
+      "layout": "S",
+      "run_id": "overlap-controlled-hs-baseline-20261002b-target-cold",
+      "requests": 1763,
+      "useful_output_tokens": 721595,
+      "first_client_dispatch": 1790986108.4816616,
+      "last_client_completion": 1790986440.4271915,
+      "measured_dispatch_interval_s": 331.94552993774414,
+      "reported_makespan_s": 331.9996,
+      "started_wall": 1790986108.4520752,
+      "finished_wall": 1790986440.4516826,
+      "ten_second_output_rates": [
+        866.2,
+        2997.9,
+        3024.7,
+        2897.3,
+        2690.3,
+        2801.9,
+        2740.5,
+        2617.0,
+        2573.0,
+        2469.6,
+        2341.7,
+        2531.4,
+        2337.2,
+        2437.9,
+        2479.3,
+        2470.3,
+        2535.2,
+        2446.3,
+        2474.9,
+        2324.5,
+        2310.4,
+        2395.6,
+        2397.6,
+        2463.1,
+        2298.4,
+        2255.1,
+        2086.1,
+        1977.9,
+        1562.5,
+        984.1,
+        722.8,
+        478.1,
+        159.0,
+        11.7
+      ],
+      "middle_60_percent_median_tokens_per_s": 2446.3,
+      "positive_first_120s_ramp_deficit_s": 6.886726893676165,
+      "all_completed_exact_budget": true,
+      "unfrozen_pilot": true,
+      "loaded_runtime": null,
+      "evidence_scope": "UNFROZEN pilot; never cohort or headline evidence"
+    }
+  },
+  "dispatch_gap_s": 451.4098291397095,
+  "target_ramp_deficit_s": 6.886726893676165,
+  "observed_C_s": 458.2965560333856,
+  "gap_segments": [
+    {
+      "from": "last_source_client_completion",
+      "to": "source_pilot_export_return",
+      "seconds": 7.349959850311279
+    },
+    {
+      "from": "source_pilot_export_return",
+      "to": "source_teardown_start",
+      "seconds": 0.0010607242584228516
+    },
+    {
+      "from": "source_teardown_start",
+      "to": "source_released",
+      "seconds": 19.30677556991577
+    },
+    {
+      "from": "source_released",
+      "to": "target_deploy_start",
+      "seconds": 0.001046895980834961
+    },
+    {
+      "from": "target_deploy_start",
+      "to": "target_deploy_end",
+      "seconds": 380.59134316444397
+    },
+    {
+      "from": "target_deploy_end",
+      "to": "target_pilot_start",
+      "seconds": 25.020036220550537
+    },
+    {
+      "from": "target_pilot_start",
+      "to": "first_target_client_dispatch",
+      "seconds": 19.139606714248657
+    }
+  ],
+  "target_prior_provisioning_s": 920.8023388385773,
+  "target_provisioning_segments_s": {
+    "normal_deploy": 532.1935238838196,
+    "reference_and_snapshot_and_release": 388.6088149547577
+  },
+  "C_plus_target_prior_provisioning_s": 1379.0988948719628,
+  "provisioning_scope": "Prior target normal load, graph/bundle creation, reference generation, snapshot writing and release all charged. This is not pure compile cost. C plus this target provisioning is not whole-job first startup: source initial deployment/snapshot and source workload are separate.",
+  "ramp_definition": "Median of middle60% of ten-second aggregate emitted-output bins; sum only positive deficits in first12bins, divided by steady rate. Thus workload-specific output-equivalent penalty, not an additional measured no-serving interval or signed net deficit.",
+  "dispatch_definition": "Client timestamp immediately before HTTP POST after concurrency semaphore acquisition, not engine scheduling or first token. Source endpoint is final client response completion, not pilot subprocess exit. Pilot makespan includes small event-loop setup/tail beyond first/last client markers.",
+  "charged_work": "Gap includes source artifact/export tail, teardown, target restored deploy/startup profiles, control checks, restore-only check, pilot setup and standard internal warmup. Post-target-W0 greedy validation, target cleanup and all later inventory/paused-process holds occur after this closed C and are not charged to it.",
+  "input_provenance": {
+    "actual_catalogue_sha256": "7b99d0f0a93d7ac0e4b8a6b6e9b02df47e2ad93f0589b7a53fd00032ace45b46",
+    "manifest_catalogue_sha256": "8832576dbb16d5b1cf21288354cab78407752372562bf6aae2cbb39001c7941b",
+    "W0_token_manifest_sha256": "8a65e939b78fb20523249dcec6955c120218a449781d5ee19526f088e656318f",
+    "same_actual_catalogue_and_warmup_both_pilots": true,
+    "raw_request_ids_prompt_lengths_and_output_budgets_verified": true,
+    "historical_equivalence": "Not established: actual catalogue differs historical manifest provenance; token manifest remains identical and used directly. Do not combine these rates with historical crossover data."
+  },
+  "target_startup_profiles_before_W0_warmup": [
+    {
+      "instance": "small_a",
+      "rank": 0,
+      "phase": "initialize_from_config",
+      "start": 1790985762.5039287,
+      "end": 1790985794.5457852,
+      "cache_entries_at_worker_receipt": null,
+      "cache_hits": 4,
+      "cache_misses": 73
+    },
+    {
+      "instance": "small_a",
+      "rank": 0,
+      "phase": "compile_or_warm_up_model",
+      "start": 1790985794.581331,
+      "end": 1790986036.7828171,
+      "cache_entries_at_worker_receipt": null,
+      "cache_hits": 5,
+      "cache_misses": 179
+    },
+    {
+      "instance": "small_a",
+      "rank": 1,
+      "phase": "initialize_from_config",
+      "start": 1790985762.5042799,
+      "end": 1790985794.54615,
+      "cache_entries_at_worker_receipt": null,
+      "cache_hits": 0,
+      "cache_misses": 77
+    },
+    {
+      "instance": "small_a",
+      "rank": 1,
+      "phase": "compile_or_warm_up_model",
+      "start": 1790985794.5814655,
+      "end": 1790986036.7866316,
+      "cache_entries_at_worker_receipt": null,
+      "cache_hits": 1,
+      "cache_misses": 183
+    },
+    {
+      "instance": "small_b",
+      "rank": 0,
+      "phase": "initialize_from_config",
+      "start": 1790985763.6677964,
+      "end": 1790985794.5317743,
+      "cache_entries_at_worker_receipt": null,
+      "cache_hits": 8,
+      "cache_misses": 69
+    },
+    {
+      "instance": "small_b",
+      "rank": 0,
+      "phase": "compile_or_warm_up_model",
+      "start": 1790985794.568144,
+      "end": 1790986036.7892988,
+      "cache_entries_at_worker_receipt": null,
+      "cache_hits": 10,
+      "cache_misses": 174
+    },
+    {
+      "instance": "small_b",
+      "rank": 1,
+      "phase": "initialize_from_config",
+      "start": 1790985763.6679444,
+      "end": 1790985794.5321112,
+      "cache_entries_at_worker_receipt": null,
+      "cache_hits": 11,
+      "cache_misses": 66
+    },
+    {
+      "instance": "small_b",
+      "rank": 1,
+      "phase": "compile_or_warm_up_model",
+      "start": 1790985794.5682883,
+      "end": 1790986036.7883527,
+      "cache_entries_at_worker_receipt": null,
+      "cache_hits": 8,
+      "cache_misses": 176
+    },
+    {
+      "instance": "small_c",
+      "rank": 0,
+      "phase": "initialize_from_config",
+      "start": 1790985763.8592455,
+      "end": 1790985794.5787866,
+      "cache_entries_at_worker_receipt": null,
+      "cache_hits": 11,
+      "cache_misses": 66
+    },
+    {
+      "instance": "small_c",
+      "rank": 0,
+      "phase": "compile_or_warm_up_model",
+      "start": 1790985794.6147656,
+      "end": 1790986036.8123653,
+      "cache_entries_at_worker_receipt": null,
+      "cache_hits": 8,
+      "cache_misses": 176
+    },
+    {
+      "instance": "small_c",
+      "rank": 1,
+      "phase": "initialize_from_config",
+      "start": 1790985763.8596492,
+      "end": 1790985794.5790029,
+      "cache_entries_at_worker_receipt": null,
+      "cache_hits": 12,
+      "cache_misses": 65
+    },
+    {
+      "instance": "small_c",
+      "rank": 1,
+      "phase": "compile_or_warm_up_model",
+      "start": 1790985794.6148458,
+      "end": 1790986036.793142,
+      "cache_entries_at_worker_receipt": null,
+      "cache_hits": 7,
+      "cache_misses": 177
+    },
+    {
+      "instance": "small_d",
+      "rank": 0,
+      "phase": "initialize_from_config",
+      "start": 1790985764.3762736,
+      "end": 1790985794.6128678,
+      "cache_entries_at_worker_receipt": null,
+      "cache_hits": 16,
+      "cache_misses": 61
+    },
+    {
+      "instance": "small_d",
+      "rank": 0,
+      "phase": "compile_or_warm_up_model",
+      "start": 1790985794.6487942,
+      "end": 1790986036.8084528,
+      "cache_entries_at_worker_receipt": null,
+      "cache_hits": 16,
+      "cache_misses": 168
+    },
+    {
+      "instance": "small_d",
+      "rank": 1,
+      "phase": "initialize_from_config",
+      "start": 1790985764.3766518,
+      "end": 1790985794.6130955,
+      "cache_entries_at_worker_receipt": null,
+      "cache_hits": 21,
+      "cache_misses": 56
+    },
+    {
+      "instance": "small_d",
+      "rank": 1,
+      "phase": "compile_or_warm_up_model",
+      "start": 1790985794.6488566,
+      "end": 1790986036.800706,
+      "cache_entries_at_worker_receipt": null,
+      "cache_hits": 12,
+      "cache_misses": 172
+    }
+  ],
+  "post_W0_greedy_validation": {
+    "equal_to_current_prior_target_reference": true,
+    "prompts_per_engine": 32,
+    "engines": 4,
+    "tokens_compared": 8140,
+    "outside_C": true
+  },
+  "lifecycle": "Target-provision, source-cold and target-cold closed generations drained/released successfully. Later baseline still active; no campaign-wide final cleanup/idle claim.",
+  "limitations": [
+    "One closed cold observation, not a matched warm/overlap difference or optimization saving.",
+    "Explicit UNFROZEN pilot with loaded_runtime=null; no frozen cohort/headline acceptance or runtime-cohort binding was performed.",
+    "Cold root is shared by target replicas; intra-startup writes/hits are possible. This is not guaranteed all-miss startup or proof of fully populated future warm cache.",
+    "Profiled host startup controls verified, but no valid S/H device attribution; diagnostic trace failures remain excluded.",
+    "No target precompile association, external physical warm-cache inventory, or full campaign cleanup inferred.",
+    "Wall timestamp arithmetic is retained observation; this audit adds no independent cross-host clock-skew guarantee."
+  ],
+  "verification": "Executed local raw records/iterations/manifests/source/settings/lifecycle replay only; no cluster calls or experiment reruns.",
+  "closed_prefix_timeline": [
+    {
+      "event": "deploy_start:target-provision",
+      "layout": "S",
+      "t": 1790983853.5055287
+    },
+    {
+      "event": "deploy_end:target-provision",
+      "layout": "S",
+      "t": 1790984385.6990526
+    },
+    {
+      "event": "teardown_start:target-provision",
+      "layout": "S",
+      "t": 1790984754.7526884
+    },
+    {
+      "event": "released:target-provision",
+      "layout": "S",
+      "t": 1790984774.3078675
+    },
+    {
+      "event": "deploy_start:source-provision",
+      "layout": "H",
+      "t": 1790984774.3087637
+    },
+    {
+      "event": "deploy_end:source-provision",
+      "layout": "H",
+      "t": 1790985079.668186
+    },
+    {
+      "event": "pilot_start:source-cold-control",
+      "layout": "H",
+      "t": 1790985141.5367634
+    },
+    {
+      "event": "pilot_end:source-cold-control",
+      "layout": "H",
+      "t": 1790985664.4217923
+    },
+    {
+      "event": "teardown_start:source-cold",
+      "layout": "H",
+      "t": 1790985664.422853
+    },
+    {
+      "event": "released:source-cold",
+      "layout": "H",
+      "t": 1790985683.7296286
+    },
+    {
+      "event": "deploy_start:target-cold",
+      "layout": "S",
+      "t": 1790985683.7306755
+    },
+    {
+      "event": "deploy_end:target-cold",
+      "layout": "S",
+      "t": 1790986064.3220186
+    },
+    {
+      "event": "pilot_start:target-cold",
+      "layout": "S",
+      "t": 1790986089.3420548
+    },
+    {
+      "event": "pilot_end:target-cold",
+      "layout": "S",
+      "t": 1790986447.4773648
+    },
+    {
+      "event": "teardown_start:target-cold",
+      "layout": "S",
+      "t": 1790986604.2122767
+    },
+    {
+      "event": "released:target-cold",
+      "layout": "S",
+      "t": 1790986625.6856682
+    }
+  ],
+  "source_manifest": [
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/cold-transition-observed.json",
+      "sha256": "d38f367558d2e66628ec3b468187a4ab1c3f743d9b5aa6de9282bc7f0cf62209",
+      "bytes": 6927
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/timeline.jsonl",
+      "sha256": "b22db841d71225f87b059cb0fac54b04cc8e55d824113629ddd2ba3f5391ee34",
+      "bytes": 1456
+    },
+    {
+      "path": "data/manifests/W0.json",
+      "sha256": "d73599947c9935c95bf9247df6b66e5049885aac3e016e1f2de9442f3f772914",
+      "bytes": 2588846
+    },
+    {
+      "path": "data/workloads/sharegpt_large.json",
+      "sha256": "7b99d0f0a93d7ac0e4b8a6b6e9b02df47e2ad93f0589b7a53fd00032ace45b46",
+      "bytes": 73351464
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/source-cold-control-pilot.json",
+      "sha256": "971710093d8a1c9d2a1008b68e21c2f4ae4db0c99e0639083414551a1f6bb486",
+      "bytes": 16712
+    },
+    {
+      "path": "results/hetero/artifacts/overlap-controlled-hs-baseline-20261002b-source-cold-control/W0_H_r1_summary.json",
+      "sha256": "ddd0a4a274b1d6073f8d01444ba090a8535dc4155aceb9818c0bd87b64619242",
+      "bytes": 11847
+    },
+    {
+      "path": "results/hetero/artifacts/overlap-controlled-hs-baseline-20261002b-source-cold-control/W0_H_r1_records.json.gz",
+      "sha256": "39773607f88fb304446d1f1caad161757cf2fb169d058fc7b8e79b155130f0e0",
+      "bytes": 453271
+    },
+    {
+      "path": "results/hetero/artifacts/overlap-controlled-hs-baseline-20261002b-source-cold-control/W0_H_r1_iterations.csv.gz",
+      "sha256": "12dd6d984e7f08c3231f4983e38a822d3c6c87bcaca571384eb5138b8e6d4da3",
+      "bytes": 444100
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/target-cold-pilot.json",
+      "sha256": "d5563af8dba8cfe3d5879e270e68232f02f0d6cff0e8f10e3b0eaee2814bb57c",
+      "bytes": 19095
+    },
+    {
+      "path": "results/hetero/artifacts/overlap-controlled-hs-baseline-20261002b-target-cold/W0_S_r1_summary.json",
+      "sha256": "24547fd4cdb75d9f1ef2c160f3bb98f23943003cbd7778131cc43002a2711136",
+      "bytes": 13942
+    },
+    {
+      "path": "results/hetero/artifacts/overlap-controlled-hs-baseline-20261002b-target-cold/W0_S_r1_records.json.gz",
+      "sha256": "975ad211ef6da9b2de19cb585cd4e671034cc6900396b611d79089dc292bc3e1",
+      "bytes": 515440
+    },
+    {
+      "path": "results/hetero/artifacts/overlap-controlled-hs-baseline-20261002b-target-cold/W0_S_r1_iterations.csv.gz",
+      "sha256": "d454abde33d35791e74889a611ede712506358bb09458cfe716217442076d01f",
+      "bytes": 939496
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/target-provision-deploy.json",
+      "sha256": "dd95a2ab5c80a0d542cdfbf1f774c51c99171d6889226accbd9c4c746f48c118",
+      "bytes": 169155920
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/source-provision-deploy.json",
+      "sha256": "75407de14a1fb605165c9e17e7b4b8db1d4aa7b6dc1d5bf7b7f4bcbc46f7e220",
+      "bytes": 160536414
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/target-cold-deploy.json",
+      "sha256": "e8d47a62b16e370461453f47c4e1a23df8c8f961480ef94b3f3bc68b1c327a18",
+      "bytes": 176109790
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/target-cold-check.json",
+      "sha256": "046840fb28d111ff4eeaec1343d60934cdc932814f1cca554c5b2f3bb94c98ad",
+      "bytes": 146782191
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/target-cold-validation.json",
+      "sha256": "fb5670e77647e51238ef5e3f058298684255f70a0001021113d00d83db01439d",
+      "bytes": 147004121
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/target-reference.json",
+      "sha256": "795b1ef55557abb0e4268bcda5bc920ed813706961fe6f02880dae7db009261f",
+      "bytes": 141184259
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/target-provision-drain.json",
+      "sha256": "d6b24dc4ab90ffdd15859f78a1a13845e62be6ed22181fb61a35f2f19c89aa78",
+      "bytes": 140191
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/target-provision-release.json",
+      "sha256": "7b75eeef9322bcb19716c94973abbbedbefebcaddf554f11a933db3edb2c860a",
+      "bytes": 234082
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/source-cold-drain.json",
+      "sha256": "848c197bd459492cc3388affbf9a1454b7ffdd48d8eb0ff11b6fb9991332b0dd",
+      "bytes": 50606
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/source-cold-release.json",
+      "sha256": "467cdce1739b6642f1a8ab5a800ed6316dd31108f78dd91082e3bfa3b5218a91",
+      "bytes": 216756
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/target-cold-drain.json",
+      "sha256": "8c33984d5c5edefd289520bf6c3de77556fe7e35f40669697dba9a64fde16de8",
+      "bytes": 143034
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/target-cold-release.json",
+      "sha256": "2ebf19e96e727fcf6fd06c51bc967a3dd630625c5efe45b590bacde3b70ea0f3",
+      "bytes": 239422
+    }
+  ]
+}

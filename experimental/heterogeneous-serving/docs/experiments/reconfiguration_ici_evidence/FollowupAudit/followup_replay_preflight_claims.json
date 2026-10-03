@@ -1,0 +1,177 @@
+{
+  "verdict": "SUPPORTED_CPU_HOSTED_COMPILE_AND_ACTUAL_KEY_GATE_ONLY",
+  "submission_id": "raysubmit_ZY2dGbDWNquiCEDY",
+  "capture_commit_label": "c535e25",
+  "replay_commit_label": "9009fc7",
+  "layouts": {
+    "S": {
+      "host": "gke-tpu-8770cb66-8v5c",
+      "pid": 541080,
+      "descriptor_occurrences": 1044,
+      "source_bundles": 8,
+      "unique_actual_keys_matched": 261,
+      "backend_compile_and_load_spans": 261,
+      "cache_hit_deserialization_spans": 0,
+      "observed_profile_counts": {
+        "cache_lookup_and_decompress": 261,
+        "cache_miss_lookup": 261,
+        "backend_compile_and_load": 261
+      },
+      "effective_cache_config": {
+        "jax_compilation_cache_dir": "/models/jax_cache_overlap_preflight_s_20261002a",
+        "jax_persistent_cache_min_compile_time_secs": 0.0,
+        "jax_persistent_cache_min_entry_size_bytes": 0,
+        "jax_log_compiles": false,
+        "jax_explain_cache_misses": false
+      },
+      "diagnostic_outer_compile_task_wall_s": 336.526953458786,
+      "diagnostic_replay_loop_wall_s": 239.64285588264465,
+      "diagnostic_outer_process_cpu_s": 622.192849104,
+      "timer_scope": "Outer compile_task includes descriptor traversal/dedup/copy and replay setup. Replay-loop clock begins after JAX import/configuration and topology construction. Neither is source-serving impact, target startup, provisioning or switch C."
+    },
+    "H": {
+      "host": "gke-tpu-8770cb66-8v5c",
+      "pid": 541080,
+      "descriptor_occurrences": 522,
+      "source_bundles": 4,
+      "unique_actual_keys_matched": 261,
+      "backend_compile_and_load_spans": 261,
+      "cache_hit_deserialization_spans": 0,
+      "observed_profile_counts": {
+        "cache_lookup_and_decompress": 261,
+        "cache_miss_lookup": 261,
+        "backend_compile_and_load": 261
+      },
+      "effective_cache_config": {
+        "jax_compilation_cache_dir": "/models/jax_cache_overlap_preflight_h_20261002a",
+        "jax_persistent_cache_min_compile_time_secs": 0.0,
+        "jax_persistent_cache_min_entry_size_bytes": 0,
+        "jax_log_compiles": false,
+        "jax_explain_cache_misses": false
+      },
+      "diagnostic_outer_compile_task_wall_s": 293.24235820770264,
+      "diagnostic_replay_loop_wall_s": 231.35269165039062,
+      "diagnostic_outer_process_cpu_s": 649.576489643,
+      "timer_scope": "Outer compile_task includes descriptor traversal/dedup/copy and replay setup. Replay-loop clock begins after JAX import/configuration and topology construction. Neither is source-serving impact, target startup, provisioning or switch C."
+    }
+  },
+  "scope": "This completed preflight is separate from the active b-ID matched campaign. No target hit, deserialization, W0 correctness, completed switch, serving slowdown or performance saving is established.",
+  "same_process_warning": "S and H executed sequentially in the same host/PID541080. H requested cache directory did not exist at cleanup. Effective jax_compilation_cache_dir and compiler success do not establish where bytes were persisted; this audit does not infer the actual write location or root cause.",
+  "provenance_limits": [
+    "Inspected replay/pilot/profiler source equals commit9009fc7 locally. Artifact stores commit labels, not a submitted-source hash attestation.",
+    "Capture descriptors carry MLIR/options SHA256 fields, but replay reads payloads without comparing those hashes. Dedup chooses first descriptor for a key without checking duplicate payload equality. Do not claim descriptor SHA validation from this preflight.",
+    "Actual cache-key comparisons and 261 backend compile-and-load spans per layout are retained; no executable-load/cache-hit spans are present.",
+    "device_launches=0 is a declared field, not an invocation counter. Source contains no execution path and checks real TPU backend registry before/after replay."
+  ],
+  "cleanup": {
+    "s": {
+      "root": "/models/jax_cache_overlap_preflight_s_20261002a",
+      "existed": true,
+      "removed": true
+    },
+    "h": {
+      "root": "/models/jax_cache_overlap_preflight_h_20261002a",
+      "existed": false,
+      "removed": true
+    }
+  },
+  "orchestration": {
+    "initial_cleanup_parser_failed": true,
+    "initial_preflight_shell_exit_claim": 143,
+    "zombie_worker_receipt": {
+      "daemon_pid": 4086063,
+      "alive": false,
+      "zombie": true
+    },
+    "recovery": {
+      "status": "succeeded",
+      "replay_submission_id": "raysubmit_ZY2dGbDWNquiCEDY",
+      "failed_cleanup_worker_pid": 4086063,
+      "failed_cleanup_worker_state": "zombie; alive=false",
+      "failure_receipts": [
+        "preflight-cleanup-parser-error.log",
+        "preflight-cleanup-zombie-rcm.json"
+      ],
+      "intervention": "SIGTERM only owned stuck RCM client4086062 after successful replay and zombie cleanup-worker proof. Original preflight exited143 and released flock; queued service remained SIGSTOPed.",
+      "command": "flock /tmp/hetero-cluster.lock bash /tmp/overlap_preflight_cleanup_recovery.sh",
+      "actual_helper_argv": ".venv/bin/python rcm_exec run scripts/overlap_storage_probe.py --cleanup-cache --root /models/jax_cache_overlap_preflight_{s,h}_20261002a --output results/overlap/OverlapCompile/replay-preflight-cleanup-{s,h}-recovery.json",
+      "receipts": [
+        "replay-preflight-cleanup-s-recovery.json",
+        "replay-preflight-cleanup-h-recovery.json",
+        "replay-preflight-final-rcm-recovery.json"
+      ],
+      "S_cache_existed": true,
+      "H_cache_existed": false,
+      "both_cache_paths_removed": true,
+      "final_rcm_alive": false,
+      "original_queued_service_resumed_pid": 4083881,
+      "resumed_at": 1790983847.4343524,
+      "timing_scope": "Recovery before first b-ID campaign; not timed switch work or credited as C improvement."
+    },
+    "final_rcm_alive": false,
+    "scope": "Successful exact-path cleanup receipts and final idle receipt verified. Process signal/lock chronology is retained owner incident evidence, not a continuously monitored lock proof. Cleanup does not retroactively make original orchestration uninterrupted."
+  },
+  "source_hashes": {
+    "scripts/overlap_replay.py": "3a5d4b4a4d8e2537b577453c288562d562e0a2e5800c41859a0b9b3873612b74",
+    "scripts/overlap_pilot.py": "b798bf2633ad9d393511b81bcaf75ef24d5e1c21c5a1431accb8ec08bfb478ed",
+    "hetero/compile_overlap.py": "4a8f0eb46b8cc56ccce3506e2363ebbb17c0a8ef4cc7ab80cdc7eae4cf17f922"
+  },
+  "verification": "Executed read-only local artifact/profile/count/config/source/cleanup replay. No cluster calls or CPU/TPU performance reruns.",
+  "source_manifest": [
+    {
+      "path": "OverlapCompile/results/overlap/OverlapCompile/replay-preflight.json",
+      "bytes": 1137344,
+      "sha256": "0b393bcba03b4c2a4f03202fa3986f7ee3e4070f60dabbf5bfb6514969bb5227"
+    },
+    {
+      "path": "OverlapCompile/results/overlap/OverlapCompile/replay-preflight-summary.json",
+      "bytes": 1362,
+      "sha256": "4f42e14ea976b47ec97bb42408083a670fea033db2cb58c38fd6d5ad71e64c35"
+    },
+    {
+      "path": "OverlapCompile/results/overlap/OverlapCompile/replay-preflight-cleanup-s-recovery.json",
+      "bytes": 251,
+      "sha256": "c9e895221eb4c8e7afdf33fa17dbb6f6579dd59465d172ee2bf4265bff2fe628"
+    },
+    {
+      "path": "OverlapCompile/results/overlap/OverlapCompile/replay-preflight-cleanup-h-recovery.json",
+      "bytes": 252,
+      "sha256": "168a09d699ea50b9dac34402714a5ccb88d9556f2e978eb878191f302b18a083"
+    },
+    {
+      "path": "OverlapCompile/results/overlap/OverlapCompile/preflight-cleanup-orchestration.json",
+      "bytes": 2386,
+      "sha256": "4b505905ba10e5190de9a7c830aa233a600b2065414d81ef130010deb6d3c03a"
+    },
+    {
+      "path": "OverlapCompile/results/overlap/OverlapCompile/preflight-cleanup-parser-error.log",
+      "bytes": 206,
+      "sha256": "7f428f27c6b3d6020ddde19a683e6932f21effee6706c66001951d19d5ee5175"
+    },
+    {
+      "path": "OverlapCompile/results/overlap/OverlapCompile/preflight-cleanup-zombie-rcm.json",
+      "bytes": 2848360,
+      "sha256": "a69d8517f59dde5aeecc7015e539564449dd86325b070e0424bd6d7b11c2f17c"
+    },
+    {
+      "path": "OverlapCompile/results/overlap/OverlapCompile/replay-preflight-final-rcm-recovery.json",
+      "bytes": 7953,
+      "sha256": "a43fb5c1f30569b22cadfe752dd3a22ad5ac48a61c8da94cb90672baaf813e31"
+    },
+    {
+      "path": "OverlapCompile/scripts/overlap_replay.py",
+      "bytes": 7693,
+      "sha256": "3a5d4b4a4d8e2537b577453c288562d562e0a2e5800c41859a0b9b3873612b74"
+    },
+    {
+      "path": "OverlapCompile/scripts/overlap_pilot.py",
+      "bytes": 10836,
+      "sha256": "b798bf2633ad9d393511b81bcaf75ef24d5e1c21c5a1431accb8ec08bfb478ed"
+    },
+    {
+      "path": "OverlapCompile/hetero/compile_overlap.py",
+      "bytes": 13311,
+      "sha256": "4a8f0eb46b8cc56ccce3506e2363ebbb17c0a8ef4cc7ab80cdc7eae4cf17f922"
+    }
+  ]
+}

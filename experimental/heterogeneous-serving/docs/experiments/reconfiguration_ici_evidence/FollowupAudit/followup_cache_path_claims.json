@@ -1,0 +1,47 @@
+{
+  "verdict": "SUPPORTED_EXACT_VERSION_LOCAL_PROCESS_GLOBAL_CACHE_RETENTION",
+  "scope": "Retained CPU reproduction and exact installed-source identity; no JIT experiment rerun and no cluster calls.",
+  "jax_version": "0.10.2",
+  "compilation_cache_source_sha256": "34b476cad9116647922556aa62c6abdf6865dc8ba535777ebdd902685da1beb9",
+  "observations": {
+    "same_process_pid": 4092644,
+    "fresh_process_pid": 4093005,
+    "same_process_configured_H_but_cache_object_S": true,
+    "same_process_H_directory_absent": true,
+    "new_H_computation_file_written_under_S": [
+      "jit__lambda-b56d71aa4bce8afcd9f3e5219719874c8da3bfd3aca74f26844295d1902680d1-cache"
+    ],
+    "fresh_process_config_and_cache_object_H": true,
+    "fresh_process_file": {
+      "name": "jit__lambda-b56d71aa4bce8afcd9f3e5219719874c8da3bfd3aca74f26844295d1902680d1-cache",
+      "bytes": 2535,
+      "sha256": "37d5143c60c344fdbb7421129e15166200cb9923eb9efea7e33f5c089195b582"
+    }
+  },
+  "source_reading": "_get_cache returns the existing module-global _cache and only initializes if None. _initialize_cache is guarded by _cache_initialized and captures config.compilation_cache_dir when creating the file cache. Updating the config value alone does not replace the initialized object.",
+  "preflight_connection": "The audited S/H preflight shared one PID and H configured path was absent at cleanup. Exact-version CPU reproduction and matching library source establish a mechanism consistent with that anomaly; they do not independently inventory the actual remote H cache entries or prove their final physical location.",
+  "required_future_gate": "A fresh replay process per target avoids this specific demonstrated initialized-object reuse. Actual per-key byte visibility and target deserialization/hits still require separate completed evidence. No acceptance of active campaigns is implied.",
+  "unsupported": [
+    "TPU target deserialization",
+    "remote cache-entry physical provenance",
+    "source-serving impact",
+    "switch C or performance saving"
+  ],
+  "source_manifest": [
+    {
+      "path": "/home/hongtao/hetero-wt/OverlapCompile/results/overlap/OverlapCompile/cache-directory-local-repro.json",
+      "bytes": 1480,
+      "sha256": "d19a6802585cb37813a02c2634e6cbfa0d02891467a8e796701a8739c64a48f1"
+    },
+    {
+      "path": "/home/hongtao/hetero-wt/OverlapCompile/results/overlap/OverlapCompile/source_probe.json",
+      "bytes": 77581,
+      "sha256": "85061affa9b290d04d62277d4da05573cd5ab6b9e480a6068c1d8095468291eb"
+    },
+    {
+      "path": "/home/hongtao/hetero-wt/FastGraph/.venv-helper/lib/python3.12/site-packages/jax/_src/compilation_cache.py",
+      "bytes": 16331,
+      "sha256": "34b476cad9116647922556aa62c6abdf6865dc8ba535777ebdd902685da1beb9"
+    }
+  ]
+}
