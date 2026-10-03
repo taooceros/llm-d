@@ -1,0 +1,146 @@
+{
+  "verdict": "SUPPORTED_IMMUTABLE_ARTIFACT_PAYLOAD_AND_REHYDRATION",
+  "artifact_commit": "c22954164fcac8e1a2db32e8c59424af2e19eb9e",
+  "launcher_source_commit": "9009fc7da5f03a57077ffdaa485d63a54d9190ef",
+  "manifest_path": "results/overlap/OverlapCompile/final-artifact-manifest.json",
+  "manifest_sha256": "beb7734a9315948b6be6cb8f202f916eb11dd5cd837050ea0d2721e95ff7c7e1",
+  "verified_payload_git_blobs": 317,
+  "manifest_plus_payload_paths": 318,
+  "verified_payload_bytes": 202041063,
+  "raw_gzip_rehydrations_verified": [
+    {
+      "raw_path": "results/overlap/OverlapCompile/controlled-h-20261002a/normal-deploy.json",
+      "raw_bytes": 226399605,
+      "raw_sha256": "d205de95f81c94a338af1428278054d2cbe197c232fdd5a53c43f818a7e009c5"
+    },
+    {
+      "raw_path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002a/source-provision-deploy.json",
+      "raw_bytes": 176087138,
+      "raw_sha256": "04c661a65229f5f35c97c1f176bdf4114cacf3f47215a691cee307c1b43c0a84"
+    },
+    {
+      "raw_path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002a/target-provision-deploy.json",
+      "raw_bytes": 168863845,
+      "raw_sha256": "834aae0f74012895c9991713a05b5839e48757eacb48ca31b0afb9e9dbb61cd5"
+    },
+    {
+      "raw_path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002a/target-reference.json",
+      "raw_bytes": 140939024,
+      "raw_sha256": "d778e1dc74effbbebf08172979468c0cc03de3260e84050d869f0c598a26c55c"
+    },
+    {
+      "raw_path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/source-provision-deploy.json",
+      "raw_bytes": 160536414,
+      "raw_sha256": "75407de14a1fb605165c9e17e7b4b8db1d4aa7b6dc1d5bf7b7f4bcbc46f7e220"
+    },
+    {
+      "raw_path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/source-warm-check.json",
+      "raw_bytes": 133767439,
+      "raw_sha256": "efe3e7f88d97050ce7f4ea8352dcdd398addb9ce78d405be3435693f0aed2e2d"
+    },
+    {
+      "raw_path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/source-warm-deploy.json",
+      "raw_bytes": 160542984,
+      "raw_sha256": "6d107c5273b116f3be8297cef4190574164467a4e4a8d7962c962ce3e8bd2fa4"
+    },
+    {
+      "raw_path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/target-cold-check.json",
+      "raw_bytes": 146782191,
+      "raw_sha256": "046840fb28d111ff4eeaec1343d60934cdc932814f1cca554c5b2f3bb94c98ad"
+    },
+    {
+      "raw_path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/target-cold-deploy.json",
+      "raw_bytes": 176109790,
+      "raw_sha256": "e8d47a62b16e370461453f47c4e1a23df8c8f961480ef94b3f3bc68b1c327a18"
+    },
+    {
+      "raw_path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/target-cold-validation.json",
+      "raw_bytes": 147004121,
+      "raw_sha256": "fb5670e77647e51238ef5e3f058298684255f70a0001021113d00d83db01439d"
+    },
+    {
+      "raw_path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/target-provision-deploy.json",
+      "raw_bytes": 169155920,
+      "raw_sha256": "dd95a2ab5c80a0d542cdfbf1f774c51c99171d6889226accbd9c4c746f48c118"
+    },
+    {
+      "raw_path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/target-reference.json",
+      "raw_bytes": 141184259,
+      "raw_sha256": "795b1ef55557abb0e4268bcda5bc920ed813706961fe6f02880dae7db009261f"
+    },
+    {
+      "raw_path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/target-warm-check.json",
+      "raw_bytes": 133760341,
+      "raw_sha256": "de81fa6502075bc0112abb2b69a689e3b33b3b0896ac5e4c6968a37c4615ced3"
+    },
+    {
+      "raw_path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/target-warm-deploy.json",
+      "raw_bytes": 160552386,
+      "raw_sha256": "1259b7b43c21373d813cbb4a029a0b76fed07e275de1d3d2fcaf7c9880be858b"
+    },
+    {
+      "raw_path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/target-warm-validation.json",
+      "raw_bytes": 133982271,
+      "raw_sha256": "554690de789ccd18c05780e070e4d7b69c93947fdd84652c3e5766c653648ead"
+    },
+    {
+      "raw_path": "results/overlap/OverlapCompile/controlled-hs-overlap-20261002b/source-provision-deploy.json",
+      "raw_bytes": 160537929,
+      "raw_sha256": "22cbb7e55d445e98ab4f8aa05a5c990f56509d12f42231df97ebd8a17f5234d4"
+    },
+    {
+      "raw_path": "results/overlap/OverlapCompile/controlled-hs-overlap-20261002b/target-provision-deploy.json",
+      "raw_bytes": 169206467,
+      "raw_sha256": "42917355097748ab053506d90e30f89ea5422c992bdde6cc7db0f33a361d6392"
+    },
+    {
+      "raw_path": "results/overlap/OverlapCompile/controlled-hs-overlap-20261002b/target-reference.json",
+      "raw_bytes": 141226231,
+      "raw_sha256": "46ca8c0c3a801d5851fd470bcca123db54d00467425f1812946607b43b8dee85"
+    },
+    {
+      "raw_path": "results/overlap/OverlapCompile/controlled-s-20261002a/normal-deploy.json",
+      "raw_bytes": 222816511,
+      "raw_sha256": "29f27df0e8286539b0eed9a7391005213a868efdd6958afa8f44fa49a195c9ef"
+    },
+    {
+      "raw_path": "results/overlap/OverlapCompile/s-split-20261002c/cold-restore-deploy.json",
+      "raw_bytes": 162728787,
+      "raw_sha256": "53ef71e9d9c5e5315281f3ce2c16c22a28727c4b0dab41ecda8dbf3a74eda1fd"
+    },
+    {
+      "raw_path": "results/overlap/OverlapCompile/s-split-20261002c/cold-validation.json",
+      "raw_bytes": 135699735,
+      "raw_sha256": "37d9cd0ed426a3d6e91651136bcd85edf09636ef913a86fc095497f56905b57c"
+    },
+    {
+      "raw_path": "results/overlap/OverlapCompile/s-split-20261002c/normal-deploy.json",
+      "raw_bytes": 162730562,
+      "raw_sha256": "1ecb15e76bf9a8847ae6de836bfa05a5244d15090cdc3725e3b75fab15e78e0f"
+    },
+    {
+      "raw_path": "results/overlap/OverlapCompile/s-split-20261002c/reference.json",
+      "raw_bytes": 135926014,
+      "raw_sha256": "520b95f2729dca3e1af126285abc6c2783bc2c5980fc6d2d91d711c5a6f6b215"
+    },
+    {
+      "raw_path": "results/overlap/OverlapCompile/s-split-20261002c/warm-restore-deploy.json",
+      "raw_bytes": 162728983,
+      "raw_sha256": "9434504d431d60995782107cadf1e78c3a4e63e735c69023cf23c1c0365e3491"
+    },
+    {
+      "raw_path": "results/overlap/OverlapCompile/s-split-20261002c/warm-validation.json",
+      "raw_bytes": 135700109,
+      "raw_sha256": "2a7647c3aa5e8fab5c2d50285c3a7d196ce4e1c6d9dde744065444314e10997f"
+    }
+  ],
+  "raw_graph_archive_committed": {
+    "path": "results/overlap/OverlapCompile/pre-sh-owned-bundle-graphs.tar.gz",
+    "bytes": 67423350,
+    "sha256": "b6c3539ea40deeb66dfd5865d99d26e095b01552dc1ca56ea35a72c4129161b2",
+    "storage": "git"
+  },
+  "external_only_large_artifacts": 0,
+  "scope": "Read directly from pinned Git commit. All declared payload sizes/SHA256 match. All25compressed raw JSON payloads rehydrate in memory to declared raw byte counts/SHA256. No files rewritten in owner worktree, no cluster operations, and no new performance or backend-equivalence claim.",
+  "prior_behavioral_verdict": "b6b5a24: observed live-serving topology ownership failure; no overlap speedup/C/crossover; final cleanup qualified."
+}

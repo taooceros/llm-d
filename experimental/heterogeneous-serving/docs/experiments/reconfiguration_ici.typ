@@ -719,6 +719,9 @@ The compact final reports and generated tables are under
 `reconfiguration_ici_evidence/OverlapFollowup/`; `manifest.json` records source hashes and
 compression boundaries. Table generator `helper/results-analysis` commit `39d09ca` passed
 21 tests plus 8 subtests; no measured overlap benefit or historical crossover is emitted.
+The full raw campaign is sealed on `overlap/restore-precompile` at `c229541`. Independent
+artifact audit `2ea7783` verified all 317 declared Git payloads and all 25 gzip rehydrations,
+including the committed 67.4 MB graph archive. Its receipt is also in `FollowupAudit/`.
 
 = Approach B: in-place resharding over ICI <sec-ici>
 
