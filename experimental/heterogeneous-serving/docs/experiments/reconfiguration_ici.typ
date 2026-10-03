@@ -626,13 +626,13 @@ differs from historical provenance; these rates must not be combined with histor
 crossover inputs. Independent post-W0 greedy outputs matched the target reference.
 
 #table(
-  columns: (1fr, auto),
-  table.header[Closed cold-pilot accounting][Observed time],
-  [Last source completion to first measured target dispatch], [451.410 s],
-  [First-120-s positive output-deficit equivalent], [6.887 s],
-  [Sum: descriptive harness-inclusive C], [458.297 s],
-  [Prior target provisioning: deploy, reference, snapshot, release], [920.802 s],
-  [C plus that target provisioning], [1,379.099 s],
+  columns: (1fr, auto, auto),
+  table.header[Closed H-to-S pilot accounting][Cold target cache][Warm target cache],
+  [Last source completion to first measured target dispatch], [451.410 s], [218.716 s],
+  [First-120-s positive output-deficit equivalent], [6.887 s], [6.544 s],
+  [Sum: descriptive harness-inclusive C], [458.297 s], [225.260 s],
+  [Prior target provisioning: deploy, reference, snapshot, release], [920.802 s], [920.802 s],
+  [C plus that target provisioning], [1,379.099 s], [1,146.063 s],
 )
 
 The gap charges source artifact export, teardown, target deployment and controls/restore
@@ -643,16 +643,31 @@ holds are outside this closed interval. The last row adds the stated target prov
 not the initial source deployment or useful source workload.
 
 “Cold” names the initially empty target cache, not an all-miss startup: replicas share it and
-can hit each other’s entries. Cache-write ESTALE warnings were retained. Successful deployment
-alone does not prove complete persistence, nor does a post-workload inventory prove startup
-hits. Warm-control coverage must be established from its actual startup reads and successful
-deserializations before measuring an overlap benefit. Device/host execution attribution also
-remains unsupported because the S/H traces lacked required phase markers.
+can hit each other’s entries. The subsequent warm baseline passed the startup reuse check:
+all 2,088 reads across 16 phase-worker profiles contained a successful same-key deserialization,
+with zero misses/backend compilations in those two phases. Unkeyed listener events corroborate
+the count, not the key identity. These profiles precede the standard W0 warmup. Both warm-arm
+W0 runs completed 1,763 requests / 721,595 tokens; makespans were 491.710 s (H) and 333.837 s (S).
+Post-W0 greedy equality matched all 128 outputs / 8,140 tokens.
+
+A read-only inventory after the final W0 found all 295 observed startup keys, byte-identical
+across eight hosts, in each of the two baseline cache roots. That inventory is not itself
+proof of pre-start availability; the actual startup reads above provide the reuse evidence.
+The 28.841 s process hold and 24.850 s inventory were outside C. All five baseline generations
+were drained/released, caches removed, tmpfs snapshots cleaned, and paused processes resumed.
+This does not imply later authorized overlap work had ended.
+
+The 80 retained ESTALE warning records include 35 Ray repeat-compressed lines; they are not
+80 uniquely identified failed writes. Passing later coverage does not erase those warnings.
+These cold/warm observations are a fixed-order, single unfrozen-pilot sequence, not an overlap
+result or independent repeated trials. Device/host execution attribution remains unsupported
+because the S/H traces lacked required phase markers.
 
 No warm-versus-overlap saving or new break-even conclusion follows from these observations.
 Evidence: launcher/worktree revision `9009fc7` (not a loaded-backend verification), baseline
 `controlled-hs-baseline-20261002b`, independent audits
-`6530457` (replay), `9be7555` (cache path), and `93670de` (closed cold interval), archived under
+`6530457` (replay), `9be7555` (cache path), `93670de` (cold interval), and `ee0d5e8`
+(warm interval and startup reuse), archived under
 `reconfiguration_ici_evidence/FollowupAudit/`.
 
 = Approach B: in-place resharding over ICI <sec-ici>

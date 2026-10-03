@@ -1,0 +1,581 @@
+{
+  "verdict": "SUPPORTED_CLOSED_WARM_BASELINE_AND_PRE_W0_TARGET_HITS_UNFROZEN_PILOT",
+  "launcher_source_commit": "9009fc7",
+  "loaded_backend_revision": "UNFROZEN",
+  "loaded_runtime": null,
+  "runtime_equivalence_verified": false,
+  "pilots": {
+    "source": {
+      "requests": 1763,
+      "output_tokens": 721595,
+      "first_client_dispatch": 1790986810.2734022,
+      "last_client_completion": 1790987301.9246552,
+      "makespan_s": 491.7095,
+      "steady_middle_bin_median_tokens_per_s": 1551.05,
+      "positive_120s_ramp_deficit_s": 5.339608652203347,
+      "ten_second_rates": [
+        929.3,
+        1344.6,
+        1667.5,
+        1653.3,
+        1580.2,
+        1626.2,
+        1689.6,
+        1720.6,
+        1621.6,
+        1680.7,
+        1690.8,
+        1765.8,
+        1620.9,
+        1624.1,
+        1534.7,
+        1766.5,
+        1593.3,
+        1371.4,
+        1601.6,
+        1542.0,
+        1478.3,
+        1442.2,
+        1563.1,
+        1403.2,
+        1623.1,
+        1510.1,
+        1692.6,
+        1516.2,
+        1525.8,
+        1456.6,
+        1421.2,
+        1412.2,
+        1680.2,
+        1587.6,
+        1719.7,
+        1679.6,
+        1390.9,
+        1443.1,
+        1339.0,
+        1560.1,
+        1362.8,
+        1540.2,
+        1468.1,
+        1533.4,
+        1354.2,
+        1129.6,
+        829.8,
+        516.0,
+        328.0,
+        27.9
+      ]
+    },
+    "target": {
+      "requests": 1763,
+      "output_tokens": 721595,
+      "first_client_dispatch": 1790987520.6408875,
+      "last_client_completion": 1790987854.4268239,
+      "makespan_s": 333.8367,
+      "steady_middle_bin_median_tokens_per_s": 2448.6,
+      "positive_120s_ramp_deficit_s": 6.544147676223147,
+      "ten_second_rates": [
+        846.2,
+        2853.3,
+        3049.4,
+        2795.7,
+        2876.7,
+        2750.4,
+        2496.6,
+        2494.2,
+        2628.9,
+        2596.3,
+        2691.6,
+        2547.1,
+        2499.5,
+        2222.0,
+        2276.1,
+        2367.1,
+        2304.3,
+        2161.5,
+        2448.6,
+        2253.7,
+        2644.2,
+        2378.4,
+        2214.5,
+        2492.8,
+        2524.6,
+        2184.8,
+        2105.1,
+        2106.5,
+        1750.2,
+        1062.2,
+        733.2,
+        570.6,
+        210.1,
+        23.1
+      ]
+    }
+  },
+  "dispatch_gap_s": 218.7162322998047,
+  "ramp_deficit_s": 6.544147676223147,
+  "observed_C_s": 225.26037997602782,
+  "prior_target_provisioning_s": 920.8023388385773,
+  "C_plus_target_prior_provisioning_s": 1146.0627188146052,
+  "target_startup_qualification": {
+    "phase_workers": 16,
+    "reads_hits_nested_deserializations": 2088,
+    "listener_hit_events": 2088,
+    "misses": 0,
+    "rows": [
+      {
+        "instance": "small_a",
+        "rank": 0,
+        "phase": "initialize_from_config",
+        "successful_keyed_reads_and_nested_deserializations": 77,
+        "unique_read_keys": 77,
+        "listener_hit_events_unkeyed": 77,
+        "start": 1790987405.1164074,
+        "end": 1790987409.9063294
+      },
+      {
+        "instance": "small_a",
+        "rank": 0,
+        "phase": "compile_or_warm_up_model",
+        "successful_keyed_reads_and_nested_deserializations": 184,
+        "unique_read_keys": 184,
+        "listener_hit_events_unkeyed": 184,
+        "start": 1790987409.941364,
+        "end": 1790987458.0123816
+      },
+      {
+        "instance": "small_a",
+        "rank": 1,
+        "phase": "initialize_from_config",
+        "successful_keyed_reads_and_nested_deserializations": 77,
+        "unique_read_keys": 77,
+        "listener_hit_events_unkeyed": 77,
+        "start": 1790987405.116655,
+        "end": 1790987409.9064627
+      },
+      {
+        "instance": "small_a",
+        "rank": 1,
+        "phase": "compile_or_warm_up_model",
+        "successful_keyed_reads_and_nested_deserializations": 184,
+        "unique_read_keys": 184,
+        "listener_hit_events_unkeyed": 184,
+        "start": 1790987409.9414785,
+        "end": 1790987458.0102088
+      },
+      {
+        "instance": "small_b",
+        "rank": 0,
+        "phase": "initialize_from_config",
+        "successful_keyed_reads_and_nested_deserializations": 77,
+        "unique_read_keys": 77,
+        "listener_hit_events_unkeyed": 77,
+        "start": 1790987406.370625,
+        "end": 1790987410.3597405
+      },
+      {
+        "instance": "small_b",
+        "rank": 0,
+        "phase": "compile_or_warm_up_model",
+        "successful_keyed_reads_and_nested_deserializations": 184,
+        "unique_read_keys": 184,
+        "listener_hit_events_unkeyed": 184,
+        "start": 1790987410.3956485,
+        "end": 1790987460.5149221
+      },
+      {
+        "instance": "small_b",
+        "rank": 1,
+        "phase": "initialize_from_config",
+        "successful_keyed_reads_and_nested_deserializations": 77,
+        "unique_read_keys": 77,
+        "listener_hit_events_unkeyed": 77,
+        "start": 1790987406.3708622,
+        "end": 1790987410.3599472
+      },
+      {
+        "instance": "small_b",
+        "rank": 1,
+        "phase": "compile_or_warm_up_model",
+        "successful_keyed_reads_and_nested_deserializations": 184,
+        "unique_read_keys": 184,
+        "listener_hit_events_unkeyed": 184,
+        "start": 1790987410.395788,
+        "end": 1790987460.514968
+      },
+      {
+        "instance": "small_c",
+        "rank": 0,
+        "phase": "initialize_from_config",
+        "successful_keyed_reads_and_nested_deserializations": 77,
+        "unique_read_keys": 77,
+        "listener_hit_events_unkeyed": 77,
+        "start": 1790987405.5073314,
+        "end": 1790987410.3059332
+      },
+      {
+        "instance": "small_c",
+        "rank": 0,
+        "phase": "compile_or_warm_up_model",
+        "successful_keyed_reads_and_nested_deserializations": 184,
+        "unique_read_keys": 184,
+        "listener_hit_events_unkeyed": 184,
+        "start": 1790987410.34206,
+        "end": 1790987459.8388703
+      },
+      {
+        "instance": "small_c",
+        "rank": 1,
+        "phase": "initialize_from_config",
+        "successful_keyed_reads_and_nested_deserializations": 77,
+        "unique_read_keys": 77,
+        "listener_hit_events_unkeyed": 77,
+        "start": 1790987405.5075996,
+        "end": 1790987410.306122
+      },
+      {
+        "instance": "small_c",
+        "rank": 1,
+        "phase": "compile_or_warm_up_model",
+        "successful_keyed_reads_and_nested_deserializations": 184,
+        "unique_read_keys": 184,
+        "listener_hit_events_unkeyed": 184,
+        "start": 1790987410.3420897,
+        "end": 1790987459.8382215
+      },
+      {
+        "instance": "small_d",
+        "rank": 0,
+        "phase": "initialize_from_config",
+        "successful_keyed_reads_and_nested_deserializations": 77,
+        "unique_read_keys": 77,
+        "listener_hit_events_unkeyed": 77,
+        "start": 1790987404.9884095,
+        "end": 1790987409.8471098
+      },
+      {
+        "instance": "small_d",
+        "rank": 0,
+        "phase": "compile_or_warm_up_model",
+        "successful_keyed_reads_and_nested_deserializations": 184,
+        "unique_read_keys": 184,
+        "listener_hit_events_unkeyed": 184,
+        "start": 1790987409.8831317,
+        "end": 1790987457.6111162
+      },
+      {
+        "instance": "small_d",
+        "rank": 1,
+        "phase": "initialize_from_config",
+        "successful_keyed_reads_and_nested_deserializations": 77,
+        "unique_read_keys": 77,
+        "listener_hit_events_unkeyed": 77,
+        "start": 1790987404.9886098,
+        "end": 1790987409.8473635
+      },
+      {
+        "instance": "small_d",
+        "rank": 1,
+        "phase": "compile_or_warm_up_model",
+        "successful_keyed_reads_and_nested_deserializations": 184,
+        "unique_read_keys": 184,
+        "listener_hit_events_unkeyed": 184,
+        "start": 1790987409.8832843,
+        "end": 1790987457.6111112
+      }
+    ],
+    "proof": "Every outer cache_read returns a non-null executable; exactly one same-key deserializer interval is nested within each successful read. Bare timed intervals alone would not prove success because timer records in finally. Listener hit events are unkeyed corroborative counts, not a separate key-identity proof.",
+    "scope": "Two instrumented target startup phases before pilot internal warmup. Not an all-JAX/all-future-workload no-miss guarantee."
+  },
+  "post_W0_inventory": {
+    "/models/jax_cache_overlap_controlled-hs-baseline-20261002b_normal": {
+      "hosts": 8,
+      "keys": 295,
+      "all_observed_startup_keys_covered": true,
+      "identical_recorded_bytes_sha256_all_hosts": true
+    },
+    "/models/jax_cache_overlap_controlled-hs-baseline-20261002b_cold": {
+      "hosts": 8,
+      "keys": 295,
+      "all_observed_startup_keys_covered": true,
+      "identical_recorded_bytes_sha256_all_hosts": true
+    }
+  },
+  "inventory_scope": "Read-only post-W0 hashes prove all observed-key payloads visible identically on8hosts then; not before-startup physical inventory, not8independent stored copies. Pre-W0 hit/deserialization proof comes from startup profiles, not these later files.",
+  "ESTALE": {
+    "warning_records": 80,
+    "records_with_ray_repeat_compression": 35,
+    "exact_failed_keys_recorded": false,
+    "scope": "80 retained warning records, not80known unique failed writes. Some records compress repeated warnings. Candidate hash cohorts are not failed-key attribution. Complete later warm reads and inventory establish observed coverage despite warnings; they do not erase them or prove every original write succeeded."
+  },
+  "hold": {
+    "baseline_shell_pid": 4086716,
+    "boundary": "after final target W0/equality receipt; before cleanup",
+    "active_rcm_child_not_stopped": true,
+    "flock_owner_pid": 4083881,
+    "owned_paths": [
+      "/models/jax_cache_overlap_controlled-hs-baseline-20261002b_normal",
+      "/models/jax_cache_overlap_controlled-hs-baseline-20261002b_cold"
+    ],
+    "scope": "Read-only post-measurement inspection; no cache repair or prewarming before measurement",
+    "inventory_timeout_s": 600,
+    "held_at": 1790988013.8915963,
+    "inspection_start": 1790988016.0286732,
+    "inspection_end": 1790988040.878368,
+    "inventory_exit_code": 0,
+    "warm_control_fully_warm": true,
+    "resumed_at": 1790988042.7326937,
+    "continuation_manager_resumed_at": 1790988042.7326968
+  },
+  "hold_scope": "Both baseline shell and continuation manager have recorded resume timestamps. Hold and read-only inventory timestamps are after measured W0 and outside C. The validation receipt has no saved/completion timestamp; after-equality ordering is the owner-recorded boundary plus serial blocking harness, not an independently timestamped equality endpoint. Guard ended without intervention. These receipts do not establish continuous process-state surveillance.",
+  "post_W0_equality": {
+    "prompts_per_engine": 32,
+    "engines": 4,
+    "tokens": 8140,
+    "outside_C": true
+  },
+  "baseline_cleanup": {
+    "target-provision": {
+      "actors_removed": 4,
+      "release_all_removed": true
+    },
+    "source-cold": {
+      "actors_removed": 2,
+      "release_all_removed": true
+    },
+    "target-cold": {
+      "actors_removed": 4,
+      "release_all_removed": true
+    },
+    "source-warm": {
+      "actors_removed": 2,
+      "release_all_removed": true
+    },
+    "target-warm": {
+      "actors_removed": 4,
+      "release_all_removed": true
+    },
+    "normal_cache": {
+      "root": "/models/jax_cache_overlap_controlled-hs-baseline-20261002b_normal",
+      "existed": true,
+      "removed": true
+    },
+    "cold_cache": {
+      "root": "/models/jax_cache_overlap_controlled-hs-baseline-20261002b_cold",
+      "existed": true,
+      "removed": true
+    },
+    "background_cache": {
+      "root": "/models/jax_cache_overlap_controlled-hs-baseline-20261002b_background",
+      "existed": false,
+      "removed": true
+    }
+  },
+  "baseline_tmpfs_cleanup": {
+    "hosts": 8,
+    "snapshot_bytes_each": 0
+  },
+  "final_baseline_rcm_alive": false,
+  "limitations": [
+    "Explicit UNFROZEN pilot; source launcher hash is not loaded vendor/backend equivalence.",
+    "Actual catalogue7b99d0 differs historical W0 provenance8832576; unchanged token-manifest8a65e939 and same actual warmup used within this campaign.",
+    "Fixed-order single cold then warm control, no replicated/randomized causal claim.",
+    "No overlap execution or overlap performance saving accepted by this warm-baseline supplement.",
+    "C is client-dispatch gap plus defined output-equivalent ramp deficit; not sum of worker phase times.",
+    "Prior920.802s target provisioning includes load/reference/snapshot/release, not pure compile or whole initial job startup.",
+    "Baseline cleanup receipts do not imply later authorized continuation or cluster-wide work has ended."
+  ],
+  "verification": "Executed independent local raw records/iterations/source/config/profile/nested-key/inventory/hold/cleanup replay; no cluster calls or new experiments.",
+  "source_manifest": [
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/warm-transition-observed.json",
+      "sha256": "d2015f9854017fa9b463733fbe8ec5479522542f9676148b200f656d64071ad1",
+      "bytes": 7119
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/warm-control-qualification.json",
+      "sha256": "3adfc5d0c8a55a23aaffd29fdb1be74ee883dd6698e0347885d5d355d31eeeb6",
+      "bytes": 4692
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/timeline.jsonl",
+      "sha256": "cd58e3150a3ae1c15806afd465391e5110c5a127b4eba705f8826bb0e94044b2",
+      "bytes": 2126
+    },
+    {
+      "path": "data/manifests/W0.json",
+      "sha256": "d73599947c9935c95bf9247df6b66e5049885aac3e016e1f2de9442f3f772914",
+      "bytes": 2588846
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/source-warm-control-pilot.json",
+      "sha256": "9fa49426bd1ff66d5e43221f90bcd486ca5df3e9c61c6c8526d3dc9f7538aa73",
+      "bytes": 16714
+    },
+    {
+      "path": "results/hetero/artifacts/overlap-controlled-hs-baseline-20261002b-source-warm-control/W0_H_r1_summary.json",
+      "sha256": "34130ca5b586510526b3b54377a564cf88e6678a0738ffd67ccf505de2249694",
+      "bytes": 11849
+    },
+    {
+      "path": "results/hetero/artifacts/overlap-controlled-hs-baseline-20261002b-source-warm-control/W0_H_r1_records.json.gz",
+      "sha256": "267850caff5fb11371c8c255f7e5bd3fd5b36b52459fed62785576904b12c81d",
+      "bytes": 460953
+    },
+    {
+      "path": "results/hetero/artifacts/overlap-controlled-hs-baseline-20261002b-source-warm-control/W0_H_r1_iterations.csv.gz",
+      "sha256": "fe47783d708b8d24792592301be2832d9ad84cde9f2e5316ffa4d57ca2bc3c2d",
+      "bytes": 448472
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/target-warm-pilot.json",
+      "sha256": "b01e94c901d7f4a9276850b5556ae8956f5987d268f98bffacc2c26a3b4651ae",
+      "bytes": 19092
+    },
+    {
+      "path": "results/hetero/artifacts/overlap-controlled-hs-baseline-20261002b-target-warm/W0_S_r1_summary.json",
+      "sha256": "0dfab6363ffe617df76fecbb1ede4378457ce2a6bc88686a1cce2050ed705e09",
+      "bytes": 13939
+    },
+    {
+      "path": "results/hetero/artifacts/overlap-controlled-hs-baseline-20261002b-target-warm/W0_S_r1_records.json.gz",
+      "sha256": "fcc2ab7a1e441882b70fa16ab3280342b0d9657a14551e2d0ddb9c9bae3e8431",
+      "bytes": 502662
+    },
+    {
+      "path": "results/hetero/artifacts/overlap-controlled-hs-baseline-20261002b-target-warm/W0_S_r1_iterations.csv.gz",
+      "sha256": "ef2b23273d41ef50549e1c3ca6493e8c2faac21b6a4d49a9c797cb1cf39159e6",
+      "bytes": 943085
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/target-provision-deploy.json",
+      "sha256": "dd95a2ab5c80a0d542cdfbf1f774c51c99171d6889226accbd9c4c746f48c118",
+      "bytes": 169155920
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/source-provision-deploy.json",
+      "sha256": "75407de14a1fb605165c9e17e7b4b8db1d4aa7b6dc1d5bf7b7f4bcbc46f7e220",
+      "bytes": 160536414
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/target-cold-deploy.json",
+      "sha256": "e8d47a62b16e370461453f47c4e1a23df8c8f961480ef94b3f3bc68b1c327a18",
+      "bytes": 176109790
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/source-warm-deploy.json",
+      "sha256": "6d107c5273b116f3be8297cef4190574164467a4e4a8d7962c962ce3e8bd2fa4",
+      "bytes": 160542984
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/target-warm-deploy.json",
+      "sha256": "1259b7b43c21373d813cbb4a029a0b76fed07e275de1d3d2fcaf7c9880be858b",
+      "bytes": 160552386
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/post-w0-cache-inventory.json",
+      "sha256": "2bc9849124bbac6525a27d8dba48024ae107759f497640daba1a05e5fdad41ec",
+      "bytes": 1299853
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/target-warm-validation.json",
+      "sha256": "554690de789ccd18c05780e070e4d7b69c93947fdd84652c3e5766c653648ead",
+      "bytes": 133982271
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/target-reference.json",
+      "sha256": "795b1ef55557abb0e4268bcda5bc920ed813706961fe6f02880dae7db009261f",
+      "bytes": 141184259
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/post-warm-validation-hold.json",
+      "sha256": "7154616f8c424c9ca41bb83abfeb0f692e48d50761c7b6b7279310f5df850f30",
+      "bytes": 747
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/post-w0-watcher-guard.json",
+      "sha256": "1b8770c030beb2cf7a1f6e2f3817d4fd2a400995141cab158992dc942c37fe94",
+      "bytes": 317
+    },
+    {
+      "path": "results/overlap/OverlapCompile/cache-write-failure-analysis.json",
+      "sha256": "2cc1449a56c2947c5f93c87d0894050e38ab06852e644e48d9f52b761931924f",
+      "bytes": 1131276
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/target-provision-drain.json",
+      "sha256": "d6b24dc4ab90ffdd15859f78a1a13845e62be6ed22181fb61a35f2f19c89aa78",
+      "bytes": 140191
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/target-provision-release.json",
+      "sha256": "7b75eeef9322bcb19716c94973abbbedbefebcaddf554f11a933db3edb2c860a",
+      "bytes": 234082
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/source-cold-drain.json",
+      "sha256": "848c197bd459492cc3388affbf9a1454b7ffdd48d8eb0ff11b6fb9991332b0dd",
+      "bytes": 50606
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/source-cold-release.json",
+      "sha256": "467cdce1739b6642f1a8ab5a800ed6316dd31108f78dd91082e3bfa3b5218a91",
+      "bytes": 216756
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/target-cold-drain.json",
+      "sha256": "8c33984d5c5edefd289520bf6c3de77556fe7e35f40669697dba9a64fde16de8",
+      "bytes": 143034
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/target-cold-release.json",
+      "sha256": "2ebf19e96e727fcf6fd06c51bc967a3dd630625c5efe45b590bacde3b70ea0f3",
+      "bytes": 239422
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/source-warm-drain.json",
+      "sha256": "ec791f9e5efbdc23a20029122e493a2df85cf0ab40c26594b3377bbacf47b28c",
+      "bytes": 52853
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/source-warm-release.json",
+      "sha256": "c1078e6407173ebf8da3b081fe173c490b6238ac06e61b8d5bd900d247e7d778",
+      "bytes": 221806
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/target-warm-drain.json",
+      "sha256": "aa7b06d7546fd5c9a628fb5603905245a7a841b64c7e9173c75460839687743f",
+      "bytes": 145873
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/target-warm-release.json",
+      "sha256": "ab8eaf6b8545a0d95678dad6c05c73855ba49f088a7ddcda493b52b954fee670",
+      "bytes": 244762
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/cleanup-jax_cache_overlap_controlled-hs-baseline-20261002b_normal.json",
+      "sha256": "daef8ce968bc9a7e177725919bc8c6c025d2db110fc14d03fb2a357ea742e10b",
+      "bytes": 269
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/cleanup-jax_cache_overlap_controlled-hs-baseline-20261002b_cold.json",
+      "sha256": "b80f20aadc174177ebceb280a72f847f9bdb5872753fbb3a72a7f6c00fcef146",
+      "bytes": 267
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/cleanup-jax_cache_overlap_controlled-hs-baseline-20261002b_background.json",
+      "sha256": "715db382b03de0ed3f60ad69533e732c6c5257ed2925e796ea395be4d7995612",
+      "bytes": 274
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/cleanup-tmpfs.json",
+      "sha256": "02ec3e96d6bbe1c33bf4a0abb981643c98a97574f844f67e5a0693f07d2fbc3d",
+      "bytes": 2363
+    },
+    {
+      "path": "results/overlap/OverlapCompile/controlled-hs-baseline-20261002b/rcm-status.json",
+      "sha256": "ec4be7488b33defa8f175ed7b8b72c31aae67cf4351b5ead240f5d72b3fb6b4a",
+      "bytes": 8218
+    }
+  ]
+}
