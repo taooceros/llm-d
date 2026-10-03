@@ -650,7 +650,8 @@ deserializations before measuring an overlap benefit. Device/host execution attr
 remains unsupported because the S/H traces lacked required phase markers.
 
 No warm-versus-overlap saving or new break-even conclusion follows from these observations.
-Evidence: runtime `9009fc7`, baseline `controlled-hs-baseline-20261002b`, independent audits
+Evidence: launcher/worktree revision `9009fc7` (not a loaded-backend verification), baseline
+`controlled-hs-baseline-20261002b`, independent audits
 `6530457` (replay), `9be7555` (cache path), and `93670de` (closed cold interval), archived under
 `reconfiguration_ici_evidence/FollowupAudit/`.
 
