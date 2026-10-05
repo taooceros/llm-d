@@ -34,6 +34,7 @@ Layouts:
 | 2026-10-05 | bf16 correctness gate = exact within a layout + cross-layout tie gate (definition under Results/Q0). fp32 references are refused for bf16 runs (`engine_identity` key). | Measured TP8/TP16 bf16-KV next-token perturbation up to 0.92 nats (`results/hetero/20260918/noncache_activation_continuation.json`), so exact S-vs-H equality is not a valid bf16 gate. |
 | 2026-10-05 | Q2 reuses the published harnesses unchanged (`reconfig_measure.sh S H`: plain deploy, max_model_len 16384, blind policy, W0 W5 W5 W0; `w4_campaign.sh 2 H` with `POLICY_ORDER=plain`, max_model_len 36864). The only configuration change vs the published fp32 rows is the KV dtype default. | Keeps the cost model comparable to `throughput_table_measured.json`. |
 | 2026-10-05 | Native patch adds a widening cast in the RPA v3 kernel: when `q_scale` is unset and the loaded K/V block dtype differs from q, cast K and V to the query dtype (fp32) before both matmuls. Activations, matmul precision and KV storage stay as decided. | Q1 attempt 1: every S worker failed to compile `RPAd-p_64-bq_1_1-bkv_8192_8192-sw_1024`: "Mosaic … Bad rhs type: 128, 128" (fp32 q × bf16 K). The alternative, casting q to bf16, would change activations. `research/bf16-kv` @ `a48034a`, backend revision `9d8ff441…`. |
+| 2026-10-05 | The pre-registered cross-layout tie gate is withdrawn (it failed in Q1; see Results). It asserts S/H near-equality that bf16 KV cannot provide in this stack. Replacement bf16 gate, adopted **after** seeing the failure: (1) within-layout bitwise equality across replicas and snapshot restores (hard); (2) layout symmetry on the 44-probe set: paired sign test of per-probe max\|Δlogprob\| vs fp32, S against H, p ≥ 0.05 and \|median_S − median_H\| ≤ 0.1 nat (hard; a single-layout fault would fail it); (3) argmax equal to fp32 on every probe where the fp32 top-1/top-2 margin > 0.5 nat (hard). The bf16-vs-fp32 deviation itself is recorded, not gated. Proceed to Q2: rates use `ignore_eos` fixed output lengths (`hetero/experiment.py:99,666`), so token identity cannot change them. | Q1 diagnostic `bf16diag-d7b1d91`; advisor fable-5-1 (twice). Whether bf16 KV's accuracy cost is acceptable is a user decision. |
 
 ## Verified facts so far (fp32 KV; re-measure under bf16 where marked)
 
@@ -116,3 +117,45 @@ Open, not blocking: consolidate the surviving branches and give `~/hetero-resear
 - Stop criteria: any compile/lowering error, replica mismatch, restore fallback, or gate failure → stop, record, at most 2 fix attempts. Expected duration ≈ 75–90 min (two cold deploys ≈ 15–20 min each, two restores ≈ 5 min each, validations, teardowns).
 
 Q1 attempt 1 (`7a06030`, run `bf16prov-7a06030`, 20:09–20:22Z): the S cold deploy failed in compile/warm-up after ~12 min. Mosaic rejected the mixed fp32-q × bf16-K matmul in RPA v3 on all S workers ✔ (`~/hetero-wt/Bf16Kv/results/bf16kv/bf16prov-7a06030/deploy-failure-excerpt.txt`). Cleanup ✔: drain, gateway-down, release S and H (all REMOVED), tmpfs cleanup ok, RCM Idle. Fix attempt 1: `a48034a` (decision log). Rerun as `bf16prov-a48034a` with the same steps.
+
+Q1 attempt 2 (`a48034a`, run `bf16prov-a48034a`): S cold deploy succeeded (566 s; compile/warm-up 254–256 s), snapshot and S reference ✔. The teardown drain was then refused by the gateway: "administrative transition requires idle responses…". Cause ✔: the S gateway recovered E2's ownership ledger `/tmp/omp-hetero-gateway-S.json` on the head pod, with 32 W5 requests still `owned` from the hung E2 run. Cleanup ran (release, tmpfs) ✔. Fix: ledger + lock moved aside (copy at `results/bf16kv/stale-gateway-ledger-S-e2.json` and `/tmp/omp-hetero-gateway-S.json.stale-e2-20261005` on the head pod).
+
+Q1 attempt 3 (run `bf16prov-a48034a-r2`, artifacts `~/hetero-wt/Bf16Kv/results/bf16kv/bf16prov-a48034a-r2/`):
+
+| Item | S (4×TP8) | H (2×TP16) |
+|---|---|---|
+| KV pool per instance, bf16 ✔ | 827 × 64 = 52,928 (52,864 usable) | 2,270 × 64 = 145,280 (145,216 usable) |
+| fp32 pool (published) | 26,432 (413 × 64) | 72,192 |
+| Ratio | 2.00 | 2.01 |
+| Cold normal deploy ✔ | 566 s (attempt 2; compile 254–256 s) | 568 s (compile 262 s) |
+| Warm normal deploy ✔ | 378 s (compile 71–73 s) | — |
+| FastSnapshot+FastGraph restore deploy ✔ | 148 s (engine init 130 s) | not reached |
+| Replica equality ✔ | 4/4 identical | 2/2 identical |
+| Restore equality vs own bf16 reference ✔ | 32/32 × 4 engines | not reached |
+
+- Cross-layout gate: H side PASS (28/32 exact; divergences at generated index 1, 1, 9, 21; tie gaps 0.001, 0.045, 0.346, 0.086). **S side FAIL** ✔ (`S-restored-validation.json`): tie gaps 0.0, 0.041, **1.553**, **9.114** nats. At prompt 31 with the same 276-token prefix, S gives the H token −9.3 nats while H gives it −1.11 (`diagnostics` in both files). The run stopped there; EXIT cleanup ✔ (drain, gateway-down, release S/H, tmpfs).
+- Offline comparison with the fp32 references (`results/restore/ShardedRestore/{S,H}-reference.json`): fp32 S vs fp32 H 32/32 exact; bf16 vs fp32 S 26/32 (first divergence at 0, 0, 1, 3, 48, 50); bf16 vs fp32 H 25/32 (0, 0, 1, 3, 9, 48, 50); bf16 S vs bf16 H 28/32 ✔.
+- Advisor (fable-5-1): the 8-nat single-forward S/H gap is ~200× the prior TP8/TP16 bf16-KV measurement and points to a layout-dependent fault in the bf16 KV path (most likely the packed-K/V load or mask in the patched RPA kernel, TP16 side suspected) [INF]. Do not measure throughput before it is resolved.
+
+**Q1 diagnostic — spec.** Hypothesis: one of the bf16 layouts matches fp32 within ~0.3 nat on fixed-prefix probes and the other does not (fault), or neither does (genuine sensitivity). Commit `research/bf16-kv` @ `d7b1d91`; driver `scripts/bf16_probe_diag.sh` (flock, one `rcm_exec run` per stage): fp32-KV S normal deploy → `snapshot_validate.py probe` → teardown; bf16 H → probe → teardown; bf16 S → probe → teardown. 44 probe points (`results/bf16kv/probe-points-q1.json`): the 4 divergence prefixes, every prompt at an empty prefix, and prompts 0–7 at a 32-token prefix; every engine probes every point (one-token top-32). Endpoint: per point, max |Δlogprob| over shared top-32 and argmax agreement for bf16-S vs fp32, bf16-H vs fp32 and bf16-S vs bf16-H. Stop criteria as Q1. About 35 min.
+
+Q1 diagnostic result (run `bf16diag-d7b1d91`, `~/hetero-wt/Bf16Kv/results/bf16kv/bf16diag-d7b1d91/probe-{S-float32,H-bfloat16,S-bfloat16}.json`), 44 probes, max\|Δlogprob\| over tokens with p ≥ 1e-3 in either table:
+
+| Pair | argmax equal | median | p90 | max | TV median / max |
+|---|---|---|---|---|---|
+| bf16 S vs fp32 ✔ | 41/44 (35/35 where fp32 margin > 0.5) | 0.109 | 1.24 | 2.97 (p21, d0) | 0.010 / 0.298 |
+| bf16 H vs fp32 ✔ | 41/44 (35/35) | 0.125 | 1.06 | 8.53 (p31, d21) | 0.010 / 0.617 |
+| bf16 S vs bf16 H ✔ | 42/44 | 0.097 | 1.35 | 8.16 | — |
+
+- Replicas bitwise identical in all three deploys ✔. Sign test of per-probe deviation, S vs H: 21 vs 23, p = 0.88; \|median diff\| 0.016 ✔. The large outliers sit on different probes for S and H, and both layouts flip argmax vs fp32 where fp32 is near a tie (p27, p31 at d0).
+- Verdict: symmetric bf16-KV sensitivity, no single-layout fault ✔ under the replacement gate (decision log). CPU emulation of the patched kernel on per-shard S/H shapes was bitwise S≡H (Mosaic not exercised) [INF: the S/H difference comes from TP8/TP16 fp32 differences before the bf16 cast, e.g. the global layers' head_dim-sharded k_norm/RoPE].
+- Accuracy cost of bf16 KV vs fp32 KV ✔: 64-token greedy sequences differ on 6–7 of 32 prompts per layout; per-probe TV up to 0.30 (S) and 0.62 (H).
+- Not done in Q1: H snapshot-restore equality (run stopped before it). It moves to Q3's prep.
+- fp32-KV S deploy in the diagnostic: 525 s (cold fp32 compile 217 s); bf16 H warm deploy 385 s (compile 80 s); bf16 S warm 377 s (73 s).
+
+### Q2 — spec (bf16 per-layout rates)
+
+- Hypothesis: bf16 KV doubles per-instance pools (✔ Q1), so concurrency-bound phases speed up. Biggest effect expected on W4 and W5 on H [INF].
+- Commit `research/bf16-kv` @ `d7b1d91` (bf16 KV default; native backend `9d8ff441…`). Harness unchanged from the published rows: `reconfig_measure.sh S H` (plain deploy, max_model_len 16384, blind policy `{"decode_length_blind":true}`, `run-arm --unfrozen-diagnostic`, ORDER `W0 W5 W5 W0` → run ids `rc-d7b1d91-{S,H}-s{1..4}`), then `POLICY_ORDER=plain w4_campaign.sh 2 H` (max_model_len 36864 → `w4-d7b1d91-plain-r{1,2}`). One `flock /tmp/hetero-cluster.lock` session; every stage is one `rcm_exec run`; HEAD_POD `tpu-ray-cluster-vllm-tpu-head-gxwsv`; data already staged in the head pod (sha-checked).
+- Endpoints: makespan per arm (`results/pilot/*.json`), mean of 2 reps; completeness (all requests, useful tokens = manifest). Then `bf16_rate_table.py` → `bulk_cost_model.py --table` recalibration (validation stays on the published fp32 table) and break-even phase sizes for C = 160.5 / 80 / 45 s.
+- Stop criteria: any arm incomplete or failed → stop that layout, record, at most 2 fix attempts. Expected duration ≈ 2.5–3 h.
