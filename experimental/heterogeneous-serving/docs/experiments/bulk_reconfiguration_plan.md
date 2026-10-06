@@ -644,10 +644,10 @@ Comparability notes:
   - check 24.5;
   - pilot start 20.6.
   - Total ≈ **252 s**, against 132 s production: about 120 s (48%) of a harness-measured C is harness and controller shape.
-- Hypothesis check: production C (132 s) is below the predicted 170–210 s. Load_model fell from 40.7 to 5.0 s (FastSnapshot + FastGraph), and the in-process controller removes about 120 s. The harness return (274 s) is above the predicted 230–280 s range's lower part. It is slower than the fp32-era 225 s because initialize_from_config (+21 s) and S compile/warm-up (+22 s vs 50.2) grew under full bf16 [INF: not profiled], plus the extra check job.
+- Hypothesis check: production C (132 s) is below the predicted 170–210 s. load_model fell from 40.7 to 5.0 s (FastSnapshot + FastGraph), and the in-process controller removes about 120 s of harness and controller shape. The harness return (274 s) is inside the predicted 230–280 s. It is slower than the fp32-era 225 s because initialize_from_config (+21 s) and S compile/warm-up (+22 s vs 50.2) grew under full bf16 [INF: not profiled], plus the extra check job.
 - Static W6 on the FAST-restored H ✔: 202.2 s (`full-29e7b0f-static-W6-H`) and 204.4 s (`full-7a3aaeb-static-W6-H`), against 206.2 s on the normal loader (L1).
 
-**Cleanup receipt (P2)** ✔: final teardown S (drain, gateway-down, release); EXIT cleanup releases H/Mb/S (no owned PG left non-REMOVED); tmpfs cleanup ok (`results/switch/full-7a3aaeb/cleanup-*.json.gz`); RCM Idle; state line `switch-campaign full-7a3aaeb released S final`. Attempt 1 and 2 cleanups ✔ as recorded above.
+**Cleanup receipt (P2)** ✔: final teardown S (drain, gateway-down, release); the EXIT cleanup released H, Mb and S, and no owned PG is left non-REMOVED; tmpfs cleanup ok (`results/switch/full-7a3aaeb/cleanup-*.json`); RCM Idle; state line `switch-campaign full-7a3aaeb released S final`. Attempt 1 and 2 cleanups ✔ as recorded above.
 
 ### P3 — spec (partial S→Mb, effective C, join tail)
 
