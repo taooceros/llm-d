@@ -593,3 +593,21 @@ The rerun uses run ids `full-7a3aaeb-*` with the same steps.
   - **effective C** = (phase-2 end − T0) − 409.2 s (the S→M arm's C when W6-bound, which holds here because 352.7 < C + 409.2);
   - per-class finish times.
 - Stop criteria: the E2 joiner hang (joiner engine stops making progress, RPC timeouts, gateway 500/503). If it recurs: capture diagnostics (the driver's `diagnose`: RCM logs, `inspect`, gateway status, the run-switch artifacts and report from the head), tear down, and stop P3 after at most 2 attempts. `ARM_TIMEOUT` 900 s caps a hung stream. Other failures: same as P2. Expected duration ≈ 1.3 h.
+
+### P4 — spec (W0 on H at max_model_len 131,072)
+
+- Hypothesis [INF]: at 131,072 the TP16 KV block is 512 tokens (283 blocks, 144,896 tokens). Each W0 request (context median ≈ 400 tokens) then holds at least one 512-token block, versus about 7 × 64 at 16,384, so W0 on H runs slower than R3's 306.4 s. Predicted 306–400 s per manifest.
+- Commit: `research/bf16-kv` at the HEAD when P4 starts (code = `7a3aaeb`; later commits are evidence only), run ids `w0h131k-<sha>-plain-r{1,2}`. Policy = the W6 policy (`{"decode_length_blind":true,"large_fresh_traffic_share":0.0,"reserve_large_headroom_blocks":0}`), which a static H job serving W0 and then W6 would run; R3's W0-on-H used the base reserve of 16 blocks (1,024 tokens at 64-token blocks). Plain deploy (normal loader, warm cache), as in R3/L1.
+- Steps: `KUBECONFIG=… HEAD_POD=tpu-ray-cluster-vllm-tpu-head-gxwsv WORKLOAD=W0 TAG=w0h131k flock /tmp/hetero-cluster.lock scripts/band_campaign.sh 2 H` (pre-teardown → deploy H `--max-model-len 131072` → 2 × `run_pilot.sh H H` W0 → final teardown; disk floors before each stage). Then locally: `long_rate_table.py --w0h131k-runs …` → a0H_131k.
+- Endpoints: makespan per rep (mean of 2); completeness (1,763 req / 721,595 tok); KV pool and block size; max running, iteration p50 and preemptions per TP16, compared with R3's W0 on H.
+- Stop criteria: deploy failure or an incomplete run stops it; at most 2 fix attempts; no hot-patching. Expected ≈ 25 min.
+
+### P5 — spec (W7 on S and H; region maps at measured C)
+
+- Hypothesis [INF]: W7 (context median 21.8k): a TP8 pool (52.9k) holds 2 such requests and a TP16 (144.9k) about 6. The fitted step model predicts about 4 min per manifest on both, with H/S ≈ 0.9–1.0. So a W0 → W7 job switches S→H only if t7S − t7H is large compared with C.
+- Commit as P4; run ids `w7-<sha>-plain-r{1,2}`. S deploys at `max_model_len` 51,200: the first deploy at this length is a cold compile [INF ≈ 8 min]. H deploys at 131,072. Same W6 policy (S has no large instances).
+- Steps: `… WORKLOAD=W7 flock /tmp/hetero-cluster.lock scripts/band_campaign.sh 2 S H`. Then locally (`ReconfigLevers`):
+  1. `long_rate_table.py --w7-s-runs … --w7-h-runs … --w0h131k-runs …` → mid table;
+  2. `bulk_cost_model.py --table throughput_table_fullbf16.json --long-table throughput_table_long_fullbf16.json --mid-table <mid> --c-full <P2 production C> --c-partial <P3 effective C> --a0h-override <P4> --json results/bulk_cost_model/model_switchcost_fullbf16.json` → long-job and mid-job region maps at the measured C (O = 32.6 s and 0).
+- Endpoints: t7S, t7H (mean of 2), completeness (120 req / 79,531 tok), per-instance admission (max running, preemptions, iteration p50); region maps (winner per region, break-evens k_s*, k_m*, S→M boundary) at the measured C, compared with L2's projected regimes.
+- Stop criteria: as P4. Expected ≈ 50 min.
