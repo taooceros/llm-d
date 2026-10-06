@@ -84,7 +84,7 @@ Q0–Q2 are done; they ran under the withdrawn fp32-activation, bf16-KV profile 
 | Q4 | cluster | Staged S→Mb→H (rerun of E2). | Effective C and join tail ✔, or a blocker |
 | Q5 | cluster | Restrict precompile buckets to the shapes the bulk phases use (target: the 36 s trace+lower). Must show zero serving recompiles with `VLLM_XLA_CHECK_RECOMPILATION=1`. | Compile/warm-up time ✔ |
 
-R4, Q3, Q4 and Q5 were paused until L2. L0–L2 are done (Results); L2 says Q3 and a re-scoped Q4 (S→Mb) are worth running — awaiting the user.
+R4 and Q5 stay paused. Q3 and Q4 are superseded by P2 and P3 below (user approval 2026-10-05).
 
 ### Long-context job model (user option (a), 2026-10-05)
 
@@ -93,6 +93,19 @@ R4, Q3, Q4 and Q5 were paused until L2. L0–L2 are done (Results); L2 says Q3 a
 | L0 | local | Build a long-context workload W6 from real data, following the `hetero-workload-campaign` conventions: prompts above 52.9k tokens (so they cannot fit a TP8 pool), with prompt + output ≤ the TP16 limit chosen in L1 (TP16 pool ≈145k tokens; the model supports 262,144 positions). Never truncate; drop what doesn't fit. Extend `bulk_cost_model.py` to the new job (k_s W0 manifests, then k_l W6 manifests). Arms: static H; static M (long requests on the TP16 while small requests run concurrently on the 2×TP8); S→H full switch; S→M partial switch. Static S is infeasible because long requests don't fit. Switch costs: the existing regimes (full ≈160.5 s production warm, staged ≈186 s effective, projected 80 / 45 s). | Manifest built and dry-checked; cost model extended; validation still reproduces the published rows |
 | L1 | cluster | Full-bf16 rates: W6 on H, and a concurrent W0 + W6 mix on M (W6 routed to the TP16, W0 to the TP8s). TP16 `max_model_len` is set to fit W6; record the TP16 KV pool and per-request admission at that setting. 2 reps each. | Rates ✔, all requests complete |
 | L2 | local | Break-even for the long-context job across the switch-cost regimes; identify which arm wins in each region of (k_s, k_l). | Region map ✔; says whether Q3/Q4 are worth running |
+
+### Switch costs and mid-length band (user approval 2026-10-05, after L2)
+
+Order: P0 and P1 are local and run in parallel; P2–P5 are cluster items and run serially. Full bf16 state, pod-local compile cache, fast restore (FastSnapshot + FastGraph), warm persistent cache. Before any timed arm, the switch harness must record every segment in the "Verified facts" breakdown: source last completion, drain, gateway, release, deploy start, engine-init phases, endpoint/gateway ready, first measured target dispatch, ramp.
+
+| ID | Kind | Item | Exit criterion |
+|---|---|---|---|
+| P0 | local | Build W7, a real-data mid-length band: prompts 16k–48k tokens, so both a TP8 (52.9k pool) and a TP16 can hold them, with real output lengths; never truncate. The GovReport band below 52.9k is the first candidate; justify any other source. Size it so a manifest takes several minutes on S. Also W6x: W6 repeated for longer long phases (user approved repeats; label repeated documents). Extend `bulk_cost_model.py` with W7 arms. | Manifests built on the head; cost model validation still passes |
+| P1 | local | Production switch harness without the benchmark harness: one in-process sequence (drain → release → deploy → gateway ready) with no evidence dump, restore-check job or pilot startup on the critical path. Dispatch comes from an already-running client that sends the target-phase workload as soon as the gateway routes. Gaps are measured from the client's last source completion to the first target dispatch and the first target token. | Local tests; a dry-run of the sequence logic |
+| P2 | cluster | Full S→H warm switch (old Q3): 3 reps, S running W0 → H running W6. Record the production C with its segments, plus the harness-equivalent C for comparison with 225.26 s. | C ✔ with segments; output checks pass |
+| P3 | cluster | Partial S→Mb switch (old Q4, re-scoped): 3 reps. Two TP8s keep serving W0 while the other two release and a TP16 joins; then W6 goes to the TP16. Measure the serving gap, the throughput of the kept TP8s during the join, the join tail (joiner first-served to steady), and the effective C. | Effective C ✔; join tail ✔; or a blocker |
+| P4 | cluster | W0 on H at max_model_len 131,072 (TP16 with 512-token blocks), 2 reps, to pin static H and k_s*. | Rates ✔ |
+| P5 | cluster | W7 on S and on H, 2 reps each; recompute the region map with W7 and the measured C values from P2/P3, replacing the projected regimes. | Rates ✔; updated region map |
 
 Open, not blocking: consolidate the surviving branches and give `~/hetero-research` a remote.
 
