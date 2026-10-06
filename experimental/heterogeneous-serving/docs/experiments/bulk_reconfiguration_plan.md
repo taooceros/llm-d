@@ -714,6 +714,22 @@ Run health ✔:
 - Endpoints: makespan per rep (mean of 2); completeness (1,763 req / 721,595 tok); KV pool and block size; max running, iteration p50 and preemptions per TP16, compared with R3's W0 on H.
 - Stop criteria: deploy failure or an incomplete run stops it; at most 2 fix attempts; no hot-patching. Expected ≈ 25 min.
 
+### P4 — results (W0 on H at max_model_len 131,072, runs `w0h131k-1edf1c8-plain-r{1,2}`)
+
+Commit `1edf1c8`: code = `7a3aaeb`, plus the P2/P3 evidence commit and a `band_campaign.sh` staging fix (verified sha copy with retries). Artifacts: `~/hetero-wt/Bf16Kv/results/pilot/w0h131k-1edf1c8-*` (deploy, teardowns, campaign log `w0h131k-campaign-1edf1c8.log`) and `results/hetero/artifacts/w0h131k-1edf1c8-plain-r{1,2}/`.
+
+| ✔ | r1 | r2 | mean | R3 (H @16,384, base policy) |
+|---|---|---|---|---|
+| W0 makespan on H | 270.57 | 265.04 | **267.80 s** | 306.4 s (307.2, 305.6) |
+| scheduled requests p50 (large_a / large_b) | 89 / 66 | 66 / 52 | | 52 / 47, 39 / 60 |
+| iteration latency p50 (s) | 0.115 / 0.092 | 0.092 / 0.073 | | 0.094 / 0.081, 0.072 / 0.100 |
+| preemptions | 0 | 0 | | 0 |
+
+- Completeness ✔: 1,763 req / 721,595 tok in both reps, 0 failed requests. KV pool ✔: 282 blocks × 512 = 144,384 usable tokens per TP16 (L1: 283 × 512). Warm deploy 360.2 s (hetero_ctl elapsed).
+- **Hypothesis falsified**: W0 on H at 131,072 is 12.6% *faster* than R3's 306.4 s, not slower. The run admits a larger batch (scheduled p50 52–89 vs 39–60) with no preemptions and similar step latency. The two runs differ in two ways: `max_model_len`/block size (512 vs 64 tokens) and policy (the W6 policy has `reserve_large_headroom_blocks` 0; R3 used the base reserve of 16 blocks on H's large instances). Which one raises the batch is not isolated [INF].
+- For the cost model: a static H that serves W0 and then W6 runs at exactly this setting, so a0H_131k = 267.8 s is the input for that arm (`--a0h-override 267.8`). It narrows the S advantage on W0 from 115.6 to 77.0 s per manifest.
+- Cleanup receipt (P4) ✔: final drain, gateway-down (removed=true) and release of H, with no non-REMOVED owned PG (`results/pilot/w0h131k-1edf1c8-{drain,gateway-down,release}-H-final.json.gz`); RCM Idle.
+
 ### P5 — spec (W7 on S and H; region maps at measured C)
 
 - Hypothesis [INF]: W7 (context median 21.8k): a TP8 pool (52.9k) holds 2 such requests and a TP16 (144.9k) about 6. The fitted step model predicts about 4 min per manifest on both, with H/S ≈ 0.9–1.0. So a W0 → W7 job switches S→H only if t7S − t7H is large compared with C.
