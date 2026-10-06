@@ -50,8 +50,8 @@ Layouts:
     - Compile/warm-up: 50.2 s. Of that, JAX trace is 15.8 s and lower is 20.4 s, both sequential on the main thread.
   - Controller overhead: 32.5 s. Harness: 64.8 s.
   - The persistent cache cannot skip trace or lower, and `NUM_PRECOMPILE_WORKERS` only parallelizes `compile()`.
-  - **Re-measure under bf16.**
-- FastSnapshot + FastGraph on S: `load_model` 5.78–5.96 s, greedy equality on 4 engines. A joining TP16 fast restore took 86.3 s. **Re-measure under bf16.**
+  - **Re-measured under full bf16 in P2:** production S→H C 132.2 s; the published-harness H→S return 273.7 s.
+- FastSnapshot + FastGraph on S: `load_model` 5.78–5.96 s, greedy equality on 4 engines. A joining TP16 fast restore took 86.3 s. **Re-measured under full bf16 in P2/P3:** TP16 `load_model` 5.0 s; a joining TP16 is ready 126.7 s after T0, and its engine init is 90.4 s.
 - Partial M→S: the measured serving gap was 9.3 s; effective C about 186 s versus 413 s for a full switch (`reconfiguration_breakeven.typ`).
 - Cost model: `~/hetero-wt/ReconfigLevers/scripts/bulk_cost_model.py`. It reproduces the published break-even rows and the switching arms of the mixed jobs. Static mixed-queue rates must be measured, not derived. It is calibrated with fp32 rates; **recalibrate under bf16.**
 
@@ -739,3 +739,94 @@ Commit `1edf1c8`: code = `7a3aaeb`, plus the P2/P3 evidence commit and a `band_c
   2. `bulk_cost_model.py --table throughput_table_fullbf16.json --long-table throughput_table_long_fullbf16.json --mid-table <mid> --c-full <P2 production C> --c-partial <P3 effective C> --a0h-override <P4> --json results/bulk_cost_model/model_switchcost_fullbf16.json` → long-job and mid-job region maps at the measured C (O = 32.6 s and 0).
 - Endpoints: t7S, t7H (mean of 2), completeness (120 req / 79,531 tok), per-instance admission (max running, preemptions, iteration p50); region maps (winner per region, break-evens k_s*, k_m*, S→M boundary) at the measured C, compared with L2's projected regimes.
 - Stop criteria: as P4. Expected ≈ 50 min.
+
+### P5 — results (W7 on S and H, runs `w7-1edf1c8-plain-r{1,2}`; region maps at measured C)
+
+Commit `1edf1c8` (as P4). Artifacts: `~/hetero-wt/Bf16Kv/results/pilot/w7-1edf1c8-*` and `results/hetero/artifacts/w7-1edf1c8-plain-r{1,2}/` (evidence commit `e54dcb6`, which also holds the head-built W7 manifest). Model: `~/hetero-wt/ReconfigLevers` @ `d4f324b`, `results/bulk_cost_model/{throughput_table_mid_fullbf16.json, model_switchcost_fullbf16.json, model_switchcost_fullbf16.txt}`.
+
+| W7 ✔ (120 req / 79,531 tok, complete, 0 failed) | r1 | r2 | mean | admission per instance |
+|---|---|---|---|---|
+| S (4×TP8 @51,200; 205 × 256 = 52,480 tokens per TP8) | 249.17 | 247.54 | **248.4 s** | scheduled p50 2 (max 2–3), 5 / 14 preemptions per run, step p50 0.032 s |
+| H (2×TP16 @131,072; 282 × 512 = 144,384 per TP16) | 203.36 | 206.23 | **204.8 s** | scheduled p50 6 (max 7), 0 / 1 preemptions, step p50 0.033 s |
+
+- H is 17.6% faster than S on W7 (H/S = 0.82; predicted 0.9–1.0 [INF]). At the same step time H keeps 6 requests resident per TP16, against 2 per TP8 on S. Mid-length context is the first workload in this study where H beats S on rate. Deploys: S @51,200 was a cold compile, 466.4 s (compile/warm-up median 155.4 s); H warm, 361.6 s.
+- Cleanup receipt (P5) ✔: final drain, gateway-down and release for S and for H, with no non-REMOVED owned PG (`results/pilot/w7-1edf1c8-{drain,gateway-down,release}-{S,H}-final.json.gz`); RCM Idle.
+
+**Region maps at the measured C** ✔:
+- Inputs: C_full = 132.2 s (P2), C_partial = 128.9 s (P3), a0H = 267.8 s (P4, static H at 131,072), t7S = 248.4 s, t7H = 204.8 s (P5); a0S 190.8, a0M 352.7, t6H 206.2, t6M 409.2 (R3/L1); O = 32.6 s.
+- Published-row validation: 10 rows, max \|Δk\| 0.009 ✔. Recomputing the L2 shares from the same arm functions reproduces L2's C = 160.5 / 186 rows exactly ✔.
+
+*Long-context job (k_s W0, then k_l W6), grid k_s 0–8 × k_l 0.25–8:*
+
+| | static H | static M | S→H | S→M | switching total | gain of winning switch vs best static, median / max |
+|---|---|---|---|---|---|---|
+| L2 (C = 160.5 projected, a0H 306.4) | 0.19 | 0.17 | 0.27 | 0.37 | 0.64 | 10.0% / 33.3% |
+| **measured** (C 132.2 / 128.9, a0H 267.8) | **0.24** | **0.14** | **0.24** | **0.38** | **0.62** | **8.3% / 24.5%** |
+| measured, O = 0 | 0.19 | 0.15 | 0.29 | 0.38 | 0.67 | 8.3% / 25.6% |
+| measured C, with R3's a0H 306.4 (sensitivity) | 0.17 | 0.15 | 0.31 | 0.38 | 0.69 | 10.4% / 33.9% |
+
+- Winner per region (same order as L2):
+  - static H: k_s < k_s* = (C + O)/(a0H − a0S) = **2.14** (1.72 at O = 0; L2 1.67);
+  - S→H: k_s > 2.14, while the job is W6-heavy;
+  - static M: the balanced band;
+  - S→M: k_s > (C_partial + 409.2·k_l)/352.7 = **0.365 + 1.160·k_l** (L2 at 160.5: 0.455 + 1.160·k_l).
+- k_s ranges by k_l:
+  - k_l = 1: H 0–0.88, M 0.88–1.53, S→M > 1.53;
+  - k_l = 2: H 0–1.64, M 1.64–2.69, S→M > 2.69;
+  - k_l = 4: H 0–2.14, S→H 2.14–3.56, M 3.56–5.01, S→M > 5.01;
+  - k_l = 8: H 0–2.14, S→H 2.14–7.82, M > 7.82.
+- Example points (H / M / S→H / S→M, s):
+  - (4, 2): 1,451 / 1,411 / 1,308 / **1,198**;
+  - (8, 2): 2,522 / 2,822 / 2,071 / **1,961**;
+  - (2, 4): **1,328** / 1,637 / 1,339 / 1,766;
+  - (4, 4): 1,863 / **1,637** / 1,720 / 1,766.
+- What changed vs L2:
+  - The measured switch costs are about 30 s below the projected 160.5 s. The partial C is 57 s below the borrowed 186 s, which widens S→M (0.37 → 0.38).
+  - A faster static H (a0H 267.8 instead of 306.4) moves k_s* from 1.67 to 2.14 and wins back cells from S→H and M.
+  - Net: switching still wins 62% of the grid, but the best gain falls from 33% to 25%.
+
+*Mid-band job (k_s W0, then k_m W7, then k_l W6), grid k_s, k_m 0–8; S→H only (no M arm: W7 on M is unmeasured):*
+
+| k_l | static S | static H | S→H before W7 | gain of S→H vs best static, median / max |
+|---|---|---|---|---|
+| 0 | 0.42 | 0.21 | 0.38 | 3.3% / 6.5% |
+| 1 | infeasible | 0.27 | 0.73 | 9.7% / 19.5% |
+| 2 | infeasible | 0.27 | 0.73 | 8.9% / 17.9% |
+
+- Break-evens:
+  - S→H before W7 beats static S (k_l = 0) for k_m > k_m* = (C + O)/(t7S − t7H) = **3.78 W7 manifests** (3.03 at O = 0);
+  - it beats static H for k_s > 2.14, for any k_m and k_l;
+  - switching before W7 always beats switching before W6, by k_m·43.6 s, because t7S > t7H.
+- Winner per region:
+  - k_l = 0:
+    - static S when k_m < 3.78 and k_s·77.0 > k_m·43.6 (W0-heavy);
+    - static H when k_s < 2.14 and k_s·77.0 < k_m·43.6 (W7-heavy, little W0);
+    - S→H before W7 when k_s > 2.14 and k_m > 3.78.
+  - k_l ≥ 1: static H below k_s = 2.14, S→H above.
+- Examples (k_s, k_m, k_l → S / H / S→H, s): (2, 4, 0) 1,343 / **1,322** / 1,333; (4, 8, 0) 2,718 / 2,677 / **2,534**; (4, 2, 1) — / 1,654 / **1,511**.
+- Caveats [INF]:
+  - a0S is R3's W0 on S at 16,384; S running W0 + W7 would be deployed at 51,200, which is unmeasured, and P4 shows such a setting change can move a rate by 13%.
+  - The mid job has no M or S→M arm, so its k_l ≥ 1 shares are against static H only.
+  - All arms scale linearly per manifest.
+  - C_full was measured S@16,384 → H@131,072; switching from an S at 51,200 needs the S snapshot at that length, untested.
+
+**Final cleanup receipt (P0–P5)** ✔:
+- RCM Idle;
+- every campaign's final drain, gateway-down and release succeeded, with no non-REMOVED owned PG (P2 `results/switch/full-7a3aaeb/`, P3 `results/switch/partial-7a3aaeb/`, P4/P5 `results/pilot/*-1edf1c8-*-final.json.gz`);
+- TPU-host tmpfs snapshots removed by the P2 and P3 EXIT cleanups (`cleanup-tmpfs.json`); P4/P5 used none;
+- state line `w7-campaign 1edf1c8 released H`;
+- local `/dev/shm/hetero-scratch` removed; `/` has 61 GB free.
+- Head pod:
+  - `longctx` (21 MB) and `midctx` (28 MB, sha `1222a9b3…`) catalogues are staged at `/tmp/omp_hetero/data/data/workloads/` (kept for reruns); the truncated copy from P2 attempt 1 was overwritten and verified;
+  - run-switch artifacts sit under `/tmp/omp_hetero/artifacts/{full,partial}-*` (copied locally);
+  - Q2 leftovers are unchanged.
+
+**Decisions for the user (after P0–P5)**
+
+1. Use the measured costs as the study's C:
+   - full S→H 132 s (production, in-process; a published-style harness adds about 120 s);
+   - partial S→Mb 129 s effective with a 2 s kept-pair gap.
+   The projected 160.5 / 186 s regimes can be retired. The next lever is the engine path: process start 21.5 s, initialize_from_config 26 s (it was 4.2 s in the fp32 era, unexplained), compile/warm-up 55 s. Q5 (bucket restriction) and an initialize_from_config profile target exactly these. Both are outside this queue.
+2. W0 on H at 131,072 is 12.6% faster than at 16,384 (block size and policy are confounded). Should one short run isolate the cause (H @131,072 with the base 16-block reserve)? It moves k_s* (2.14 vs 1.67).
+3. W7 makes H the faster layout for mid-length contexts: S→H pays after 3.8 W7 manifests (W0 → W7 jobs, k_l = 0). Should W7 on M (W7 on the TP16 alongside W0 on the TP8s) and W0 on S at 51,200 be measured, to complete the mid-job arms?
+4. R4 and Q5 remain paused, as instructed.
