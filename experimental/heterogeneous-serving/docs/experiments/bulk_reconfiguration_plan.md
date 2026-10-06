@@ -554,6 +554,8 @@ Code: `research/bf16-kv` @ `6c6cf36` (+ `ad94de5`, `7bae5a3`: driver idle check 
   - Output checks: restored on every worker (deploy report), exact token accounting on both phases, 0 failed requests; greedy restore equality in prep for both S and H.
 - Stop criteria: any deploy, restore or compile failure, incomplete phase or failed segment reconciliation stops the rep. The driver fails closed (teardown, rebuild S, new attempt id), at most 2 failed attempts in total, then record and move on to P3. Expected duration ≈ 1.5 h (prep ≈ 30 min; 3 × (run-switch ≈ 10 min + return ≈ 10 min)).
 
+P2 attempt 1 (`d16fc32`, 09:00Z): the driver stopped before the first deploy ✔ (`results/switch/p2-driver-d16fc32.log`). Its `kubectl cp` of the `longctx` catalogue hit an API-server i/o timeout and left a truncated file on the head (sha `77c7781f…` ≠ `d1ba9a9b…`). Only preflight, release no-ops and tmpfs cleanup had run; cleanup ✔. Fix attempt 1: `29e7b0f` (driver only) skips the copy when the head's sha already matches, else retries up to 3 times and verifies the sha. The rerun uses run ids `full-29e7b0f-*`; no `hetero/` code changed.
+
 ### P3 — spec (partial S→Mb, effective C, join tail)
 
 - Hypothesis [INF]:
