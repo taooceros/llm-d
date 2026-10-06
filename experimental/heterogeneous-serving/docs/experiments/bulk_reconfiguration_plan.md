@@ -443,7 +443,7 @@ Artifacts: `~/hetero-wt/Bf16Kv/results/pilot/w6-5b94430-*` and `results/hetero/a
 
 `bulk_cost_model.py --table throughput_table_fullbf16.json --long-table throughput_table_long_fullbf16.json --json results/bulk_cost_model/model_long_fullbf16.json` (`1b3bb23`). Published-row validation 10 rows, max \|Δk\| 0.009 ✔. Inputs: a0S 190.8, a0H 306.4 (R3), a0M 352.7, t6H 206.2, t6M 409.2 s per manifest; O = 32.6 s. Grid k_s 0–8 × k_l 0.25–8, step 0.25. An independent recomputation of the four arm formulas reproduces the printed map boundaries ✔.
 
-Winning arm by region (C = 160.5 s; the shape is the same for every C):
+Winning arm by region (C = 160.5 s; the order of the four regions is the same for every C, and a lower C widens S→H):
 
 | Region | Winner | Boundary |
 |---|---|---|
@@ -470,7 +470,7 @@ Winning arm by region (C = 160.5 s; the shape is the same for every C):
   - (2, 4): 1,405 / 1,637 / **1,367** / 1,797.
   - (4, 4): 2,018 / **1,637** / 1,748 / 1,797.
 - Static S is infeasible: W6 does not fit a TP8.
-- **Are Q3/Q4 worth running? Yes.** The switching arms win 61–83% of the grid, with a median gain of about 10% and up to 35% over the best static layout. Their regions depend directly on C.
+- **Are Q3/Q4 worth running? Yes.** The switching arms win 60–83% of the grid, with a median gain of about 10% and up to 35% over the best static layout. Their regions depend directly on C.
   - Q3 (warm full S→H) prices the S→H region.
   - Q4's first step S→Mb is exactly the S→M switch (Mb = TP16 + 2×TP8 = M), which wins the largest region. That step's effective C is now borrowed from the fp32-era partial M→S measurement (186 s).
   - Recommendation: re-scope Q4 to S→Mb (effective C with the two kept TP8s serving, plus the join tail) before the full staged S→Mb→H.
@@ -486,7 +486,7 @@ Winning arm by region (C = 160.5 s; the shape is the same for every C):
 - Final drain, gateway-down and release for H and M all ok (`results/pilot/w6-5b94430-{drain,gateway-down,release}-{H,M}-final.json.gz`). Placement groups REMOVED: H 24/24, M 6/6.
 - Attempt-1 teardowns also ok (`w6-cee352a-*-final`). No snapshots or tmpfs weights were used.
 - Cluster state line: `w6-campaign 5b94430 released M`.
-- Head pod: the `longctx` catalogue is staged at `/tmp/omp_hetero/data/data/workloads/longctx_govreport.json` (19 MB, kept for reruns). Leftovers from Q2 are unchanged.
+- Head pod: the `longctx` catalogue is staged at `/tmp/omp_hetero/data/data/workloads/longctx_govreport.json` (21 MB, kept for reruns). Leftovers from Q2 are unchanged.
 - Local: `/dev/shm/hetero-scratch` removed. `/` has 62 GB free (freed outside this item).
 
 **Decisions for the user (after L0–L2)**
