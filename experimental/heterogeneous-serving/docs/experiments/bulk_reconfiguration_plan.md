@@ -84,7 +84,7 @@ Q0–Q2 are done; they ran under the withdrawn fp32-activation, bf16-KV profile 
 | Q4 | cluster | Staged S→Mb→H (rerun of E2). | Effective C and join tail ✔, or a blocker |
 | Q5 | cluster | Restrict precompile buckets to the shapes the bulk phases use (target: the 36 s trace+lower). Must show zero serving recompiles with `VLLM_XLA_CHECK_RECOMPILATION=1`. | Compile/warm-up time ✔ |
 
-R4, Q3, Q4 and Q5 are paused until L2 shows whether any switch to TP16 pays.
+R4, Q3, Q4 and Q5 were paused until L2. L0–L2 are done (Results); L2 says Q3 and a re-scoped Q4 (S→Mb) are worth running — awaiting the user.
 
 ### Long-context job model (user option (a), 2026-10-05)
 
@@ -417,3 +417,80 @@ GovReport keeps the W4 precedent (real documents, real output lengths) and needs
   3. Locally: `long_rate_table.py --commit cee352a --deploy-json …` → `bulk_cost_model.py --long-table …` (L2).
 - Endpoints: per-arm makespan (H) and per-class finish times (M), mean of 2 reps; completeness (all requests, exact tokens: W6 40 / 26,951; MIX 1,803 / 748,546); TP16 KV pool and block size at 131,072; per-request admission on the TP16 (max running/scheduled, preemptions, iteration p50).
 - Stop criteria: deploy or compile failure, or an incomplete run → stop that layout and record it; at most 2 fix attempts; no hot-patching. Expected duration ≈ 1.5–2 h.
+
+L1 attempt 1 (`cee352a`, 05:29–05:46Z): both deploys succeeded, but all 4 runs failed within ~20 s in `run_arm` ✔ (`hetero/experiment.py:710`, `AutoTokenizer.from_pretrained('/tmp/longwl/gemma')`). The locally frozen W6 manifest carried the local tokenizer path as `model`. The campaign script did not stop on failed runs (it continued to M); no timed run was produced. Teardowns ran (`results/pilot/w6-cee352a-{drain,gateway-down,release}-{H,M}-{pre,final}.json.gz`).
+
+- KV pools at `max_model_len` 131,072 ✔ (`results/pilot/w6-cee352a-deploy-{H,M}.json.gz`): every TP16 has 283 blocks × 512 = 144,896 tokens (H both; M's `large`). M's TP8s at 16,384: 827 × 64 = 52,928. The 512-token block confirms the headroom fix: 64 blocks would have held back 32,768 tokens. H deploy 486.1 s (hetero_ctl elapsed), M 385.7 s RCM stage.
+- Fix 1: W6 rebuilt on the head (`hetero_ctl build-manifest`, model `/models/gemma-4-31b`): the same `manifest_sha256` `3ae550fb…` and catalogue sha as the local build, so the request set is unchanged ✔; MIX_W6_W0 re-written (`ebb23284…`, unchanged). The script now stops a layout on a failed or incomplete run (`5b94430`). Rerun as `w6-5b94430-plain-r{1,2}`.
+
+### L1 — results (full bf16, `research/bf16-kv` @ `5b94430`, runs `w6-5b94430-plain-r{1,2}`)
+
+Artifacts: `~/hetero-wt/Bf16Kv/results/pilot/w6-5b94430-*` and `results/hetero/artifacts/w6-5b94430-plain-r{1,2}/` (committed `95f9e3c`); log `results/pilot/w6-campaign-5b94430.log`. All 4 runs complete with exact token accounting (W6 40 req / 26,951 tok; MIX 1,803 / 748,546), 0 failed requests, 0 migrations ✔. Rate table: `~/hetero-wt/ReconfigLevers` @ `1b3bb23`, `results/bulk_cost_model/throughput_table_long_fullbf16.json` (+ `.runs.json`).
+
+| Arm | Quantity | Mean (reps) ✔ |
+|---|---|---|
+| W6 on H (2×TP16 @ 131,072) | makespan | **206.2 s** (204.6, 207.9) |
+| MIX_W6_W0 on M | run makespan | 409.3 s (404.6, 414.0) |
+| ↳ W6 class on the TP16 | finish | **409.2 s** (404.5, 413.9); p50 191.5 / 200.6 s |
+| ↳ W0 class on the 2×TP8 | finish | **352.7 s** (355.9, 349.6); p50 144.7 / 144.5 s |
+
+- TP16 at `max_model_len` 131,072 ✔ (`w6-5b94430-deploy-{H,M}.json.gz`): 283 blocks × 512 = 144,896 tokens on all three TP16s (H `large_a/b`, M `large`). TP8 at 16,384: 827 × 64. Warm deploys: H 361.3 s, M 377.9 s (hetero_ctl elapsed).
+- Admission ✔: every TP16 held at most 2 W6 requests (max and p50 running/scheduled = 2 on H and on M), 0 preemptions, iteration p50 0.028 s. A third request never fits: W6 context p50 is 64,338 tokens against a 144,896-token pool.
+- W6 on M's single TP16 takes 1.98× W6 on H ✔, so the TP16 rate is the same in both layouts. W0 on M's 2×TP8 takes 352.7 s, i.e. 1.85× W0 on S (190.8 s), with 578 / 582 preemptions per TP8 per rep (max running 116–118); W0 on S had none in R3.
+- Hypothesis check: W6 on H was faster than predicted (3.4 min, not 5–10 min).
+
+### L2 — long-context job region map (local)
+
+`bulk_cost_model.py --table throughput_table_fullbf16.json --long-table throughput_table_long_fullbf16.json --json results/bulk_cost_model/model_long_fullbf16.json` (`1b3bb23`). Published-row validation 10 rows, max \|Δk\| 0.009 ✔. Inputs: a0S 190.8, a0H 306.4 (R3), a0M 352.7, t6H 206.2, t6M 409.2 s per manifest; O = 32.6 s. Grid k_s 0–8 × k_l 0.25–8, step 0.25. An independent recomputation of the four arm formulas reproduces the printed map boundaries ✔.
+
+Winning arm by region (C = 160.5 s; the shape is the same for every C):
+
+| Region | Winner | Boundary |
+|---|---|---|
+| Little small work, W6-heavy | static H | k_s < k_s* and k_s < 0.663·k_l + 0.106 (where H beats a W6-bound M) |
+| W6-heavy, k_s above k_s* | S→H | k_s > k_s* = (C + O)/(a0H − a0S) and k_s < (203.0·k_l − C)/190.8 (beats W6-bound static M) |
+| Balanced: k_s·352.7 ≈ k_l·409.2 | static M | between the S→H and S→M lines |
+| W0-heavy | S→M | k_s·a0M > C + k_l·t6M, i.e. k_s > (C + 409.2·k_l)/352.7 |
+
+| C | k_s* S→H vs H (O = 32.6 / 0) | S→M vs M: k_s > | Share of grid won (H / M / S→H / S→M) | Gain of the winning switch vs best static, median / max |
+|---|---|---|---|---|
+| 160.5 (full, warm production) | 1.67 / 1.39 | 0.455 + 1.160·k_l | 0.19 / 0.17 / 0.27 / 0.37 | 10.0% / 33.3% |
+| 186 (staged effective) | 1.89 / 1.61 | 0.527 + 1.160·k_l | 0.21 / 0.19 / 0.24 / 0.36 | 9.7% / 32.8% |
+| 80 (projected levers) | 0.97 / 0.69 | 0.227 + 1.160·k_l | 0.12 / 0.11 / 0.38 / 0.39 | 11.1% / 34.8% |
+| 45 (projected, no trace) | 0.67 / 0.39 | 0.128 + 1.160·k_l | 0.09 / 0.08 / 0.43 / 0.40 | 11.9% / 35.5% |
+
+- Winner ranges in k_s at C = 160.5 (O = 32.6):
+  - k_l = 1: H 0–0.77, M 0.77–1.62, S→M > 1.62.
+  - k_l = 2: H 0–1.43, M 1.43–2.78, S→M > 2.78.
+  - k_l = 4: H 0–1.67, S→H 1.67–3.41, M 3.41–5.10, S→M > 5.10.
+  - k_l = 8: H 0–1.67, S→H 1.67–7.67, M > 7.67.
+- Example points at C = 160.5, in seconds (H / M / S→H / S→M):
+  - (k_s, k_l) = (4, 2): 1,605 / 1,411 / 1,336 / **1,213**.
+  - (8, 2): 2,831 / 2,822 / 2,099 / **1,976**.
+  - (2, 4): 1,405 / 1,637 / **1,367** / 1,797.
+  - (4, 4): 2,018 / **1,637** / 1,748 / 1,797.
+- Static S is infeasible: W6 does not fit a TP8.
+- **Are Q3/Q4 worth running? Yes.** The switching arms win 61–83% of the grid, with a median gain of about 10% and up to 35% over the best static layout. Their regions depend directly on C.
+  - Q3 (warm full S→H) prices the S→H region.
+  - Q4's first step S→Mb is exactly the S→M switch (Mb = TP16 + 2×TP8 = M), which wins the largest region. That step's effective C is now borrowed from the fp32-era partial M→S measurement (186 s).
+  - Recommendation: re-scope Q4 to S→Mb (effective C with the two kept TP8s serving, plus the join tail) before the full staged S→Mb→H.
+- Caveats [INF]:
+  - a0H is the R3 W0-on-H rate at `max_model_len` 16,384. A static H that also serves W6 runs at 131,072 with 512-token blocks, and its W0 rate there is unmeasured. A slower a0H shrinks the static-H region and lowers k_s*.
+  - Static M and S→M scale linearly from one manifest of each class.
+  - S→M assumes the kept TP8s run at M's W0 rate during the switch and that the TP16 serves from τ + C.
+  - All C values are prior or projected costs; none is measured under full bf16.
+
+**Cleanup receipt (after L1)** ✔:
+
+- RCM Idle.
+- Final drain, gateway-down and release for H and M all ok (`results/pilot/w6-5b94430-{drain,gateway-down,release}-{H,M}-final.json.gz`). Placement groups REMOVED: H 24/24, M 6/6.
+- Attempt-1 teardowns also ok (`w6-cee352a-*-final`). No snapshots or tmpfs weights were used.
+- Cluster state line: `w6-campaign 5b94430 released M`.
+- Head pod: the `longctx` catalogue is staged at `/tmp/omp_hetero/data/data/workloads/longctx_govreport.json` (19 MB, kept for reruns). Leftovers from Q2 are unchanged.
+- Local: `/dev/shm/hetero-scratch` removed. `/` has 62 GB free (freed outside this item).
+
+**Decisions for the user (after L0–L2)**
+
+1. Run Q3 (full S→H) and a re-scoped Q4 (S→Mb = S→M partial switch, effective C and join tail) under full bf16. Both decide regions that the model says are won by switching.
+2. Optional, about 20 min: measure W0 on H at `max_model_len` 131,072 (2 reps). This pins static H and k_s* for jobs that keep H for both phases.
+3. W6 is 40 of 63 qualifying GovReport documents. 63 is the whole real supply above 52.9k tokens with a real output length, so a larger long phase needs repeats (as W0x4 does) or another source.
