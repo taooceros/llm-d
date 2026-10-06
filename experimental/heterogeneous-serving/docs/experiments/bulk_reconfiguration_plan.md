@@ -574,6 +574,81 @@ These two runs are kept as supporting evidence; the harness return did not run f
 
 The rerun uses run ids `full-7a3aaeb-*` with the same steps.
 
+### P2 — results (full S→H warm switch, `research/bf16-kv` @ `7a3aaeb`, runs `full-7a3aaeb-r{1,2,3}`)
+
+Artifacts: `~/hetero-wt/Bf16Kv/results/switch/full-7a3aaeb/` (driver outputs, `timeline.jsonl`, `runs.jsonl`) and `results/hetero/artifacts/full-7a3aaeb-{r1,r2,r3,ret-r1,ret-r2,ret-r3,static-W6-H}/`; summary `scripts/switch_summary.py results/switch/full-7a3aaeb`; driver log `results/switch/p2-driver-7a3aaeb.log`.
+
+Run health ✔:
+- every rep is complete, with exact accounting in both phases (W0 1,763 req / 721,595 tok on S; W6 40 / 26,951 on H) and 0 failed requests;
+- every new worker was restored from the snapshot (8/8);
+- in all reps the gate opened on the controller event (no poll fallback);
+- the offline recomputation equals the in-process segments (max diff 0.00 s);
+- prep restore checks and greedy restore equality on S and H passed (`H-restored-validation.json`, `S-restored-validation.json`);
+- every harness-return pilot is complete.
+
+**Production C, full S→H (in-process, no harness on the critical path)** ✔:
+
+| | r1 | r2 | r3 | mean |
+|---|---|---|---|---|
+| T0 → first W6 dispatch | 130.68 | 130.52 | 130.72 | **130.64 s** |
+| T0 → first W6 token (engine clock) | 135.67 | 134.80 | 135.29 | 135.26 s |
+| W6 makespan on the new H | 208.12 | 211.46 | 203.76 | 207.78 s |
+| ramp = makespan − 206.2 (L1 static, normal loader) | 1.92 | 5.26 | −2.44 | 1.58 s |
+| **C_production = gap + ramp** | 132.60 | 135.78 | 128.27 | **132.22 s** |
+| C vs same-loader static W6 (FAST-restored H: 202.2 / 204.4 s, mean 203.3) | 135.5 | 138.7 | 131.2 | 135.1 s |
+| C with the iteration-bin deficit (diagnostic; biased high for W6, advisor) | 143.34 | 144.20 | 144.96 | 144.17 s |
+
+The two attempt-2 runs (`full-29e7b0f-r1{,-a2}`, rechecked offline) give C = 136.5 and 132.5 s. All five switches fall within 128.3–136.5 s.
+
+Segments (mean of 3, s after T0, contiguous; they sum to the gap within 0.01 s) ✔:
+
+| Segment | Class | s | Notes |
+|---|---|---|---|
+| controller wake | controller | 0.01 | |
+| drain + release of 4 idle TP8s | engine | 1.92 | maintenance, drain ack, stop, shutdown, kill, PG release |
+| gateway down | controller | 0.17 | |
+| deploy: Ray backend, placement, actor create | controller | 11.01 | stage clocks backend 2.0, placement 0.1, actor 0.5; the rest is ray/inventory/native-backend preparation |
+| engine process start before `init_device` | engine | 21.50 | fp32-era 21.1 |
+| engine init (`init_device` → last engine ready) | engine | 90.73 | medians: init_device 4.1, **load_model 5.0** (snapshot read 0.44, device placement 0.86, other 3.5; fp32-era 40.7), **initialize_from_config 26.0** (fp32-era 4.2), **compile/warm-up 54.6** (fp32-era 50.2) |
+| endpoint register | engine | 2.16 | |
+| gateway up (create, bind, start) | controller | 3.13 | |
+| gate, capture arm, dispatch | controller / harness | 0.02 | |
+| **gap** | | **130.64** | engine 116.3, controller 14.3, harness 0.01 |
+
+**Harness-equivalent C, return H→S on the published harness** ✔ (same direction and harness shape as the fp32-era 225.26 s):
+
+| | r1 | r2 | r3 | mean |
+|---|---|---|---|---|
+| gap: last W6 completion → first pilot dispatch | 279.05 | 278.43 | 255.87 | 271.12 s |
+| ramp deficit of the W0 pilot (published method) | 2.50 | 2.49 | 2.60 | 2.53 s |
+| **C_harness** | 281.55 | 280.92 | 258.48 | **273.65 s** |
+| C_harness without the restore-check job | 257.1 | 256.7 | 233.6 | 249.2 s |
+
+Mean split:
+- switch tail (run-switch finalize + artifact fetch, equivalent to the published "source pilot tail") 14.4 s;
+- teardown jobs: drain 8.3, gateway-down 7.7, release 6.1 s;
+- S restore deploy job 189.4 s: remote 149.0 s, of which engine init ≈ 108 s with compile/warm-up 72.0 s and initialize_from_config 25.7 s; the remaining 40.5 s is kubectl apply/rollout, job submit and the evidence stream (r3 23 s, r1/r2 49 s);
+- restore-check job 24.5 s;
+- pilot start → first dispatch 20.6 s (warm-up etc.).
+
+Comparability notes:
+- FAST restore here, against the published SHA-checked load (40.7 s);
+- full bf16 here, against fp32;
+- one extra check job (the published shape had a "controls check + check job" segment as well);
+- head-pod clock for T0 and dispatch; controller-machine marks for the split.
+
+- **S→H harness-equivalent [INF]**: production C + the harness/controller overheads measured in the return:
+  - switch tail 14.4;
+  - teardown jobs minus their real work, 20.1;
+  - deploy-job wall minus remote, 40.5;
+  - check 24.5;
+  - pilot start 20.6.
+  - Total ≈ **252 s**, against 132 s production: about 120 s (48%) of a harness-measured C is harness and controller shape.
+- Hypothesis check: production C (132 s) is below the predicted 170–210 s. Load_model fell from 40.7 to 5.0 s (FastSnapshot + FastGraph), and the in-process controller removes about 120 s. The harness return (274 s) is above the predicted 230–280 s range's lower part. It is slower than the fp32-era 225 s because initialize_from_config (+21 s) and S compile/warm-up (+22 s vs 50.2) grew under full bf16 [INF: not profiled], plus the extra check job.
+- Static W6 on the FAST-restored H ✔: 202.2 s (`full-29e7b0f-static-W6-H`) and 204.4 s (`full-7a3aaeb-static-W6-H`), against 206.2 s on the normal loader (L1).
+
+**Cleanup receipt (P2)** ✔: final teardown S (drain, gateway-down, release); EXIT cleanup releases H/Mb/S (no owned PG left non-REMOVED); tmpfs cleanup ok (`results/switch/full-7a3aaeb/cleanup-*.json.gz`); RCM Idle; state line `switch-campaign full-7a3aaeb released S final`. Attempt 1 and 2 cleanups ✔ as recorded above.
+
 ### P3 — spec (partial S→Mb, effective C, join tail)
 
 - Hypothesis [INF]:
