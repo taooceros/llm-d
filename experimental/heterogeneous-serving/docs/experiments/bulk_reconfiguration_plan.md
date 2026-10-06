@@ -556,6 +556,24 @@ Code: `research/bf16-kv` @ `6c6cf36` (+ `ad94de5`, `7bae5a3`: driver idle check 
 
 P2 attempt 1 (`d16fc32`, 09:00Z): the driver stopped before the first deploy ✔ (`results/switch/p2-driver-d16fc32.log`). Its `kubectl cp` of the `longctx` catalogue hit an API-server i/o timeout and left a truncated file on the head (sha `77c7781f…` ≠ `d1ba9a9b…`). Only preflight, release no-ops and tmpfs cleanup had run; cleanup ✔. Fix attempt 1: `29e7b0f` (driver only) skips the copy when the head's sha already matches, else retries up to 3 times and verifies the sha. The rerun uses run ids `full-29e7b0f-*`; no `hetero/` code changed.
 
+P2 attempt 2 (`29e7b0f`, 09:12–10:03Z, `results/switch/full-29e7b0f/`). Prep succeeded ✔:
+- snapshots, references, and the H and S restore checks + validation, with restore equality on both;
+- same-loader static W6 on the restored H: **202.2 s** (`results/pilot/full-29e7b0f-static-W6-H_W6_H.json`, complete).
+
+Both run-switch attempts of rep 1 then served every request with exact tokens and a full restore, but the harness flagged them incomplete ✔ (`switch-r1-a{1,2}-failed.json`), so the driver stopped after 2 and cleaned up ✔ (all PGs REMOVED, tmpfs cleaned, RCM Idle):
+- Cause ✔ (harness false negative): phase-1 accounting in full mode uses the client records, because the source gateway's journal goes with the source gateway. Their per-segment HTTP summary carries token counts but no token ids, so `_check_accounting` reported `no_duplicate_delivery = false`. The first-token clock had the same gap: it lives only in the gateway journal.
+- Offline recheck of both runs ✔: phase 1 1,763/1,763 single-segment requests, delivered = accounted = segment tokens, 721,595 tokens; phase 2 complete; restored 8/8.
+- Production C 136.5 s and 132.5 s; gap to first W6 dispatch 131.7 / 130.7 s; to first W6 token 136.8 / 135.6 s.
+- Segments (r1 / a2): drain+release 3.5 / 2.6, gateway down 0.2, deploy controller 10.7 / 10.8, engine process start 21.6 / 21.5, engine init 90.9 / 90.8, endpoint register 1.8, gateway up 3.1 / 3.2, gate 0.004, capture arm 0.007 s.
+
+These two runs are kept as supporting evidence; the harness return did not run for them. Fix attempt 2: `7a3aaeb` (analysis code in `finalize` only):
+- phase 1 uses a client-authority check (one segment; delivered = accounted = segment tokens);
+- in partial mode phase 1 uses the gateway journal;
+- engine first-token clocks are copied from the journal onto the client records;
+- regression test added; suite 295 passed, the same 16 baseline failures.
+
+The rerun uses run ids `full-7a3aaeb-*` with the same steps.
+
 ### P3 — spec (partial S→Mb, effective C, join tail)
 
 - Hypothesis [INF]:
