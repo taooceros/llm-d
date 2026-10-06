@@ -4,7 +4,7 @@ This file is the single source of truth for this study's scope, decisions, exper
 
 ## Goal
 
-The workload is bulk (offline) inference of Gemma-4 31B on the 32-chip TPU v5e slice (8 hosts × 4 chips). A job runs in one-way phases: many small requests, then many middle requests, then a final batch of large requests.
+The workload is bulk (offline) inference of Gemma-4 31B on the 32-chip TPU v5e slice (8 hosts × 4 chips). A job runs in one-way phases: many small requests, then a batch of long-context requests whose context exceeds what one TP8 instance can hold (about 52.9k tokens under full bf16), so a TP16 instance is mandatory for them. The original job model (small → middle → large) was replaced on 2026-10-05: under full bf16, S wins every class of that model (R3).
 
 1. Measure how fast a layout switch can be made.
 2. Find the phase sizes above which switching beats a static layout.
@@ -36,6 +36,7 @@ Layouts:
 | 2026-10-05 | Native patch adds a widening cast in the RPA v3 kernel: when `q_scale` is unset and the loaded K/V block dtype differs from q, cast K and V to the query dtype (fp32) before both matmuls. Activations, matmul precision and KV storage stay as decided. | Q1 attempt 1: every S worker failed to compile `RPAd-p_64-bq_1_1-bkv_8192_8192-sw_1024`: "Mosaic … Bad rhs type: 128, 128" (fp32 q × bf16 K). The alternative, casting q to bf16, would change activations. `research/bf16-kv` @ `a48034a`, backend revision `9d8ff441…`. |
 | 2026-10-05 | The pre-registered cross-layout tie gate is withdrawn (it failed in Q1; see Results). It asserts S/H near-equality that bf16 KV cannot provide in this stack. Replacement bf16 gate, adopted **after** seeing the failure: (1) within-layout bitwise equality across replicas and snapshot restores (hard); (2) layout symmetry on the 44-probe set: paired sign test of per-probe max\|Δlogprob\| vs fp32, S against H, p ≥ 0.05 and \|median_S − median_H\| ≤ 0.1 nat (hard; a single-layout fault would fail it); (3) argmax equal to fp32 on every probe where the fp32 top-1/top-2 margin > 0.5 nat (hard). The bf16-vs-fp32 deviation itself is recorded, not gated. Proceed to Q2: rates use `ignore_eos` fixed output lengths (`hetero/experiment.py:99,666`), so token identity cannot change them. | Q1 diagnostic `bf16diag-d7b1d91`; advisor fable-5-1 (twice). Whether bf16 KV's accuracy cost is acceptable is a user decision. |
 | 2026-10-05 | **Full bf16 state for all experiments:** bf16 activations, bf16 KV, default matmul precision. This supersedes the fp32-activation clause above, and the RPA widening patch (`a48034a`) is withdrawn. Live migration stays in scope. Its numerical gate becomes relative: the migrated continuation must stay within the drift between a fresh source run and a fresh destination run. The absolute 0.25-nat bound no longer applies. | User decision, after the top-level decomposition of the 2026-09-16 bf16 continuation failure (`~/hetero-research/results/hetero/20260916/continuation_fidelity_M_dispatch_repaired.json`). With no migration at all, a fresh TP8 run and a fresh TP16 run already differ by 0.72–1.375 nats (argmax equal; top-32 overlap 31/32 in all 3 cases). Migrated-recompute output equals the fresh output exactly; host-KV import gives 0.53–1.25 nats. Same-TP migrated suffixes match exactly (12/12), and host-KV vs recompute suffixes give identical tokens (32/32). So the drift comes from bf16 arithmetic under a different TP split, not from migration code. Under fp32 state it is 0.0001–0.0096 nats (`20260918/minimal_fp32_state_continuation.json`). Q2 also showed the fp32-q × bf16-KV profile is 1.6–2.1× slower per step. |
+| 2026-10-05 | **Job model changed to small → long-context** (user option (a)). The long phase uses requests that only fit a TP16 instance (> 52.9k tokens). New queue L0–L2; R4/Q3–Q5 paused until L2. | R3: under full bf16, S beats H on W0 (190.8 vs 306.4 s), W5 (754.3 vs 774.4 s) and W4 (147.7 vs 187.4 s), so an S→H switch in the old job model never pays. |
 
 ## Verified facts so far (fp32 KV; re-measure under bf16 where marked)
 
@@ -82,6 +83,16 @@ Q0–Q2 are done; they ran under the withdrawn fp32-activation, bf16-KV profile 
 | Q3 | cluster | Warm full S→H switch with fast restore and a pod-local cache; record every segment as in the verified breakdown above. | Production C ✔ |
 | Q4 | cluster | Staged S→Mb→H (rerun of E2). | Effective C and join tail ✔, or a blocker |
 | Q5 | cluster | Restrict precompile buckets to the shapes the bulk phases use (target: the 36 s trace+lower). Must show zero serving recompiles with `VLLM_XLA_CHECK_RECOMPILATION=1`. | Compile/warm-up time ✔ |
+
+R4, Q3, Q4 and Q5 are paused until L2 shows whether any switch to TP16 pays.
+
+### Long-context job model (user option (a), 2026-10-05)
+
+| ID | Kind | Item | Exit criterion |
+|---|---|---|---|
+| L0 | local | Build a long-context workload W6 from real data, following the `hetero-workload-campaign` conventions: prompts above 52.9k tokens (so they cannot fit a TP8 pool), with prompt + output ≤ the TP16 limit chosen in L1 (TP16 pool ≈145k tokens; the model supports 262,144 positions). Never truncate; drop what doesn't fit. Extend `bulk_cost_model.py` to the new job (k_s W0 manifests, then k_l W6 manifests). Arms: static H; static M (long requests on the TP16 while small requests run concurrently on the 2×TP8); S→H full switch; S→M partial switch. Static S is infeasible because long requests don't fit. Switch costs: the existing regimes (full ≈160.5 s production warm, staged ≈186 s effective, projected 80 / 45 s). | Manifest built and dry-checked; cost model extended; validation still reproduces the published rows |
+| L1 | cluster | Full-bf16 rates: W6 on H, and a concurrent W0 + W6 mix on M (W6 routed to the TP16, W0 to the TP8s). TP16 `max_model_len` is set to fit W6; record the TP16 KV pool and per-request admission at that setting. 2 reps each. | Rates ✔, all requests complete |
+| L2 | local | Break-even for the long-context job across the switch-cost regimes; identify which arm wins in each region of (k_s, k_l). | Region map ✔; says whether Q3/Q4 are worth running |
 
 Open, not blocking: consolidate the surviving branches and give `~/hetero-research` a remote.
 
