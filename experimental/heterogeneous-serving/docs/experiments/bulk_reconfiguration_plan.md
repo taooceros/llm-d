@@ -303,3 +303,60 @@ Artifacts: `~/hetero-wt/Bf16Kv/results/bf16kv/bf16prov-69a705c/` (committed `1e3
   - For any W4 failure, the answering hop from the R1 fields.
   - Break-even phase sizes for C = 160.5 / 80 / 45 s.
 - Stop criteria: an incomplete or failed W0/W5 arm stops that layout (record; at most 2 fix attempts). W4 failures are recorded with their signature, with no hot-patching. Expected duration ≈ 2.5–3.5 h.
+
+### R3 — results (full bf16, `research/bf16-kv` @ `ed99e08`, Q2 harness unchanged)
+
+Artifacts: `~/hetero-wt/Bf16Kv/results/pilot/{rc,w4}-ed99e08-*.json` (committed `eac20be`). Logs: `results/bf16kv/r3-driver.log`, `results/reconfig/measure-ed99e08.log`, `results/pilot/w4-campaign-ed99e08.log`. Every arm is complete, with exact token accounting (W0 1,763 req / 721,595 tok; W5 250 / 982,899; W4 904 / 387,975), 0 failed requests and 0 ExtProc aborts ✔.
+
+| Workload | Layout | full bf16 (reps) ✔ | fp32 published | Q2 fp32-act/bf16-KV ✔ | full bf16 vs fp32 |
+|---|---|---|---|---|---|
+| W0 (small) | S | **190.8 s** (192.1, 189.5) | 343.3 s | 455.4 s | −44% |
+| W0 | H | **306.4 s** (307.2, 305.6) | 497.2 s | 779.8 s | −38% |
+| W5 (middle) | S | **754.3 s** (743.7, 764.8) | 1450.7 s | 1166.4 s | −48% |
+| W5 | H | **774.4 s** (772.6, 776.3) | 1372.4 s | 1469.1 s | −44% |
+| W4 (large) | H | **187.4 s** (190.0, 184.9) | 347.1 s | blocked (2 reps incomplete) | −46% |
+| W4 | S | **147.7 s** (148.3, 147.0) | — (fp32 TP8 pool < 36,864) | not run | — |
+
+- Mechanism ✔ (per-engine iteration stats in the same artifacts, compared with `rc-591e3fe-*` and `~/hetero-research/results/pilot/rc-bab4f9e-*`). Per-iteration p50 roughly halves vs Q2 at the same batch:
+  - W0 on H: 0.20–0.21 → 0.072–0.100 s.
+  - W5 on H: 0.118–0.122 → 0.065–0.066 s.
+  - W5 on S: 0.066–0.069 → 0.045 s.
+  - W0 on S: 0.085–0.232 → 0.054–0.090 s.
+  - The bf16 pools keep the doubled admitted batch (W5 max scheduled: S 15–16 vs fp32 8; H 39–43 vs fp32 20–21). The 2× batch now costs little per step (W5 on H 0.065 s vs fp32 0.055 s), so throughput nearly doubles.
+  - W5 still preempts: S 236–238, H 208–211 per rep, similar to Q2 and fp32. W0 has none.
+- S is now the fastest static layout for every class ✔: W0 by 115.6 s/manifest, W5 by 20.1 s, W4 by 39.7 s. The W5 margin is about one rep spread (S reps differ by 21 s) [INF: not significant at n = 2].
+- W4 deploys at max_model_len 36864 (block 256) ✔: H 567 blocks = 144,896 usable per TP16; S 206 blocks = 52,480 usable per TP8 (`results/pilot/w4-deploy-{H,S}-fullbf16.json`). Both were cold compiles for the new context length: deploy 483.6 s (H) and 463.9 s (S). Warm plain deploys at 16384: S 375.4 s, H 383.0 s.
+- R1 follow-up ✔: the ~255-in-flight failure did not recur in any of the 4 W4 reps (H 2, S 2) or the 8 W0/W5 arms. `failed_requests` is empty and `gateway_extproc_aborts.count` = 0 everywhere, so no answering hop was observed. [INF: the faster full-bf16 engines may simply avoid the trigger. Its cause stays open, and the R1 diagnostics remain in place.]
+
+**Cost-model recalibration** ✔. Code: `~/hetero-wt/ReconfigLevers` @ `a8c2b7e` (`bf16_rate_table.py --label full-bf16` now also reads W4 on S) and `84318d0` (results). Outputs: `results/bulk_cost_model/throughput_table_fullbf16.json` and `model_fullbf16.json` (`--kv-measured` TP8 52,864 / TP16 145,216). Published-row validation still runs on the fp32 table and reproduces all 10 rows (max \|Δk\| 0.009 manifests); the mix residuals are unchanged.
+
+| C regime (O = S drain tail 32.6 s) | k* W0: switch H→S for the small phase | k* W5: switch S→H for the middle phase | k* W4: switch to H for the large phase |
+|---|---|---|---|
+| 160.5 s (warm production) | **1.67 manifests** ≈ 1.21M output tokens (fp32 1.25; Q2 0.60) | none: H 20.1 s/manifest slower | none: H 39.7 s/manifest slower |
+| 80 s (projected levers) | **0.97** ≈ 0.70M tokens (fp32 0.73; Q2 0.35) | none | none |
+| 45 s (no trace) | **0.67** ≈ 0.48M tokens (Q2 0.24) | none | none |
+
+- With O = 0, the W0 break-even falls to 1.39 / 0.69 / 0.39 manifests.
+- Example job, 4 W0 → 2 W5 → 1 W4 [derived from the table]:
+  - static S: 4·190.8 + 2·754.3 + 147.7 − 2·32.6 (the model's same-layout overlap, as in its static H) = **2,354.3 s**;
+  - static H: 2,896.6 s;
+  - S→H at C = 160.5: 2,659.9 s (`model_fullbf16.json`; the example table has no static-S column because W4 on S was not measurable before).
+- Under full bf16 the bulk job should stay on S. A layout switch only pays when the job *starts* on H (or another layout) and the small phase holds ≥ 0.7–1.7 W0 manifests.
+
+**Cleanup receipt (after R3)** ✔ (`results/bf16kv/r3-cleanup/`):
+
+- RCM Idle.
+- `snapshot_validate.py preflight` ok; `snapshot_directory_bytes` 0 on 8/8 hosts.
+- `inspect` for S and H: registry [], observed []; all owned placement groups REMOVED (S 52, H 20 historical PGs).
+- Final teardowns: W4 campaign drain, gateway-down (removed=true) and release for H and S; reconfig_measure gateway-down and release for H.
+- R2 tmpfs cleanup ✔ (`bf16prov-69a705c/cleanup-tmpfs.json`).
+- Head-pod leftovers, unchanged from Q2: the stale E2 S ledger copy and the failed Q2 W4 artifacts.
+- Local: RCM telemetry rotated (see R2).
+- The dashboard port-forward runs as a managed local service.
+
+**Decisions for the user (after R0–R3)**
+
+1. Accept full bf16 as the rate basis. Under full bf16 every rate improves 38–48% over fp32, and S wins every class. The accuracy cost vs the fp32-state references: 64-token greedy sequences differ on 14/32 (S) and 11/32 (H) prompts; median per-probe deviation ≈ 0.5 nat.
+2. Given that S dominates W0, W5 and W4, should the study's job model change? For example: jobs that start on H, or larger large-request contexts that do not fit a TP8 pool (> 52,480 tokens). Otherwise the one-way S→H switch has no positive break-even.
+3. R1: the gateway failure is unexplained and did not recur under full bf16. Options: keep the diagnostics and move on (recommended), or spend a targeted reproduction under the slower Q2 profile.
+4. Disk: `/` on this host is at ~99%. RCM telemetry grows by GBs per campaign, and each provisioning run writes about 1.4 GB of JSON (per-worker `startup_profiles`).
