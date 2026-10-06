@@ -507,3 +507,63 @@ Winning arm by region (C = 160.5 s; the order of the four regions is the same fo
 1. Run Q3 (full S→H) and a re-scoped Q4 (S→Mb = S→M partial switch, effective C and join tail) under full bf16. Both decide regions that the model says are won by switching.
 2. Optional, about 20 min: measure W0 on H at `max_model_len` 131,072 (2 reps). This pins static H and k_s* for jobs that keep H for both phases.
 3. W6 is 40 of 63 qualifying GovReport documents. 63 is the whole real supply above 52.9k tokens with a real output length, so a larger long phase needs repeats (as W0x4 does) or another source.
+
+### P0 — W7 mid-length band, W6 repeats, W7 cost-model arms (local) — done
+
+**Source.** GovReport again (same four shards, same template and real-summary decode length as W4/W6, `ignore_eos`). The band below 52.9k is the first candidate in the plan, and it is large: 2,304 deduplicated reports have 16,384 ≤ prompt ≤ 49,152 tokens, prompt + decode ≤ 51,200 and 64 ≤ decode ≤ 2,048, so no second source is needed. The 51,200 context cap keeps every request inside a TP8 deployed at `max_model_len` 51,200 (bf16 TP8 pool 52.9k).
+
+- Catalogue `midctx` ✔ (`scripts/build_midctx_catalogue.py`, `data/workloads/midctx_govreport.json`, sha256 `1222a9b3…`, 27.9 MB): a seeded sample (`Random(20261007)`) of 240 of the 2,304 eligible reports, never truncated. The 45,000-character pre-filter is lossless: below 45k characters the largest prompt is 12,300 tokens; the minimum chars/token at ≥ 16,384 tokens is 3.03.
+- Manifest **W7** ✔ (120 of the 240, seed 20261007, `request_class` mid), built on the head (`hetero_ctl build-manifest`, model `/models/gemma-4-31b`) with the same `manifest_sha256` `db5e59a8…` as the local dry build: 120 requests, 79,531 output tokens, 2,769,014 prompt tokens; prompt 16,409–42,605 (median 21,070); decode 166–1,436 (median 663); context p50 21,765, max 43,071. The real band is skewed to its low end. Sizing [INF, fitted step model of the R3 iterations]: about 4 min per manifest on S and on H.
+- **W6x2 / W6x4** ✔ (composites of W6 ×2 / ×4; every row now carries `repeat`, ids `W6xN-p0r<k>-…`): 80 req / 53,902 tok (`ce3598ec…`), 160 / 107,804 (`3df1d186…`). Prefix caching is off, so a repeat costs the same as the first copy. Existing composites keep their frozen shas (W0x4, MIX_W4_W0x4, MIX_W4_W5, MIX_W6_W0 `ebb23284…`) ✔.
+- `scripts/band_campaign.sh` (P4/P5 driver, from `w6_campaign.sh`): `WORKLOAD`, per-layout `max_model_len` S 51,200 / H 131,072, W6 policy, disk floors `/` ≥ 10 GB and `/dev/shm` ≥ 20 GB before every layout and run, stops a layout on an incomplete run.
+- Code: `research/bf16-kv` @ `1ba74e7`. Tests ✔: suite 271 passed, the same 16 baseline failures; new `tests/test_w7_manifest.py`.
+- Cost model ✔ (`~/hetero-wt/ReconfigLevers` @ `e1045eb`): `mid_job` = k_s W0, then k_m W7, then optionally k_l W6. Arms: static S = k_s·a0S + k_m·t7S − O (k_l = 0 only); static H = k_s·a0H + k_m·t7H + k_l·t6H − O; S→H before W7 = k_s·a0S + C + k_m·t7H + k_l·t6H; S→H before W6 = k_s·a0S + k_m·t7S + C + k_l·t6H. Break-even k_m* = (C + O)/(t7S − t7H) (none if t7S ≤ t7H). New flags: `--c-full`/`--c-partial` (S→H arms use the measured full C, S→M the measured partial C), `--a0h-override` (W0 on H at 131,072), `long_rate_table.py --w7-*-runs/--w0h131k-runs`. Default output is byte-identical to the old code on the L2 inputs ✔; published-row validation unchanged (10 rows, max \|Δk\| 0.009) ✔; tests 203 passed, the same 15 baseline failures.
+
+### P1 — production switch harness (local) — done
+
+Code: `research/bf16-kv` @ `6c6cf36` (+ `ad94de5`, `7bae5a3`: driver idle check and timeouts). `hetero/switch.py`, CLI `hetero.cli run-switch`, one Ray job per switch via `hetero_ctl.py run-switch`.
+
+- **Sequence** (in-process, one job): pre-flight (gateway idle on the source, manifests loaded, request bodies built, policy set; no warm-up requests) → phase 1 dispatched by an asyncio client that keeps one httpx connection pool open for the whole run → **T0 = the client's last phase-1 completion** wakes a controller thread:
+  - full: `drain_deployment(source, remove=True)` (drain, stop, shutdown, kill, PG release per instance) → `gateway_down` → `deploy(target)` (FastSnapshot + FastGraph) → `gateway_up(target, policy)`;
+  - partial: drain the released engines → adopt the kept ones → `retarget_layout(target, joiners)` → capture → `deploy(joiners)` → `join_instances`. These steps are the helpers extracted from `run_transition`, with identical order and checks.
+- **Dispatch gates:** each phase-2 stream starts when the controller signals and a light `OmpGateway.routing_status()` confirms the required instances are bound under the target layout (0.25 s poll fallback). In partial mode, rows that fit the kept TP8 `max_model_len` go to a kept stream (opens after retarget) and the rest to a joiner stream (opens after join). The caps add up to 256: joiner = its row count (40 for W6), kept = 216, as in the L1 MIX run.
+- **Off the critical path:** no evidence dump, restore-check job, pilot start-up or warm-up between T0 and the first target dispatch. Iteration capture is armed just before the first target dispatch: a recorded harness segment `capture_arm`, subtracted in `C_production_ex_capture_s`. Records, iterations, the gateway journal, deploy and drain reports are written after phase 2.
+- **Clocks:** contiguous segments from T0: controller_wake, drain_release (per-instance step timings added to `drain_deployment`), gateway_down, deploy_controller_pre, engine_process_start, engine_init (per-phase median/max over workers: init_device, load_model with snapshot sub-phases, determine_available_memory, initialize_from_config, compile_or_warm_up), endpoint_register, gateway_up, gate_observe, capture_arm, dispatch. They must sum to `gap_dispatch_s` within 0.05 s, or the run is marked incomplete.
+- **Endpoints:** gap to the first target dispatch and to the first target token (engine-host clock); target makespan; ramp as makespan minus the static reference (`--static-target-s`) and as the published iteration-bin deficit; `C_production_s` = gap + ramp. Partial mode adds kept_gap, join delay, kept-pair tokens/s during and after the join, joiner bins, `C_eff_s` = (phase-2 end − T0) − static finish, and per-class finish times.
+- Tests ✔: `tests/test_switch.py`, 23 tests. They check ordering, that no dispatch happens before its gate, segment reconciliation, the 216/40 caps with joiner rows only after the join, fail-closed abort (report written, streams cancelled, capture disarmed, never retried), unchanged `run_transition` behaviour, drain timings and the `routing_status` shape. Full suite 294 passed, the same 16 baseline failures. `scripts/switch_dry_run.py` runs both modes end to end on fakes; ordering asserts pass and segments reconcile (sum = gap).
+- Drivers: `scripts/switch_campaign.sh full|partial` (from `staged_sequence.sh`: prep snapshots + greedy references, restore checks, fail-closed teardown, disk floors, `MAX_ATTEMPTS=2`, `ARM_TIMEOUT` 1,800 s) and `scripts/switch_summary.py` (offline recomputation and tables).
+
+### P2 — spec (full S→H warm switch, production C)
+
+- Hypothesis [INF]: production C = drain/release of 4 idle TP8s (tens of s) + H restore deploy (R2: 154.9 s hetero_ctl elapsed, engine init 137.6 s, compile/warm-up 80.5 s) + gateway up (~5 s) + W6 ramp ≈ 170–210 s. The harness return H→S on the published harness ≈ 230–280 s, compared with the fp32-era 225.26 s.
+- Commit `research/bf16-kv` @ `7bae5a3`, frozen for the timed runs (no hot-patching). Full-bf16 defaults; FAST = `{"weight_snapshot":"read","weight_snapshot_verify":false,"fast_graph":true,"startup_profile":true}`, pod-local XLA cache; S at `max_model_len` 16,384, H at 131,072; policy `{"decode_length_blind":true,"large_fresh_traffic_share":0.0,"reserve_large_headroom_blocks":0}`.
+- Steps: `KUBECONFIG=$HOME/.kube/hetero-agent.yaml HEAD_POD=tpu-ray-cluster-vllm-tpu-head-gxwsv REPS=3 flock /tmp/hetero-cluster.lock scripts/switch_campaign.sh full`. Every stage is one `rcm_exec run`; output `results/switch/full-7bae5a3/`. Ray session unchanged, so `/tmp/hetero-inventory-only.json` stays valid.
+  1. Prep: preflight; tmpfs cleanup; S normal deploy → snapshot → greedy reference → teardown; H normal deploy @131,072 → snapshot → reference → teardown; H restore deploy → `check --require-restored` + `validate --reference` → teardown; S restore deploy → check + validate.
+  2. Per rep r = 1..3: `run-switch` full (phase 1 W0 on S → T0 → controller → phase 2 W6 on H, `--static-target-s 206.2`, run id `full-7bae5a3-r<r>`). Then the harness return H→S on the published harness shape (drain H `--force`, gateway-down, release, S restore deploy, `check --require-restored`, `run_pilot.sh` W0 on S, run id `full-7bae5a3-ret-r<r>`), with timeline marks. The return leaves S deployed for the next rep. After rep 3: teardown S; the EXIT trap releases everything and removes tmpfs snapshots.
+  3. Locally: `scripts/switch_summary.py results/switch/full-7bae5a3`.
+- Endpoints (mean of 3 reps and each rep):
+  - **Production C** = (first W6 dispatch − T0) + (W6 makespan − 206.2 s), with every segment. Also reported: C with the iteration-bin ramp deficit, C without `capture_arm`, and the gap to the first W6 token.
+  - **Harness-equivalent C ✔**: the measured H→S return on the published harness = (first pilot dispatch − last W6 completion) + the published ramp deficit of the W0 pilot. Same direction and harness as the fp32-era 225.26 s, split into teardown jobs, deploy job, check job and pilot start-up.
+  - **S→H harness-equivalent [INF]** = production S→H C + the harness and controller segments measured in the return.
+  - Output checks: restored on every worker (deploy report), exact token accounting on both phases, 0 failed requests; greedy restore equality in prep for both S and H.
+- Stop criteria: any deploy, restore or compile failure, incomplete phase or failed segment reconciliation stops the rep. The driver fails closed (teardown, rebuild S, new attempt id), at most 2 failed attempts in total, then record and move on to P3. Expected duration ≈ 1.5 h (prep ≈ 30 min; 3 × (run-switch ≈ 10 min + return ≈ 10 min)).
+
+### P3 — spec (partial S→Mb, effective C, join tail)
+
+- Hypothesis [INF]:
+  - kept gap ≈ drain of two idle TP8s + adopt + retarget + capture ≈ 10–25 s (fp32-era 9.3 s);
+  - TP16 joiner restore ≈ 140–160 s, join ≈ 5–10 s;
+  - kept-pair W0 rate during the join ≈ the M pair rate, 721,595/352.7 = 2,046 tok/s (half of S = 1,891 tok/s);
+  - C_eff ≈ join delay + joiner ramp ≈ 160–200 s, against the 186 s (fp32-era) that L2 borrowed.
+- Commit `7bae5a3`, frozen. Mb = small_a, small_b (TP8 @16,384, kept) + large_b (TP16 @131,072, FAST restore from an Mb snapshot). Same policy.
+- Steps: `… REPS=3 flock /tmp/hetero-cluster.lock scripts/switch_campaign.sh partial` (output `results/switch/partial-7bae5a3/`).
+  1. Prep: S normal → snapshot → reference → teardown; Mb normal with `large_b` @131,072 → snapshot of `large_b` → reference → teardown.
+  2. Per rep: S restore deploy → check (+ validate on rep 1) → `run-switch` partial (phase 1 W0 on S; phase 2 = W0 on the kept pair + W6 on the joiner, `--static-target-s 409.2`, the L1 W6-class finish on M) → `check Mb --require-restored` → teardown Mb and leftover S PGs.
+- Endpoints:
+  - serving gap = first kept dispatch − T0, with segments;
+  - kept-pair tok/s during the join and after it, vs 2,046;
+  - join delay = first W6 dispatch − T0, plus deploy/join and first-W6-token times;
+  - join tail = the joiner's per-10-s bins from first served to steady, and W6-class finish − first W6 dispatch − 409.2;
+  - **effective C** = (phase-2 end − T0) − 409.2 s (the S→M arm's C when W6-bound, which holds here because 352.7 < C + 409.2);
+  - per-class finish times.
+- Stop criteria: the E2 joiner hang (joiner engine stops making progress, RPC timeouts, gateway 500/503). If it recurs: capture diagnostics (RCM logs, Ray job logs, `inspect`, gateway status, the run-switch report on the head), abort, and stop P3 after at most 2 attempts. `ARM_TIMEOUT` 1,800 s caps a hung stream. Other failures: same as P2. Expected duration ≈ 1.3 h.
