@@ -581,8 +581,8 @@ The rerun uses run ids `full-7a3aaeb-*` with the same steps.
   - TP16 joiner restore ≈ 140–160 s, join ≈ 5–10 s;
   - kept-pair W0 rate during the join ≈ the M pair rate, 721,595/352.7 = 2,046 tok/s (half of S = 1,891 tok/s);
   - C_eff ≈ join delay + joiner ramp ≈ 160–200 s, against the 186 s (fp32-era) that L2 borrowed.
-- Commit `d16fc32`, frozen. Mb = small_a, small_b (TP8 @16,384, kept) + large_b (TP16 @131,072, FAST restore from an Mb snapshot). Same policy.
-- Steps: `… REPS=3 flock /tmp/hetero-cluster.lock scripts/switch_campaign.sh partial` (output `results/switch/partial-d16fc32/`).
+- Commit `7a3aaeb` (`d16fc32` + the two P2 fixes above), frozen. Mb = small_a, small_b (TP8 @16,384, kept) + large_b (TP16 @131,072, FAST restore from an Mb snapshot). Same policy.
+- Steps: `… REPS=3 flock /tmp/hetero-cluster.lock scripts/switch_campaign.sh partial` (output `results/switch/partial-7a3aaeb/`).
   1. Prep: S normal → snapshot → reference → teardown; Mb normal with `large_b` @131,072 → snapshot of `large_b` → reference → teardown.
   2. Per rep: S restore deploy → check (+ validate on rep 1) → `run-switch` partial (phase 1 W0 on S; phase 2 = W0 on the kept pair + W6 on the joiner, `--static-target-s 409.2`, the L1 W6-class finish on M) → `check Mb --require-restored` → teardown Mb and leftover S PGs.
 - Endpoints:
