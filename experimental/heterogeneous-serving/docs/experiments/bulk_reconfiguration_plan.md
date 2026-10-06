@@ -371,3 +371,49 @@ Artifacts: `~/hetero-wt/Bf16Kv/results/pilot/{rc,w4}-ed99e08-*.json` (committed 
 2. Given that S dominates W0, W5 and W4, should the study's job model change? For example: jobs that start on H, or larger large-request contexts that do not fit a TP8 pool (> 52,480 tokens). Otherwise the one-way S→H switch has no positive break-even.
 3. R1: the gateway failure is unexplained and did not recur under full bf16. Options: keep the diagnostics and move on (recommended), or spend a targeted reproduction under the slower Q2 profile.
 4. Disk: `/` on this host is at ~99%. RCM telemetry grows by GBs per campaign, and each provisioning run writes about 1.4 GB of JSON (per-worker `startup_profiles`).
+
+### L0 — W6 long-context workload and long-job cost model (local) — done
+
+**Source choice.** GovReport (`ccdv/govreport-summarization`, all four shards: train 0/1, validation, test; cached in `/tmp/longwl/govreport-*.parquet`), same prompt template as W4 (`Summarize the following government report.` + report + `Summary:`), decode length = Gemma-token length of the real human summary, run with `ignore_eos`. Rejected:
+
+- PG-19: books have no reference output, so the decode length would be synthetic; most books also exceed the 145k-token TP16 pool.
+- LongBench-v2: multiple-choice, so the real output is about one token (a prefill-only phase), and many contexts exceed the TP16 pool.
+
+GovReport keeps the W4 precedent (real documents, real output lengths) and needs no new instruction format.
+
+**Catalogue** `longctx` ✔ (`scripts/build_longctx_catalogue.py`, `data/workloads/longctx_govreport.json`, sha256 `d1ba9a9b…`). Filter: prompt > 52,864 tokens (does not fit a full-bf16 TP8 pool), prompt + decode ≤ 131,072, 64 ≤ decode ≤ 2,048, deduped by report hash, never truncated. Of all GovReport reports, 65 have prompts above 52,864 tokens; 63 pass. Prompt 52,917–127,370 tokens (median 62,853); decode 77–1,534 (median 677); context 53,295–128,342. The character pre-filter (≥ 150k chars) loses nothing: the largest prompt under 150k chars is 37,749 tokens.
+
+**Manifests** ✔ (`research/bf16-kv` @ `c1d80df` + `cee352a`, `~/hetero-wt/Bf16Kv`; `load_manifest` round-trips both):
+
+| Manifest | Requests | Output tokens | Prompt tokens | Context p50 / max | sha256 |
+|---|---|---|---|---|---|
+| W6 (40 of the 63, seed 20261006, `request_class` long) | 40 | 26,951 | 2,750,436 | 64,338 / 128,342 | `3ae550fb…` |
+| MIX_W6_W0 = W6 ×1 then W0 ×1 (rows labelled by `phase_workload`) | 1,803 | 748,546 | 3,180,294 | 502 / 128,342 | `ebb23284…` |
+
+- Size: 40 requests so that one W6 manifest on H takes several minutes [INF: about 5–10 min, from ~69k-token prefills and at most two requests resident per TP16; to be measured in L1].
+- TP16 `max_model_len` for W6 = 131,072 (≥ largest context 128,342; below the 144,896–145,216-token TP16 pool).
+- Routing on M ✔ (code + unit test `tests/test_w6_manifest.py`): W6 contexts exceed the TP8 `max_model_len` 16,384, so only the TP16 is eligible (`hetero/gateway/policy.py:158,189-190`); with `large_fresh_traffic_share` 0 and no fallback, W0 goes only to the TP8s (`policy.py:184,196`).
+- Admission fix ✔: the default `reserve_large_headroom_blocks` = 64 applies to every `large*` instance, H's two TP16s included. At 512-token blocks it would refuse a 127,370-token prompt. The W6 policy sets it to 0 (test covers 256/512/1,024-token blocks).
+- Tests ✔: full suite at `cee352a` 262 passed, same 16 baseline failures.
+
+**Cost model** ✔ (`~/hetero-wt/ReconfigLevers` @ `76f446d`, `ea2cbf1`): `bulk_cost_model.py --long-table` adds `long_job` (k_s W0 manifests, then k_l W6 manifests; all requests known at t = 0). Rates: a0S, a0H (R3), a0M = W0-class finish on M's 2×TP8, t6H = W6 on H, t6M = W6-class finish on M's TP16 (both from MIX_W6_W0 on M). Convention as in the published break-even rows: switching adds C; a static layout keeps the phase overlap O (32.6 s; O = 0 also reported).
+
+- static H = k_s·a0H + k_l·t6H − O
+- static M = max(k_s·a0M, k_l·t6M) [INF: linear in k]
+- S→H = k_s·a0S + C + k_l·t6H
+- S→M: 2 TP8 become the TP16 at τ (serving W6 from τ + C) while 2 TP8 keep serving W0. Optimum τ* = max(0, (k_s − (C + k_l·t6M)/a0M)·a0S); makespan = k_s·a0S + (C + k_l·t6M)(1 − a0S/a0M) if k_s·a0M > C + k_l·t6M, else C + k_l·t6M. S→M beats static M iff k_s·a0M > C + k_l·t6M.
+- Static S is infeasible. Break-even S→H vs static H: k_s* = (C + O)/(a0H − a0S), independent of k_l.
+- `scripts/long_rate_table.py` builds the table from the L1 pilot files and joins records with the composite to get per-class finish times; tested on the fp32 `MIX_W4_W0x4` M run (7,956/7,956 records labelled; W0 finish = run makespan 1,757.2 s).
+- Published-row validation unchanged: 10 rows, max \|Δk\| 0.009 ✔. Tests: 17 new pass; suite failures identical to `84318d0` (15).
+
+### L1 — spec (full-bf16 W6 rates on H and M)
+
+- Hypothesis [INF]: W6 on H takes about 5–10 min per manifest, bounded by long prefills and at most two resident requests per TP16. On M, W6 on the single TP16 takes about twice as long as on H, and W0 on the 2×TP8 about 2 × 190.8 s.
+- Commit `research/bf16-kv` @ `cee352a` (full-bf16 defaults; native backend `81164462…`). Policy `{"decode_length_blind":true,"large_fresh_traffic_share":0.0,"reserve_large_headroom_blocks":0}`, `run-arm --unfrozen-diagnostic`.
+- Deploys: H `--max-model-len 131072`; M `--max-model-len 16384 --instance-engine-settings '{"large":{"max_model_len":131072}}'`. This is the first deploy at 131,072, so it is a cold compile [INF: ~8–10 min each].
+- Steps: `KUBECONFIG=$HOME/.kube/hetero-agent.yaml HEAD_POD=tpu-ray-cluster-vllm-tpu-head-gxwsv flock /tmp/hetero-cluster.lock scripts/w6_campaign.sh 2 H M`. Every stage is one `rcm_exec run`; Ray session `session_2026-10-03_14-58-37` unchanged, so `/tmp/hetero-inventory-only.json` is valid. The script:
+  1. Checks disk floors (`/` ≥ 4 GB, `/dev/shm` ≥ 20 GB) before each layout and run, and stages the `longctx` catalogue on the head.
+  2. Per layout: pre-teardown → deploy → 2 reps (`w6-cee352a-plain-r{1,2}`; H runs W6 arm H, M runs MIX_W6_W0 arm M0) → final teardown (drain, gateway-down, release). Deploy and teardown outputs are kept gzipped in `results/pilot/`; large run JSON is gzipped after each stage.
+  3. Locally: `long_rate_table.py --commit cee352a --deploy-json …` → `bulk_cost_model.py --long-table …` (L2).
+- Endpoints: per-arm makespan (H) and per-class finish times (M), mean of 2 reps; completeness (all requests, exact tokens: W6 40 / 26,951; MIX 1,803 / 748,546); TP16 KV pool and block size at 131,072; per-request admission on the TP16 (max running/scheduled, preemptions, iteration p50).
+- Stop criteria: deploy or compile failure, or an incomplete run → stop that layout and record it; at most 2 fix attempts; no hot-patching. Expected duration ≈ 1.5–2 h.
