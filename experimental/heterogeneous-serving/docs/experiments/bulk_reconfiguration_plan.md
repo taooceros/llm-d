@@ -227,3 +227,79 @@ Note: the run ids carry `591e3fe` (the evidence commit on top of `d7b1d91`; no c
   6. Locally: `kv_pools.json`, `drift.json` (`probe_drift.py`).
 - Endpoints: KV pool per instance; cold vs restore deploy time and compile/warm-up; replica equality; restore equality on S and H; drift summary.
 - Stop criteria: compile/lowering error, replica mismatch, restore fallback or restore inequality → stop, record, at most 2 fix attempts. Expected duration ≈ 80–100 min (two cold deploys ≈ 10 min each, two restores ≈ 3–5 min each, references, probes, teardowns).
+
+### R1 — gateway failure at ~255 in flight (local) — root cause not pinned; diagnostics committed
+
+- Code: `research/gateway-255` @ `0395e78` (`~/hetero-wt/Gateway255`), cherry-picked onto `research/bf16-kv` as `ed99e08`.
+- "255 in flight" is not a limit ✔: it is the client's closed-loop steady state. `ADMITTED_CAP = 256` (`hetero/experiment.py:64`) feeds `asyncio.Semaphore(256)` and `httpx.Limits(max_connections=256)` (`experiment.py:221-222`), so every request starts with 255 others in flight. In r2, 309 of the 380 successful starts before the burst also saw exactly 255, and 256 concurrent requests were served at t = 0.14 s in both reps.
+- Other candidate limits were checked and excluded ✔:
+  - The gateway semaphore (`core.py:29`, 256) waits and never fails, and one permit was free at onset (gateway in-flight = 255).
+  - The Envoy `omp_gateway` circuit breakers are set to 40,000 (`deploy/k8s/omp-router.yaml:149-153`).
+  - The gRPC ExtProc server sets no `maximum_concurrent_rpcs` and advertises no MAX_CONCURRENT_STREAMS.
+  - Engine actors use `max_concurrency=1024`.
+- Local reproduction ✔ (did not reproduce the failure). Setup: Envoy 1.33.2 with the deployed `omp-router.yaml`, the real `ExtProcServer` and `build_app` over a sleeping fake core, and the real `_dispatch_http` client sending the real W4 bodies. It served 904/904 requests at 256 concurrency and 1,808/1,808 at 512, with `streams_failed` = 0.
+- Failure signature (Q2 artifacts) ✔:
+  - The refusals were a global, transient refusal of *new* requests only. In-flight requests all completed, and the failed requests left no gateway record or trace row.
+  - r1: 36 × 503, starting at 36.77–37.02 s, recovering by itself within ~0.25 s.
+  - r2: 268 × 500, starting at 166.7–168.0 s. Each failure returned in ~9 ms, so the closed loop drained the whole remaining queue; recovery was never observed.
+  - Not retained: the gateway actor log, Envoy access logs and response bodies. A gateway 503 and an ExtProc-abort 500 look identical in Envoy's log.
+- Ranked candidates [INF]:
+  - r1 (503): a discovery health-lease expiry (`hetero/gateway/service.py:176-178`), with the lease set at `service.py:349-352` and renewed by the 5 s `_discovery_loop`. That loop shares `administration_lock` with the migration loop (`service.py:620-640`).
+  - r2 (500): an ExtProc stream abort (`extproc.py:160-172`) or a non-Runtime dispatch exception (`service.py:111-117`).
+  - The two reps may have different causes.
+- Fix committed: diagnostics only, no limit or behaviour change.
+  - Failed client records and summary rows now keep `http_status`, `response_protocol` (the gateway marker header, absent on Envoy local replies), headers and the first 1 KiB of the body.
+  - The gateway counts ExtProc aborts (`extproc_aborts` → summary `gateway_extproc_aborts`).
+  - The discovery 503 now names its reason (lease expired vs reconcile error).
+  - Tests: `tests/test_ingress_failure_signature.py`, 4 tests. Three fail on `4c652ca`; the 512-stream ExtProc guard passes on both. Full suite at `ed99e08`: 256 passed, same 16 baseline failures ✔.
+- Exit criterion not met: there is no cause with file:line and no fix. The next W4 run with `ed99e08` (R3) records which hop answers.
+
+### R2 — results (full-bf16 cold provisioning, run `bf16prov-69a705c`, `research/bf16-kv` @ `69a705c`)
+
+Artifacts: `~/hetero-wt/Bf16Kv/results/bf16kv/bf16prov-69a705c/` (committed `1e3ba13`); driver logs `results/bf16kv/r2-driver-69a705c{,-resume,-resume2}.log`. Native backend revision `81164462…`; NATIVE_BACKEND_READY on the first deploy, so the pristine-kernel restore applied ✔.
+
+| Item | S (4×TP8) | H (2×TP16) |
+|---|---|---|
+| KV pool per instance ✔ | 827 × 64 = 52,928 (52,864 usable), all 4 | 2,270 × 64 = 145,280 (145,216 usable), both |
+| vs Q1 (fp32 act, bf16 KV) | identical | identical |
+| Cold normal deploy ✔ (hetero_ctl elapsed / RCM stage) | 486.3 s / 511.7 s; engine init 458–462 s; compile/warm-up 173.5–176.2 s | 515.9 s / 564.8 s; init 499 s; compile/warm-up 210.6–211.1 s |
+| FastSnapshot+FastGraph restore deploy ✔ | 147.6 s / 184.6 s; init 128.7–130.4 s; compile/warm-up 71.6–72.2 s | 154.9 s / 176.5 s; init 137.6–138.1 s; compile/warm-up 80.4–80.6 s |
+| Restored on every worker (`check --require-restored`) ✔ | 8/8 | 8/8 |
+| Replica equality ✔ | 4/4 identical (cold and restore) | 2/2 identical (cold and restore) |
+| Restore equality vs own full-bf16 reference ✔ | 32/32 × 4 engines | 32/32 × 2 engines |
+
+- Cold compile/warm-up under full bf16 is shorter than under fp32-act/bf16-KV (S 174 s vs 254–256 s; H 211 s vs 262 s) ✔. The pod-local caches held only fp32-activation entries, so these were cold compiles [INF: no cache-hit counters read].
+- S-vs-H drift (recorded, not gated):
+  - Greedy, 32 W0 prompts × 64 tokens: 19/32 identical; first divergence at 0, 0, 0, 0, 1, 1, 2, 3, 5, 9, 15, 38, 46 ✔.
+  - Tie gaps at the divergence point: up to 4.19 nats from the H side and 10.31 from the S side (`agreement` in `prep-H-reference.json`, `S-restored-validation.json`) ✔.
+  - Probes (`drift.json`, 44 Q1 points), versus the Q1 rows (fp32 activations, bf16 KV):
+
+| Pair | argmax equal | median max\|Δlp\| | p90 | max | TV median / max | Q1 median / max |
+|---|---|---|---|---|---|---|
+| full-bf16 S vs H ✔ | 39/44 | 0.513 | 3.07 | 5.37 (p10, d0) | 0.040 / 0.826 | 0.097 / 8.16 |
+| full-bf16 S vs fp32 S ✔ | 38/44 | 0.515 | 2.96 | 8.09 (p31, d21) | 0.043 / 0.585 | 0.109 / 2.97 |
+| full-bf16 H vs fp32 S ✔ | 39/44 | 0.551 | 3.27 | 5.39 (p10, d0) | 0.041 / 0.822 | 0.125 / 8.53 |
+
+- Symmetry ✔: S vs H deviation from fp32, sign test 21/23, p = 0.88; \|median diff\| 0.036 nat. No single-layout fault.
+- Accuracy cost vs the fp32-state references (64-token greedy) ✔: S 18/32 identical, H 21/32 (Q1 bf16-KV only: 26 and 25). Full bf16 moves the median next-token deviation from ~0.1 to ~0.5 nat.
+- Process incident ✔: the first driver attempt stopped after `prep-S-reference`. Its idle check parsed `rcm_exec status --json`, which embeds the last Ray job's log tail (≈ 33 MB line) and was cut off at 72 MiB while `/` was full (2.5 GB RCM telemetry). The EXIT cleanup refused to run for the same reason, which left S deployed. Then the dashboard port-forward died, which stranded the first resume. Fixes:
+  - RCM telemetry gzipped to `/tmp/omp_rcm-telemetry-upto-20261006T0150.jsonl.gz` and truncated; go-build and uv caches pruned.
+  - `bf16_provision.sh` @ `a104ebb`: text idle check plus `RESUME_FROM`/`RESUME_LAYOUT`.
+  - Port-forward restarted as a managed service.
+  - The run resumed at `probe-S` with S still deployed (`inspect`: 4/4 ready). No `hetero/` code changed, so the runtime revision and `engine_identity` are unchanged.
+- Cleanup receipt (R2) ✔: final drain, gateway-down and release of H; S released after its restore; cleanup release of S and H; tmpfs cleanup (`cleanup-tmpfs.json`); RCM Idle.
+
+### R3 — spec (full-bf16 rates with the Q2 harness)
+
+- Hypothesis [INF]: without the fp32-q widening, per-iteration time falls back to or below the fp32 rows, while the bf16 pools keep the 2× admitted batch. W0 on S and H should then be no slower than fp32 (343.3 / 497.2 s), and W5 should beat fp32 on both layouts. W4 should complete on H, and on S (TP8 pool 52,864 ≥ 36,864).
+- Commit `research/bf16-kv` @ `ed99e08` (full bf16 + R1 diagnostics); native backend `81164462…`. Harness unchanged from Q2: plain deploy, no engine-settings override (so full-bf16 defaults), blind policy `{"decode_length_blind":true}`, `run-arm --unfrozen-diagnostic`.
+- Steps, in one `flock /tmp/hetero-cluster.lock` session (`KUBECONFIG=$HOME/.kube/hetero-agent.yaml HEAD_POD=tpu-ray-cluster-vllm-tpu-head-gxwsv`; every stage is one `rcm_exec run`; driver log `results/bf16kv/r3-driver.log`):
+  1. `scripts/reconfig_measure.sh S H` (max_model_len 16384, ORDER `W0 W5 W5 W0`) → `rc-ed99e08-{S,H}-s{1..4}`.
+  2. `POLICY_ORDER=plain scripts/w4_campaign.sh 2 H S` (max_model_len 36864) → `w4-ed99e08-plain-r{1,2}` on H, then on S.
+  3. Locally: `ReconfigLevers` @ `a8c2b7e` `scripts/bf16_rate_table.py --rc-commit ed99e08 --w4-commit ed99e08 --label full-bf16 --out results/bulk_cost_model/throughput_table_fullbf16.json` → `bulk_cost_model.py --table … --json results/bulk_cost_model/model_fullbf16.json`.
+- Endpoints:
+  - Makespan per arm, mean of 2 reps; completeness (all requests, exact useful tokens).
+  - Per-iteration p50 and admitted batch vs Q2 and the fp32 rows.
+  - For any W4 failure, the answering hop from the R1 fields.
+  - Break-even phase sizes for C = 160.5 / 80 / 45 s.
+- Stop criteria: an incomplete or failed W0/W5 arm stops that layout (record; at most 2 fix attempts). W4 failures are recorded with their signature, with no hot-patching. Expected duration ≈ 2.5–3.5 h.
