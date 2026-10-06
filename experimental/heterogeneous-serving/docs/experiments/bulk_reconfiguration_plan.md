@@ -669,6 +669,43 @@ Comparability notes:
   - per-class finish times.
 - Stop criteria: the E2 joiner hang (joiner engine stops making progress, RPC timeouts, gateway 500/503). If it recurs: capture diagnostics (the driver's `diagnose`: RCM logs, `inspect`, gateway status, the run-switch artifacts and report from the head), tear down, and stop P3 after at most 2 attempts. `ARM_TIMEOUT` 900 s caps a hung stream. Other failures: same as P2. Expected duration ≈ 1.3 h.
 
+### P3 — results (partial S→Mb, `research/bf16-kv` @ `7a3aaeb`, runs `partial-7a3aaeb-r{1,2,3}`)
+
+Artifacts: `~/hetero-wt/Bf16Kv/results/switch/partial-7a3aaeb/` and `results/hetero/artifacts/partial-7a3aaeb-r{1,2,3}/`; driver log `results/switch/p3-driver-7a3aaeb.log`; summary `scripts/switch_summary.py results/switch/partial-7a3aaeb`.
+
+Run health ✔:
+- all 3 reps succeeded on the first attempt;
+- exact accounting in both phases (phase 1 W0 1,763/721,595 against the gateway journal; phase 2 W0 1,763/721,595 + W6 40/26,951), 0 failed requests;
+- the joiner `large_b` was restored on every worker, and `check Mb --require-restored` passed after each rep;
+- every gate opened on the controller event;
+- the offline recomputation equals the in-process values.
+- **The E2 joiner hang did not recur** ✔: no stalled joiner, no RPC timeout, no gateway 500/503. Each joiner served its 40 W6 requests at the static-M rate.
+
+| ✔ (s after T0 = last phase-1 completion) | r1 | r2 | r3 | mean |
+|---|---|---|---|---|
+| **serving gap of the kept pair** (first kept dispatch) | 1.93 | 2.27 | 2.05 | **2.08** (fp32-era 9.3) |
+| ↳ drain + release of small_c/small_d, adopt, retarget, capture arm | 1.36 / 0.02 / 0.50 / 0.03 | 1.61 / 0.01 / 0.59 / 0.03 | 1.49 / 0.01 / 0.50 / 0.03 | 1.49 / 0.01 / 0.53 / 0.03 |
+| joiner deploy ready | 126.96 | 126.83 | 126.31 | 126.70 |
+| join returned = first W6 dispatch | 127.92 | 129.33 | 127.99 | **128.41** |
+| first W6 token (engine clock) | 132.42 | 134.57 | 132.43 | 133.14 |
+| kept-pair W0 tok/s during the join (first kept dispatch → join) | 2,502 | 2,510 | 2,554 | **2,522** |
+| kept-pair W0 tok/s after the join | 1,863 | 1,844 | 1,917 | 1,875 |
+| kept-class (W0) finish | 346.1 | 347.7 | 336.6 | 343.4 |
+| C_kept = kept finish − 352.7 (static-M W0-class finish) | −6.6 | −5.0 | −16.1 | **−9.2** |
+| W6-class finish | 541.1 | 532.8 | 540.4 | 538.1 |
+| W6 on the joiner, first dispatch → finish (static M: 409.2) | 413.2 | 403.5 | 412.5 | 409.7 |
+| **effective C = W6-class finish − 409.2** | 131.90 | 123.61 | 131.25 | **128.92** |
+
+- Join tail ✔: none measurable. From its first dispatch the joiner finishes W6 in 409.7 s, against 409.2 s on a static M (−5.7 to +4.0 s per rep). Its per-10-s token bins sit at the steady W6 level (median ≈ 69 tok/s) from the second bin on; the first bin is a W6 prefill.
+- Kept pair: 2,522 tok/s during the join is 0.67 of a full S on W0 (721,595/190.8 = 3,782 tok/s), the same fraction as fp32-era mix A, and 23% above the static-M pair rate (2,046). The phase-2 W0 stream had no TP16 competitor for capacity or concurrency before the join [INF]. The W0 class therefore finishes 9 s *before* the static-M W0-class time: the kept side costs nothing.
+- The joiner's engine anatomy equals the full switch's H: controller pre-engine 10.9 s, process start 21.8 s, engine init 90.4 s. Medians: load_model 5.0, initialize_from_config 26.1, compile/warm-up 54.7 s. Effective C (128.9 s) ≈ production full C (132.2 s): both are the time to start a FAST-restored TP16.
+- Against the S→M arm in L2: C_partial = 128.9 s replaces the borrowed 186 s, and the arm's assumption that the kept pair runs from τ with no gap holds (2.1 s gap, C_kept ≤ 0).
+
+**Cleanup receipt (P3)** ✔:
+- per rep: `check Mb`, teardown Mb (drain, gateway-down, release) and the leftover S PGs;
+- EXIT cleanup: release H/Mb/S with no non-REMOVED owned PG (`results/switch/partial-7a3aaeb/cleanup-*.json`) and tmpfs cleanup ok;
+- RCM Idle; state line `switch-campaign partial-7a3aaeb released S switch-r3-leftover-S`.
+
 ### P4 — spec (W0 on H at max_model_len 131,072)
 
 - Hypothesis [INF]: at 131,072 the TP16 KV block is 512 tokens (283 blocks, 144,896 tokens). Each W0 request (context median ≈ 400 tokens) then holds at least one 512-token block, versus about 7 × 64 at 16,384, so W0 on H runs slower than R3's 306.4 s. Predicted 306–400 s per manifest.
