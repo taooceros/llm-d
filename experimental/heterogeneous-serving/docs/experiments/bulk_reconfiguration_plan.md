@@ -159,3 +159,37 @@ Q1 diagnostic result (run `bf16diag-d7b1d91`, `~/hetero-wt/Bf16Kv/results/bf16kv
 - Commit `research/bf16-kv` @ `d7b1d91` (bf16 KV default; native backend `9d8ff441…`). Harness unchanged from the published rows: `reconfig_measure.sh S H` (plain deploy, max_model_len 16384, blind policy `{"decode_length_blind":true}`, `run-arm --unfrozen-diagnostic`, ORDER `W0 W5 W5 W0` → run ids `rc-d7b1d91-{S,H}-s{1..4}`), then `POLICY_ORDER=plain w4_campaign.sh 2 H` (max_model_len 36864 → `w4-d7b1d91-plain-r{1,2}`). One `flock /tmp/hetero-cluster.lock` session; every stage is one `rcm_exec run`; HEAD_POD `tpu-ray-cluster-vllm-tpu-head-gxwsv`; data already staged in the head pod (sha-checked).
 - Endpoints: makespan per arm (`results/pilot/*.json`), mean of 2 reps; completeness (all requests, useful tokens = manifest). Then `bf16_rate_table.py` → `bulk_cost_model.py --table` recalibration (validation stays on the published fp32 table) and break-even phase sizes for C = 160.5 / 80 / 45 s.
 - Stop criteria: any arm incomplete or failed → stop that layout, record, at most 2 fix attempts. Expected duration ≈ 2.5–3 h.
+
+### Q2 — results (bf16 KV, `research/bf16-kv` @ `591e3fe`, same harness as the published rows)
+
+Note: the run ids carry `591e3fe` (the evidence commit on top of `d7b1d91`; no code change). Artifacts `~/hetero-wt/Bf16Kv/results/pilot/rc-591e3fe-{S,H}-s{1..4}_*.json`; driver log `results/bf16kv/q2-driver.log`. All W0/W5 arms complete with exact token accounting ✔.
+
+| Workload | Layout | bf16 makespan (reps) ✔ | fp32 published | Change |
+|---|---|---|---|---|
+| W0 (small) | S | 455.4 s (450.7, 460.0) | 343.3 s (S W0 in E2: 337.6) | +33% |
+| W0 | H | 779.8 s (779.4, 780.3) | 497.2 s | +57% |
+| W5 (middle) | S | 1166.4 s (1168.6, 1164.3) | 1450.7 s | −20% |
+| W5 | H | 1469.1 s (1483.3, 1454.8) | 1372.4 s | +7% |
+| W4 (large) | H | **blocked**: 2 reps incomplete | 347.1 s | — |
+
+- Mechanism ✔ (per-engine iteration stats in the same artifacts vs `~/hetero-research/results/pilot/rc-bab4f9e-*`): bf16 KV doubles the admitted batch where KV was the bound (W5: S max scheduled 8 → 14–16, H 20–21 → 41) and removes preemptions in W0 (S 1,483 → 0, H 526 → 0). But per-iteration time rises sharply: W0 on S p50 0.077–0.079 → 0.123–0.155 s at similar batch (63–78 vs 69–76); W5 on H 0.055–0.057 → 0.118–0.120 s; W5 on S 0.040–0.042 → 0.066–0.068 s. Only W5 on S gains net. [INF: the in-kernel bf16→fp32 widening of every loaded K/V block (decision log) and the doubled decode KV tile for packed bf16 make attention slower than with fp32 KV; not profiled.]
+- W4 on H blocker ✔ (`results/bf16kv/q2-w4-failed/`, `results/pilot/w4-campaign-591e3fe.log`): rep 1 lost 36/904 requests (router 503, all within 0.2 s at t = 37 s); rep 2 lost 268 (router 500, within 1.3 s at t = 167 s, then every remaining request). Both bursts began with exactly 255 client requests in flight; failures return in 3–8 ms and never reach gateway admission (no trace rows). [INF: ext_proc/gateway saturation under the larger admitted concurrency; `hetero/gateway/extproc.py:176-183` documents the same 500/upstream "-" signature.] The completed part already took 472 s and 362 s, so bf16 W4 on H is not faster than fp32's 347.1 s [INF: a lower bound only]. No fix attempted; the gateway actor logs were empty.
+- Deploy for W4 (H, max_model_len 36864, bf16 KV) ✔: 567 blocks × 256 per TP16 (144,896 usable tokens), vs 72,192 under fp32 (`results/pilot/w4-deploy-H-bf16.json`).
+
+**Cost model recalibration** (`~/hetero-wt/ReconfigLevers` @ `055c1b9`: `scripts/bf16_rate_table.py` → `results/bulk_cost_model/throughput_table_bf16.json`; `bulk_cost_model.py --table … --json results/bulk_cost_model/model_bf16.json`). Published-row validation still runs on the fp32 table and reproduces all 10 rows (max \|Δk\| 0.009) ✔.
+
+| C regime | k* W0, switch to S for the small phase (O = S tail 32.6 s) | k* W5, switch S→H for the middle phase |
+|---|---|---|
+| 160.5 s (warm production) | 0.60 manifests (fp32: 1.25) | none: H is 302.7 s/manifest slower than S (fp32: 2.47) |
+| 80 s (projected levers) | 0.35 (fp32: 0.73) | none |
+| 45 s (no trace) | 0.24 | none |
+
+- One W0 manifest = 721,595 output tokens, so under bf16 a small phase of ≥ ~0.43M tokens (C = 160.5 s) pays for leaving H. Under bf16 there is no middle-phase reason to go to H at all. The large phase still needs a W4 rate (blocked) [INF: S may now hold W4's 36,864-token requests, since a bf16 TP8 pool is 52,864 tokens; untested].
+
+**Cleanup receipt (after Q2)** ✔: RCM Idle; `snapshot_validate.py preflight` ok (it refuses registered engines or non-REMOVED placement groups), `snapshot_directory_bytes` 0 on 8/8 hosts, `files` finds no snapshot manifests (`results/bf16kv/q2-cleanup/`); H gateway down (`final-gateway-down-H.json`, removed=true); H placement groups REMOVED (`final-release-H.json`); `inspect` registry [] observed []. Head-pod leftovers: stale E2 S ledger copy `/tmp/omp-hetero-gateway-S.json.stale-e2-20261005`; failed W4 artifacts in `/tmp/omp_hetero/artifacts/w4-591e3fe-plain-r{1,2}` (copied locally).
+
+**Decisions for the user**
+
+1. bf16 KV with fp32 activations is slower per step in this kernel. Of W0/W5 on S/H, it helps only W5 on S. Options: (a) keep fp32 KV for rate experiments; (b) allow bf16 activations in attention (q cast to bf16, the kernel's native bf16 path; changes activations); (c) profile and optimize the widened kernel first.
+2. The bf16 accuracy cost vs fp32 KV (6–7/32 greedy sequences differ; per-probe TV up to 0.6) is it acceptable? The cross-layout gate was replaced after it failed (decision log).
+3. W4 under bf16 needs the gateway saturation at ~255 in-flight requests fixed before it can be measured; and S becomes a W4 candidate.
