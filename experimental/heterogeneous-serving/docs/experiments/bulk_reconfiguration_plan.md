@@ -198,3 +198,32 @@ Note: the run ids carry `591e3fe` (the evidence commit on top of `d7b1d91`; no c
 1. bf16 KV with fp32 activations is slower per step in this kernel. Of W0/W5 on S/H, it helps only W5 on S. Options: (a) keep fp32 KV for rate experiments; (b) allow bf16 activations in attention (q cast to bf16, the kernel's native bf16 path; changes activations); (c) profile and optimize the widened kernel first.
 2. The bf16 accuracy cost vs fp32 KV (6–7/32 greedy sequences differ; per-probe TV up to 0.6) is it acceptable? The cross-layout gate was replaced after it failed (decision log).
 3. W4 under bf16 needs the gateway saturation at ~255 in-flight requests fixed before it can be measured; and S becomes a W4 candidate.
+
+### R0 — full bf16 state (local) — done
+
+- Code: `research/bf16-kv` @ `69a705c` (`~/hetero-wt/Bf16Kv`), on `4c652ca`.
+  - `EngineSettings` defaults: `dtype=bfloat16`, `activation_dtype` unset (activations follow the bf16 model dtype; the native Gemma4 patch keeps `activation_dtype=None`), `kv_cache_dtype=bfloat16`, `matmul_precision=default`. Only two numeric profiles are accepted (`NUMERIC_PROFILES`, `hetero/engine_actor.py`): full bf16 `(unset, bfloat16, default)` and FP32-state `(float32, float32, highest)` for fp32 references. Mixed q/KV dtypes are refused, since the RPA v3 kernel has no mixed-dtype matmul path once the widening is gone.
+  - Widening patch withdrawn: the native patch entry is now `rpa_v3_kernel_pristine` (original sha = the a48034a widened kernel `b97aa3be…`, patched sha = the pristine upstream kernel `bcd21fda…`). Deploy preparation therefore *restores* the pristine kernel on any host still carrying the widening, and the worker/experiment/freeze checks require the pristine sha on every worker. New `BACKEND_REVISION`.
+  - Worker (`hetero/tpu_worker.py`), qualification (`hetero/experiment.py`) and freeze (`scripts/freeze_predeclaration.py`) checks compare the *effective* activation dtype (`native_backend.effective_activation_dtype`: override, else model dtype). Without this, `jnp.dtype(None)` would read as float64. `engine_identity` (`model_build`) carries `activation_dtype: null` and `matmul_precision: default`, so Q1/Q2 references (fp32 activations) are refused for full-bf16 runs.
+  - `snapshot_validate.py validate --agreement-reference` records S-vs-H drift (`agreement.gated=false`, divergence indices, tie gaps) and no longer fails the stage. New `scripts/probe_drift.py` summarizes probe artifacts. On the Q1 diagnostic files it reproduces the Q1 table exactly (medians, nearest-rank p90, max, TV, sign test 21/23, p = 0.88) ✔.
+  - Harness: `scripts/bf16_provision.sh` is the R2 driver (adds per-layout probes and the drift summary). `scripts/w4_campaign.sh` accepts `S` (max_model_len 36864). `reconfig_measure.sh` and `w4_campaign.sh` pass no engine settings, so they now run full bf16 by default.
+- Tests ✔: `.venv/bin/python -m pytest tests -q -p no:cacheprovider --ignore tests/test_restore_tail_worker.py` → 252 passed, with the same 8 failed + 8 errors as the `4c652ca` baseline (missing `results/hetero/*protocol*`/fp32 continuation files, plus one restore_graph assertion). The ignored module needs `flax`. New: `tests/test_full_bf16_state.py` (profiles, defaults, effective dtype, no widening in the patch, and preparation restoring a widened copy of the local pristine kernel to `bcd21fda…` in a temp root), `tests/test_probe_drift.py`, and drift-recording/identity tests in `tests/test_snapshot_validation.py`.
+
+**Full-bf16 correctness gate (replaces the Q0 gate and the post-Q1 replacement gate):**
+
+1. Hard: within a layout, all replicas of a TP size give token-identical greedy outputs (32 W0 prompts, 64 tokens). A snapshot restore must equal its own layout's full-bf16 reference token for token (`validate --reference`, matching `engine_identity`).
+2. Recorded, not gated: S-vs-H drift, measured as exact prompts, first-divergence indices and tie gaps (`validate --agreement-reference`); per-probe max\|Δlogprob\|, argmax agreement and TV on the 44 Q1 probe points (`probe_drift.py`), S vs H and each vs the fp32-state S probe (`bf16diag-d7b1d91/probe-S-float32.json`).
+
+### R2 — spec (full-bf16 cold provisioning, S and H)
+
+- Hypothesis: full bf16 compiles with the stock RPA kernel on S and H. Per-instance KV pools equal the Q1 bf16 pools (KV dtype unchanged; activation memory may shift them slightly) [INF]. Restore equality holds on both layouts. S/H drift is of the order measured in Q1 (median ≈ 0.1 nat; outliers up to several nats on near-ties) [INF].
+- Commit `research/bf16-kv` @ `69a705c`. Engine settings `{"weight_snapshot":"off"|"read", "startup_profile":true, "kv_cache_dtype":"bfloat16", "matmul_precision":"default"}` (activation unset); restore adds `weight_snapshot_verify:false, fast_graph:true`; max_model_len 16384; pod-local XLA cache. HEAD_POD `tpu-ray-cluster-vllm-tpu-head-gxwsv`; Ray session `session_2026-10-03_14-58-37` unchanged since the last inventory, so `/tmp/hetero-inventory-only.json` stays valid.
+- Steps: `KUBECONFIG=$HOME/.kube/hetero-agent.yaml HEAD_POD=… flock /tmp/hetero-cluster.lock scripts/bf16_provision.sh` (every stage is one `rcm_exec run`; run id `bf16prov-69a705c`, output `results/bf16kv/bf16prov-69a705c/`):
+  1. `rcm_exec status` Idle; preflight; tmpfs cleanup.
+  2. S cold normal deploy (the first deploy re-patches the native files and restores the pristine kernel) → `snapshot` → `validate` (S reference) → `probe` (44 points) → teardown.
+  3. H cold normal deploy → `snapshot` → `validate --agreement-reference S-ref` (drift recorded) → `probe` → teardown.
+  4. S restore deploy → `check --require-restored` → `validate --reference S-ref --agreement-reference H-ref` → teardown.
+  5. H restore deploy → `check --require-restored` → `validate --reference H-ref` → teardown. The EXIT trap releases S/H and removes `/dev/shm/omp_weights` on all hosts.
+  6. Locally: `kv_pools.json`, `drift.json` (`probe_drift.py`).
+- Endpoints: KV pool per instance; cold vs restore deploy time and compile/warm-up; replica equality; restore equality on S and H; drift summary.
+- Stop criteria: compile/lowering error, replica mismatch, restore fallback or restore inequality → stop, record, at most 2 fix attempts. Expected duration ≈ 80–100 min (two cold deploys ≈ 10 min each, two restores ≈ 3–5 min each, references, probes, teardowns).
