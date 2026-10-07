@@ -859,6 +859,16 @@ Cluster spec:
 - Stop criteria: as P2/P3 (≤ 2 failed attempts per campaign; fail-closed teardown). A worker whose report or profile shows a threshold other than 0/0 means the spec did not apply: stop that campaign and record it. A hit rate below 95% is a result, not a stop: finish the reps and list the missing modules.
 - Disk floors before each stage as in P2 (`/` ≥ 10 GB, `/dev/shm` ≥ 20 GB). Worker pod caches at start: 806 MB, 118–119 entries, 75 GB free on `/` (read-only `du`/`df`). Expected ≈ 1.5 h + 1.3 h.
 
+O0 full attempt 1 (`dbc5513`, 2026-10-06 21:2x–21:49Z, `results/switch/full-dbc5513-interrupted/`): prep and the H restore check + validation succeeded ✔. The driver was then killed by SIGTERM from the controller session (not by the cluster) at the start of the static W6 pilot, before its EXIT cleanup, so restored H stayed deployed. Manual cleanup with the driver's own commands at 2026-10-07 ✔: drain H `--force`, gateway-down (removed), release H/Mb/S (all PGs REMOVED), tmpfs cleanup ok (`cleanup-*.json`); RCM Idle. Early O0 signal from this attempt ✔ (`cache_hit_summary.py`; every worker report and profile 0/0):
+
+| deploy (8 workers) | `initialize_from_config` hits | wall (median) | `compile_or_warm_up_model` hits | wall (median) | of which trace / lower / backend compile / executable load |
+|---|---|---|---|---|---|
+| prep S normal (first 0/0 start: writes) | 0/616 | 26.7 s | 104/1,472 | 75.2 s | 17.9 / 28.0 / 19.5 / 2.9 |
+| prep H normal (first 0/0 start: writes) | 16/616 | 27.1 s | 104/1,472 | 58.1 s | 14.0 / 15.0 / 19.5 / 2.7 |
+| **H restore (next start)** | **616/616 (100%)** | **2.6 s** (P2: 25.9) | **1,472/1,472 (100%)** | **34.9 s** (P2: 54.6) | 13.7 / 14.7 / **0.0** / 2.9 |
+
+The rerun is detached from the controller session (`setsid`; `/dev/shm/hetero-scratch/o0/run_o0.sh`: full, then partial, each under the cluster lock), with the same commit, run ids and steps.
+
 ### O1 — host-only target preparation: feasibility and design (local) — done
 
 Installed worker versions ✔ (pip metadata via read-only `kubectl exec`, no jax import): Python 3.12.13, jax 0.10.2, jaxlib 0.10.2, libtpu 0.0.43, ray 2.56.1, vllm 0.23.1rc1.dev1474+g0ba2aa35a.tpu (`/workspace/vllm`), tpu_inference `/workspace/tpu_inference` @ `8d31f0866` (image `vllm/vllm-tpu:v0.26.0`). An identical CPU venv (same wheels) and a read-only copy of the installed vllm/tpu_inference sources were used for all evidence; `compilation_manager.py`, `tpu_runner.py` and `tpu_worker.py` match our fork by md5 (only `gemma4.py` is patched at deploy). Line numbers: installed JAX (`jax/_src/…`) and installed tpu_inference/vllm. Prototypes, tests and strace logs: `~/hetero-wt/OverlapSwitch/results/overlap/o1/o1-prototypes.tar.gz` (three opus-5-5 research agents; tests rerun by the organizer: 5 + 4 passed ✔).
