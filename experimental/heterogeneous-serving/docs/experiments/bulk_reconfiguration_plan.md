@@ -899,4 +899,36 @@ Required gate proofs, folded into O2:
 - banked executables give bitwise-identical output to native jit on the live mesh (within-layout greedy equality), with a measured load time;
 - a forced single-host bank miss makes every rank fall back, with no hang.
 
-Implementation: `~/hetero-wt/OverlapSwitch`, branch `overlap/prespawn-bank` from `dbc5513` (in progress; O2 spec follows once it is frozen).
+Implementation ✔ (local; `~/hetero-wt/OverlapSwitch`, branch `overlap/prespawn-bank`, from `dbc5513`; two opus-5-5 implementers, reviewed by the organizer and a reviewer agent):
+- `eac4391` executable bank (`hetero/exec_bank.py`). `BankedFunction` replaces each precompiled jit at its call sites: the `run_model` closure cell, `compute_logits`, the sample/logprob module globals, select, substitute and structured decode. Its bucket key is the static values plus the shape/dtype of the per-bucket arguments; weights and KV are left out of the key but `Compiled` still validates them. `CompilationManager._run_compilation` is wrapped so that banked buckets skip lower/compile while warm-up still runs through the bank. Write mode captures every AOT `Compiled`; the store is pod-local per rank with an atomic rename and a sha256 manifest.
+  - Identity: model, KV, scheduler shape, `num_blocks`, mesh and host order, topology, versions, `platform_version`, `XLA_FLAGS`/`LIBTPU_INIT_ARGS`, JAX config, revisions, digests of the runner sources.
+  - Unanimity: rank 0 collects every rank's vote over Ray `internal_kv` (120 s bound) and every rank follows its verdict, so ranks never mix banked and jit paths.
+  - Evidence: `omp_init_phases()["exec_bank"]` with per-function hits/misses/rejections. CPU tests: 11.
+- `37e1317` pre-spawn (`hetero/prespawn.py`, split `deployment.deploy`, `switch.py`):
+  - CPU-only placement groups; a `/proc/self` check before parking and again when released (a mapped `libtpu.so`, a vfio fd or a lockfile fd raises); the ReleaseGate actor; a bounded wait until the libtpu lock and the vfio fds are free; TPU-hold groups; registration only at commit; fail-closed abort.
+  - New reconciled segments `prespawn_wait`, `prespawn_release`, `device_handoff`, plus a source-delivery window before, during and after the spawn.
+  - `switch_campaign.sh` gains `OVERLAP=1` and `GATE=1`; the `OVERLAP=0` dry-run output is byte-identical to before. CPU tests: 30.
+- `2dd7d2e` (organizer): under `OVERLAP`, the bank-read target's greedy tokens are checked against the native normal-loader reference after phase 2, outside C, as a hard check. Full mode checks H; partial checks Mb; the sabotage deploy is checked too.
+- `47b5c67` (organizer, fixing the reviewer's blocker ✔). The installed vLLM `get_bundles_sorted_by_node` drops bundles without a TPU key (`vllm/v1/executor/ray_utils.py:429-432`), so a CPU-only group would have no worker ranks (`ray_executor_v2.py:330`). The pre-spawn executor now swaps in an unfiltered version with the same driver-first order, only inside its own `_init_executor`. Tests: 32 pre-spawn tests; the full suite has 339 passed, with the same 8 failed and 8 errors as the baseline.
+- Reviewer should-fix items, not fixed (they do not arise in the campaign path) [INF]:
+  - TPU-hold groups are named `<instance>-tpuhold`, so `drain` and `release --instances` miss them. The campaign only releases whole layouts, which removes them.
+  - A spawn still blocked when phase 1 fails is not aborted by the switch. The driver's EXIT `release H/Mb/S` removes its groups and actors.
+
+### O2 — spec (same-host coexistence gate)
+
+- Hypothesis [INF]: parked target workers (imports, engine config, tokenizer, Ray actors; RSS ≈ 1–2 GB per host) coexist with a serving S without touching the TPU. After release the target takes the devices within about 1 s of the source exit. It loads ≈ 250 banked executables per rank in a few seconds, runs no trace or lower for them, and its greedy outputs equal the native reference. A forced single-rank bank refusal makes every rank fall back with no hang. Source W0 slows by less than 5% while workers spawn.
+- Commit `overlap/prespawn-bank` @ `47b5c67`, frozen. Run from `~/hetero-wt/OverlapSwitch` (`.venv`/`data` symlinked to `Bf16Kv`). Settings as O0, plus: bank write on the prep H restore deploy; pre-spawn + bank read on the run-switch target, with `--prespawn-at-s 0`.
+- Steps: `KUBECONFIG=… HEAD_POD=tpu-ray-cluster-vllm-tpu-head-gxwsv GATE=1 flock /tmp/hetero-cluster.lock scripts/switch_campaign.sh full` (run ids `full-47b5c67-ov-*`, output `results/switch/full-47b5c67-ov/`), detached as in O0:
+  1. Prep as P2/O0: S and H normal → snapshot → reference → teardown; H restore with `exec_bank=write` → check + validate → static W6 → teardown.
+  2. Sabotage deploy: H restore, `exec_bank=read`, `exec_bank_sabotage_rank=1` → validate against the H reference → teardown.
+  3. S restore → check + validate.
+  4. One overlapped run-switch (S W0 → H W6, pre-spawn + bank read) → greedy validation of H → the harness return to S → final teardown.
+- Pass conditions, all hard:
+  - (i) **Source health**: phase 1 complete with exact accounting (1,763 req / 721,595 tok, 0 failed).
+  - (ii) **Throughput impact measured**: tokens/s during and after the spawn vs before it and vs O0 phase 1 (reported, not gated).
+  - (iii) **No second TPU owner**: every pre-spawned worker's self-checks are clean at park and at release, no foreign lock/vfio holder appears before release, and every `parked_at` ≤ `released_at`.
+  - (iv) **Target consumption**: on every target worker the bank unanimity verdict is `use`, entries are loaded, AOT buckets are skipped, rejections = 0 and no serving misses on banked functions. Startup profiles show trace/lower only for unbanked glue. Greedy validation equals the reference.
+  - (v) **Sabotage**: every rank reports `use = false` with the same reason, the deploy finishes, and validation passes.
+  - (vi) **Bounded failure**: any failure ends within the driver's timeouts (park 900 s, device-free 120 s, `ARM_TIMEOUT` 900 s, `SWITCH_TIMEOUT` 5400 s) and the EXIT cleanup releases only H/Mb/S groups of this campaign.
+- Endpoints: the handoff timeline per worker (release → lock free → vfio free → devices ready); bank load s; C with the new segments (indicative, n = 1).
+- Stop: a failed condition is a blocker. Allow at most 2 fix attempts (new commit, new run ids, re-freeze); then record and stop O2/O3. Expected ≈ 1.5 h.
