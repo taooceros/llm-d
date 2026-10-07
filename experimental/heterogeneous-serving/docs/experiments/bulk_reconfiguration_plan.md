@@ -869,6 +869,50 @@ O0 full attempt 1 (`dbc5513`, 2026-10-06 21:2x–21:49Z, `results/switch/full-db
 
 The rerun is detached from the controller session (`setsid`; `/dev/shm/hetero-scratch/o0/run_o0.sh`: full, then partial, each under the cluster lock), with the same commit, run ids and steps.
 
+### O0 — results (`research/bf16-kv` @ `dbc5513`, runs `full-dbc5513-*`, `partial-dbc5513-*`)
+
+Artifacts (evidence commit `146edc0`): `~/hetero-wt/Bf16Kv/results/switch/{full,partial}-dbc5513/` (driver outputs, `switch_summary.{md,json}`) and `results/hetero/artifacts/{full,partial}-dbc5513-*/`; driver logs `results/switch/o0-{full,partial}-driver-dbc5513.log`. Both campaigns exited 0 with no failed attempt. In every rep: exact accounting in both phases, 0 failed requests, all workers restored, gates opened on the controller event, offline = in-process segments (max diff 0.00 s), prep restore equality on S, H (and Mb).
+
+**Cache ✔**: every worker's `compile_cache` report and every startup profile reads 0/0, on all switch targets, joiners, harness returns and prep deploys.
+
+| hits / lookups (all workers) | `initialize_from_config` | `compile_or_warm_up_model` | P2/P3 (1.0 s threshold) |
+|---|---|---|---|
+| full: H targets r1–r3 (24 workers) | 1,848/1,848 (**100%**) | 4,416/4,416 (**100%**) | 2.6% / 6.0% |
+| partial: TP16 joiners r1–r3 (12 workers) | 924/924 (**100%**) | 2,208/2,208 (**100%**) | 2.6% / 6.0% |
+| harness returns: S r1–r3 (24 workers) | 1,848/1,848 (100%) | 4,416/4,416 (100%) | 0% / 6.0% |
+
+H target medians, O0 (P2): `initialize_from_config` 2.6 s (25.9), `compile_or_warm_up_model` 35.0 s (54.6) = trace 13.7 + lower 14.9 + backend compile **0.0** (19.5) + lookup 0.7 + executable load 2.9 + warm-up 2.0. S return `compile_or_warm_up_model` 52.2 s (72.0) = trace 18.1 + lower 27.4 + executable load 3.0. What remains is exactly trace + lower.
+
+**Full S→H, production C ✔**:
+
+| | r1 | r2 | r3 | mean | P2 |
+|---|---|---|---|---|---|
+| T0 → first W6 dispatch | 87.32 | 87.97 | 86.43 | **87.24 s** | 130.64 |
+| T0 → first W6 token | 92.57 | 92.70 | 92.04 | 92.44 s | 135.26 |
+| ramp (makespan − 206.2) | −0.28 | 1.74 | 6.29 | 2.58 s | 1.58 |
+| **C_production** | 87.04 | 89.71 | 92.72 | **89.82 s** | 132.22 |
+| C, iteration-bin deficit (diagnostic) | 109.25 | 104.90 | 99.41 | 104.52 s | 144.17 |
+
+Segments (mean, s): controller wake 0.01, drain + release 1.95, gateway down 0.17, deploy controller pre 11.07, engine process start 21.56, **engine init 47.23** (P2 90.73; init_device 3.6, load_model 4.8, initialize_from_config 2.6, compile/warm-up 35.2), endpoint register 2.02, gateway up 3.23, gate/capture/dispatch 0.01. Sum = gap.
+
+Harness-equivalent return H→S ✔: C_harness **222.3 s** (214.9 / 226.0 / 225.9; P2 273.7), of which the S deploy job is 136.2 s (P2 189.4).
+
+**Partial S→Mb ✔**:
+
+| | r1 | r2 | r3 | mean | P3 |
+|---|---|---|---|---|---|
+| kept-pair serving gap | 1.92 | 2.03 | 2.65 | 2.20 s | 2.08 |
+| join delay (first W6 dispatch) | 84.90 | 84.34 | 88.36 | **85.87 s** | 128.41 |
+| first W6 token | 89.27 | 89.42 | 93.09 | 90.59 s | 133.14 |
+| kept-pair W0 tok/s during the join | 2,557 | 2,567 | 2,567 | 2,564 | 2,522 |
+| kept-class finish | 339.5 | 342.9 | 361.4 | 347.9 s | 343.4 |
+| W6-class finish | 500.9 | 492.1 | 496.4 | 496.5 s | 538.1 |
+| **effective C = W6-class finish − 409.2** | 91.66 | 82.89 | 87.21 | **87.25 s** | 128.92 |
+
+Exit criterion met ✔: C with segments and ≥ 95% cache hits in both phases. The hypothesis (C_full ≈ 90–95, C_eff ≈ 88–92 s) holds. The remaining host-side critical path on the target is controller pre 11.1 + process start 21.6 + trace/lower 28.6 ≈ 61 s of the 87 s gap, which is what O1 targets. Phase-1 W0 on S takes 191.6 / 193.9 / 192.8 s here (P2: 198.4 / 196.0 / 190.6); this is the source baseline for O2/O3.
+
+**Cleanup receipt (O0)** ✔: both EXIT cleanups released H/Mb/S, with every owned PG REMOVED and tmpfs cleanup ok (`cleanup-*.json` in both directories); RCM Idle; state line `switch-campaign partial-dbc5513 released S switch-r3-leftover-S`. Worker pod caches grew with the 0/0 entries (not removed: they are the warm cache).
+
 ### O1 — host-only target preparation: feasibility and design (local) — done
 
 Installed worker versions ✔ (pip metadata via read-only `kubectl exec`, no jax import): Python 3.12.13, jax 0.10.2, jaxlib 0.10.2, libtpu 0.0.43, ray 2.56.1, vllm 0.23.1rc1.dev1474+g0ba2aa35a.tpu (`/workspace/vllm`), tpu_inference `/workspace/tpu_inference` @ `8d31f0866` (image `vllm/vllm-tpu:v0.26.0`). An identical CPU venv (same wheels) and a read-only copy of the installed vllm/tpu_inference sources were used for all evidence; `compilation_manager.py`, `tpu_runner.py` and `tpu_worker.py` match our fork by md5 (only `gemma4.py` is patched at deploy). Line numbers: installed JAX (`jax/_src/…`) and installed tpu_inference/vllm. Prototypes, tests and strace logs: `~/hetero-wt/OverlapSwitch/results/overlap/o1/o1-prototypes.tar.gz` (three opus-5-5 research agents; tests rerun by the organizer: 5 + 4 passed ✔).
@@ -917,10 +961,10 @@ Implementation ✔ (local; `~/hetero-wt/OverlapSwitch`, branch `overlap/prespawn
 ### O2 — spec (same-host coexistence gate)
 
 - Hypothesis [INF]: parked target workers (imports, engine config, tokenizer, Ray actors; RSS ≈ 1–2 GB per host) coexist with a serving S without touching the TPU. After release the target takes the devices within about 1 s of the source exit. It loads ≈ 250 banked executables per rank in a few seconds, runs no trace or lower for them, and its greedy outputs equal the native reference. A forced single-rank bank refusal makes every rank fall back with no hang. Source W0 slows by less than 5% while workers spawn.
-- Commit `overlap/prespawn-bank` @ `47b5c67`, frozen. Run from `~/hetero-wt/OverlapSwitch` (`.venv`/`data` symlinked to `Bf16Kv`). Settings as O0, plus: bank write on the prep H restore deploy; pre-spawn + bank read on the run-switch target, with `--prespawn-at-s 0`.
-- Steps: `KUBECONFIG=… HEAD_POD=tpu-ray-cluster-vllm-tpu-head-gxwsv GATE=1 flock /tmp/hetero-cluster.lock scripts/switch_campaign.sh full` (run ids `full-47b5c67-ov-*`, output `results/switch/full-47b5c67-ov/`), detached as in O0:
+- Commit `overlap/prespawn-bank` @ `46ba270`, frozen. It is `47b5c67` plus a driver-only change: the restore `check --require-restored` is kept before each greedy validation, because `validate` records `require_restored` but does not enforce it remotely. Run from `~/hetero-wt/OverlapSwitch` (`.venv`/`data` symlinked to `Bf16Kv`). Settings as O0, plus: bank write on the prep H restore deploy; pre-spawn + bank read on the run-switch target, with `--prespawn-at-s 0`.
+- Steps: `KUBECONFIG=… HEAD_POD=tpu-ray-cluster-vllm-tpu-head-gxwsv GATE=1 flock /tmp/hetero-cluster.lock scripts/switch_campaign.sh full` (run ids `full-46ba270-ov-*`, output `results/switch/full-46ba270-ov/`), detached as in O0:
   1. Prep as P2/O0: S and H normal → snapshot → reference → teardown; H restore with `exec_bank=write` → check + validate → static W6 → teardown.
-  2. Sabotage deploy: H restore, `exec_bank=read`, `exec_bank_sabotage_rank=1` → validate against the H reference → teardown.
+  2. Sabotage deploy: H restore, `exec_bank=read`, `exec_bank_sabotage_rank=1` → check → validate against the H reference → teardown.
   3. S restore → check + validate.
   4. One overlapped run-switch (S W0 → H W6, pre-spawn + bank read) → greedy validation of H → the harness return to S → final teardown.
 - Pass conditions, all hard:
