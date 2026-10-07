@@ -38,6 +38,7 @@ Layouts:
 | 2026-10-05 | **Full bf16 state for all experiments:** bf16 activations, bf16 KV, default matmul precision. This supersedes the fp32-activation clause above, and the RPA widening patch (`a48034a`) is withdrawn. Live migration stays in scope. Its numerical gate becomes relative: the migrated continuation must stay within the drift between a fresh source run and a fresh destination run. The absolute 0.25-nat bound no longer applies. | User decision, after the top-level decomposition of the 2026-09-16 bf16 continuation failure (`~/hetero-research/results/hetero/20260916/continuation_fidelity_M_dispatch_repaired.json`). With no migration at all, a fresh TP8 run and a fresh TP16 run already differ by 0.72–1.375 nats (argmax equal; top-32 overlap 31/32 in all 3 cases). Migrated-recompute output equals the fresh output exactly; host-KV import gives 0.53–1.25 nats. Same-TP migrated suffixes match exactly (12/12), and host-KV vs recompute suffixes give identical tokens (32/32). So the drift comes from bf16 arithmetic under a different TP split, not from migration code. Under fp32 state it is 0.0001–0.0096 nats (`20260918/minimal_fp32_state_continuation.json`). Q2 also showed the fp32-q × bf16-KV profile is 1.6–2.1× slower per step. |
 | 2026-10-05 | **Job model changed to small → long-context** (user option (a)). The long phase uses requests that only fit a TP16 instance (> 52.9k tokens). New queue L0–L2; R4/Q3–Q5 paused until L2. | R3: under full bf16, S beats H on W0 (190.8 vs 306.4 s), W5 (754.3 vs 774.4 s) and W4 (147.7 vs 187.4 s), so an S→H switch in the old job model never pays. |
 | 2026-10-05 | **Resume compile/execution overlap** (user). Decision-log row 2 ("pause compile-overlap") is reversed: the switch path is not actually warm. Decomposition of the P2 H restore deploy (`~/hetero-wt/Bf16Kv/results/switch/full-7a3aaeb/H-restore-deploy.json.gz`, worker 0) shows effective `min_compile_time_secs = 1.0`. Persistent-cache hits are 2/77 executables in `initialize_from_config` and 11/184 in `compile_or_warm_up_model`, so every start backend-compiles about 248 small executables (≈47 s summed, ≈43 s exclusive wall). Trace + lower add ≈30 s on H and ≈47 s on S, all host-side. Engine process start adds 21.5 s. The device-bound remainder (init_device, weight placement, executable load, warm-up execute, KV allocation) is ≈14 s. Queue O0–O3. | Top-level analysis of P2 startup profiles. The `JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS=0` env exists only in the old overlap scripts, not in the bf16 / run-switch deploy path. |
+| 2026-10-07 | Overlap design (O1): persistent-cache thresholds 0/0 on every instance; target engines pre-spawned in CPU-only bundles during the source phase and parked before the first device touch; and an executable bank. Deviceless background compilation is rejected for the switch path. | Under the same-model rule, a deviceless compile only rebuilds what the warm cache holds, and it needs a libtpu lock bypass. JAX trace/lower caches are process-local, so only serialized executables spare the target its trace and lower. Advisor (fable-5-1): accept with changes, all folded into the O2 gate, which passed. |
 
 ## Verified facts so far (fp32 KV; re-measure under bf16 where marked)
 
@@ -984,7 +985,7 @@ O2 attempt 1 (`46ba270`, 2026-10-07 07:4x–08:35Z, `~/hetero-wt/OverlapSwitch/r
   - Pre-spawn during phase 1: spawn 0–2.7 s, **all 8 hosts parked at 34.1 s**, phase 1 complete with T0 at 193.5 s (O0 phase 1: 191.6–193.9 s).
   - Release 1.6–2.6 s after T0. `init_device`, `load_model`, KV allocation, bank load and **unanimity `use`** all completed on the target.
 - Failure ✔ (Ray worker log on `192.168.102.47`, `worker-cd06…-311880.err`): the first banked `run_model` warm-up call aborted in PjRt with `INVALID_ARGUMENT: PjRtBuffer's memory space is addressed by device TPU_5(process=0,(1,1,0,0)) vs sharding is on device TPU_4(process=0,(0,1,0,0))` (stack: `exec_bank.py:358` → `stages.py:890` → `pxla.py:395`).
-- Cause ✔: `jax.experimental.serialize_executable.deserialize_and_load` loads the XLA executable onto `backend.devices()` in id order when `execution_devices` is not given (`serialize_executable.py:63-64,116-119`). The unpickled shardings keep the mesh order, which on a TP16 sub-slice is ids `[0, 1, 4, 5, 2, 3, …]`. The CPU tests used an id-ordered mesh, so they could not see this. Reproduced on CPU with a permuted 8-device mesh (`/dev/shm/hetero-scratch/o2/perm_probe.py`): loaded local devices `[0..7]` vs compiled `[0,1,4,5,2,3,6,7]`, the same abort; with `execution_devices` in banked order, outputs are equal.
+- Cause ✔: `jax.experimental.serialize_executable.deserialize_and_load` loads the XLA executable onto `backend.devices()` in id order when `execution_devices` is not given (`serialize_executable.py:63-64,116-119`). The unpickled shardings keep the mesh order, which on a TP16 sub-slice is ids `[0, 1, 4, 5, 2, 3, …]`. The CPU tests used an id-ordered mesh, so they could not see this. Reproduced on CPU with a permuted 8-device mesh (`OverlapSwitch/results/overlap/o2/perm_probe.py`): loaded local devices `[0..7]` vs compiled `[0,1,4,5,2,3,6,7]`, the same abort; with `execution_devices` in banked order, outputs are equal.
 - Rerun after the driver's fail-closed rebuild of S, same commit: `large_a` (hosts .47–.51) aborted the same way. `large_b`'s rank on `192.168.102.54` failed earlier, in `init_device`, with `open(/dev/vfio/0): 16: Device or resource busy` (the next attempt's failure, below). The driver stopped after 2 attempts.
 - Bounded failure (vi) ✔: each failure surfaced within 27 s of T0. The driver tore down H/Mb/S, and the EXIT cleanup released H/Mb/S, including both `-tpuhold` groups (all REMOVED). tmpfs cleanup ok; RCM Idle.
 - **Fix attempt 1** (`19adba0`): each entry stores its executable's device assignment (`_unloaded_executable.device_list` ids) and is loaded with `execution_devices` in that order. After loading, the XLA executable's `local_devices()` order is checked against the banked order, and a mismatch is a refusal. The test mesh now uses the TPU-like permuted order: red before the fix, green after (11 passed on jax 0.11.2; 9 on the 0.10.2 venv); suite 339 passed with the baseline failures.
@@ -1034,3 +1035,89 @@ Indicative overlapped full S→H, n = 1 ✔:
   - every O2 check per rep;
   - long-job and mid-job region-map shares and break-evens vs P5 and O0.
 - Stop criteria: as P2/P3 (≤ 2 failed attempts per campaign, fail-closed). A failed O2 check in any rep is a blocker: at most 2 fix attempts, then record and stop. Expected ≈ 1.6 h + 1.6 h.
+
+### O3 — results (code `d510c36`, runs `full-c762edb-ov-r{1,2,3}`, `partial-c762edb-ov-r{1,2,3}`)
+
+Artifacts: `~/hetero-wt/OverlapSwitch` (branch `overlap/prespawn-bank`, evidence commit `bbbeb4f`), under `results/switch/{full,partial}-c762edb-ov/` (`switch_summary.md`, `overlap_check.json`) and `results/hetero/artifacts/{full,partial}-c762edb-ov-*`; driver logs `results/switch/o3-{full,partial}-driver-c762edb.log`. Both campaigns exited 0, with every rep passing on its first attempt.
+
+Every rep ✔:
+- complete with exact accounting in both phases, 0 failed requests, all restored, segments reconciled;
+- every O2 check: parked before T0 and before release, self-checks clean, bank `use` on every target worker (8/8 full, 4/4 joiner), backend compile 0 in compile/warm-up;
+- post-switch greedy validation equal to the native reference, with **0 bank misses and 0 rejections** over all serving calls.
+
+The EBUSY wait fired in 5 of 6 reps, on the four `large_b` hosts.
+
+**Full S→H, production C ✔**:
+
+| | r1 | r2 | r3 | mean | O0 | P2 |
+|---|---|---|---|---|---|---|
+| T0 → first W6 dispatch | 23.96 | 24.23 | 23.75 | **23.98 s** | 87.24 | 130.64 |
+| T0 → first W6 token | 28.28 | 29.50 | 29.16 | 28.98 s | 92.44 | 135.26 |
+| ramp (makespan − 206.2) | 5.92 | 3.12 | 1.55 | 3.53 s | 2.58 | 1.58 |
+| **C_production** | 29.88 | 27.35 | 25.30 | **27.51 s** | 89.82 | 132.22 |
+| C, iteration-bin deficit (diagnostic) | 48.86 | 42.25 | 40.69 | 43.93 s | 104.52 | 144.17 |
+
+Segments (mean, s): drain + release 2.16, gateway down 0.17, pre-spawn release 0.08, device handoff 0.60, **engine init 16.74** (init_device ≈ 4.1, load_model ≈ 4.9, initialize_from_config ≈ 2.6, bank load 3.4–3.5, compile/warm-up ≈ 1.5), endpoint register 1.16, gateway up 3.05. The removed segments are controller pre (11.1), process start (21.6) and trace + lower (28.6).
+
+**Partial S→Mb ✔**:
+
+| | r1 | r2 | r3 | mean | O0 | P3 |
+|---|---|---|---|---|---|---|
+| kept-pair gap | 2.29 | 1.99 | 2.11 | 2.13 s | 2.20 | 2.08 |
+| join delay (first W6 dispatch) | 20.47 | 20.58 | 20.86 | **20.64 s** | 85.87 | 128.41 |
+| first W6 token | 25.22 | 25.13 | 25.53 | 25.29 s | 90.59 | 133.14 |
+| kept-pair W0 tok/s during / after the join | 2,410 / 2,061 | 2,440 / 2,099 | 2,423 / 2,099 | 2,424 / 2,086 | 2,564 / 1,937 | 2,522 / 1,875 |
+| kept-class finish (static M 352.7) | 349.3 | 342.7 | 343.1 | 345.0 s | 347.9 | 343.4 |
+| W6-class finish | 427.8 | 424.5 | 431.8 | 428.0 s | 496.5 | 538.1 |
+| **effective C = W6-class finish − 409.2** | 18.56 | 15.34 | 22.61 | **18.84 s** | 87.25 | 128.92 |
+
+Join tail: none measurable. W6 on the joiner, first dispatch → finish, takes 407.4 s against 409.2 s on a static M.
+
+**Source impact ✔** (phase-1 W0 on S while the target pre-spawns at phase-1 start):
+
+| | spawn window (first ≈ 34 s), tok/s | parked → T0, tok/s | phase 1 length |
+|---|---|---|---|
+| O3 full r1–r3 | 2,661 / 2,661 / 2,673 | 3,932 / 4,024 / 4,030 | 194.6 / 191.3 / 190.7 s |
+| O3 partial r1–r3 | 2,662 / 2,671 / 2,677 | 4,095 / 3,968 / 4,113 | 188.4 / 193.0 / 187.7 s |
+| O0 (no pre-spawn), same windows | 2,639 / 2,665 / 2,667 | 4,013 / 3,949 / 3,975 | 191.6 / 193.9 / 192.8 s |
+
+No slowdown is measurable: every overlapped rep is within the O0 spread or above it. The spawn window coincides with the W0 ramp-up, so its absolute rate is low in both arms.
+
+**Region maps at the overlapped C** ✔ (`~/hetero-wt/ReconfigLevers` @ `377f11a`, `results/bulk_cost_model/model_overlap_fullbf16.{json,txt}`; O0 maps in `model_cache00_fullbf16.*`). Every other input is as in P5 (a0H 267.8 at 131,072; O = 32.6 s). The P5 map recomputes identically apart from provenance strings ✔.
+
+*Long-context job (k_s W0, then k_l W6), grid k_s 0–8 × k_l 0.25–8, O = 32.6 s:*
+
+| C full / partial | static H | static M | S→H | S→M | switching | gain median / max | k_s* (S→H vs H) | S→M boundary k_s at k_l = 1 / 2 / 4 |
+|---|---|---|---|---|---|---|---|---|
+| P5: 132.2 / 128.9 | 0.24 | 0.14 | 0.24 | 0.38 | 0.62 | 8.3% / 24.5% | 2.14 | 1.53 / 2.69 / 5.01 |
+| O0: 89.8 / 87.3 | 0.20 | 0.11 | 0.30 | 0.39 | 0.69 | 8.7% / 25.4% | 1.59 | 1.41 / 2.57 / 4.89 |
+| **O3: 27.5 / 18.8** | **0.12** | **0.06** | **0.41** | **0.41** | **0.82** | **9.9% / 26.8%** | **0.78** | 1.21 / 2.37 / 4.69 |
+| O3, O = 0 | 0.06 | 0.06 | 0.47 | 0.41 | 0.88 | 10.4% / 27.9% | 0.36 | same |
+
+- O3 winners by k_l:
+  - k_l = 1: H 0–0.78, S→H 0.78–0.92, M 0.92–1.21, S→M > 1.21;
+  - k_l = 2: H 0–0.78, S→H 0.78–1.98, M 1.98–2.37, S→M > 2.37;
+  - k_l = 4: H 0–0.78, S→H 0.78–4.11, M 4.11–4.69, S→M > 4.69;
+  - k_l = 8: H 0–0.78, S→H > 0.78.
+- Mid-band job: S→H before W7 beats static S (k_l = 0) for k_m > **1.38** W7 manifests (O0: 2.81; P5: 3.78). S→H beats static H for k_s > 0.78 at any k_m and k_l.
+- Caveats [INF]: the P5 rate caveats still hold (a0S at 16,384; no M arm in the mid job; linear scaling). The O = 32.6 s S-tail term now exceeds C itself, so the O = 0 row bounds what a tail-aware dispatcher could add.
+
+**What remains on the critical path** (full, 24.0 s gap):
+- device-bound engine init ≈ 16.7 s: init_device 4.1, weight restore 4.9, initialize_from_config 2.6 (KV allocation + the sampling/logprob precompile through the cache), bank load 3.4, warm-up 1.5;
+- gateway up 3.1, drain + release 2.2, endpoint register 1.2, handoff 0.6 (of which ≤ 0.65 s is waiting for VFIO EBUSY).
+
+**Cleanup receipt (O0–O3)** ✔:
+- every campaign's EXIT cleanup released H/Mb/S with all owned PGs REMOVED, `-tpuhold` groups included (`results/switch/*/cleanup-*.json`), tmpfs cleanup ok;
+- the O0 attempt-1 manual cleanup is recorded above;
+- RCM Idle; last state line `switch-campaign partial-c762edb-ov released S switch-r3-leftover-S`;
+- worker pods: the pod-local XLA caches gained the 0/0 entries and `/root/.cache/omp_exec_bank/` holds the provisioned banks (warm-state assets, kept like the cache);
+- local `/dev/shm/hetero-scratch` removed after archiving its probes into `OverlapSwitch/results/overlap/`.
+
+**Decisions for the user (after O0–O3)**
+
+1. Adopt the overlapped costs as the study's C: full S→H **27.5 s**, partial S→Mb **18.8 s** effective.
+   - Prerequisites: pre-spawn at phase-1 start, a bank provisioned per target shape on its hosts, and the cache at 0/0.
+   - The bank is keyed to the source revision, so every code change needs one bank-writing restore deploy per target shape [INF: a few minutes each, as a warm restore deploy].
+   - Should `overlap/prespawn-bank` be merged into `research/bf16-kv` as the default switch path?
+2. The remaining 24 s is mostly device-bound. The next levers would be weight restore (4.9 s), bank load (3.4 s for 187 entries per rank, loaded serially), init_device (4.1 s) and gateway up (3.1 s). Pursue them, or stop here? At C ≈ 27 s, the S-tail term O = 32.6 s is now the larger switching overhead.
+3. Two reviewer should-fix items are not fixed, because they cannot arise in this campaign path: the TPU-hold groups under scoped `drain`/`release --instances`, and the late-spawn abort. Fix them before any non-campaign use.
