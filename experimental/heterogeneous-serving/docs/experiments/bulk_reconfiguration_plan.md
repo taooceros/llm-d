@@ -995,3 +995,42 @@ O2 attempt 2 (code `19adba0`; HEAD `0b4841d` = `19adba0` + the attempt-1 evidenc
 - Cause [INF, consistent with the evidence]: the killed source worker closes its fds early in process exit, but the VFIO group stays busy until the kernel's release path (device reset) finishes. A /proc scan cannot see that window. On the normal path it is hidden behind ≈ 32 s of target process start.
 - Bounded failure (vi) ✔: the same teardown and EXIT cleanup, all groups REMOVED, RCM Idle.
 - **Fix attempt 2 (last allowed)** `d510c36`: the device-free wait also requires every `/dev/vfio/<N>` group to open. It probes with `open(O_RDWR)` and closes at once; it is safe because a VFIO group admits one opener and the probe runs only after the lock and /proc checks are clear. `EBUSY` keeps waiting (bounded at 120 s), and the gate record gains `groups_openable_at` and `busy_polls`. Tests: 34 pre-spawn tests; suite 341 passed with the baseline failures. The rerun uses run ids `full-d510c36-ov-*`. If it fails, O2 stops with a recorded blocker.
+
+### O2 — results (`overlap/prespawn-bank` @ `d510c36`, run `full-d510c36-ov-r1`) — **gate PASSED**
+
+Artifacts: evidence commit after `d510c36` on `overlap/prespawn-bank`, under `~/hetero-wt/OverlapSwitch/results/switch/full-d510c36-ov/` (driver outputs, `switch_summary.md`, `overlap_check.json`) and `results/hetero/artifacts/full-d510c36-ov-*`; driver log `results/switch/o2-gate-driver-d510c36.log`; checker `scripts/overlap_check.py`. The campaign exited 0 on its first attempt.
+
+| Condition | Verdict | Evidence ✔ |
+|---|---|---|
+| (i) source health | **pass** | Phase 1 complete with exact accounting (1,763 req / 721,595 tok, 0 failed). Phase 1 lasted 189.2 s (O0: 191.6 / 193.9 / 192.8). |
+| (ii) source throughput impact | **none measurable** (n = 1) | Spawn window, first 34.3 s of phase 1: 2,661 tok/s (O0 same window: 2,639 / 2,665 / 2,667). Parked, 34.3 s → T0: 4,070 tok/s (O0: 4,013 / 3,949 / 3,975). |
+| (iii) no second TPU owner | **pass** | 8/8 workers parked 155 s before release. Self-checks were clean at park and at release: no `libtpu.so` mapped, no vfio or lockfile fd. No foreign lock or /proc vfio holder after release. On the 4 `large_b` hosts every `/dev/vfio/0–3` was still EBUSY for 0.42–0.65 s after release; the fix waited that out (the attempt-2 failure mode). Release → devices ready: median 4.32 s, max 4.55 s, of which `init_device` takes 4.08. |
+| (iv) target consumption | **pass** | 8/8 workers: unanimity `use`, 187 entries loaded in 3.41–3.57 s, all 199 AOT buckets skipped. `compile_or_warm_up_model` 1.52 s (O0 35.0): lower 0.11, trace 0, backend compile 0. After phase 2 + validation, banked calls hit with **0 misses and 0 rejections** (`run_model` 65,956 hits; logits, sample, select ≈ 65.9k each). Greedy validation equals the native normal-loader reference token for token (32 prompts × 2 engines). |
+| (v) sabotage fallback | **pass** | Repeated in this run: 8/8 ranks `use = false` with `ranks refused: {1: 'sabotaged …'}`; the deploy finished; check and greedy validation passed. |
+| (vi) bounded failure / cleanup | **pass** | The two earlier failures ended within 27 s of T0 with owned-only cleanup. This run's final teardown and EXIT cleanup ✔: H/Mb/S all REMOVED including `-tpuhold`, tmpfs ok, RCM Idle, state `released S final`. |
+
+Indicative overlapped full S→H, n = 1 ✔:
+- Production C **23.32 s** (gap to first W6 dispatch 24.11 s, first token 29.64 s, ramp −0.79 s); with the iteration-bin deficit 38.4 s.
+- Segments: drain + release 1.91, gateway down 0.18, pre-spawn release 0.21, device handoff 0.65, **engine init 17.02**, endpoint register 1.16, gateway up 2.96. Sum = gap.
+- Engine init split (rank 0): init_device 4.08, load_model 4.85, initialize_from_config 2.6, bank load 3.45, compile/warm-up 1.52.
+- The harness return C (277.7 s) is not comparable to O0: the post-switch greedy validation now sits in its switch tail (62.3 s vs 14.4 s).
+
+### O3 — spec (integrated overlap switch, full and partial, 3 reps each)
+
+- Hypothesis [INF]:
+  - full S→H C ≈ 23–26 s, partial S→Mb effective C ≈ 22–28 s, kept-pair gap ≈ 2 s;
+  - no measurable phase-1 slowdown;
+  - the partial joiner's bank (written by an extra Mb restore deploy, `large_b` only) is used on 4/4 workers.
+- Code = `d510c36` (frozen). The run ids carry the HEAD at launch, i.e. the O2 evidence commit; `hetero/` is unchanged, so `RUNTIME_REVISION` and the bank identity are those of `d510c36`. Run from `~/hetero-wt/OverlapSwitch`, detached, under the cluster lock.
+- Steps:
+  - `OVERLAP=1 REPS=3 scripts/switch_campaign.sh full`: prep with bank write on the H restore → 3 × (S restore → run-switch with pre-spawn at phase-1 start + bank read → H check + greedy validation → harness return).
+  - Then `OVERLAP=1 REPS=3 … partial`: prep plus the Mb bank deploy → 3 × (S restore → run-switch partial with `large_b` pre-spawned on the released TP8 hosts + bank read → Mb check + greedy validation → teardown).
+  - Locally: `switch_summary.py` and `overlap_check.py` on every rep.
+  - Region maps: `bulk_cost_model.py` (`ReconfigLevers`) at the new means, with every other input as in P5.
+- Endpoints:
+  - full: production C with segments (mean of 3 and per rep);
+  - partial: kept gap, join delay, C_eff, join tail, kept-pair tok/s;
+  - source impact: phase-1 tok/s during and after the spawn vs O0;
+  - every O2 check per rep;
+  - long-job and mid-job region-map shares and break-evens vs P5 and O0.
+- Stop criteria: as P2/P3 (≤ 2 failed attempts per campaign, fail-closed). A failed O2 check in any rep is a blocker: at most 2 fix attempts, then record and stop. Expected ≈ 1.6 h + 1.6 h.
