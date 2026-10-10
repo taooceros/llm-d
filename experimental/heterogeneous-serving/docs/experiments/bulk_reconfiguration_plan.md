@@ -1186,3 +1186,51 @@ No instance spans two blocks. Every TP8 is an x-half of a block. In the block ru
 So libtpu 0.0.43 has two complementary sub-box defects: compiling collectives fails on an origin-anchored, non-dense box (x-lower), and deserialize-and-load aborts on a non-origin box (x-upper, U0). In the 4×4 block, the S-layout TP8 boxes (host columns) cannot both run TP programs in one runtime. Host rows (y-halves) can both compile.
 
 **Fix attempt 1 (of 2), decision (organizer):** halve the block along y (host rows) for U1/U2: lower = ids 0–7 (ranks 0, 1), upper = ids 8–15 (ranks 2, 3). TP16 local order `[0,8,1,9,…]`. A row half is still an 8-chip ICI box (4×2 instead of 2×4). A unified-runtime layout would pack its TP8s as host rows instead of `resolve_layout`'s columns; this is a layout change, not an engine change. Code `research/unified-runtime` @ `945a152` = `3b445ea` + `half_split` (default `y`; `x` reproduces attempt 1) + the deviceless probe; 14 CPU tests pass. Run otherwise as specified: `--output results/unified/u1-945a152.json --timeout 2400`. The deviceless compile times give U2's background window: TP16 bucket set 8–256 ≈ 9.9 s plus warm reshards 0.5 s on this host [INF for TPU hosts]; (c) program ≈ 3 s. If attempt 2 fails on a new blocker, record it and stop U1.
+
+### U1 — results (attempt 2, `945a152`, y-halves; job `raysubmit_ZHYwsXEkwSnEQb8N`) — **PASSED**
+
+Artifacts: `~/hetero-wt/UnifiedRuntime/results/unified/u1-945a152.json{,.gz}` and the driver log. The job ran 246.6 s. One 16-chip runtime on block A: rank 0 r3qx and rank 1 64b6 hold the lower half, ids 0–7; rank 2 kk2b and rank 3 v48p hold the upper half, ids 8–15. Every program is direct jit with the persistent cache off, each half dispatched only by its own 2 processes. Verdict `passed`, no failures ✔.
+
+Per-half rates (small TP8 program, 8 layers; step ≈ 0.46 ms, dispatch-bound; steps/s):
+
+| arm | lower | upper | ratio vs (a) lower / upper |
+|---|---|---|---|
+| (a0) alone | 2,070 | 2,009 | (a)/(a0) 1.05 / 1.08 |
+| (a) both concurrently | 2,179 | 2,162 | — |
+| (b1) other half idle 30 s | 2,202 | 2,119 | 1.01 / 0.98 |
+| (c) other half compiles the 384-layer program (3.3 s) | 2,151 | 2,132 | 0.99 / 0.99 |
+| (b2) other half stalled 30 s inside a step | 2,105 | 2,145 | 0.97 / 0.99 |
+| (e) all 4 processes compile the U2 TP16 set (native-compile intervals) | 1,682 | 1,637 | −22.2% / −23.3% vs its 10 s baseline |
+
+- (b2) ✔: the stalled half's waiting partner sat 29.9997 s (upper) and 29.9994 s (lower) in its blocked collective, then both halves finished all 5 steps with correct output. During each stall the other half's max step was 4.5 / 4.3 ms. No libtpu launch-barrier timeout and no cross-half blocking.
+- Correctness ✔: in all 8 check rounds the ranks agree within each half. Host-reference error is 0.0014 for the small program and 0.032 for the 384-layer (c) program (bound 0.1). The two halves were also bitwise equal in every round (data only).
+- (e) ✔ (U2 calibration, data): each rank compiled the TP16 set (64 layers × 4096 × 12288; buckets 8–256 plus 4 warm reshard programs) in 12.0–12.3 s; the native intervals total 11.5–11.8 s (10 per rank). Inside them each half ran ≈ 19k fully contained steps. p50 step barely moved (0.454 → 0.463 ms), but the mean step rose 0.46 → 0.59 ms. That is the same order as CompileExecutionSmoke's −19% (rank 0 only, 0.34 ms steps, a 32 s compile-only call), and here every serving process compiles.
+- Not run: the x-halves (the S-layout columns), which are blocked by the libtpu compile defect (attempt 1). Cleanup ✔: actors DEAD, PG REMOVED, 32 TPU free.
+
+### U2 — spec (in-runtime switch 2×TP8 ↔ TP16, y-halves)
+
+- Hypothesis [INF]:
+  - TP8 model step ≈ 2–4 ms: 1.61 GB/chip at ~0.8 TB/s, plus 64 all-reduces over 8 chips. The TP16 step is about half that.
+  - The background TP16 compile takes ≈ 12 s (U1 (e)). Serving slows less than U1 (e)'s −22%, because model steps are device-bound.
+  - Forward reshard (local order: every TP16 shard is a slice of the TP8 shard already on its chip) ≈ an HBM copy of 0.8 GB/chip, i.e. milliseconds.
+  - Reverse reshard is a pairwise ICI exchange of 0.8 GB/chip (tens of ms).
+  - Switch, last half step → first target step, well under 1 s in both directions, with 0 compiles on the critical path.
+- Code `945a152`, frozen. Model: 64 layers, d 4096, ff 12288, batch 32; bf16 weights = 1.61 GB/chip at TP8, 0.81 GB/chip at TP16. Each half initializes its own weights on device. Background job on all 4 processes: the TP16 forward for buckets 8–256, plus the 4 warm `device_put` reshard programs. The switch runs `jax.device_put` on the zero-copy 2-replica view (forward) or on the TP16 arrays (reverse); the reverse reuses the TP8 executables still loaded since setup.
+- Phases: baseline 10 s → background compile (both halves serving) → post 10 s → switch forward (queued behind live batches) → TP16 serves 10 s → switch reverse → 2×TP8 serve 10 s. Output checks after each step.
+- Arms:
+  - **run 1** (primary): target order `local`, warm `device_put`;
+  - **run 2** (diagnostic): `--unified '{"target_order":"natural"}'`. The TP16 shards then sit in device-id order, so the reshard moves data over ICI, and `device_put` compiles its reorder/reshard program at switch time.
+- Pass, per `verdict_u2`:
+  - weights ≥ 1 GB/chip at TP8;
+  - each half internally bitwise-equal at every check; halves within 0.05 of each other; TP16 first output within 0.05 of the TP8 output;
+  - exact position-weighted checksums equal at setup, after forward and after reverse;
+  - 2×TP8 outputs after the reverse bitwise equal to setup;
+  - run 1: 0 backend compiles inside either switch.
+  - Overlap evidence: per rank, ≥ 5 s of native compile and ≥ 20 fully contained serving steps; otherwise `inconclusive`.
+- Recorded:
+  - serving rate change, call window and native window, vs the −19% / U1 (e) −22%;
+  - compile time per bucket and in total;
+  - switch time and stop / reshard / first-execution split, on the driver-corrected clock and per-rank monotonic;
+  - TP16 step rate; HBM in use after setup, after forward and after reverse.
+- Steps (lock, status, floors as in U1): from the worktree, `.venv/bin/python rcm_exec run scripts/compile_execution_smoke.py --experiment u2 --inventory /tmp/hetero-inventory-only.json --output results/unified/u2-945a152-local.json --timeout 2400`; then run 2 with `--output results/unified/u2-945a152-natural.json`.
+- Expected ≈ 5 min each. Stop: a failure is recorded with its logs; at most 2 fix attempts.
