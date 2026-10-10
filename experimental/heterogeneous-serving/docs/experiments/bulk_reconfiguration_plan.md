@@ -1234,3 +1234,43 @@ Per-half rates (small TP8 program, 8 layers; step ≈ 0.46 ms, dispatch-bound; s
   - TP16 step rate; HBM in use after setup, after forward and after reverse.
 - Steps (lock, status, floors as in U1): from the worktree, `.venv/bin/python rcm_exec run scripts/compile_execution_smoke.py --experiment u2 --inventory /tmp/hetero-inventory-only.json --output results/unified/u2-945a152-local.json --timeout 2400`; then run 2 with `--output results/unified/u2-945a152-natural.json`.
 - Expected ≈ 5 min each. Stop: a failure is recorded with its logs; at most 2 fix attempts.
+
+### U2 — results (`945a152`, y-halves) — **PASSED** (run 1 primary, run 2 diagnostic)
+
+Artifacts: `~/hetero-wt/UnifiedRuntime/results/unified/u2-945a152-{local,natural}.json{,.gz}` and the driver logs. The jobs are `raysubmit_VXETgsN2qweKNDXr` (run 1, 70.1 s) and run 2 (71.4 s). Both have verdict `passed`, no failures, and no overlap-evidence problems ✔.
+
+Model: 64 layers, d 4096, ff 12288, bf16; **1.61 GB/chip at TP8** ✔ (`1,610,612,736` B). HBM in use per chip: 1.62–1.63 GB after setup, 2.44–2.45 GB after the forward switch (TP8 + TP16 copies), 1.64 GB after the reverse.
+
+**Serving and compile** (run 1; per half, mean of its two ranks):
+
+| | lower | upper |
+|---|---|---|
+| TP8 baseline | 269.0 steps/s (3.72 ms; p50 3.71 ms) | 268.4 (3.73 ms) |
+| inside the native-compile intervals (11.2–11.3 s per rank, 10 intervals, ≈ 2,630 contained steps per rank) | 234.0 (**−13.0%**; p50 3.77 ms, mean 4.27 ms) | 236.8 (**−11.8%**) |
+| whole compile-thread call (11.8–11.9 s, trace+lower included) | −16.0% | −14.5% |
+| post-compile control | 268.2 | 267.0 |
+| after the round trip (2×TP8 again) | 268.9 | 268.4 |
+
+- The slowdown is smaller than U1 (e) (−22%, dispatch-bound 0.46 ms steps) and CompileExecutionSmoke (−19%) ✔. It shows as rare long steps (the mean moves, the p50 barely does).
+- Background compile on every rank ✔: 11.8–11.9 s per call. TP16 forward buckets 8/16/32/64/128/256 took 1.7/1.0/1.1/1.7/2.2/3.4–3.5 s, and the 4 warm reshard programs 0.12–0.17 s each.
+- TP16 after the switch: 342 steps/s (2.92 ms per step) vs 269 for each TP8.
+
+**Switch** (driver-corrected cross-host clock, offset uncertainty ≈ RTT/2 ≈ 0.5 ms; per-rank monotonic in brackets) ✔:
+
+| | switch (last source step → first target step on every rank) | stop | reshard | first execution | compiles on the switch |
+|---|---|---|---|---|---|
+| run 1 forward 2×TP8 → TP16 (`local` order) | **12.0 ms** [11.96–14.60] | 0.08 | 6.1 [6.1–8.75] | 5.8 [5.7–5.8] | **0** |
+| run 1 reverse TP16 → 2×TP8 | **48.0 ms** [47.6–48.0] | 0.08 | 43.2 [42.7–43.2] | 4.7 [4.6–4.9] | **0** |
+| run 2 forward (`natural` order) | 285 ms [284–316] | 0.09 | 278 (of which compile ≤ 246) | 7.0 | 2 per rank |
+| run 2 reverse (`natural`) | 343 ms | 0.09 | 339 (of which compile ≤ 287) | 4.3 | 2 per rank |
+
+- In run 1 the halves stopped 2.6 ms apart (forward), so the earlier half was down 14.6 ms. In the local order the forward reshard is an on-chip slice copy (6 ms). The reverse rebuilds each TP8 replica pairwise, chip k ↔ chip k+8, 0.8 GB per chip in ≈ 39–43 ms.
+- Run 2 shows what the background warm-up buys. With a non-local order, `device_put` compiles its reorder/reshard programs on the critical path (≈ 0.25–0.29 s), and moving the data adds ≈ 30–50 ms.
+- Correctness ✔ (both runs):
+  - the exact position-weighted checksums are identical at setup, after forward and after reverse (`(2382864628, 1995569434)` on all 4 ranks);
+  - each half's ranks agree bitwise at every check, and the two halves also agree bitwise (data);
+  - the first TP16 output is within 0.0067 (run 2: 0.0057) of the TP8 output;
+  - the 2×TP8 outputs after the reverse are bitwise equal to setup on all ranks.
+- The reverse reuses the TP8 executables loaded at setup, so it has no compile by design (limitation recorded in the result). Cleanup ✔ (both): 4 actors DEAD, PG REMOVED, 32 TPU free.
+
+**U1d amendment (before running):** the default `half_split` is now `y`, so the probe tests the y-halves. Prediction from U0 [INF]: the lower half (ids 0–7, origin box) loads and matches bitwise; the upper half (ids 8–15, non-origin box) aborts at `ValidateIndexForBounds`. Command: `--experiment u1d --output results/unified/u1d-945a152.json --timeout 1200`. An abort ends the job; the lower probe result and pre-probe reports are already saved by then.
