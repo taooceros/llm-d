@@ -1274,3 +1274,9 @@ Model: 64 layers, d 4096, ff 12288, bf16; **1.61 GB/chip at TP8** ✔ (`1,610,61
 - The reverse reuses the TP8 executables loaded at setup, so it has no compile by design (limitation recorded in the result). Cleanup ✔ (both): 4 actors DEAD, PG REMOVED, 32 TPU free.
 
 **U1d amendment (before running):** the default `half_split` is now `y`, so the probe tests the y-halves. Prediction from U0 [INF]: the lower half (ids 0–7, origin box) loads and matches bitwise; the upper half (ids 8–15, non-origin box) aborts at `ValidateIndexForBounds`. Command: `--experiment u1d --output results/unified/u1d-945a152.json --timeout 1200`. An abort ends the job; the lower probe result and pre-probe reports are already saved by then.
+
+### U1d — results (`945a152`, y-halves, job `raysubmit_KXBTsGxaAXZeX4JN`, 11.2 s) — **PASSED; the U0 load prediction is refuted for y-halves**
+
+`results/unified/u1d-945a152.json{,.gz}`. Each half serialized its live-compiled TP8 executable (`jax.experimental.serialize_executable`; lower 0.78 MB, upper 1.25 MB) and deserialize-and-loaded it on its own 8 devices. Load took 4.1–4.2 ms on all 4 ranks, and the outputs are bitwise equal to the directly compiled program on all 4 ✔. The **upper y-half (ids 8–15, a non-origin box) loads fine**, so U0's general form ("any non-origin sub-box aborts on load") is wrong.
+
+The CompileExecutionSmoke abort stays specific to its case: an **x**-upper executable (ids 2,3,6,7,…) produced by the *compile-only* client. Which of the two factors matters is not isolated [INF], and it is moot for this design: the x-halves are already blocked by the compile defect. For the y-halves both the direct-jit path and the deserialize path (persistent cache, executable bank) work. Cleanup ✔: actors DEAD, PG REMOVED, 32 TPU free.
