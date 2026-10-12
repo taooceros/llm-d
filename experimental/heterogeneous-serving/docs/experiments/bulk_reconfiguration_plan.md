@@ -1460,3 +1460,27 @@ Analysis (opus-5-5 research agent; transcript `agent://OrganizerFirstSwitch.F3aL
   5. First read F1/F2's `host_convert` / `shard_place` and the page-cache records; run a separate sequential-read comparison only if they leave I/O vs conversion unresolved.
   6. Frozen acceptance: done before T0, < 5% S degradation, memory floor, exact accounting, restored and greedy equality, bounded child cleanup, ≤ 2 fixes.
 - Decision (organizer): implement the advisor's minimal streaming A in a new worktree **`~/hetero-wt/FirstSwitchPreread`** (branch `research/first-switch-preread`, from `ea16e24`), in parallel with F1/F2, which run frozen from `FirstSwitch`. F3b's spec is written after the F2 results and the attribution pre-step.
+
+### F1 — results, attempt 1 (`11bd0fb`, run `first-gate-11bd0fb`) — **incomplete: stopped by the local disk floor before the restore deploy** (not a code blocker)
+
+Artifacts: `~/hetero-wt/FirstSwitch/results/switch/first-gate-11bd0fb/` (evidence commit `9e0df49`), driver log `results/switch/f1-gate-driver-11bd0fb.log.gz`, inventory `results/switch/inventory-2026-10-12.json` (same 8 hosts `.56–.63` as 2026-10-10 ✔).
+- Preflight and `memory H` passed. The H normal deploy with inline snapshot + bank write **succeeded** (hetero_ctl 861.5 s; engine init 850.7 s) ✔:
+  - `provisioned_flags`: snapshot published and bank written on **8/8** workers, one generation and one identity digest per instance ✔.
+  - **Time added: `snapshot_write` median 7.10 s (max 7.39 s; 15,824,457,568 B/rank); `exec_bank_write` median 2.57 s (max 2.62 s; 187 entries/rank, 0 skipped)** ✔.
+  - `H-first-scope-files`: one v2 manifest (15.82 GB) and one bank manifest (187 entries, ≈ 378 MB) on all 8 hosts ✔.
+  - The greedy reference `prep-H-reference.json` was produced from this deploy ✔.
+- Truly-first (cold) regime ✔ (median over 8 workers). These pods had no XLA cache, and the checkpoint was cold for this deploy:
+  - init_device 3.16 s; **load_model 571.2 s** (graph_build 1.82, weight_load 565.1, rest 4.25); snapshot 7.10; initialize_from_config 30.2; **compile_or_warm_up 189.8 s** (backend compile 148.2, trace 14.1, lower 14.8, warm-up 9.8); bank write 2.57.
+  - Inside weight_load: checkpoint iterator 14.8 s and shard placement 44.4 s. host_convert sums to 780 s, more than its 565 s window. [INF] The two hooks overlap: unquantized's fused path calls both wrappers, so its time is counted twice. The split is valid only as an upper bound and needs a non-nested hook before F2 (see blockers).
+  - The cold load (571 s vs O3's 170 s) shows that the checkpoint read regime dominates load_model. This is the attribution pre-step the F3 advisor asked for [INF: page-cache state was not recorded in this attempt; `pagecache` exists from `ea16e24`].
+- Stop ✔: before `deploy H H-first-restore`, `disk_floor` found local `/` at 9.1 GB (< 10 GB). The causes are other activity on the controller host (`~/.cache/huggingface`, `~/tts`, rust toolchains, all outside this run) and RCM's 5.6 GB `/tmp/omp_rcm/telemetry.jsonl`. The campaign stopped fail-closed. A rerun of the whole gate is needed: the restore half (restored 8/8, bank used, 0 backend compile, greedy equal, 0 misses/rejections) is **not yet shown**.
+- Cleanup receipts ✔: EXIT trap released H/Mb/S (all owned PGs REMOVED, `cleanup-release-*.json`); the scope was removed on all 8 hosts (`cleanup-scope-first-gate-11bd0fb.json`: snapshot 15.83 GB + bank 378 MB per host existed and are absent afterwards); default tmpfs root cleaned (`cleanup-tmpfs.json`). Afterwards RCM was Idle and the lock free. Side effect: the H XLA cache entries now exist on the pods (warm state, kept).
+- Process note: during attempt 1, `ea16e24` (scripts only) was committed in the running worktree. Later jobs of this attempt uploaded `snapshot_validate.py` with the added, unused `pagecache` action; no action used by F1 changed. `switch_campaign.sh` was restored in place to `11bd0fb`'s bytes, so the running bash was unaffected. From now on, edits go only to other worktrees while a campaign runs.
+- Housekeeping: `/tmp/omp_rcm/telemetry.jsonl` was gzipped to `/tmp/omp_rcm/telemetry-until-20261012T0550.jsonl.gz` and truncated (RCM idle).
+
+**Status at organizer return (budget stop, 2026-10-12):** F0 done; F1 needs a rerun (attempt 2); F2 not run; F3a done; F3b/F3c not run. Pre-read implementation (design A) in progress on `research/first-switch-preread` (`~/hetero-wt/FirstSwitchPreread`, from `ea16e24`) by an opus implementer; its commits are unreviewed. Next steps:
+1. Fix the nested `host_convert` accounting (time only the outermost call).
+2. Get local `/` above 10 GB.
+3. Rerun F1 at the fixed commit (`REFERENCE_H` from that run).
+4. F2 per spec.
+5. F3b spec after the F2 data.
