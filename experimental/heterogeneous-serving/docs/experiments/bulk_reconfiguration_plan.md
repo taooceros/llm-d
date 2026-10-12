@@ -1485,3 +1485,12 @@ Artifacts: `~/hetero-wt/FirstSwitch/results/switch/first-gate-11bd0fb/` (evidenc
 3. Rerun F1 at the fixed commit (`REFERENCE_H` from that run).
 4. F2 per spec.
 5. F3b spec after the F2 data.
+
+### F1 — spec, attempt 2 (resume after the user's 2026-10-12 answers)
+
+- Fix (attempt 1 of the "nested hook" blocker): `research/first-switch` @ **`dcc3276`**. The normal-loader clock now times only the outermost hooked call per key, as the wall-clock union across nesting and threads. `weight_load` spans every `load_weights` call, and nested or concurrent calls get their own counters (`*_nested_calls`). Test: `tests/test_first_switch.py::CheckpointClockTests::test_nested_and_concurrent_calls_count_wall_time_once`. Affected suites pass: 109 passed.
+  - [INF] Cause in attempt 1: a hooked module imported after the first patch bound the already-wrapped name, so the wrapper was wrapped again.
+- Code frozen at `dcc3276` for F1 and F2. During a campaign, edits go only to other worktrees.
+- Same steps and pass conditions as the F1 spec above. Run base `first-gate-dcc3276`, driver log `results/switch/f1-gate-driver-dcc3276.log`.
+- Regime: the H XLA cache is now warm (filled by attempt 1), and the checkpoint was read once by these hosts. So this normal deploy is in the C_first regime (decision row 2026-10-12), not from scratch. The from-scratch figure stays attempt 1's 861.5 s ✔.
+- Floors before the stage: `/` 37 GB free, `/dev/shm` 58 GB free (local) ✔. RCM local state is on tmpfs (`/tmp/omp_rcm` → `/dev/shm/omp_rcm`).
