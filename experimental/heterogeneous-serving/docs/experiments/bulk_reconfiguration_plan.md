@@ -1599,3 +1599,28 @@ Organizer review:
   - S throughput in the O2 windows;
   - amortized per-switch cost for N = 1/3/10, with F2's warm C.
 - Pass: as F3b (1)–(5) for each rep. Fail-closed loop as in F2.
+
+### F2 — attempt 1 (`dcc3276`, run base `first-dcc3276-ov`): driver killed after rep 1; relaunch decision
+
+- The F2 driver was killed with the organizer's turn (`f2-first-driver-dcc3276.log` ends `Terminated`) while it checked `S-restore-r2`. Rep 1 had completed. S was left deployed (owned PGs). There were no running Ray jobs, RCM was Idle, and the lock was free (checked by Main).
+- **Rep 1 is valid ✔**: `overlap_check.py`, the validation and scope receipts in `results/switch/first-dcc3276-ov/`:
+  - complete, accounting exact, segments reconciled, parked before T0, self-checks clean, provisioned on 8/8;
+  - greedy and replica equal to `REFERENCE_H`, 0 misses, 0 rejections;
+  - scope files complete on 8 hosts, scope removed on 8 hosts.
+  - **C_production 220.40 s** (gap 218.69); snapshot_write 7.40, bank write 2.27, compile/warm-up 35.8; source tok/s 2,641 during the window and 4,024 after.
+- **Decision (organizer): no mid-campaign resume; relaunch the full `first` campaign (REPS = 3 + warm) under a fresh run base.**
+  - The driver keeps state in-process (SCOPES, current layout, attempt counters), and its run ids are `<mode>-<commit>`, so re-entering at rep 2 would collide with rep 1's artifacts.
+  - A fresh campaign gives a native 3-cold-rep summary with one S prep. Old rep 1 is reported as a supplementary cold rep under the same `hetero/`.
+  - Commit **`b55d161`** changes scripts only (`git diff dcc3276 b55d161 -- hetero` is empty, so the runtime revision and the identity are those of F1/`REFERENCE_H`). It adds `RUN_SUFFIX` and a `release-all` mode, which runs the campaign's EXIT cleanup after a killed driver.
+- Sequence, launched fully detached (`setsid nohup`), with the organizer blocking until both finish:
+  1. `CURRENT=S switch_campaign.sh release-all` (log `results/switch/release-all-b55d161.log`; receipts in `results/switch/release-all-b55d161/`);
+  2. `REFERENCE_H=results/switch/first-gate-dcc3276 switch_campaign.sh first` (run base `first-b55d161-ov`, driver log `results/switch/f2-first-driver-b55d161.log`).
+- Floors at launch: `/` 35 GB, `/dev/shm` 58 GB ✔.
+- F3 code after the advisor review (fable-5-1, accept with 3 must-fixes): `research/first-switch-preread` @ **`b497642`**:
+  - `preread_timeout_s` 300 in the campaign target;
+  - `preread_complete` requires `prespawn.preread_all_used`;
+  - the child's log tail is attached on refusal;
+  - child `oom_score_adj` is 1000.
+  - Gate (4) is amended: S throughput in both O2 windows is compared to the F2 cold reps (same code, no child; per-rep spread) and to O2. ≥ 95% of O2 stays the hard floor.
+  - Tests: `test_preread.py` 15 passed; the Bf16Kv suites 114 passed, 10 skipped.
+  - F3b and F3c run at `b497642`.
