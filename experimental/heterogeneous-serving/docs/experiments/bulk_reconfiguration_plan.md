@@ -1494,3 +1494,33 @@ Artifacts: `~/hetero-wt/FirstSwitch/results/switch/first-gate-11bd0fb/` (evidenc
 - Same steps and pass conditions as the F1 spec above. Run base `first-gate-dcc3276`, driver log `results/switch/f1-gate-driver-dcc3276.log`.
 - Regime: the H XLA cache is now warm (filled by attempt 1), and the checkpoint was read once by these hosts. So this normal deploy is in the C_first regime (decision row 2026-10-12), not from scratch. The from-scratch figure stays attempt 1's 861.5 s ✔.
 - Floors before the stage: `/` 37 GB free, `/dev/shm` 58 GB free (local) ✔. RCM local state is on tmpfs (`/tmp/omp_rcm` → `/dev/shm/omp_rcm`).
+
+### F1 — results, attempt 2 (`dcc3276`, run `first-gate-dcc3276`) — **PASS ✔**
+
+Artifacts: `~/hetero-wt/FirstSwitch/results/switch/first-gate-dcc3276/` (deploy, check and validation JSONs gzipped; `prep-H-reference.json` kept plain as F2's `REFERENCE_H`), driver log `results/switch/f1-gate-driver-dcc3276.log.gz`. Campaign rc 0, 2026-10-12 06:03–06:13 UTC.
+
+| | H normal + inline snapshot + bank write | H restore + bank read |
+|---|---|---|
+| hetero_ctl wall | 249.9 s ✔ | 52.8 s ✔ |
+| engine init (stage clock) | 244.35 s | 47.69 s |
+| init_device | 4.14 | 3.60 |
+| load_model | 157.96 (graph_build 1.78; weight_load 154.74 = checkpoint_iter 0.58 + host_convert 130.61 + shard_place 14.33 + ≈ 9.2 other; rest 1.44) | 4.92 (tmpfs read 0.46, device placement 0.84, graph 2.15) |
+| **snapshot_write** | **7.15 median (max 9.26)** | — |
+| initialize_from_config | 2.60 | 2.40 (+ exec_bank_load 3.56) |
+| compile_or_warm_up | 35.70 (backend compile 0.00, trace 14.08, lower 14.75, executable load 2.86, warm-up 2.31) | 1.58 |
+| **exec_bank_write** | **2.28 median (max 2.32)** | — |
+
+(medians over 8 workers ✔ from the deploy JSONs via `switch.deploy_anatomy`)
+
+- (i) ✔ Provisioned on 8/8 workers (one generation and one digest per instance). Scope files: a v2 manifest of 15.82 GB and a bank of 187 entries on all 8 hosts.
+- (ii) ✔ `overlap_check.py --deploy`: restored 8/8, bank `use` unanimous on 8/8 (187 entries each), backend compile < 0.05 s on every worker.
+- (iii) ✔ Greedy output equals the normal-loader H reference: 32 prompts × 2 engines, token for token. TP16 replicas are equal.
+- (iv) ✔ Post-validation serving counters: 0 misses, 0 rejections.
+- **Time the first deploy adds for provisioning: ≈ 9.4 s per worker (snapshot 7.15 + bank write 2.28)**, against the separate pass's ≈ 95 s (snapshot 7.2 + bank-writing restore deploy 88.2).
+- The clock fix holds: host_convert + shard_place + iter = 145.5 s, inside the 154.7 s weight_load window. 270 nested host_convert calls were counted once each, which confirms the [INF] double-wrap cause of attempt 1.
+- **Same regime as C_first (warm H XLA cache): load_model is 158 s, of which host_convert is 130.6 s.** That is host-only work and the target of the F3 pre-read. Compare from scratch (attempt 1): load_model 571 s and compile/warm-up 189.8 s.
+- Cleanup ✔: scope removed on 8/8 hosts (`H-first-scope-cleanup.json`); `cleanup-release-{H,Mb,S}.json` show all 6 owned PGs REMOVED; default tmpfs root cleaned. Afterwards RCM was Idle and the lock free.
+
+### F2 — launch note
+
+Runs at **`dcc3276`** (frozen; `hetero/` differs from the reviewed `ea16e24` only by the clock fix) with `REFERENCE_H=results/switch/first-gate-dcc3276`. Run base `first-dcc3276-ov`, driver log `results/switch/f2-first-driver-dcc3276.log`. The rest follows the F2 spec plus the advisor changes.
