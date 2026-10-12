@@ -1675,3 +1675,30 @@ Artifacts: `~/hetero-wt/FirstSwitch/results/switch/first-b55d161-ov/` (`switch_s
   - scopes r1, r2 and warm (= the r3 scope) removed on 8/8 hosts;
   - `cleanup-release-{H,Mb,S}.json` and `cleanup-tmpfs.json` ok;
   - afterwards RCM Idle, lock free.
+
+### F3b — results (`b497642`, run base `preread-b497642-ov`) — **GATE PASS ✔** (the pre-read does not finish before T0)
+
+Artifacts: `~/hetero-wt/FirstSwitchPreread/results/switch/preread-b497642-ov/` (`overlap_check.json`, `switch-r1-preread-compare.json`, validation, page-cache, scope and release receipts), `results/hetero/artifacts/preread-b497642-ov-r1/`, driver log `results/switch/f3b-preread-driver-b497642.log.gz`. Evidence commit `a9a0b9a`. Campaign rc 0.
+
+- (1) ✔ Complete with exact accounting, segments reconcile, parked before T0 and before release, parent self-checks clean. `overlap_check` lists `all_provisioned` as its only "failure". That check is not applicable here: it expects an inline `snapshot_write`, while this rep's snapshot comes from the child. The bank was written on 8/8.
+- (2) ✔ **Pre-read used on 8/8** (`preread_all_used`). Child exit 0 on 8/8; `jax_platforms == ['cpu']`; `audit_events` empty (no vfio, accel, lockfile or libtpu open/dlopen); child self-checks clean. Restored on 8/8.
+- (3) ✔ **Exact**: `preread_compare` against the device-produced H reference snapshot: 2 × 1028 arrays, **32,896 shards equal** (path, shape, dtype, spec, devices, per-shard device, index, bytes, sha256). Greedy equal to the reference (32 × 2), 0 misses, 0 rejections.
+- (4) ✔ S source tok/s:
+  - window during the pre-spawn: **2,700.9**; ≥ 95% of O2's 2,661, and −0.2% to −0.4% vs the F2 cold controls (2,705 / 2,711 / 2,705);
+  - window after, to T0: **4,012.8**; 98.6% of O2's 4,070, and inside the F2 spread (3,929–4,021).
+  - **No measurable S impact.**
+- (5) ✔ Child-sampler minimum MemAvailable 132.8 GB (≥ 40); `/dev/shm` free minimum 143.9 GB (≥ 20).
+- Pre-read cost per host (median of 8 ✔):
+  - child wall 241.9 s (started before parking, ≈ T0 − 165 s): imports 9.6, graph 15.0, load 211.9 (convert ≈ 195, shard write ≈ 10.7), publish 0.16;
+  - CPU user 300 s and sys 108 s; major faults 0 (checkpoint in the page cache);
+  - VmHWM 64.5 GB. [INF] Mostly file-backed checkpoint pages mapped by the child; the MemAvailable minimum stayed at 132.8 GB.
+  - The child's convert (≈ 195 s, single process, nice 10) is slower than the engine's in-process host_convert (130.7 s, F2).
+- **Timed outcome (informational; F3c is the comparison): C = 133.36 s** (gap 135.21, ramp −1.85).
+  - engine_init 128.39 = init_device 4.07 + load_model 82.91 (**preread_wait 77.48**, restore ≈ 5.4) + initialize_from_config 2.58 + compile/warm-up 36.13 + bank write 2.25.
+  - `preread_all_done_before_T0` = **false**: the child needs ≈ 242 s and has ≈ 165 s before T0.
+- Cleanup ✔:
+  - `-ref` and r1 scopes removed on 8/8 hosts;
+  - `final-*` teardown of S;
+  - `cleanup-release-{H,Mb,S}`, `cleanup-tmpfs` ok;
+  - afterwards RCM Idle, lock free.
+- F3c runs per spec at the same `hetero/` and `scripts/`. The run base is `preread-a9a0b9a-ov`; the evidence commit changes only `results/`, so the run ids do not collide with F3b's.
