@@ -1702,3 +1702,44 @@ Artifacts: `~/hetero-wt/FirstSwitchPreread/results/switch/preread-b497642-ov/` (
   - `cleanup-release-{H,Mb,S}`, `cleanup-tmpfs` ok;
   - afterwards RCM Idle, lock free.
 - F3c runs per spec at the same `hetero/` and `scripts/`. The run base is `preread-a9a0b9a-ov`; the evidence commit changes only `results/`, so the run ids do not collide with F3b's.
+
+### F3c — results (`b497642` `hetero/` + `scripts/`, run base `preread-a9a0b9a-ov`, 2 reps) — **PASS ✔: C_first 222.6 → 134.1 s**
+
+Artifacts: `~/hetero-wt/FirstSwitchPreread/results/switch/preread-a9a0b9a-ov/` (`overlap_check.json`, `switch-r{1,2}-preread-compare.json`, validations, scope and release receipts), `results/hetero/artifacts/preread-a9a0b9a-ov-r{1,2}/`, driver log `results/switch/f3c-preread-driver-a9a0b9a.log.gz`. Evidence commit `5f9468a`. Campaign rc 0, no failed attempts.
+
+- Per rep, F3b gate conditions (1)–(5) all ✔:
+  - complete and reconciled, pre-read used on 8/8, child exit 0, platforms `['cpu']`, 0 audit events, self-checks clean;
+  - exact on 32,896 shards in each rep, greedy equal, 0 misses and 0 rejections;
+  - MemAvailable minimum 132.6 GB, `/dev/shm` free minimum 143.9 GB.
+  - `overlap_check`'s `all_provisioned` is not applicable here, as in F3b; the bank was written on 8/8.
+
+| s (median over workers / per rep) | r1 | r2 | mean | F2 cold mean |
+|---|---|---|---|---|
+| **C_production** | **134.47** | **133.73** | **134.10** | 222.63 |
+| gap (dispatch) | 137.01 | 137.17 | 137.09 | 219.46 |
+| ramp | −2.54 | −3.44 | −2.99 | 3.17 |
+| engine_init | 130.79 | 130.98 | 130.89 | 213.13 |
+| — load_model | 85.07 (preread_wait 79.52) | 85.48 (79.64) | 85.28 (79.58) | 158.92 |
+| — snapshot_write | — (pre-read) | — | — | 7.53 |
+| — compile/warm-up | 35.31 | 35.26 | 35.29 | 35.79 |
+| — exec_bank_write | 2.27 | 2.27 | 2.27 | 2.26 |
+| other segments (drain, gateway, handoff, endpoint) | 6.20 | 6.17 | 6.19 | 6.30 |
+| child wall (median) | 241.5 | 242.0 | 241.8 | — |
+| S tok/s during / after | 2,679 / 4,051 | 2,712 / 4,054 | — | 2,707 / 3,978 (control) |
+
+- **Saving: 88.5 s (−40%)** ✔. The child absorbs ≈ 165 s of conversion before T0 and finishes ≈ 79.6 s after T0. `preread_wait` is the residual, so `preread_all_done_before_T0` is false in every rep.
+  - [INF] The remaining lever is the child's convert speed (≈ 195 s single-process at nice 10, vs 131 s in-engine). Closing that gap, or starting the pre-spawn earlier, would bring C_first toward ≈ 55 s: compile 35 + bank 2 + restore 5 + init/handoff 13.
+- S impact: none measurable. S throughput stays within F2's no-child spread and ≥ 95% of O2.
+- **Amortized per-switch cost with the pre-read** (C_first 134.10, F2 warm 21.14) [computed from ✔ values]: **N = 1: 134.1; N = 3: 58.8; N = 10: 32.4**. Without the pre-read (F2): 222.6 / 88.3 / 41.3. Separate pass: 378.3 / 144.4 / 62.6.
+- Cleanup ✔:
+  - `-ref`, r1 and r2 scopes removed on 8/8 hosts;
+  - `cleanup-release-{H,Mb,S}` ok, every listed owned PG REMOVED;
+  - `cleanup-tmpfs` ok;
+  - afterwards RCM Idle and the lock free.
+- At return, local `/` had 8.7 GB free, below the 10 GB floor, due to the user's own downloads (Main, 2026-10-12). The campaign finished before it crossed.
+
+**F-series status:** F0 ✔, F1 ✔ (attempt 2), F2 ✔, F3a ✔ (design A implemented, `research/first-switch-preread` @ `b497642`), F3b gate ✔, F3c ✔.
+Open:
+- the pre-read is not done before T0 (79.6 s residual);
+- `overlap_check` needs a pre-read-aware cold check (cosmetic);
+- the user's disk.
