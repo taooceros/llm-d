@@ -1624,3 +1624,54 @@ Organizer review:
   - Gate (4) is amended: S throughput in both O2 windows is compared to the F2 cold reps (same code, no child; per-rep spread) and to O2. ≥ 95% of O2 stays the hard floor.
   - Tests: `test_preread.py` 15 passed; the Bf16Kv suites 114 passed, 10 skipped.
   - F3b and F3c run at `b497642`.
+
+### F2 — results (`b55d161` = `dcc3276` `hetero/`; run base `first-b55d161-ov`) — **PASS ✔**
+
+Artifacts: `~/hetero-wt/FirstSwitch/results/switch/first-b55d161-ov/` (`switch_summary.{json,md}`, `overlap_check.json`, per-rep validation, page-cache and scope receipts), `results/hetero/artifacts/first-b55d161-ov-{r1,r2,r3,warm}`, driver log `results/switch/f2-first-driver-b55d161.log.gz`. Evidence commit `e0ee1ef`. Campaign rc 0. Before it, `release-all` released the killed attempt's S (rc 0, receipts in `results/switch/release-all-b55d161/`).
+
+- Checks ✔ (`overlap_check.py`, all four reps ok):
+  - complete, exact accounting, segments reconcile (offline vs in-process diff 0.00 s), parked before T0, self-checks clean;
+  - cold reps provisioned on 8/8;
+  - greedy equal to `REFERENCE_H` on all three cold reps and the warm rep, with 0 misses and 0 rejections; the warm rep's post-check is also 0/0;
+  - the warm rep is restored on 8/8, with the bank used and 0 backend compile.
+- Checkpoint page-cache residency before every rep: **1.000 on all 8 hosts** ✔. So the 159 s `load_model` is **conversion-bound, not I/O-bound**. This resolves the F3a attribution pre-step: design B (page-cache warm) has nothing left to save.
+
+**C_first segment table** (s after T0; mean of the 3 cold reps ✔ from `switch_summary.json`; per-rep C 225.82 / 219.10 / 222.96):
+
+| segment | cold mean | warm |
+|---|---|---|
+| drain_release | 2.08 | 2.43 |
+| gateway_down | 0.17 | 0.12 |
+| device_handoff | 0.64 | 0.89 |
+| **engine_init** | **213.13** | 16.89 |
+| — init_device | 3.92 | 4.02 |
+| — load_model | 158.92 (graph 1.79; weight_load 155.69 = host_convert 130.73 + shard_place 13.89 + iter 0.59 + ≈ 10.5 other; rest 1.44) | 4.81 (restore) |
+| — snapshot_write | 7.53 | — |
+| — initialize_from_config | 2.63 | 2.56 (+ bank load 3.45) |
+| — compile_or_warm_up | 35.79 | 1.53 |
+| — exec_bank_write | 2.26 | — |
+| endpoint_register | 1.16 | 1.08 |
+| gateway_up | 2.25 | 2.18 |
+| **gap (dispatch)** | **219.46** | 23.60 |
+| ramp (makespan − 206.2) | 3.17 | −2.47 |
+| **C_production** | **222.63** | **21.14** |
+
+- **C_first = 222.6 s ✔**, against 237 s [INF] (no FastGraph) and 208–211 s [INF] (FastGraph). The remaining ≈ 12 s comes from a measured `load_model` of 159 s (vs the 157 s estimate), the 7.5 s snapshot, and the startup segments.
+- The first attempt's rep 1 (`first-dcc3276-ov-r1`, same `hetero/`) gives C 220.40 s and agrees with these reps ✔.
+- **Warm follow-up C = 21.14 s ✔** (O3: 27.51). It restores and reads the bank from rep 3's scope. Its ramp is negative (−2.47 s): the phase-2 makespan beat the 206.2 s static reference. [INF] This is ordinary run-to-run variance in W6.
+- **Provisioning added inside C_first: snapshot 7.53 + bank write 2.26 ≈ 9.8 s.**
+- From scratch (decision row): F1 attempt 1's normal deploy took 861.5 s, of which weight_load was 565 s and compile was 189.8 + 30.2 s ✔.
+- S source throughput (`overlap_check`), cold reps, tok/s: during the window 2,705 / 2,711 / 2,705; after 3,985 / 4,021 / 3,929. Warm: 2,714 / 3,978. These are the F3b same-code controls.
+
+**Amortized per-switch cost** (C_first + (N − 1)·C_warm)/N ✔ (`switch_summary.json`):
+
+| N | this warm (21.14) | O3 warm (27.51) | separate pass (350.8 s deploy walls) + O3 warm |
+|---|---|---|---|
+| 1 | 222.6 | 222.6 | 378.3 |
+| 3 | 88.3 | 92.6 | 144.4 |
+| 10 | 41.3 | 47.0 | 62.6 |
+
+- Cleanup ✔:
+  - scopes r1, r2 and warm (= the r3 scope) removed on 8/8 hosts;
+  - `cleanup-release-{H,Mb,S}.json` and `cleanup-tmpfs.json` ok;
+  - afterwards RCM Idle, lock free.
