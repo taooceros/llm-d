@@ -1524,3 +1524,78 @@ Artifacts: `~/hetero-wt/FirstSwitch/results/switch/first-gate-dcc3276/` (deploy,
 ### F2 — launch note
 
 Runs at **`dcc3276`** (frozen; `hetero/` differs from the reviewed `ea16e24` only by the clock fix) with `REFERENCE_H=results/switch/first-gate-dcc3276`. Run base `first-dcc3276-ov`, driver log `results/switch/f2-first-driver-dcc3276.log`. The rest follows the F2 spec plus the advisor changes.
+
+### F3a — design A implementation (local) — done (organizer-verified)
+
+Branch `research/first-switch-preread` (`~/hetero-wt/FirstSwitchPreread`), rebased onto `dcc3276`. Implementer: opus-5-5. Commits:
+- `e06289c` test helpers
+- `2f80aa8` CPU venv record
+- `690e554` shared shard-write and publish helpers in `weight_snapshot`; `snapshot()` output unchanged
+- `ed8ee2f` deviceless device table + CPU-only child `hetero/preread.py`
+- `acb7d5e` `file_fingerprint` (also `--run-scope`) + `scripts/preread_compare.py`
+- `bcb4c28` worker integration: `preread` / `preread_timeout_s`; child started before `park_and_wait` and killed on abort; `preread_wait` clock; local refusal leads to an all-rank vote fallback to the normal loader
+- **`f0c39f2`** `switch_campaign.sh preread`
+
+How it works:
+- The child is a separate process with a sanitized env: `TPU_*`, `JAX_*`, `XLA_*`, `RAY_*` and `LIBTPU*` are dropped; `JAX_PLATFORMS=cpu`; 16 forced host devices; no compile cache; nice 10; parent-death signal plus a getppid watchdog.
+- It unpickles the worker's own `vllm_config`, which needs no backend.
+- It runs the real `nnx.eval_shape` + `load_weights`, with `assign_and_shard_param` intercepted. Only this rank's 4 shards are written immediately, then a v2 manifest (canonical jit specs, state order) is published with the actor's generation.
+- The released worker waits for the child (bounded), then takes the existing restore path.
+
+Tests:
+- Implementer: `tests/test_preread.py` 15 passed (pre-read venv `/dev/shm/hetero-scratch/preread/venv`, 3.9 GB). Bf16Kv `.venv` suites: 107 passed, 2 skipped.
+- Organizer rerun: see F3b launch.
+- Coverage:
+  - device table equals O3's H mesh ids and per-rank local ids;
+  - tiny real `Gemma4ForConditionalGeneration` on a 4-process × 4-CPU-device mesh: the union of the 4 children's files equals the normal loader's `snapshot()` per shard (sha256), and restore equals the normal fingerprint;
+  - killed, failed or timed-out child leads to refusal and fallback;
+  - the parent has no JAX backend after spawning;
+  - the child reports platforms `['cpu']`, clean self-checks and no audit events.
+- Tiny-model child: 10.8 s wall (imports 6.8 s), VmHWM 1.04 GB.
+
+Organizer review:
+- The worker diff kills the child on every abort path. `_snapshot_location`/`_snapshot_context` are payload-derived.
+- Open risks, F3b checks them:
+  - isolation on a TPU host: the libtpu Python package is importable there;
+  - canonical-spec equality for the 1028-leaf state on TPU;
+  - 31B child wall time, RSS and CPU contention with serving S.
+
+### F3b — spec (coexistence gate; cluster)
+
+- Hypothesis [INF]:
+  - With S serving W0, each parked H worker's child converts the full checkpoint on the host and writes 15.8 GB of its own shards. This takes about F1's host_convert + shard placement, ≈ 145 s, plus about 10 s of imports and graph build. That fits inside the ≈ 160 s between parking and T0 (O3 ✔).
+  - The S throughput hit is < 5% in the O2 windows, because S's engines are TPU-bound and the child runs at nice 10.
+- Code: `research/first-switch-preread` @ **`f0c39f2`**, frozen.
+- Steps: `HEAD_POD=… flock /tmp/hetero-cluster.lock scripts/switch_campaign.sh preread` (REPS = 1), from `~/hetero-wt/FirstSwitchPreread`. Run base `preread-f0c39f2-ov`.
+  1. S prep.
+  2. H reference: normal loader + inline snapshot into scope `-ref` → per-shard file fingerprint → greedy reference → teardown → scope cleanup.
+  3. S restore.
+  4. pagecache.
+  5. run-switch S→H, full, W0→W6. The target is pre-spawned with `preread` + `weight_snapshot=read` + bank write into scope `<rid>`.
+  6. Validation against the reference.
+  7. `file-fingerprint --run-scope` → local `preread_compare.py` (hard).
+  8. Teardown → scope cleanup.
+- Gate, all hard:
+  - (1) The switch is complete with exact accounting, and segments reconcile.
+  - (2) The pre-read is used on 8/8 workers: no fallback, child exit 0. Child `jax_platforms == ['cpu']`, child `audit_events` empty, child self-checks clean. The parked parent's pre-spawn self-checks are clean, and it was parked before T0.
+  - (3) Exact: per-shard sha256 and the spec/index rows equal the device-produced reference. Greedy output equals the reference on 32 × 2.
+  - (4) S source throughput is ≥ 95% of O2 in both windows: the spawn window, the first 34.3 s of phase 1 (2,661 tok/s), and the parked window to T0 (4,070 tok/s).
+  - (5) Child sampler minimum MemAvailable ≥ 40 GB, and `/dev/shm` free ≥ 20 GB on every host.
+- Recorded:
+  - pre-read wall per host (child start → publish) and its end relative to T0;
+  - `preread_wait`;
+  - child VmHWM, CPU user+sys, majflt;
+  - C and its segments (informational; F3c is the timed comparison).
+- Stop: a failed gate stops F3c. At most 2 fix attempts.
+- Expected ≈ 35 min. Cleanup: per-run scope and `-ref` scope receipts, H/Mb/S release, tmpfs root.
+
+### F3c — spec (cold first switch with pre-read, 2 reps; timed; only if F3b passes)
+
+- Same code (`f0c39f2`) and the same campaign with `REPS=2`; a new run base, `preread-f0c39f2-c`. The campaign re-creates the H reference: one normal deploy, outside C.
+- Endpoints:
+  - C_production per rep and mean, with segments; the engine-init split, now with `preread_wait`;
+  - vs F2's C_first (same regime: warm H XLA cache, checkpoint read before);
+  - the pre-read wall, and whether it ended before T0;
+  - S throughput in the O2 windows;
+  - amortized per-switch cost for N = 1/3/10, with F2's warm C.
+- Pass: as F3b (1)–(5) for each rep. Fail-closed loop as in F2.
