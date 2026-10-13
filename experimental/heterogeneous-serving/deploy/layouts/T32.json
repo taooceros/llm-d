@@ -1,0 +1,6 @@
+{
+  "layout_id": "T32",
+  "instances": [
+    {"instance_id": "large", "tp_size": 32}
+  ]
+}

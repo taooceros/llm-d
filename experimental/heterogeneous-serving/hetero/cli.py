@@ -330,7 +330,11 @@ def _routing_policy(args: argparse.Namespace) -> Dict[str, Any]:
         return json.loads(pathlib.Path(args.policy_file).read_text())
     if args.policy:
         return json.loads(args.policy)
-    names = BUILTIN_LAYOUTS.get(args.layout, ())
+    if getattr(args, "layout_file", None):
+        names = tuple((i.instance_id, i.tp_size) for request in _layout_requests(args)
+                      for i in request.instances)
+    else:
+        names = BUILTIN_LAYOUTS.get(args.layout, ())
     small = tuple(n for n, tp in names if tp == 8)
     large = tuple(n for n, tp in names if tp >= 16)
     if not large:
