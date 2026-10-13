@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import pathlib
 import shlex
 import subprocess
@@ -70,6 +71,8 @@ parser.add_argument(
 args, extra = parser.parse_known_args()
 
 input_env = {}
+if os.environ.get("OMP_PROFILE_LOAD") == "1":
+    input_env["OMP_PROFILE_LOAD"] = "1"
 input_files = [
     (args.inventory, "OMP_HETERO_INVENTORY_JSON"),
     (args.layout_file, "OMP_HETERO_LAYOUT_JSON"),
