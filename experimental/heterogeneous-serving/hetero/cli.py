@@ -627,12 +627,14 @@ def cmd_run_switch(args: argparse.Namespace) -> Dict[str, Any]:
     config = _deployment_config(args)
     fabric = RayFabric(inventory=inventory, config=config, mode=args.switch_mode,
                        source_layout=args.from_layout, drain_timeout_s=args.drain_timeout_s,
-                       head_node_ip=args.head_node_ip or _head_node_ip())
+                       head_node_ip=args.head_node_ip or _head_node_ip(),
+                       prespawn_gate_timeout_s=args.prespawn_gate_timeout_s)
     try:
         report = run_switch(
             fabric, HttpClient(timeout_s=args.arm_timeout), mode=args.switch_mode, source_layout=args.from_layout,
             target_layout=config.layout.layout_id, phase1=args.phase1, phase2=args.phase2, run_id=args.run_id,
-            policy=_transition_policy(args), static_target_s=args.static_target_s, arm_timeout_s=args.arm_timeout)
+            policy=_transition_policy(args), static_target_s=args.static_target_s, arm_timeout_s=args.arm_timeout,
+            prespawn_at_s=args.prespawn_at_s, prespawn_park_timeout_s=args.prespawn_park_timeout_s)
     except Exception as exc:  # noqa: BLE001 - a failed switch still returns its report so the evidence is fetched
         from hetero.experiment import ARTIFACT_ROOT
 
@@ -734,6 +736,13 @@ def build_parser() -> argparse.ArgumentParser:
                         help="run-switch: phase-2 manifest, or a comma list (partial: W0,W6) on --layout")
     parser.add_argument("--static-target-s", type=float, default=None,
                         help="run-switch: static target-layout finish time the ramp/C_eff are measured against")
+    parser.add_argument("--prespawn-at-s", type=float, default=0.0,
+                        help="run-switch: pre-spawn the target engines this long after phase 1 begins "
+                             "(only when every deployed instance has engine setting prespawn=true)")
+    parser.add_argument("--prespawn-park-timeout-s", type=float, default=900.0,
+                        help="run-switch: bound on spawning + parking the pre-spawned workers")
+    parser.add_argument("--prespawn-gate-timeout-s", type=float, default=3600.0,
+                        help="run-switch: how long a parked worker waits for its release before failing")
     return parser
 
 

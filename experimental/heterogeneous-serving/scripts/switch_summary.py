@@ -144,6 +144,10 @@ def summarize(out: pathlib.Path, *, artifacts: pathlib.Path = ARTIFACTS,
             "drain_detail_s": run["timeline"]["drain_detail_s"],
             "deploy_anatomy": {k: v for k, v in (run["timeline"].get("deploy_anatomy") or {}).items()
                                if k in ("stage_clocks", "phase_median_s", "phase_max_s")}}
+        if run["report"].get("prespawn"):  # OVERLAP=1: gate anatomy + source delivery around the window
+            row["prespawn"] = {"anatomy": run["timeline"].get("prespawn"),
+                               "window": run["report"]["prespawn"].get("window"),
+                               "parked_before_T0": run["report"]["prespawn"].get("parked_before_T0")}
         if mode == "full":
             row["harness"] = harness_return(run, marks, base, pilot_fn)
         reps.append(row)

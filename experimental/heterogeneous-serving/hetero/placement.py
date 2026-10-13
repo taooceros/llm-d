@@ -65,15 +65,26 @@ class PlacementRecord:
 def intended_bundles(
     instance: ResolvedInstance, cpu_per_host: float, tpu_per_host: float
 ) -> List[Dict[str, float]]:
-    """Node-pinned bundles in instance-local process-rank order."""
-    return [
-        {
-            "TPU": float(tpu_per_host),
-            "CPU": float(cpu_per_host),
-            f"node:{host.node_ip}": 0.001,
-        }
-        for host in instance.hosts
-    ]
+    """Node-pinned bundles in instance-local process-rank order.
+
+    ``tpu_per_host=0`` (a pre-spawned engine) omits the TPU key: the group then holds no chips
+    and can be placed next to a source engine that still owns them.
+    """
+    bundles = []
+    for host in instance.hosts:
+        bundle = {"TPU": float(tpu_per_host)} if tpu_per_host else {}
+        bundle.update({"CPU": float(cpu_per_host), f"node:{host.node_ip}": 0.001})
+        bundles.append(bundle)
+    return bundles
+
+
+def tpu_hold_pg_name(layout_id: str, instance_id: str) -> str:
+    """Ray TPU accounting for a pre-spawned engine once its hosts are released (owned name)."""
+    return pg_name(layout_id, f"{instance_id}-tpuhold")
+
+
+def tpu_hold_bundles(instance: ResolvedInstance, tpu_per_host: float) -> List[Dict[str, float]]:
+    return [{"TPU": float(tpu_per_host), f"node:{host.node_ip}": 0.001} for host in instance.hosts]
 
 
 def _table_entry(pg_id: str) -> Dict[str, Any]:

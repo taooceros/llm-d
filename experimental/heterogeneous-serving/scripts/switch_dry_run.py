@@ -7,8 +7,11 @@ each one against the *currently bound* instances (a request dispatched before it
 recorded error), and returns records with segments and ttft.  tests/test_switch.py imports
 this module for the same fakes.
 
-    scripts/switch_dry_run.py [full|partial|both] [--scale 1.0]   # scale 1.0: drain 2 s/instance,
-                                                                  # deploy 5 s, gateway_up 1 s
+    scripts/switch_dry_run.py [full|partial|both] [--scale 1.0] [--overlap]   # scale 1.0: drain 2 s/instance,
+                                                                              # deploy 5 s, gateway_up 1 s
+
+``--overlap`` runs the pre-spawn path (hetero/prespawn.py): the fake target engines are spawned
+during phase 1, park, are released after the drain and committed instead of deployed.
 """
 from __future__ import annotations
 
@@ -38,7 +41,9 @@ PLANS = {
                 "kept_max_model_len": 16384},
 }
 DEFAULT_DELAYS = {"drain": 2.0, "gateway_down": 0.3, "deploy": 5.0, "gateway_up": 1.0, "adopt": 0.2,
-                  "retarget": 0.3, "capture": 0.2, "join": 1.0}
+                  "retarget": 0.3, "capture": 0.2, "join": 1.0,
+                  # pre-spawn: spawn (imports, config, actors) and park during phase 1; commit = engine init
+                  "prespawn": 2.0, "park": 1.0, "release": 0.05, "commit": 3.0}
 
 
 def synthetic_manifest(name: str, n: int, *, prompt_len: int, max_tokens: int) -> Dict[str, Any]:
@@ -57,7 +62,13 @@ def make_loader(manifests: Dict[str, Dict[str, Any]]):
 
 class FakeFabric:
     def __init__(self, mode: str, *, delays: Optional[Dict[str, float]] = None, scale: float = 1.0,
-                 fail_at: Optional[str] = None, clock=time.time) -> None:
+                 fail_at: Optional[str] = None, clock=time.time, overlap: bool = False) -> None:
+        self.overlap = overlap
+        self.prespawn_started: Optional[float] = None
+        self.parked_at: Optional[float] = None
+        self.released_at: Optional[float] = None
+        self.prespawn_ids: List[str] = []
+        self.aborted = False
         self.mode, self.clock = mode, clock
         self.cfg = PLANS[mode]
         self.delays = {k: v * scale for k, v in {**DEFAULT_DELAYS, **(delays or {})}.items()}
@@ -134,6 +145,8 @@ class FakeFabric:
         return {"found": True, "removed": True}
 
     def deploy(self, instance_ids=None):
+        if self.overlap:
+            raise AssertionError("a pre-spawn run must commit, never deploy")
         if self.fail_at == "deploy":
             self._call("deploy", self.delays["deploy"])
         ids = list(self.cfg["target_instances"] if instance_ids is None else instance_ids)
@@ -224,6 +237,81 @@ class FakeFabric:
     def traces(self, limit=0):
         return []
 
+    # -- pre-spawn
+    def prespawn_requested(self, instance_ids):
+        return self.overlap
+
+    def prespawn(self, instance_ids=None):
+        self.prespawn_ids = list(self.cfg["target_instances"] if instance_ids is None else instance_ids)
+        self.prespawn_started = self.clock()
+        self._call("prespawn", self.delays["prespawn"])
+        return {"gate_name": "fake-gate", "clocks": {"prespawn_begin": self.prespawn_started}}
+
+    def await_parked(self, timeout_s, stop=None):
+        began = self.clock()
+        if self.fail_at == "park":
+            self.calls.append({"name": "await_parked", "begin": began, "end": None})
+            raise RuntimeError("injected failure in park")
+        deadline = began + self.delays["park"]
+        while self.clock() < deadline:
+            if stop is not None and stop():
+                raise RuntimeError("pre-spawn park wait aborted")
+            time.sleep(0.005)
+        self.parked_at = self.clock()
+        self.calls.append({"name": "await_parked", "begin": began, "end": self.parked_at})
+        return {"parked": {f"10.0.0.{i}": self.parked_at for i in range(2)}, "all_parked_at": self.parked_at}
+
+    def release(self, instance_ids=None):
+        self._call("release", self.delays["release"])
+        self.released_at = self.clock()
+        ids = self.prespawn_ids if instance_ids is None else list(instance_ids)
+        return {"released_at": {f"10.0.0.{i}": self.released_at for i in range(2)},
+                "tpu_hold_pgs": [f"omp-hetero--{self.cfg['target']}--{n}-tpuhold" for n in ids]}
+
+    def commit(self, instance_ids=None):
+        if self.fail_at == "commit":
+            self._call("commit", self.delays["commit"])
+        ids = self.prespawn_ids if instance_ids is None else list(instance_ids)
+        assert sorted(ids) == sorted(self.prespawn_ids), "commit set differs from the pre-spawn"
+        total = self.delays["commit"]
+        began = self.clock()
+        time.sleep(total * .05)  # gate wake-up + libtpu lock / vfio free
+        free = self.clock()
+        phases: Dict[str, Dict[str, float]] = {"prespawn_gate": {"start": self.parked_at, "end": free}}
+        for name, frac in (("init_device", .05), ("load_model", .4), ("determine_available_memory", .02),
+                           ("initialize_from_config", .08), ("compile_or_warm_up_model", .3)):
+            start = self.clock()
+            time.sleep(total * frac)
+            phases[name] = {"start": start, "end": self.clock()}
+        lm = phases["load_model"]
+        for i, sub in enumerate(("snapshot_manifest_verify", "snapshot_read_tmpfs", "snapshot_verify",
+                                 "snapshot_device_placement")):
+            phases[sub] = {"start": lm["start"] + (lm["end"] - lm["start"]) * i / 5,
+                           "end": lm["start"] + (lm["end"] - lm["start"]) * (i + 1) / 5}
+        time.sleep(total * .05)  # serving endpoint + registry
+        gate = {"key": "10.0.0.0", "parked_at": self.parked_at, "released_at": self.released_at,
+                "gate_returned_at": self.released_at, "lock_free_at": free, "vfio_free_at": free,
+                "devices_ready_at": phases["init_device"]["end"], "device_free_wait_s": free - self.released_at,
+                "holders_seen": {}, "self_check_parked": {"clean": True}, "self_check_released": {"clean": True}}
+        instances = [{"descriptor": {"instance_id": n},
+                      "initialization": {"instance_id": n, "engine_init_started_at": self.prespawn_started,
+                                         "worker_init_phases": [
+                                             {"executor_rank": r, "phases": phases, "prespawn_gate": gate,
+                                              "weight_snapshot": {"restored": True}} for r in range(2)]}}
+                     for n in ids]
+        self.calls.append({"name": "commit", "begin": began, "end": self.clock()})
+        return {"layout_id": self.cfg["target"], "stage_clocks": {"backend_s": 0.1, "placement_s": 0.1},
+                "instances": instances,
+                "prespawn": {"clocks": {"prespawn_begin": self.prespawn_started, "all_parked": self.parked_at},
+                             "tpu_hold": {n: {"created_at": self.released_at, "ready_at": self.released_at + 0.01}
+                                          for n in ids}}}
+
+    def abort_prespawn(self):
+        now = self.clock()
+        self.calls.append({"name": "abort_prespawn", "begin": now, "end": now})
+        self.aborted = True
+        return {"aborted": True, "actors": list(self.prespawn_ids)}
+
     # -- used by the fake client
     def route(self, item) -> str:
         context = len(item["prompt_token_ids"]) + int(item["max_tokens"])
@@ -311,8 +399,12 @@ def default_manifests(mode: str, *, phase1_rows=64, w0_rows=120, w6_rows=20) -> 
 
 
 def run_dry(mode: str, out_dir: pathlib.Path, *, scale: float = 1.0, delays=None, fail_at=None,
-            service_s: float = 0.02, service_by_label=None, manifests=None, run_id: Optional[str] = None):
-    fabric = FakeFabric(mode, scale=scale, delays=delays, fail_at=fail_at)
+            service_s: float = 0.02, service_by_label=None, manifests=None, run_id: Optional[str] = None,
+            overlap: bool = False, prespawn_at_s: float = 0.0):
+    fabric = FakeFabric(mode, scale=scale, delays=delays, fail_at=fail_at, overlap=overlap)
+    if overlap and service_by_label is None:
+        # Phase 1 outlasts spawn + park, so the engines are parked before T0 (as intended in production).
+        service_by_label = {"phase1": prespawn_at_s + 1.5 * (fabric.delays["prespawn"] + fabric.delays["park"])}
     client = FakeClient(fabric, service_s=service_s, service_by_label=service_by_label)
     manifests = manifests or default_manifests(mode)
     cfg = PLANS[mode]
@@ -321,7 +413,8 @@ def run_dry(mode: str, out_dir: pathlib.Path, *, scale: float = 1.0, delays=None
                   policy={"decode_length_blind": True, "large_fresh_traffic_share": 0.0,
                           "reserve_large_headroom_blocks": 0},
                   static_target_s=0.5 if mode == "full" else 1.0, artifact_root=out_dir,
-                  manifest_loader=make_loader(manifests), gate_poll_s=0.05, event_grace_s=1.0)
+                  manifest_loader=make_loader(manifests), gate_poll_s=0.05, event_grace_s=1.0,
+                  prespawn_at_s=prespawn_at_s, prespawn_park_timeout_s=60.0)
     return fabric, client, kwargs
 
 
@@ -361,6 +454,19 @@ def check_order(report: Dict[str, Any], fabric: FakeFabric, client: FakeClient) 
         assert min(d["t"] for d in client.dispatches if d["label"] == "kept") >= st["gate_open:kept"]
         assert st["gate_open:kept"] < st["deploy_end"], "kept stream must not wait for the joiners' deploy"
         assert min(d["t"] for d in client.dispatches if d["label"] == "joiner") >= st["gate_open:joiner"] >= st["join_begin"]
+    if report.get("prespawn"):
+        pre = [("phase1_begin", "prespawn_begin"), ("prespawn_end", "prespawn_park_begin"),
+               ("prespawn_parked", "T0"), ("controller_wake", "prespawn_wait_begin"),
+               ("prespawn_wait_end", "drain_begin"), ("drain_end", "prespawn_release_begin"),
+               ("prespawn_release_end", "deploy_begin")]
+        if mode == "full":
+            pre.append(("gateway_down_end", "prespawn_release_begin"))
+        else:
+            pre.append(("prespawn_release_end", "adopt_begin"))
+        seq += pre
+        assert report["prespawn"]["parked_before_T0"], "pre-spawned engines were not parked before T0"
+        assert "deploy" not in fabric.order() and "commit" in fabric.order()
+        assert st["prespawn_begin"] - st["phase1_begin"] >= report["prespawn"]["at_s"] - 1e-3
     for a, b in seq:
         assert st[a] <= st[b] + 1e-6, f"{a} after {b}"
     assert report["timeline"]["segments_reconcile"], "segments do not sum to the dispatch gap"
@@ -372,12 +478,18 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("mode", nargs="?", default="both", choices=("full", "partial", "both"))
     parser.add_argument("--scale", type=float, default=1.0, help="multiply every fake delay")
+    parser.add_argument("--overlap", action="store_true", help="pre-spawn the target engines during phase 1")
+    parser.add_argument("--prespawn-at-s", type=float, default=0.0, help="pre-spawn start after phase 1 begins")
     args = parser.parse_args()
     for mode in ("full", "partial") if args.mode == "both" else (args.mode,):
         with tempfile.TemporaryDirectory() as tmp:
-            fabric, client, kwargs = run_dry(mode, pathlib.Path(tmp), scale=args.scale)
+            fabric, client, kwargs = run_dry(mode, pathlib.Path(tmp), scale=args.scale, overlap=args.overlap,
+                                             prespawn_at_s=args.prespawn_at_s)
             report = run_switch(fabric, client, **kwargs)
             print_report(report, fabric, client)
+            if report.get("prespawn"):
+                print("-- prespawn window", report["prespawn"]["window"])
+                print("-- prespawn anatomy", report["timeline"]["prespawn"])
             check_order(report, fabric, client)
             print(f"-- call order {fabric.order()}\n-- ordering asserts OK")
 

@@ -214,6 +214,57 @@ break-even table. Mixed-workload M-to-S and partial-restore projections are
 explicitly estimates: only full H/S restore transitions are measured, and the
 partial projection preserves the historical partial/full effective-cost ratio.
 
+### Pre-spawned switch targets (`prespawn`)
+
+`EngineSettings.prespawn` (default `false`) makes `run-switch` start the target
+engines during phase 1, next to the source engines that still own the TPUs
+(`hetero/prespawn.py`, `deployment.prespawn_deployment`). Their placement
+groups carry no TPU resource and their worker actors request none; each worker
+runs imports, vLLM config and worker construction, then parks in
+`HeteroTPUWorker.init_device` immediately before the first device touch
+(`jax.devices()` in tpu_inference's `TPUWorker.init_device`) on a named release
+gate keyed by node IP. Before parking and when the gate opens the worker checks
+`/proc/self`: a mapped `libtpu.so`, an open `/dev/vfio` fd or a
+`/tmp/libtpu_lockfile` fd is a hard failure. After the drain the controller
+releases the target hosts; each worker then waits, bounded, until no other
+process holds a lock on `/tmp/libtpu_lockfile` or a `/dev/vfio` fd, and the
+controller creates `<layout>--<instance>-tpuhold` placement groups that restore
+Ray's TPU accounting (released with the layout by `release`). Nothing is
+registered (registry, gateway) before `commit_prespawned`. Any failure before
+commit removes only the pre-spawn's own actors, groups and gate; a failure
+before T0 cancels phase 1 without touching the source. `deploy` refuses
+`prespawn=true`. `run-switch --prespawn-at-s` (default 0) sets the spawn time
+after phase 1 begins; the report records the pre-spawn window, phase-1 delivery
+before/during/after it, per-worker gate clocks (`parked_at`, `released_at`,
+`lock_free_at`, `vfio_free_at`, `devices_ready_at`) and the segments
+`prespawn_wait`, `prespawn_release` and (full) `device_handoff`.
+`OVERLAP=1 scripts/switch_campaign.sh <full|partial>` runs it with the
+executable bank; `GATE=1` (full) adds the sabotaged-bank fallback deploy.
+
+### Executable bank (skip trace/lower/compile on a known engine shape)
+
+`EngineSettings.exec_bank` (`null` | `"write"` | `"read"`, directory
+`exec_bank_dir`, default `/root/.cache/omp_exec_bank`, pod-local). With
+`"write"` (provisioning deploy) every precompiled tpu_inference bucket
+(`run_model`, `compute_logits`, `sample`, both logprob gathers,
+`select_from_array`, `substitute_placeholder_token`, `structured_decode`) is
+captured as an AOT `Compiled` and, after warm-up, serialized per rank into
+`<dir>/<identity digest>/rank<k>/` (atomic rename; manifest with identity,
+entries and sha256). With `"read"` each worker loads its bank after
+`initialize_from_config` (`exec_bank_load` clock). All ranks vote through Ray
+internal_kv, and the bank is used only if every rank agrees on identity and
+entry set; otherwise every rank compiles normally and reports why. Banked
+buckets skip lower/compile in `CompilationManager._run_compilation`. Warm-up
+and serving call the `Compiled` directly. A bucket miss or a `Compiled`
+signature rejection takes the original jit path and is counted. The identity
+covers model/KV/scheduler shape, num_blocks, mesh device order, host order,
+topology, jax/jaxlib/libtpu/vllm/tpu_inference versions, platform version,
+XLA/libtpu flags, jax config, native-patch revisions and the installed runner
+sources. So a read deploy must use the write deploy's settings on the same
+hosts. Evidence: `omp_init_phases()["exec_bank"]` and the worker RPC
+`omp_exec_bank_report()`. `exec_bank_sabotage_rank` (read only) makes one
+process rank refuse its bank, for testing the all-rank fallback.
+
 ### Scoped fast graph construction
 
 `EngineSettings.fast_graph` (default `false`) applies a load-scoped JAX 0.10

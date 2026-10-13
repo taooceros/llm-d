@@ -21,6 +21,16 @@
 # OUT (results/switch/<mode>-<commit>), POLICY, INVENTORY, MODEL, SWITCH_TIMEOUT (5400 s per run-switch job),
 # ARM_TIMEOUT (900 s per run-switch stream),
 # REFERENCE ($OUT; directory with prep-<layout>-reference.json when PREP=0).
+#
+# OVERLAP=1 (O1): the run-switch target engines are pre-spawned during phase 1 (engine setting
+#   prespawn=true; PRESPAWN_AT_S after phase 1 begins, default 0) and read the executable bank
+#   (exec_bank=read).  PREP writes the banks on the restore deploy of every target shape: full ->
+#   the H restore deploy (exec_bank=write); partial -> an extra Mb restore deploy (large_b
+#   exec_bank=write) + check + teardown before rep 1.  Run ids and OUT get an "-ov" suffix.
+# GATE=1 (O2 gate; full only; implies OVERLAP=1, REPS=1): after PREP, one H restore deploy reads
+#   the bank with exec_bank_sabotage_rank=1 (that process rank reports its bank unusable, so every
+#   rank must fall back without a hang), check, teardown; then the single overlapped switch.
+# OVERLAP=0 (default) runs exactly the published P2/P3 campaign.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 MODE=${1:-}
@@ -39,7 +49,16 @@ HEAD_POD=${HEAD_POD:-'<head-pod>'}
 export HEAD_POD
 NS=llm-d-optimized-baseline
 COMMIT=$(git rev-parse --short HEAD)
+OVERLAP=${OVERLAP:-0}
+GATE=${GATE:-0}
+PRESPAWN_AT_S=${PRESPAWN_AT_S:-0}
+if (( GATE )); then
+  [[ $MODE == full ]] || { echo "GATE=1 runs only with mode full" >&2; exit 2; }
+  OVERLAP=1
+  REPS=1
+fi
 RUN_BASE=$MODE-$COMMIT
+(( OVERLAP )) && RUN_BASE+=-ov
 OUT=${OUT:-results/switch/$RUN_BASE}
 INVENTORY=${INVENTORY:-/tmp/hetero-inventory-only.json}
 MODEL=${MODEL:-/models/gemma-4-31b}
@@ -59,6 +78,25 @@ POLICY=${POLICY:-'{"decode_length_blind":true,"large_fresh_traffic_share":0.0,"r
 FAST='{"weight_snapshot":"read","weight_snapshot_verify":false,"fast_graph":true,"startup_profile":true}'
 NORMAL='{"weight_snapshot":"off","startup_profile":true}'
 LARGE_B_LONG='{"large_b":{"max_model_len":131072}}'
+# OVERLAP: bank write on the prep restore deploys; pre-spawn + bank read on the run-switch target.
+# The bank identity covers every engine setting except exec_bank*/prespawn, so the write and read
+# deploys have the switch target's shape (hosts, max_model_len, batch limits).
+FAST_BANK_WRITE='{"weight_snapshot":"read","weight_snapshot_verify":false,"fast_graph":true,"startup_profile":true,"exec_bank":"write"}'
+FAST_BANK_SABOTAGE='{"weight_snapshot":"read","weight_snapshot_verify":false,"fast_graph":true,"startup_profile":true,"exec_bank":"read","exec_bank_sabotage_rank":1}'
+FAST_PRESPAWN='{"weight_snapshot":"read","weight_snapshot_verify":false,"fast_graph":true,"startup_profile":true,"prespawn":true,"exec_bank":"read"}'
+# Mb bank deploy: only large_b has a published Mb snapshot; the kept-shape engines load normally.
+LARGE_B_BANK_WRITE='{"large_b":{"max_model_len":131072,"exec_bank":"write"},"small_a":{"weight_snapshot":"off"},"small_b":{"weight_snapshot":"off"}}'
+LARGE_B_PRESPAWN='{"large_b":{"max_model_len":131072,"prespawn":true,"exec_bank":"read"}}'
+H_PREP_RESTORE=$FAST
+H_TARGET=$FAST
+MB_TARGET=$LARGE_B_LONG
+OVERLAP_ARGS=()
+if (( OVERLAP )); then
+  H_PREP_RESTORE=$FAST_BANK_WRITE
+  H_TARGET=$FAST_PRESPAWN
+  MB_TARGET=$LARGE_B_PRESPAWN
+  OVERLAP_ARGS=(--prespawn-at-s "$PRESPAWN_AT_S")
+fi
 for manifest in W0 W6; do
   [[ -s data/manifests/$manifest.json ]] || { echo "missing data/manifests/$manifest.json (scripts/w6_campaign.sh builds W6)" >&2; exit 1; }
 done
@@ -234,8 +272,10 @@ record_run() {  # record_run <rep> <attempt> <run_id> <ok>
 }
 run_id_for() { local id=$RUN_BASE-r$1; (( $2 > 1 )) && id+=-a$2; echo "$id"; }
 write_campaign() {
-  (( DRY )) || printf '{"mode":"%s","commit":"%s","run_base":"%s","reps":%s,"policy":%s}\n' \
-    "$MODE" "$COMMIT" "$RUN_BASE" "$REPS" "$POLICY" > "$OUT/campaign.json"
+  local extra=
+  (( OVERLAP )) && extra=$(printf ',"overlap":1,"gate":%s,"prespawn_at_s":%s' "$GATE" "$PRESPAWN_AT_S")
+  (( DRY )) || printf '{"mode":"%s","commit":"%s","run_base":"%s","reps":%s,"policy":%s%s}\n' \
+    "$MODE" "$COMMIT" "$RUN_BASE" "$REPS" "$POLICY" "$extra" > "$OUT/campaign.json"
 }
 
 # ---------------------------------------------------------------- full (P2): S -> H
@@ -280,7 +320,7 @@ campaign_full() {
     prep_snapshot S -
     prep_snapshot H - --max-model-len 131072
     validate files S prep-snapshot-files
-    deploy H H-restore "$FAST" --max-model-len 131072
+    deploy H H-restore "$H_PREP_RESTORE" --max-model-len 131072
     restored H
     # Same-loader static reference: W6 on the FAST-restored H (the published 206.2 s came from a
     # normal-loader H); switch_summary.py can recompute the ramp against it.
@@ -295,6 +335,14 @@ campaign_full() {
     fi
     teardown H H-restore
   fi
+  if (( GATE )); then
+    # O2 gate: the bank written above, read with one process rank sabotaged; every rank must fall
+    # back (worker_init_phases[*].exec_bank in the check) and the deploy must finish, not hang.
+    deploy H H-gate-sabotage "$FAST_BANK_SABOTAGE" --max-model-len 131072
+    validate check H H-gate-sabotage-check --require-restored
+    validate validate H H-gate-sabotage-validation --reference "$REFERENCE/prep-H-reference.json"
+    teardown H H-gate-sabotage
+  fi
   deploy S S-restore "$FAST" --max-model-len 16384
   restored S
   local r=1 attempt=1 rid
@@ -304,12 +352,19 @@ campaign_full() {
     mark "switch_start:r$r"
     if ctl run-switch H "switch-r$r" "$SWITCH_TIMEOUT" --inventory "$INVENTORY" -- \
         --from-layout S --switch-mode full --phase1 W0 --phase2 W6 --static-target-s 206.2 \
-        --run-id "$rid" --policy "$POLICY" --engine-settings "$FAST" --max-model-len 131072 \
+        --run-id "$rid" --policy "$POLICY" --engine-settings "$H_TARGET" --max-model-len 131072 \
+        "${OVERLAP_ARGS[@]}" \
         --model "$MODEL" --arm-timeout "$ARM_TIMEOUT" && switch_complete "$OUT/switch-r$r.json"; then
       mark "switch_end:r$r"
       current=H
       record_run "$r" "$attempt" "$rid" true
       state "switched S->H $rid"
+      if (( OVERLAP )); then
+        # After phase 2, outside C: greedy tokens of the pre-spawned, bank-read H equal the native
+        # normal-loader reference (within-layout exact equality, hard).
+        validate validate H "switch-r$r-H-validation" --require-restored \
+          --reference "$REFERENCE/prep-H-reference.json" || { state "bank-validation-failed r$r"; return 1; }
+      fi
       if ! return_to_source "$r"; then
         record_run "$r" "$attempt" "$RUN_BASE-ret-r$r" false
         state "return-failed r$r"; echo "harness return H->S failed in rep $r; stopping" >&2; return 1
@@ -344,6 +399,12 @@ campaign_partial() {
     prep_snapshot S -
     prep_snapshot Mb large_b --instance-engine-settings "$LARGE_B_LONG"
     validate files S prep-snapshot-files
+    if (( OVERLAP )); then
+      # Executable bank of the joiner shape: large_b on its Mb hosts, as the switch will start it.
+      deploy Mb Mb-bank "$FAST" --instance-engine-settings "$LARGE_B_BANK_WRITE"
+      validate check Mb Mb-bank-check
+      teardown Mb Mb-bank
+    fi
   fi
   local r=1 attempt=1 rid
   while (( r <= REPS )); do
@@ -355,13 +416,19 @@ campaign_partial() {
     if ctl run-switch Mb "switch-r$r" "$SWITCH_TIMEOUT" --inventory "$INVENTORY" -- \
         --from-layout S --switch-mode partial --phase1 W0 --phase2 W0,W6 --static-target-s 409.2 \
         --run-id "$rid" --policy "$POLICY" --engine-settings "$FAST" \
-        --instance-engine-settings "$LARGE_B_LONG" --max-model-len 16384 \
+        --instance-engine-settings "$MB_TARGET" --max-model-len 16384 "${OVERLAP_ARGS[@]}" \
         --model "$MODEL" --arm-timeout "$ARM_TIMEOUT" && switch_complete "$OUT/switch-r$r.json"; then
       mark "switch_end:r$r"
       current=Mb
       record_run "$r" "$attempt" "$rid" true
       state "switched S->Mb $rid"
       validate check Mb "Mb-restore-check-r$r" --require-restored
+      if (( OVERLAP )); then
+        # Outside C: greedy tokens of the kept pair and the pre-spawned, bank-read joiner equal the
+        # native normal-loader Mb reference (hard).
+        validate validate Mb "Mb-restored-validation-r$r" \
+          --reference "$REFERENCE/prep-Mb-reference.json" || { state "bank-validation-failed r$r"; return 1; }
+      fi
       teardown Mb "switch-r$r-Mb"
       teardown S "switch-r$r-leftover-S" || true  # kept engines keep their S placement-group names
       r=$((r + 1)); attempt=1

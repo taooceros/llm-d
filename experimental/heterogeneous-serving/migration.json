@@ -36,8 +36,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "17b0bb80b362f98f4cf1e4a2ceb2ad2b651c779d8dde1c10530f507f99b8954a",
-      "bytes": 36982
+      "sha256": "ff5716d7423c7cb5bf9f83ff998714be3a77a6c199cdf5d960409538812039b4",
+      "bytes": 40425
     },
     {
       "path": "RECONFIGURATION_GOAL.md",
@@ -226,13 +226,13 @@
     },
     {
       "path": "hetero/cli.py",
-      "sha256": "32f34e36a1c03e881c6f4e8b0f6566b45eb4d1759cc8ff69c283a96d0eaf9156",
-      "bytes": 32046
+      "sha256": "afe3455e5d838594f76669f612fe97b236df3ead4fd65eeb1ff3a5e98bac8147",
+      "bytes": 32859
     },
     {
       "path": "hetero/deployment.py",
-      "sha256": "a6320378b9cf2202382b0139133bf2fe66261823e1b1f2e2547cd58388a23d21",
-      "bytes": 23684
+      "sha256": "49ec345183f17276d1855d16bf51a22caaac495f778522255e15307c1e365c7e",
+      "bytes": 38468
     },
     {
       "path": "hetero/evidence.py",
@@ -256,8 +256,8 @@
     },
     {
       "path": "hetero/placement.py",
-      "sha256": "0acc2e4d0c975146036215ea134f202e8ab3d70cdbd89a17b984c331bd017c86",
-      "bytes": 9495
+      "sha256": "05cff70589f71418e9bd2f373b6ba046092e222ca493dbe202b4e1cf0a374492",
+      "bytes": 10135
     },
     {
       "path": "hetero/qualify_continuation.py",
@@ -286,8 +286,8 @@
     },
     {
       "path": "hetero/switch.py",
-      "sha256": "024f372836ba05246ed18e19c46920b6c50eeea63c471d53d66cce5a549575c4",
-      "bytes": 58220
+      "sha256": "09a551ff995c026f951cdc5537a44499a06062eb40ee680f974418d318308cc0",
+      "bytes": 72339
     },
     {
       "path": "hetero/transition.py",
@@ -465,6 +465,11 @@
       "bytes": 13560
     },
     {
+      "path": "scripts/overlap_check.py",
+      "sha256": "240219a49a7492b6876be6ecb6d25c4df1087d4e6dc4f337661cf096ab92b384",
+      "bytes": 7610
+    },
+    {
       "path": "scripts/overlap_pilot.py",
       "sha256": "b798bf2633ad9d393511b81bcaf75ef24d5e1c21c5a1431accb8ec08bfb478ed",
       "bytes": 10836
@@ -591,18 +596,18 @@
     },
     {
       "path": "scripts/switch_campaign.sh",
-      "sha256": "3a9e272e010eab32db5140f9726c93f2d73179517f0315f5c2ab4d6eea8bed40",
-      "bytes": 18630
+      "sha256": "8023cfac0406c578f3b8de7762a8fd97339b522c26e8897c268dc46d57af8dd7",
+      "bytes": 22708
     },
     {
       "path": "scripts/switch_dry_run.py",
-      "sha256": "982e8f3a9589e0e2cae4ca171fd91a42bb76918042d95195d3b8837e0c28c677",
-      "bytes": 19935
+      "sha256": "03f26de87ca0c2ceef911c44104bae4860e29156f7cbc9d6837381770f60a3b8",
+      "bytes": 27041
     },
     {
       "path": "scripts/switch_summary.py",
-      "sha256": "eac251cd0aae8fe1ac05bb6f3f607e3675d9c337680b0a78bb31933974cf1f36",
-      "bytes": 14216
+      "sha256": "a4671d2e22947a59e62dbb3568cde7171609a92326872c2e59384013946ca934",
+      "bytes": 14580
     },
     {
       "path": "scripts/w3_campaign.sh",
