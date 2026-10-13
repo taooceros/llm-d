@@ -1,0 +1,62 @@
+{
+ "repository": "taooceros/llm-d",
+ "tag": "research-evidence-20261012",
+ "assets": [
+  {
+   "path": "/dev/shm/hetero-scratch/publish/evidence/release/results-001.tar.gz",
+   "name": "results-001.tar.gz",
+   "size": 15139518,
+   "sha256": "a426f7904e8e43371f0671298765ea5fefe2b9107a87040630713382b0e24d60"
+  },
+  {
+   "path": "/dev/shm/hetero-scratch/publish/evidence/release/results-002.tar.gz",
+   "name": "results-002.tar.gz",
+   "size": 15094214,
+   "sha256": "e6f7207a56ffecb42525152a27c17e39e70b08a0b50936320fd3b9754554b894"
+  },
+  {
+   "path": "/dev/shm/hetero-scratch/publish/evidence/release/results-003.tar.gz",
+   "name": "results-003.tar.gz",
+   "size": 15012186,
+   "sha256": "9f01d436cef3d8cb0398c6d422daf48ae6072448233f2bc0192ffb6823180090"
+  },
+  {
+   "path": "/dev/shm/hetero-scratch/publish/evidence/release/results-004.tar.gz",
+   "name": "results-004.tar.gz",
+   "size": 368684944,
+   "sha256": "8c2308f5b941a581cff140db339667cee8ffb0f18bae4932e448d33bcc73bdd5"
+  },
+  {
+   "path": "/dev/shm/hetero-scratch/publish/evidence/release/results-005.tar.gz",
+   "name": "results-005.tar.gz",
+   "size": 207731925,
+   "sha256": "79a74d7888b4f5374f6215d3dc6c3d7965c1970aa36e1566a109420054907d0c"
+  },
+  {
+   "path": "/dev/shm/hetero-scratch/publish/evidence/release/archive-inventory-001.json",
+   "name": "archive-inventory-001.json",
+   "size": 462662,
+   "sha256": "59285a5f107951066fed0f960985a39eeecb66b7f0a34f3f660333e04f33752a"
+  },
+  {
+   "path": "/dev/shm/hetero-scratch/publish/evidence/release/asset-index.json",
+   "name": "asset-index.json",
+   "size": 2727,
+   "sha256": "65b265a33bfc0c85e4bc7bf0c540558a059459d5569a9554bf39d9e12f8a23f3"
+  },
+  {
+   "path": "/dev/shm/hetero-scratch/publish/evidence/release/branch-results.json",
+   "name": "branch-results.json",
+   "size": 199713,
+   "sha256": "cc2b23fd586250525f777492a2a19ecbc97dc5ad56a86a0f7583e476a457c58d"
+  },
+  {
+   "path": "/dev/shm/hetero-scratch/publish/evidence/release/publication-audit.json",
+   "name": "publication-audit.json",
+   "size": 38574,
+   "sha256": "b41d2c2ea000d5e85c8da27177b5c7748b23eb46c0629cdb9056affc10cb5a45"
+  }
+ ],
+ "upload_performed": true,
+ "publication_record": "../publication.json"
+}

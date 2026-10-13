@@ -14,5 +14,26 @@
   "unexpected_release_assets": 0,
   "pull_requests_created": 0,
   "default_branches_changed": false,
-  "publication_policy": "Uploaded only the exact final manifest, never a directory wildcard. Superseded unsafe local archives/index were not uploaded. Historical input/request omissions and screening limits are recorded in research/publication-audit.json and the asset index."
+  "publication_policy": "Uploaded only the exact final manifest, never a directory wildcard. Superseded unsafe local archives/index were not uploaded. Historical input/request omissions and screening limits are recorded in research/publication-audit.json and the asset index.",
+  "publication_20261012": {
+    "release_tag": "research-evidence-20261012",
+    "release_id": 411108502,
+    "release_url": "https://github.com/taooceros/llm-d/releases/tag/research-evidence-20261012",
+    "published": true,
+    "prerelease": true,
+    "tag_target": "2f67981b74449047939ca1cd81ed22f1a63443c6",
+    "asset_manifest": "research/release-assets-20261012.json",
+    "asset_index": "research/evidence-20261012/asset-index.json",
+    "asset_index_sha256": "65b265a33bfc0c85e4bc7bf0c540558a059459d5569a9554bf39d9e12f8a23f3",
+    "uploaded_assets": 9,
+    "github_reported_sha256_digests_matched": 9,
+    "github_reported_sizes_matched": 9,
+    "unexpected_release_assets": 0,
+    "pull_requests_created": 24,
+    "pull_request_targets": "taooceros/<fork> only: pr/hetero-local-20261012 -> research/heterogeneous-tpu-20260918, pr/hetero-chain-20261012 -> pr/hetero-local-20261012, pr/hetero-<side>-20261012 -> pr/hetero-chain-20261012",
+    "pull_request_record": "docs/experiments/bulk_reconfiguration_plan.md (Publication 2026-10-12)",
+    "merged_by_us": false,
+    "default_branches_changed": false,
+    "publication_policy": "Uploaded the exact file list, never a wildcard. Evidence is not committed to the forks; the three withheld files are listed under exclusions in the asset index."
+  }
 }
