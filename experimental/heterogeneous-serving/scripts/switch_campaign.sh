@@ -58,7 +58,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 MODE=${1:-}
-case $MODE in full|partial|first-gate|first|preread) shift;; *) echo "usage: $0 <full|partial|first-gate|first|preread> [--dry-run]" >&2; exit 2;; esac
+case $MODE in full|partial|first-gate|first|preread|release-all) shift;; *) echo "usage: $0 <full|partial|first-gate|first|preread|release-all> [--dry-run]" >&2; exit 2;; esac
 DRY=0
 if [[ "${1:-}" == --dry-run ]]; then DRY=1; shift; fi
 (( $# == 0 )) || { echo "usage: $0 <full|partial> [--dry-run]" >&2; exit 2; }
@@ -84,7 +84,8 @@ fi
 if [[ $MODE == first || $MODE == preread ]]; then OVERLAP=1; fi
 if [[ $MODE == preread ]]; then REPS=${REPS:-1}; fi
 if [[ $MODE == first-gate ]]; then REPS=0; fi
-RUN_BASE=$MODE-$COMMIT
+# RUN_SUFFIX: a relaunch at the same commit (e.g. after a killed driver) gets fresh run ids and OUT.
+RUN_BASE=$MODE-$COMMIT${RUN_SUFFIX:+-$RUN_SUFFIX}
 (( OVERLAP )) && RUN_BASE+=-ov
 OUT=${OUT:-results/switch/$RUN_BASE}
 INVENTORY=${INVENTORY:-/tmp/hetero-inventory-only.json}
@@ -690,6 +691,10 @@ campaign_preread() {
   teardown S final
 }
 
+campaign_release_all() {  # after a killed driver: the EXIT cleanup (drain CURRENT, release H/Mb/S, tmpfs root)
+  started=1
+  current=${CURRENT:-}
+}
 idle
 disk_floor preflight
 write_campaign

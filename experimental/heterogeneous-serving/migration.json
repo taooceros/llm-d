@@ -606,8 +606,8 @@
     },
     {
       "path": "scripts/switch_campaign.sh",
-      "sha256": "bc35fb22019b6e3d189332b50b825c5278065eee716c9fce7a42d26bc00c6734",
-      "bytes": 37665
+      "sha256": "08042801ac8ab31ed4c73308e70c1218eb42882fbf1adb1428311fe6c1242cce",
+      "bytes": 37966
     },
     {
       "path": "scripts/switch_dry_run.py",
