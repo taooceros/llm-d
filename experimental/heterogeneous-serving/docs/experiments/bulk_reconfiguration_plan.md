@@ -1744,3 +1744,136 @@ Open:
 - the pre-read is not done before T0 (79.6 s residual);
 - `overlap_check` needs a pre-read-aware cold check (cosmetic);
 - the user's disk.
+
+## Publication 2026-10-12
+
+This section executes the decision "Publish everything as PRs". It was recorded after the PRs were created.
+
+- The code was ported into the five forks by file ownership: `migration.json` plus `assemble.py`.
+- Every PR is on `taooceros/<fork>`, and none is upstream.
+- Nothing was merged.
+- The default branches and the remote `research/heterogeneous-tpu-20260918` / `main` are unchanged; `git ls-remote` was checked before and after.
+- The evidence is in the release only.
+
+Recommended merge order, per fork: local, then chain, then sides. Use "Create a merge commit" so that the SHAs pinned in `forks.lock.json` and in the stacked PRs stay valid.
+
+### Pull requests
+
+| fork | PR | base | head | head sha | commits | files |
+|---|---|---|---|---|---|---|
+| vllm | [#1](https://github.com/taooceros/vllm/pull/1) | `research/heterogeneous-tpu-20260918` | `pr/hetero-local-20261012` | e81004817 | 1 | 4 |
+| vllm | [#2](https://github.com/taooceros/vllm/pull/2) | `pr/hetero-local-20261012` | `pr/hetero-chain-20261012` | 7052f7125 | 10 | 5 |
+| vllm | [#3](https://github.com/taooceros/vllm/pull/3) | `pr/hetero-chain-20261012` | `pr/hetero-reconfig-levers-20261012` | ea4f517f6 | 1 | 2 |
+| vllm | [#4](https://github.com/taooceros/vllm/pull/4) | `pr/hetero-chain-20261012` | `pr/hetero-load-profiler-20261012` | 10ba785a3 | 1 | 2 |
+| tpu-inference | [#1](https://github.com/taooceros/tpu-inference/pull/1) | `research/heterogeneous-tpu-20260918` | `pr/hetero-local-20261012` | ac4497925 | 1 | 2 |
+| tpu-inference | [#2](https://github.com/taooceros/tpu-inference/pull/2) | `pr/hetero-local-20261012` | `pr/hetero-chain-20261012` | 0f79ecad7 | 11 | 19 |
+| tpu-inference | [#3](https://github.com/taooceros/tpu-inference/pull/3) | `pr/hetero-chain-20261012` | `pr/hetero-unified-runtime-20261012` | b3d859a06 | 1 | 4 |
+| tpu-inference | [#4](https://github.com/taooceros/tpu-inference/pull/4) | `pr/hetero-chain-20261012` | `pr/hetero-in-place-engine-20261012` | 559a9776a | 1 | 5 |
+| tpu-inference | [#5](https://github.com/taooceros/tpu-inference/pull/5) | `pr/hetero-chain-20261012` | `pr/hetero-ici-benchmark-20261012` | 4cfadab15 | 1 | 5 |
+| tpu-inference | [#6](https://github.com/taooceros/tpu-inference/pull/6) | `pr/hetero-chain-20261012` | `pr/hetero-load-profiler-20261012` | 76e6f8390 | 1 | 4 |
+| llm-d-router | [#1](https://github.com/taooceros/llm-d-router/pull/1) | `research/heterogeneous-tpu-20260918` | `pr/hetero-local-20261012` | d74301a5c | 7 | 23 |
+| llm-d-router | [#2](https://github.com/taooceros/llm-d-router/pull/2) | `pr/hetero-local-20261012` | `pr/hetero-chain-20261012` | ff0e8212e | 2 | 13 |
+| llm-d | [#1](https://github.com/taooceros/llm-d/pull/1) | `research/heterogeneous-tpu-20260918` | `pr/hetero-local-20261012` | this commit | 58 | 1 |
+| llm-d | [#2](https://github.com/taooceros/llm-d/pull/2) | `pr/hetero-local-20261012` | `pr/hetero-chain-20261012` | 8ab4f6df6 | 12 | 78 |
+| llm-d | [#3](https://github.com/taooceros/llm-d/pull/3) | `pr/hetero-chain-20261012` | `pr/hetero-reconfig-levers-20261012` | 8354954b9 | 1 | 6 |
+| llm-d | [#4](https://github.com/taooceros/llm-d/pull/4) | `pr/hetero-chain-20261012` | `pr/hetero-unified-runtime-20261012` | 9bb25ee3a | 1 | 3 |
+| llm-d | [#5](https://github.com/taooceros/llm-d/pull/5) | `pr/hetero-chain-20261012` | `pr/hetero-in-place-engine-20261012` | d1fb14ed3 | 1 | 4 |
+| llm-d | [#6](https://github.com/taooceros/llm-d/pull/6) | `pr/hetero-chain-20261012` | `pr/hetero-ici-benchmark-20261012` | 20107896c | 1 | 7 |
+| llm-d | [#7](https://github.com/taooceros/llm-d/pull/7) | `pr/hetero-chain-20261012` | `pr/hetero-pathways-reshard-20261012` | a4d5da167 | 1 | 3 |
+| llm-d | [#8](https://github.com/taooceros/llm-d/pull/8) | `pr/hetero-chain-20261012` | `pr/hetero-load-profiler-20261012` | 62f8e72c0 | 1 | 5 |
+| llm-d | [#9](https://github.com/taooceros/llm-d/pull/9) | `pr/hetero-chain-20261012` | `pr/hetero-first-switch-20261012` | bd67d34a3 | 1 | 2 |
+| llm-d-async | [#1](https://github.com/taooceros/llm-d-async/pull/1) | `research/heterogeneous-tpu-20260918` | `pr/hetero-local-20261012` | 13525088e | 1 | 3 |
+| llm-d-async | [#2](https://github.com/taooceros/llm-d-async/pull/2) | `pr/hetero-local-20261012` | `pr/hetero-chain-20261012` | 0f7a855ad | 4 | 16 |
+| llm-d-async | [#3](https://github.com/taooceros/llm-d-async/pull/3) | `pr/hetero-chain-20261012` | `pr/hetero-reconfig-levers-20261012` | fc1d45f81 | 1 | 7 |
+
+Release: [research-evidence-20261012](https://github.com/taooceros/llm-d/releases/tag/research-evidence-20261012) (prerelease, id 411108502, tag at 2f67981).
+
+- 9 assets, 622,366,463 bytes; GitHub sha256 digests and sizes match 9/9.
+- The assets carry 2,424 `results/` files (3,959,061,075 bytes) in 5 `results-NNN.tar.gz` parts.
+- The trusted index and branch map are on the chain branch under `research/evidence-20261012/`.
+- `restore_evidence.py --verify-only` passes.
+
+### Chain stages (one fork commit per stage, only where owned files change)
+
+0. `main` @ `2d003a4`: vllm, tpu-inference, llm-d-router, llm-d, llm-d-async
+1. `restore/sharded-snapshot` @ `cc0f44f`: vllm, tpu-inference, llm-d
+2. `overlap/restore-precompile` @ `c229541`: vllm, tpu-inference, llm-d
+3. `restore/fast-snapshot` @ `b987931` (merge of restore/fast-snapshot (1f2dadf) into staged-fast-restore): vllm, tpu-inference, llm-d, llm-d-async
+4. `restore/fast-graph` @ `4c5ea0f` (merge of restore/fast-graph (1409b24) into staged-fast-restore): vllm, tpu-inference, llm-d
+5. `research/staged-fast-restore` @ `fdc9f7e`: tpu-inference, llm-d, llm-d-async
+6. `research/gateway-255` @ `4c652ca` (merge-base of research/gateway-255): vllm, tpu-inference, llm-d
+7. `research/bf16-kv` @ `dbc5513` (merge-base of research/bf16-kv): vllm, tpu-inference, llm-d-router, llm-d, llm-d-async
+8. `overlap/prespawn-bank` @ `bbbeb4f`: vllm, tpu-inference, llm-d
+9. `research/first-switch` @ `dcc3276` (merge-base of research/first-switch): vllm, tpu-inference, llm-d
+10. `research/first-switch-preread` @ `5f9468a` (research/first-switch-preread (chain tip)): vllm, tpu-inference, llm-d
+
+No code was missing from the tip:
+
+- `research/bf16-kv` 146edc0 is evidence only.
+- `research/gateway-255` 0395e78 has the same patch-id as `ed99e08` on the chain.
+- `research/first-switch` b55d161 (`switch_campaign.sh` RUN_SUFFIX, release-all mode) is not in the tip, so it is published as the `first-switch` side branch.
+
+Base check: the five forks at their local research HEADs assemble to hetero-research `b0ce11d` on 247/248 owned paths. The exception is `.gitignore`, which is the `8ca7686` baseline. That commit is not `main`, so `main` is stage 0.
+
+### Side branches
+
+Each `publish/side/<name>` branch in hetero-research is the chain tip with the side branch merged using `--no-ff`.
+
+Conflicts resolved:
+
+- reconfig-levers: `snapshot_validate.py`, by adding T32 to `LAYOUT_SIZES`. Fix-up `7fd2dc2`: `_routing_policy` now uses `getattr(args, "layout_file", None)`, and the T32 test expects the chain's full-bf16 default.
+- load-profiler: `engine_actor.py` and `tpu_worker.py`. LoadProfile now wraps the normal-loader path only.
+- first-switch: `switch_campaign.sh`, keeping both the preread and release-all modes.
+
+The other four merged cleanly.
+
+Not published as a code PR: `ici/pathways-prereq` (bd4a580). It adds only `results/`, so its files are in the release. No branch was skipped for unresolved conflicts.
+
+### New-file ownership (files that no fork owned at `research/heterogeneous-tpu-20260918`)
+
+Rule:
+
+- llm-d-router: the gateway.
+- tpu-inference: the TPU worker and device runtime (pre-spawn, executable bank, weight snapshot, restore graph, pre-read, compile cache and startup attribution, load profiling, ICI and unified runtimes).
+- vllm: the engine and vLLM glue.
+- llm-d-async: workloads, experiments, benchmarks, cost/policy models and catalogue builders.
+- llm-d: everything else (orchestration, switch, transition, layouts, CLI, campaign drivers and summaries, deploy, docs).
+
+Tests follow the module they test.
+
+| owner | files |
+|---|---|
+| vllm (1) | `tests/test_full_bf16_state.py` |
+| tpu-inference (30) | `hetero/compile_cache.py`, `hetero/compile_execution_smoke.py`, `hetero/compile_overlap.py`, `hetero/exec_bank.py`, `hetero/ici_benchmark.py`, `hetero/ici_executor.py`, `hetero/ici_mixed.py`, `hetero/ici_payload.py`, `hetero/ici_resident.py`, `hetero/ici_worker.py`, `hetero/load_profile.py`, `hetero/preread.py`, `hetero/prespawn.py`, `hetero/restore_graph.py`, `hetero/unified_runtime.py`, `hetero/weight_snapshot.py`, `tests/preread_ref_worker.py`, `tests/preread_support.py`, `tests/test_compile_cache.py`, `tests/test_compile_overlap.py`, `tests/test_exec_bank.py`, `tests/test_ici_benchmark.py`, `tests/test_ici_resident.py`, `tests/test_load_profile.py`, `tests/test_preread.py`, `tests/test_prespawn.py`, `tests/test_restore_graph.py`, `tests/test_restore_tail_worker.py`, `tests/test_unified_runtime.py`, `tests/test_weight_snapshot.py` |
+| llm-d-router (3) | `tests/test_ingress_failure_signature.py`, `tests/test_length_blind_policy.py`, `tests/test_mixed_length_policy.py` |
+| llm-d (74) | `RECONFIGURATION_GOAL.md`, `deploy/epp/latebinding.yaml`, `deploy/epp/plain.yaml`, `deploy/epp/reserve.yaml`, `deploy/k8s/hetero-agent-rbac.yaml`, `deploy/k8s/omp-epp-router.yaml`, `deploy/layouts/T32.json`, `hetero/agreement.py`, `hetero/run_scope.py`, `hetero/switch.py`, `hetero/transition.py`, `scripts/analyze_ici_trace.py`, `scripts/analyze_load_profile.py`, `scripts/analyze_overlap.py`, `scripts/band_campaign.sh`, `scripts/bf16_probe_diag.sh`, `scripts/bf16_provision.sh`, `scripts/cache_hit_summary.py`, `scripts/collect_ici_trace.py`, `scripts/compile_execution_smoke.py`, `scripts/epp_router.sh`, `scripts/fast_graph_ab.sh`, `scripts/fast_graph_summary.py`, `scripts/fast_snapshot_sequence.sh`, `scripts/ici_bench.py`, `scripts/ici_engine.py`, `scripts/ici_engine_analyze.py`, `scripts/ici_engine_sequence.sh`, `scripts/ici_sequence.sh`, `scripts/load_profile_campaign.sh`, `scripts/overlap_check.py`, `scripts/overlap_pilot.py`, `scripts/overlap_replay.py`, `scripts/overlap_restore_sequence.sh`, `scripts/overlap_source_probe.py`, `scripts/overlap_storage_probe.py`, `scripts/overlap_switch_sequence.sh`, `scripts/preread_compare.py`, `scripts/probe_drift.py`, `scripts/reconfig_measure.sh`, `scripts/reconfig_mix.sh`, `scripts/reconfig_partial.sh`, `scripts/reconfig_snapshot.sh`, `scripts/reconfig_timeline.py`, `scripts/reconfig_warm_stage.sh`, `scripts/reshard_prototype.py`, `scripts/snapshot_bandwidth.py`, `scripts/snapshot_validate.py`, `scripts/staged_sequence.sh`, `scripts/summarize_fast_snapshot.py`, `scripts/summarize_ici.py`, `scripts/summarize_reconfig.py`, `scripts/summarize_snapshot.py`, `scripts/summarize_snapshot_bandwidth.py`, `scripts/summarize_tp32.py`, `scripts/summarize_w3.py`, `scripts/summarize_w4.py`, `scripts/switch_campaign.sh`, `scripts/switch_dry_run.py`, `scripts/switch_summary.py`, `scripts/unified_runtime_deviceless_probe.py`, `scripts/w3_campaign.sh`, `scripts/w4_campaign.sh`, `scripts/w6_campaign.sh`, `tests/test_agreement.py`, `tests/test_fast_graph_summary.py`, `tests/test_first_switch.py`, `tests/test_partial_reconfiguration.py`, `tests/test_probe_drift.py`, `tests/test_reshard_prototype.py`, `tests/test_snapshot_validation.py`, `tests/test_staged_transition.py`, `tests/test_switch.py`, `tests/test_tp32_layout.py` |
+| llm-d-async (17) | `scripts/bf16_rate_table.py`, `scripts/build_longctx_catalogue.py`, `scripts/build_longdoc_catalogue.py`, `scripts/build_midctx_catalogue.py`, `scripts/build_reasoning_catalogue.py`, `scripts/build_translation_catalogue.py`, `scripts/bulk_cost_model.py`, `scripts/long_rate_table.py`, `scripts/production_c_recut.py`, `scripts/reconfig_breakeven.py`, `scripts/simulate_length_aware.py`, `tests/test_composite_manifest.py`, `tests/test_epp_ingress.py`, `tests/test_long_job_model.py`, `tests/test_mid_job_model.py`, `tests/test_w6_manifest.py`, `tests/test_w7_manifest.py` |
+
+### Verification
+
+Results are from the commands, run before pushing.
+
+- Each assembled workspace was compared byte for byte, excluding `results/`, with the hetero-research tree:
+  - local heads vs `b0ce11d`: differences in `.gitignore` and the generated `workspace-provenance.json` only;
+  - chain heads vs `research/first-switch-preread`: no differences except the generated `workspace-provenance.json`, with nothing missing and nothing extra;
+  - each side set vs `publish/side/<name>`: the same.
+- `assemble.py --check` returns rc 0 for every set. That covers 248 files for local, 338 for the chain, and 338–347 for the sides.
+- CPU pytest with `~/hetero-research/.venv` gives an identical test-id set and 0 per-test outcome differences between the assembled workspace and the hetero-research tree, for the chain and all 8 side sets:
+  - chain: `10 failed, 355 passed, 12 skipped, 6 warnings, 9 errors, 28 subtests passed`
+  - reconfig-levers: `16 failed, 382 passed, 12 skipped, 6 warnings, 9 errors, 28 subtests passed`
+  - unified-runtime: `10 failed, 369 passed, 12 skipped, 6 warnings, 9 errors, 28 subtests passed`
+  - in-place-engine: `10 failed, 360 passed, 13 skipped, 6 warnings, 9 errors, 32 subtests passed`
+  - ici-benchmark: `10 failed, 356 passed, 12 skipped, 6 warnings, 9 errors, 28 subtests passed`
+  - ici-pathways-prereq: `10 failed, 355 passed, 12 skipped, 6 warnings, 9 errors, 28 subtests passed`
+  - pathways-reshard: `10 failed, 356 passed, 12 skipped, 6 warnings, 9 errors, 28 subtests passed`
+  - load-profiler: `10 failed, 359 passed, 12 skipped, 6 warnings, 9 errors, 28 subtests passed`
+  - first-switch: `10 failed, 355 passed, 12 skipped, 6 warnings, 9 errors, 28 subtests passed`
+- The common failures are CPU-venv gaps (no `flax`) and evidence inputs that are absent from source trees: the untracked `results/hetero/continuation_qualification_protocol.json`, and on reconfig-levers `results/bulk_cost_model/*`, which is in the release.
+- Secret scan of every pushed diff (private key, `ghp_`/`github_pat_`, `hf_`, `ya29.`, `client-key-data`, AIza, AKIA): 0 hits, and no blob is over 50 MB.
+- `gh pr list -R <upstream> --author taooceros --state all` shows no PRs before or after, for all five upstreams.
+
+### Open items for the user
+
+- **Native kernel patch.** The chain's `hetero/native_backend_patch.json` (8116446…) adds the bf16-kv patch to `tpu_inference/kernels/ragged_paged_attention/v3/kernel.py`. The fork's native source and `native-build.json` still describe the 20260918 patch. `forks.lock.json` records this.
+- **CI markers.** The pre-existing local commits in llm-d-router (6) and llm-d (4 plan commits) have no `[skip ci]`, and the head of llm-d-router #1 is one of them. The forks have never run an Actions workflow.
+- **Withheld evidence.** Three files are withheld from the release under the 20260918 screening policy: two Pathways HTML pages that match the Google API key pattern, and one unparsable JSON ledger.
