@@ -550,6 +550,11 @@
       "bytes": 29912
     },
     {
+      "path": "scripts/reshard_prototype.py",
+      "sha256": "7252ff7af59bdf00db6123bc0e3f4412eac8ed92d6dcd2b716b0ea736ae034e8",
+      "bytes": 15091
+    },
+    {
       "path": "scripts/run_pilot.sh",
       "sha256": "6b69308880c4b30fea3bc497480fb167c3fe1dbeb947ee83d67af2f14afdb586",
       "bytes": 1408
@@ -678,6 +683,11 @@
       "path": "tests/test_probe_drift.py",
       "sha256": "89ebc56d6c4b3960fd0be66faee223750d47f963e602480ab231857ab8e0dfda",
       "bytes": 2235
+    },
+    {
+      "path": "tests/test_reshard_prototype.py",
+      "sha256": "7aa66cb7192d3d4cb92a8a9168df012c01f4fe5f87b39322be8ad11efc9fcc6d",
+      "bytes": 2794
     },
     {
       "path": "tests/test_snapshot_validation.py",
