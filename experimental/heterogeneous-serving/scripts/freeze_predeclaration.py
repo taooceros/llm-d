@@ -78,7 +78,7 @@ def _capture(stats: dict) -> None:
 
 def _gate(gate: dict, layout: str, settings: dict) -> None:
     from hetero.bringup_gate import _evaluate_gate
-    from hetero.native_backend import BACKEND_REVISION, RUNTIME_REVISION
+    from hetero.native_backend import BACKEND_REVISION, RUNTIME_REVISION, effective_activation_dtype
     native_hashes = {row["name"]: row["patched_sha256"] for row in
                      json.loads((ROOT / "hetero/native_backend_patch.json").read_text())["files"]}
 
@@ -110,7 +110,8 @@ def _gate(gate: dict, layout: str, settings: dict) -> None:
                              for row in backend["files"])
                      and {row["name"]: row["actual_sha256"] for row in backend["files"]} == native_hashes,
                      "worker native backend is not fully patched")
-            expected = {"model_dtype": settings["dtype"], "activation_dtype": settings["activation_dtype"],
+            activation_dtype = effective_activation_dtype(settings["activation_dtype"], settings["dtype"])
+            expected = {"model_dtype": settings["dtype"], "activation_dtype": activation_dtype,
                         "configured_cache_dtype": settings["kv_cache_dtype"],
                         "runner_cache_dtype": settings["kv_cache_dtype"],
                         "matmul_precision": settings["matmul_precision"]}
@@ -118,7 +119,7 @@ def _gate(gate: dict, layout: str, settings: dict) -> None:
                      and all(precision[key] == value for key, value in expected.items()),
                      "effective native precision differs")
             for key, dtype in (("parameter_dtypes", settings["dtype"]),
-                               ("decoder_norm_dtypes", settings["activation_dtype"]),
+                               ("decoder_norm_dtypes", activation_dtype),
                                ("attention_cache_dtypes", settings["kv_cache_dtype"])):
                 _require(set(precision[key]) == {dtype} and precision[key][dtype] > 0,
                          f"native {key} differs")

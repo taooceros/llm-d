@@ -289,10 +289,17 @@ def _verify_agreement(reference, measured, path):
     cross = measured.get('cross_layout')
     if not cross:
         raise RuntimeError('measurement has no cross_layout verdict')
-    return {'reference': str(path), 'other_layout': reference['layout'], 'passed': cross['passed'],
+    # Full bf16 state: cross-layout drift is recorded, not gated (plan decision log,
+    # 2026-10-05).  The withdrawn tie-gate verdict is kept as a drift descriptor only.
+    gaps = [row.get('gap_nats') for row in cross['divergences']]
+    return {'reference': str(path), 'other_layout': reference['layout'], 'gated': False,
+            'tie_gate_passed': cross['passed'],
             'summary': {'exact_prompts': cross['exact_prompts'],
                         'first_divergence_min': cross['first_divergence_min'],
-                        'divergences': len(cross['divergences'])}}
+                        'divergences': len(cross['divergences']),
+                        'divergence_indices': [row.get('d') for row in cross['divergences']],
+                        'tie_gaps_nats': gaps,
+                        'max_tie_gap_nats': max((g for g in gaps if g is not None), default=None)}}
 
 
 def submit(args):
@@ -360,9 +367,6 @@ def submit(args):
             ref = json.loads(args.agreement_reference.read_text())['measurements']
             measured['agreement'] = _verify_agreement(ref, measured, args.agreement_reference)
             args.output.write_text(json.dumps(evidence, indent=2) + '\n')
-            if not measured['agreement']['passed']:
-                failed = {k: v for k, v in measured['cross_layout']['checks'].items() if not v}
-                raise RuntimeError('cross-layout agreement failed: ' + json.dumps(failed))
     runner = StageRunner(silence_timeout_s=args.timeout)
     runner.register(run)
     try:

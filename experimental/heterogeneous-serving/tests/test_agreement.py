@@ -111,7 +111,8 @@ class CompareDistributionsTests(unittest.TestCase):
 class EngineSettingsTests(unittest.TestCase):
     def test_kv_dtype(self):
         self.assertEqual(EngineSettings().kv_cache_dtype, 'bfloat16')
-        self.assertEqual(EngineSettings(kv_cache_dtype='float32').kv_cache_dtype, 'float32')
+        fp32 = EngineSettings(kv_cache_dtype='float32', activation_dtype='float32', matmul_precision='highest')
+        self.assertEqual(fp32.kv_cache_dtype, 'float32')
         for bad in ('auto', 'fp8'):
             with self.assertRaises(ValueError):
                 EngineSettings(kv_cache_dtype=bad)

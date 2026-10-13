@@ -17,6 +17,13 @@ from .slice_inventory import Coord, HostRecord, SliceInventory
 
 TPU_PROCESS_PORT = "8471"
 JAX_COMPILATION_CACHE_DIR = "/models/jax_cache"
+# Persist every executable, however small or fast to compile: at JAX's default
+# 1.0 s threshold a warm start still backend-compiles ~248 small executables.
+# Applied and verified in every worker by hetero.compile_cache.
+PERSISTENT_CACHE_THRESHOLD_ENV = {
+    "JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS": "0",
+    "JAX_PERSISTENT_CACHE_MIN_ENTRY_SIZE_BYTES": "0",
+}
 
 
 @dataclasses.dataclass(frozen=True)
@@ -138,6 +145,7 @@ class ResolvedInstance:
             "TPU_PROCESS_PORT": TPU_PROCESS_PORT,
             "JAX_PLATFORMS": "tpu,cpu",
             "JAX_COMPILATION_CACHE_DIR": JAX_COMPILATION_CACHE_DIR,
+            **PERSISTENT_CACHE_THRESHOLD_ENV,
             "VLLM_ENABLE_V1_MULTIPROCESSING": "0",
             "OMP_HETERO_INSTANCE_ID": self.instance_id,
         }

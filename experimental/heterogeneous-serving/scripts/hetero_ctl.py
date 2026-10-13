@@ -42,6 +42,8 @@ RUNTIME_EXCLUDES = [
     "**/reports/**",
     "data/workloads/sharegpt_large.json",
     "data/workloads/longdoc_govreport.json",
+    "data/workloads/longctx_govreport.json",  # staged on the head by w6_campaign.sh
+    "data/workloads/midctx_govreport.json",  # staged on the head by band_campaign.sh
     "data/workloads/translation_ted.json",
 ]
 

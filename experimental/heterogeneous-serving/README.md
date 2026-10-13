@@ -22,18 +22,24 @@ to existing actors rather than replacing their weights.
 ./rcm_exec status
 ```
 
-The serving configuration now names `kv_cache_dtype="bfloat16"` by default
-(`"float32"` remains selectable; `"auto"` is refused),
-`activation_dtype="float32"`, `matmul_precision="highest"`, the exact native
-`backend_revision`, and the serving-package `runtime_revision`; parameter storage
-remains `dtype="bfloat16"` by default. These fields participate in attachment
-checks and migration build identity. The supported state profile is FP32/highest;
-drain incompatible live engines rather than silently reconfiguring them.
+The serving configuration defaults to **full bf16 state**: `dtype="bfloat16"`,
+`kv_cache_dtype="bfloat16"`, `activation_dtype` unset (activations follow the
+bf16 model dtype) and `matmul_precision="default"`. The FP32-state profile
+(`activation_dtype="float32"`, `kv_cache_dtype="float32"`,
+`matmul_precision="highest"`) stays selectable for fp32 references; any other
+combination is refused (`EngineSettings` `NUMERIC_PROFILES`; the RPA v3 kernel
+has no mixed q/KV dtype path, and `"auto"` KV is refused). The settings, the
+exact native `backend_revision` and the serving-package `runtime_revision`
+participate in attachment checks and migration build identity; drain
+incompatible live engines rather than silently reconfiguring them. Native
+preparation restores the pristine RPA v3 kernel on hosts that still carry the
+withdrawn bf16-KV widening patch.
 
 Greedy references are per layout and per `engine_identity` (the `model_build`,
-including the KV dtype). `validate --reference` is exact within a layout;
-`validate --agreement-reference OTHER.json` runs the cross-layout tie gate in
-`hetero/agreement.py`.
+including activation dtype, KV dtype and matmul precision). `validate --reference`
+is exact within a layout (hard gate). `validate --agreement-reference OTHER.json`
+records the cross-layout drift (divergence points and tie gaps from
+`hetero/agreement.py`); it is not a gate.
 
 ### Explicit host-RAM weight snapshots
 
@@ -268,6 +274,12 @@ The installed Envoy calls the actual ExtProc v3 gRPC service (service port
 9002, target 8201). Its `ImmediateResponse` is assembled by the same gateway
 that owns placement and migration. This is not an HTTP-only proxy or an EPP
 decision followed by a second scheduler. No direct-backend fallback is used.
+A failed client request keeps the hop that answered it: arm summaries list
+`http_status`, `response_protocol` (the gateway's protocol marker, which every
+gateway-produced completion response carries, errors included; absent on Envoy
+local replies), `response_headers` and the first 1 KiB of `response_body` per
+failed request. `gateway_extproc_aborts` counts streams the gateway's ExtProc
+aborted, which Envoy reports only as a bodiless 500 with upstream `-`.
 
 ```bash
 ./rcm_exec run scripts/hetero_ctl.py gateway-smoke --layout M --output /tmp/hetero-smoke.json

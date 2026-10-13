@@ -432,13 +432,16 @@ def drain_deployment(
         raise ValueError("drain target is absent from this layout's registry")
     gateway = find_gateway()
     maintenance = None
+    maintenance_span = None
     if gateway is not None:
         status = ray.get(gateway.status.remote(), timeout=60)
         if status["layout_id"] != layout_id:
             gateway = None
         elif targets:
+            began = time.time()
             maintenance = ray.get(gateway.begin_maintenance.remote(
                 sorted(wanted), reason="explicit deployment drain"), timeout=300)
+            maintenance_span = [began, time.time()]
     results = []
     for row in targets:
         instance_id, generation = row["instance_id"], row["generation"]
@@ -457,6 +460,12 @@ def drain_deployment(
                 or identity["instance_id"] != instance_id):
             raise RuntimeError("actor/registry identity changed before drain")
         entry: Dict[str, Any] = {"instance_id": instance_id, "generation": generation, "actor_found": True}
+        # Wall-clock [start, end] of every step, for the switch harness's segment accounting.
+        timings: Dict[str, List[float]] = {}
+        entry["timings"] = timings
+        if maintenance_span is not None:
+            timings["maintenance"] = list(maintenance_span)
+        step_began = time.time()
         if gateway is not None:
             entry.update(ray.get(gateway.drain_maintenance_instance.remote(
                 instance_id, maintenance_id=maintenance["id"], timeout_s=timeout_s),
@@ -469,17 +478,30 @@ def drain_deployment(
             entry["idle_snapshot"] = ray.get(actor.idle_snapshot.remote(), timeout=120)
             if not entry["native_idle"].get("idle") or not entry["idle_snapshot"].get("all_blocks_free"):
                 raise RuntimeError(f"native scheduler/KV is not idle: {entry}")
+        timings["drain_ack"] = [step_began, time.time()]
+        step_began = time.time()
         if not ray.get(registry.set_state.remote(instance_id, "draining", generation=generation), timeout=60):
             raise RuntimeError("registry generation changed after native drain")
+        timings["registry_draining"] = [step_began, time.time()]
         if remove:
+            step_began = time.time()
             entry["stop_serving"] = ray.get(actor.stop_serving.remote(), timeout=120)
+            timings["stop_serving"] = [step_began, time.time()]
+            step_began = time.time()
             entry["shutdown"] = ray.get(actor.shutdown.remote(), timeout=600)
+            timings["shutdown"] = [step_began, time.time()]
             if any(key.endswith("_error") for key in entry["shutdown"]):
                 raise RuntimeError(f"native shutdown was not acknowledged: {entry['shutdown']}")
+            step_began = time.time()
             ray.kill(actor, no_restart=True)
             entry["actor_removed"] = True
+            timings["kill"] = [step_began, time.time()]
+            step_began = time.time()
             entry["placement_group_removed"] = release_placement_group(row["placement_group_name"])
+            timings["pg_release"] = [step_began, time.time()]
+            step_began = time.time()
             entry["withdrawn"] = ray.get(registry.withdraw.remote(instance_id, generation=generation), timeout=60)
+            timings["withdraw"] = [step_began, time.time()]
             if not entry["withdrawn"]:
                 raise RuntimeError("registry generation changed before withdrawal")
         results.append(entry)

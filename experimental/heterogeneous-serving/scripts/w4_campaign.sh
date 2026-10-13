@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # W4 long-document + chat mix: heterogeneous M versus homogeneous H, one locked session.
 # Run: flock /tmp/hetero-cluster.lock scripts/w4_campaign.sh <reps> [layouts...]
-# S (4xTP8) cannot serve W4: every long request exceeds a TP8 engine's KV pool.
+# S (4xTP8) serves W4 only with bf16 KV: a bf16 TP8 pool (52,864 tokens) holds a 36,864-token
+# request; an fp32 TP8 pool (26,368) does not.
 # Each layout runs two routing policies: "plain" (BASE_POLICY) and "resv"
 # (work-conserving fallback plus a long-request KV reserve on large engines).
 set -uo pipefail
@@ -59,6 +60,7 @@ for layout in $LAYOUTS; do
     M) arm=M0; deploy_args=(--max-model-len 16384 --instance-engine-settings '{"large":{"max_model_len":36864}}');;
     Mb) arm=Mb0; deploy_args=(--max-model-len 16384 --instance-engine-settings '{"large_b":{"max_model_len":36864}}');;
     H) arm=H; deploy_args=(--max-model-len 36864);;
+    S) arm=S; deploy_args=(--max-model-len 36864);;
     *) log "layout $layout cannot serve W4"; exit 1;;
   esac
   if [ "${REUSE:-}" = "$layout" ]; then log "reusing deployed $layout"; else

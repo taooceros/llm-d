@@ -143,6 +143,102 @@ def _digest(summary: Mapping[str, Any]) -> Dict[str, Any]:
     return {k: summary.get(k) for k in _SUMMARY_KEYS}
 
 
+def check_source_idle(gateway: Any, registry: Any, from_layout: str) -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, int]]:
+    """The gateway is idle on the complete source layout; returns (status, source layout, tp sizes)."""
+    import ray
+
+    if gateway is None or registry is None:
+        raise RuntimeError("a transition needs the running gateway and registry")
+    status = ray.get(gateway.status.remote(), timeout=120)
+    source = ray.get(registry.get_layout.remote(from_layout), timeout=60)
+    if (status["layout_id"] != from_layout or status.get("maintenance") or status.get("joining")
+            or status.get("capturing") or not status["discovery"].get("ready") or not source):
+        raise RuntimeError("gateway is not idle on the complete source layout")
+    from_instances = {i["instance_id"]: i["tp_size"] for i in source["instances"]}
+    if set(status["instances"]) != set(from_instances):
+        raise RuntimeError("gateway does not bind every source instance")
+    return status, source, from_instances
+
+
+def resolve_transition(
+    inventory: Any, config: Any, from_layout: str, registry: Any,
+    source: Mapping[str, Any], from_instances: Mapping[str, int],
+) -> Tuple[Any, Dict[str, Any], str, TransitionPlan, Dict[str, Any], Dict[str, Any]]:
+    """Resolve the target layout and plan the partial transition; returns
+    (resolved, target body, digest, plan, resolved instances by id, source registry rows by id)."""
+    import ray
+
+    from .layout import resolve_layout
+
+    to_layout = config.layout.layout_id
+    resolved = resolve_layout(inventory, config.layout)
+    target = resolved.to_dict()
+    digest = target["layout_digest"]
+    plan = plan_transition(from_layout, to_layout, from_instances,
+                           {i.instance_id: i.tp_size for i in resolved.instances},
+                           from_placement={i["instance_id"]: i for i in source["instances"]},
+                           to_placement={i["instance_id"]: i for i in target["instances"]})
+    by_id = {i.instance_id: i for i in resolved.instances}
+    rows = {r["instance_id"]: r for r in ray.get(registry.snapshot.remote(from_layout), timeout=60)}
+    return resolved, target, digest, plan, by_id, rows
+
+
+def prepare_kept(
+    registry: Any, inventory: Any, config: Any, plan: TransitionPlan,
+    by_id: Mapping[str, Any], rows: Mapping[str, Any], target: Mapping[str, Any],
+) -> Dict[str, Any]:
+    """Prove every kept engine adoptable (config match + dry-run adopt) and register the target
+    layout; nothing destructive.  Returns the kept engine actors by instance id."""
+    import ray
+
+    from .deployment import _find_engine_actor_named
+
+    to_layout = config.layout.layout_id
+    digest = target["layout_digest"]
+    actors = {n: _find_engine_actor_named(rows[n]["engine_actor_name"]) for n in plan.kept}
+    if any(a is None for a in actors.values()):
+        raise RuntimeError("a kept engine actor is missing")
+    for name, actor in actors.items():
+        instance = by_id[name].to_dict()
+        verdict = ray.get(actor.matches.remote(instance, config.settings_for(name)), timeout=60)
+        if not verdict["matches"]:
+            raise RuntimeError(f"kept engine {name} conflicts with the target config: "
+                               f"{verdict['differences']}")
+        ray.get(actor.adopt_identity.remote(to_layout, digest, instance, dry_run=True), timeout=60)
+    ray.get(registry.put_inventory.remote(inventory.to_dict()), timeout=60)
+    ray.get(registry.put_layout.remote(target), timeout=60)
+    return actors
+
+
+def adopt_kept(
+    registry: Any, actors: Mapping[str, Any], by_id: Mapping[str, Any], to_layout: str, digest: str,
+) -> None:
+    """Kept engines move to the target layout in place (same generation)."""
+    import ray
+
+    from .registry import descriptor_for_layout
+
+    for name, actor in actors.items():
+        identity = ray.get(actor.adopt_identity.remote(to_layout, digest, by_id[name].to_dict()),
+                           timeout=60)
+        row = ray.get(registry.get.remote(name), timeout=60)
+        if identity["generation"] != row["generation"]:
+            raise RuntimeError(f"{name}: actor and registry generations disagree")
+        accepted = ray.get(registry.register.remote(
+            descriptor_for_layout(row, to_layout, digest)), timeout=60)
+        if not accepted.get("accepted") or accepted["generation"] != row["generation"]:
+            raise RuntimeError(f"registry refused the adopted generation of {name}: {accepted}")
+
+
+def policy_after_join(arm2: str, pilot_policy: Optional[Mapping[str, Any]]) -> Dict[str, Any]:
+    """The arm's declared non-role policy fields restored at the join."""
+    from .experiment import ARMS, BASE_POLICY
+
+    return {**BASE_POLICY, **(pilot_policy or {}),
+            "migration_enabled": ARMS[arm2]["migration_enabled"],
+            "migration_mechanism": ARMS[arm2]["migration_mechanism"]}
+
+
 def run_transition(
     *,
     inventory: Any,
@@ -170,12 +266,11 @@ def run_transition(
     """
     import ray
 
-    from .deployment import _find_engine_actor_named, deploy, drain_deployment
+    from .deployment import deploy, drain_deployment
     from .evidence import emit_event
-    from .experiment import ARMS, ARTIFACT_ROOT, BASE_POLICY, run_arm
+    from .experiment import ARMS, ARTIFACT_ROOT, run_arm
     from .gateway.lifecycle import find_gateway
-    from .layout import resolve_layout
-    from .registry import descriptor_for_layout, find_registry
+    from .registry import find_registry
 
     to_layout = config.layout.layout_id
     for arm, layout in ((arm1, from_layout), (arm2, to_layout)):
@@ -183,25 +278,9 @@ def run_transition(
             raise ValueError(f"arm {arm} does not run on layout {layout}")
     gateway = find_gateway()
     registry = find_registry()
-    if gateway is None or registry is None:
-        raise RuntimeError("a transition needs the running gateway and registry")
-    status = ray.get(gateway.status.remote(), timeout=120)
-    source = ray.get(registry.get_layout.remote(from_layout), timeout=60)
-    if (status["layout_id"] != from_layout or status.get("maintenance") or status.get("joining")
-            or status.get("capturing") or not status["discovery"].get("ready") or not source):
-        raise RuntimeError("gateway is not idle on the complete source layout")
-    from_instances = {i["instance_id"]: i["tp_size"] for i in source["instances"]}
-    if set(status["instances"]) != set(from_instances):
-        raise RuntimeError("gateway does not bind every source instance")
-    resolved = resolve_layout(inventory, config.layout)
-    target = resolved.to_dict()
-    digest = target["layout_digest"]
-    plan = plan_transition(from_layout, to_layout, from_instances,
-                           {i.instance_id: i.tp_size for i in resolved.instances},
-                           from_placement={i["instance_id"]: i for i in source["instances"]},
-                           to_placement={i["instance_id"]: i for i in target["instances"]})
-    by_id = {i.instance_id: i for i in resolved.instances}
-    rows = {r["instance_id"]: r for r in ray.get(registry.snapshot.remote(from_layout), timeout=60)}
+    status, source, from_instances = check_source_idle(gateway, registry, from_layout)
+    resolved, target, digest, plan, by_id, rows = resolve_transition(
+        inventory, config, from_layout, registry, source, from_instances)
 
     report: Dict[str, Any] = {"plan": dataclasses.asdict(plan), "run_id": run_id, "steps": [],
                               "timestamps": {}, "completed": False}
@@ -218,18 +297,7 @@ def run_transition(
     pool = ThreadPoolExecutor(max_workers=1, thread_name_prefix="omp-transition-deploy")
     try:
         # ---- prepare: nothing destructive until every kept engine is proven adoptable
-        actors = {n: _find_engine_actor_named(rows[n]["engine_actor_name"]) for n in plan.kept}
-        if any(a is None for a in actors.values()):
-            raise RuntimeError("a kept engine actor is missing")
-        for name, actor in actors.items():
-            instance = by_id[name].to_dict()
-            verdict = ray.get(actor.matches.remote(instance, config.settings_for(name)), timeout=60)
-            if not verdict["matches"]:
-                raise RuntimeError(f"kept engine {name} conflicts with the target config: "
-                                   f"{verdict['differences']}")
-            ray.get(actor.adopt_identity.remote(to_layout, digest, instance, dry_run=True), timeout=60)
-        ray.get(registry.put_inventory.remote(inventory.to_dict()), timeout=60)
-        ray.get(registry.put_layout.remote(target), timeout=60)
+        actors = prepare_kept(registry, inventory, config, plan, by_id, rows, target)
         mark("prepared")
 
         # ---- phase 1: workload on the source layout (optional)
@@ -246,16 +314,7 @@ def run_transition(
         mark("drain_end")
 
         # ---- adopt: kept engines move to the target layout in place
-        for name, actor in actors.items():
-            identity = ray.get(actor.adopt_identity.remote(to_layout, digest, by_id[name].to_dict()),
-                               timeout=60)
-            row = ray.get(registry.get.remote(name), timeout=60)
-            if identity["generation"] != row["generation"]:
-                raise RuntimeError(f"{name}: actor and registry generations disagree")
-            accepted = ray.get(registry.register.remote(
-                descriptor_for_layout(row, to_layout, digest)), timeout=60)
-            if not accepted.get("accepted") or accepted["generation"] != row["generation"]:
-                raise RuntimeError(f"registry refused the adopted generation of {name}: {accepted}")
+        adopt_kept(registry, actors, by_id, to_layout, digest)
         mark("adopted")
 
         # ---- retarget: joiners are fenced out of discovery BEFORE they can be registered
@@ -275,9 +334,7 @@ def run_transition(
 
         # The arm's declared non-role policy fields: run_arm zeroes the large share and migration
         # while the large instance does not exist yet, so the join must restore them.
-        policy_after = {**BASE_POLICY, **(pilot_policy or {}),
-                        "migration_enabled": ARMS[arm2]["migration_enabled"],
-                        "migration_mechanism": ARMS[arm2]["migration_mechanism"]}
+        policy_after = policy_after_join(arm2, pilot_policy)
 
         def join_when_ready(cancel: Any) -> Dict[str, Any]:
             while not deployed.done():  # a deploy failure surfaces as the hook's error

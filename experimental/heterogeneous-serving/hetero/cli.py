@@ -617,6 +617,34 @@ def cmd_run_transition(args: argparse.Namespace) -> Dict[str, Any]:
     }
 
 
+def cmd_run_switch(args: argparse.Namespace) -> Dict[str, Any]:
+    """Production in-process layout switch (hetero/switch.py): phase 1, then drain/deploy/join with gated phase 2."""
+    from hetero.switch import HttpClient, RayFabric, run_switch
+
+    if not args.phase1 or not args.phase2:
+        raise ValueError("--phase1 and --phase2 are required")
+    inventory, source = _resolve_inventory(args, allow_probe=False)
+    config = _deployment_config(args)
+    fabric = RayFabric(inventory=inventory, config=config, mode=args.switch_mode,
+                       source_layout=args.from_layout, drain_timeout_s=args.drain_timeout_s,
+                       head_node_ip=args.head_node_ip or _head_node_ip())
+    try:
+        report = run_switch(
+            fabric, HttpClient(timeout_s=args.arm_timeout), mode=args.switch_mode, source_layout=args.from_layout,
+            target_layout=config.layout.layout_id, phase1=args.phase1, phase2=args.phase2, run_id=args.run_id,
+            policy=_transition_policy(args), static_target_s=args.static_target_s, arm_timeout_s=args.arm_timeout)
+    except Exception as exc:  # noqa: BLE001 - a failed switch still returns its report so the evidence is fetched
+        from hetero.experiment import ARTIFACT_ROOT
+
+        path = ARTIFACT_ROOT / args.run_id / "switch_report.json"
+        report = json.loads(path.read_text()) if path.exists() else {"completed": False}
+        return {"action": "run-switch", "inventory_source": source, "result": report,
+                "artifact_dir": str(ARTIFACT_ROOT / args.run_id), "ok": False,
+                "error": f"{type(exc).__name__}: {str(exc)[-2000:]}"}
+    return {"action": "run-switch", "inventory_source": source, "result": report,
+            "artifact_dir": report["artifact_dir"]}
+
+
 COMMANDS = {
     "inventory": cmd_inventory,
     "plan": cmd_plan,
@@ -639,6 +667,7 @@ COMMANDS = {
     "run-arm": cmd_run_arm,
     "run-sequence": cmd_run_sequence,
     "run-transition": cmd_run_transition,
+    "run-switch": cmd_run_switch,
 }
 
 
@@ -698,6 +727,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--arm2", default="S", help="run-transition: phase-2 arm (on --to-layout)")
     parser.add_argument("--workload2", default=None,
                         help="run-transition: phase-2 workload (new engines join mid-run)")
+    parser.add_argument("--switch-mode", choices=("full", "partial"), default="full",
+                        help="run-switch: full (drain all, redeploy) or partial (kept engines stay, joiners deploy)")
+    parser.add_argument("--phase1", default=None, help="run-switch: phase-1 manifest on --from-layout")
+    parser.add_argument("--phase2", default=None,
+                        help="run-switch: phase-2 manifest, or a comma list (partial: W0,W6) on --layout")
+    parser.add_argument("--static-target-s", type=float, default=None,
+                        help="run-switch: static target-layout finish time the ramp/C_eff are measured against")
     return parser
 
 
@@ -708,7 +744,7 @@ def main(argv: list[str]) -> int:
     emit_event("COMMAND_BEGIN", command=args.command)
     payload = COMMANDS[args.command](args)
     payload["elapsed_s"] = round(time.time() - started, 3)
-    payload["ok"] = True
+    payload["ok"] = payload.get("ok", True)
     emit_measurements(payload)
     emit_event("COMMAND_COMPLETE", command=args.command, elapsed_s=payload["elapsed_s"])
     return 0

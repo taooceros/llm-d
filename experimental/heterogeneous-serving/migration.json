@@ -36,8 +36,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "c09769844d0f6b9714a28f9c911003ae556b734477267659f822481a22f50900",
-      "bytes": 36089
+      "sha256": "17b0bb80b362f98f4cf1e4a2ceb2ad2b651c779d8dde1c10530f507f99b8954a",
+      "bytes": 36982
     },
     {
       "path": "RECONFIGURATION_GOAL.md",
@@ -226,13 +226,13 @@
     },
     {
       "path": "hetero/cli.py",
-      "sha256": "4a538f9189ea8e735be524758e35a52e57a8e525d6f5f2a34c464c590437f961",
-      "bytes": 29563
+      "sha256": "32f34e36a1c03e881c6f4e8b0f6566b45eb4d1759cc8ff69c283a96d0eaf9156",
+      "bytes": 32046
     },
     {
       "path": "hetero/deployment.py",
-      "sha256": "b50b7e7391892213e0aacd9c10216e1784b86506872fa33f61e111a1a8063097",
-      "bytes": 22622
+      "sha256": "a6320378b9cf2202382b0139133bf2fe66261823e1b1f2e2547cd58388a23d21",
+      "bytes": 23684
     },
     {
       "path": "hetero/evidence.py",
@@ -241,18 +241,18 @@
     },
     {
       "path": "hetero/layout.py",
-      "sha256": "e59bdbe928024b1a6c61dbd1364152e0e5e13d06c325ef99d7210a9b797a75a0",
-      "bytes": 16798
+      "sha256": "ed75e66ab60529a091ecb54cdc5644f90065286d87d539fff55b51758b7e0684",
+      "bytes": 17211
     },
     {
       "path": "hetero/native_backend.py",
-      "sha256": "3c0cec2a89297696fc46fe32952f806d4d9758eac877903c19f531c6478244f3",
-      "bytes": 10168
+      "sha256": "9c4daf7c5303fa51b5e0ad54d06156e605392db14094bf22cd2e5a2e7edddfea",
+      "bytes": 10517
     },
     {
       "path": "hetero/native_backend_patch.json",
-      "sha256": "9d8ff441311bc6795a5f1034c02a2e18938b4ab510130bf5dbc6aec5fa229171",
-      "bytes": 5510
+      "sha256": "8116446273d15158c39a04ff10869205eb993dd7bb74976a4cf738e279d5fc7c",
+      "bytes": 5519
     },
     {
       "path": "hetero/placement.py",
@@ -285,9 +285,14 @@
       "bytes": 14328
     },
     {
+      "path": "hetero/switch.py",
+      "sha256": "024f372836ba05246ed18e19c46920b6c50eeea63c471d53d66cce5a549575c4",
+      "bytes": 58220
+    },
+    {
       "path": "hetero/transition.py",
-      "sha256": "2a4fff246908f534ca1c63999f536d0bb6ce6703fa1d73bf0586d5cc2d531058",
-      "bytes": 16663
+      "sha256": "6673fbb34c8e8f9456301323a50f2684b87899b7ec8a8ac0fee2d4ddc2a6408a",
+      "bytes": 18767
     },
     {
       "path": "main.py",
@@ -405,14 +410,24 @@
       "bytes": 24021
     },
     {
+      "path": "scripts/band_campaign.sh",
+      "sha256": "18f922adeaf581c8c43b243455381e339f18e665680f1e653035744772a138f3",
+      "bytes": 8624
+    },
+    {
       "path": "scripts/bf16_probe_diag.sh",
-      "sha256": "0683b66eb5640754bbeba5b0e0c301e6e007760a8b1f420b9275cd7905bae263",
-      "bytes": 5423
+      "sha256": "f5cc22c72cf35b3075874fab3cc23063ad6a5d8415f54244ec5cda9ce69185cd",
+      "bytes": 5645
     },
     {
       "path": "scripts/bf16_provision.sh",
-      "sha256": "5d55428859d58437a5f5db995631e04ea9b798003e47239e9a730ae96cfe7b79",
-      "bytes": 8279
+      "sha256": "2ea4958c90f7040e51419859ac9369a908dacafc473f37b975a9c56d72646250",
+      "bytes": 10477
+    },
+    {
+      "path": "scripts/cache_hit_summary.py",
+      "sha256": "053b01455eb1b355758e6f0f33a4279f0322c5602b6738b528dea82a27bdc1e3",
+      "bytes": 4965
     },
     {
       "path": "scripts/epp_router.sh",
@@ -436,8 +451,8 @@
     },
     {
       "path": "scripts/freeze_predeclaration.py",
-      "sha256": "117a83d8d7c411b73cc004a87bd1a0250024eab5a2928c8220cb2cc419d0ee30",
-      "bytes": 30654
+      "sha256": "5c6c99054fdba9636e9e1cd97db2ba2e1dce1dd2dea3ecfe6cf9b7d2bef264a2",
+      "bytes": 30765
     },
     {
       "path": "scripts/goal_audit.py",
@@ -446,8 +461,8 @@
     },
     {
       "path": "scripts/hetero_ctl.py",
-      "sha256": "0276ea892fa303124e8d48999101af0349b6b20a6c2ff711ed44143539321874",
-      "bytes": 13389
+      "sha256": "7ff148189e9b8811d2319845e9bca4dccffa2400f955223326349b4afc7162d7",
+      "bytes": 13560
     },
     {
       "path": "scripts/overlap_pilot.py",
@@ -478,6 +493,11 @@
       "path": "scripts/overlap_switch_sequence.sh",
       "sha256": "a30f35a802dfcff0f25b9a9cb71105e909a59c3e30ea80f33d6e2fa5a0cde9bb",
       "bytes": 6915
+    },
+    {
+      "path": "scripts/probe_drift.py",
+      "sha256": "0da779b887958ecd364b2c6329c23f05f25140cb9843653287f22925898a42f1",
+      "bytes": 5680
     },
     {
       "path": "scripts/reconfig_measure.sh",
@@ -526,8 +546,8 @@
     },
     {
       "path": "scripts/snapshot_validate.py",
-      "sha256": "1f2419b463ec075444b04547b31e30a304d8b59accea9a24398a892e9a962f15",
-      "bytes": 29129
+      "sha256": "37dc88a7437d9ab4c4b808934012ff644fc8443511194f03bb7272648b129242",
+      "bytes": 29404
     },
     {
       "path": "scripts/staged_sequence.sh",
@@ -570,14 +590,34 @@
       "bytes": 3225
     },
     {
+      "path": "scripts/switch_campaign.sh",
+      "sha256": "3a9e272e010eab32db5140f9726c93f2d73179517f0315f5c2ab4d6eea8bed40",
+      "bytes": 18630
+    },
+    {
+      "path": "scripts/switch_dry_run.py",
+      "sha256": "982e8f3a9589e0e2cae4ca171fd91a42bb76918042d95195d3b8837e0c28c677",
+      "bytes": 19935
+    },
+    {
+      "path": "scripts/switch_summary.py",
+      "sha256": "eac251cd0aae8fe1ac05bb6f3f607e3675d9c337680b0a78bb31933974cf1f36",
+      "bytes": 14216
+    },
+    {
       "path": "scripts/w3_campaign.sh",
       "sha256": "64e48278b06e0a84e2ae84b29d0a56707cbff85b39711d270b3125bb13a753a4",
       "bytes": 3942
     },
     {
       "path": "scripts/w4_campaign.sh",
-      "sha256": "db440d8a68d3e029287185f81bf7a4df803b750869bfe8fc6cfedc64d265618b",
-      "bytes": 4274
+      "sha256": "d19d13c3df277c3f9e87bec817f2b5dc3e7c149d20b2cd92b01e147204a45e0d",
+      "bytes": 4387
+    },
+    {
+      "path": "scripts/w6_campaign.sh",
+      "sha256": "bf8cef80bce6454959df54fb2ed1b41ba66ffffae691ae7e665bb11e605c4b4e",
+      "bytes": 6850
     },
     {
       "path": "skaffold.yaml",
@@ -586,8 +626,8 @@
     },
     {
       "path": "tests/test_agreement.py",
-      "sha256": "327daa6997da85664f93bea0e053a13654ed03631b57ed1d50eda984694e008e",
-      "bytes": 5022
+      "sha256": "54c82c3ff9904abe5a394f2655873519a54114cd96290a5e9e6c20615d88d14d",
+      "bytes": 5098
     },
     {
       "path": "tests/test_continuation_qualification.py",
@@ -615,14 +655,24 @@
       "bytes": 20008
     },
     {
+      "path": "tests/test_probe_drift.py",
+      "sha256": "89ebc56d6c4b3960fd0be66faee223750d47f963e602480ab231857ab8e0dfda",
+      "bytes": 2235
+    },
+    {
       "path": "tests/test_snapshot_validation.py",
-      "sha256": "5f4903fc9d74d7f9c2f9fc2fa6efc09a21fee1e82f7f977eb2079b9ca88b96b8",
-      "bytes": 3078
+      "sha256": "456a9008b63e405adec5fa42432d820b42b1c7761c4b84253a2a360e87fedc80",
+      "bytes": 4132
     },
     {
       "path": "tests/test_staged_transition.py",
       "sha256": "c580fddb308971acdcc4dcb2a7f31d1cc69c88b545bbd9601605c6a03075ecf6",
       "bytes": 10589
+    },
+    {
+      "path": "tests/test_switch.py",
+      "sha256": "f28d3545e0a972df5bd0d65208ed394ee2fabe16ec14e42912f558467ec43a62",
+      "bytes": 27704
     },
     {
       "path": "uv.lock",

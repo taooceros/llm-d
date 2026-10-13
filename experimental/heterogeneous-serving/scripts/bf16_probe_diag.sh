@@ -30,7 +30,12 @@ KEEP_SNAPSHOTS=${KEEP_SNAPSHOTS:-0}
 RESERVE=62000000000
 RCM=(.venv/bin/python rcm_exec)
 POINTS=${POINTS:-results/bf16kv/probe-points-q1.json}
-settings() { echo "{\"weight_snapshot\":\"off\",\"startup_profile\":true,\"kv_cache_dtype\":\"$1\"}"; }
+# kv float32 selects the FP32-state profile; bfloat16 is full bf16 state (EngineSettings NUMERIC_PROFILES).
+settings() {
+  local extra=
+  [[ $1 == float32 ]] && extra=',"activation_dtype":"float32","matmul_precision":"highest"'
+  echo "{\"weight_snapshot\":\"off\",\"startup_profile\":true,\"kv_cache_dtype\":\"$1\"$extra}"
+}
 [[ -s data/manifests/W0.json ]] || { echo "missing data/manifests/W0.json" >&2; exit 1; }
 (( DRY )) || mkdir -p "$OUT"
 owned_run=0
