@@ -470,6 +470,21 @@
       "bytes": 13560
     },
     {
+      "path": "scripts/ici_engine.py",
+      "sha256": "eaba52d8888309ac1cb21456debacb5e0a8dbe8299a6a25e6beb8a88d8c033d6",
+      "bytes": 13548
+    },
+    {
+      "path": "scripts/ici_engine_analyze.py",
+      "sha256": "28acc00892f20727eaf3aa38b0ffd6e96ffaf353d03475e4238c86c375afa2a4",
+      "bytes": 9701
+    },
+    {
+      "path": "scripts/ici_engine_sequence.sh",
+      "sha256": "ed8a4760099d02edc5e917cbb1df6caab65d1aa5f7e89ef16f9d05d23b152365",
+      "bytes": 500
+    },
+    {
       "path": "scripts/overlap_check.py",
       "sha256": "1b6d443c94acc884619607834ef7dd81e39288788610861e858accfcb82fdd07",
       "bytes": 10066
