@@ -5,6 +5,7 @@
 #   flock /tmp/hetero-cluster.lock scripts/switch_campaign.sh partial     # P3: S -> Mb, W0 then W0+W6 mix
 #   flock /tmp/hetero-cluster.lock scripts/switch_campaign.sh first-gate  # F1: inline snapshot + bank gate
 #   flock /tmp/hetero-cluster.lock scripts/switch_campaign.sh first       # F2: cold first switch S -> H
+#   flock /tmp/hetero-cluster.lock scripts/switch_campaign.sh preread     # F3b: S -> H with the parked-target pre-read
 #   scripts/switch_campaign.sh <mode> --dry-run                           # print the commands, touch nothing
 #
 # full    4xTP8 S serves W0 (phase 1); at T0 the in-process controller drains S, deploys H (2xTP16,
@@ -47,10 +48,17 @@
 #   last rep) -> S restore; then one warm run-switch (kind warm) restoring + bank-reading the last cold
 #   rep's scope -> validation -> teardown -> scope cleanup.  REFERENCE_H: directory holding
 #   prep-H-reference.json from the same commit (the first-gate OUT); empty -> an H normal-loader prep.
+# preread (F3b; REPS default 1): S prep as `first`; an H reference = an H normal deploy with the inline
+#   snapshot (COLD, scope <run base>-ref) -> file-fingerprint of that device-produced snapshot -> greedy
+#   reference -> teardown -> scope cleanup; then REPS x [S restore -> pagecache -> run-switch S -> H with the
+#   target pre-spawned, its parked workers pre-reading their snapshots on CPU (PREREAD_TARGET, scope <rid>)
+#   -> preread_complete (completed, every worker restored, bank written) -> greedy validation against the
+#   reference -> file-fingerprint of the pre-read snapshot -> local exactness comparison with the
+#   reference fingerprint (scripts/preread_compare.py, hard) -> teardown H -> scope cleanup -> S restore].
 set -euo pipefail
 cd "$(dirname "$0")/.."
 MODE=${1:-}
-case $MODE in full|partial|first-gate|first) shift;; *) echo "usage: $0 <full|partial|first-gate|first> [--dry-run]" >&2; exit 2;; esac
+case $MODE in full|partial|first-gate|first|preread) shift;; *) echo "usage: $0 <full|partial|first-gate|first|preread> [--dry-run]" >&2; exit 2;; esac
 DRY=0
 if [[ "${1:-}" == --dry-run ]]; then DRY=1; shift; fi
 (( $# == 0 )) || { echo "usage: $0 <full|partial> [--dry-run]" >&2; exit 2; }
@@ -73,7 +81,8 @@ if (( GATE )); then
   OVERLAP=1
   REPS=1
 fi
-if [[ $MODE == first ]]; then OVERLAP=1; fi
+if [[ $MODE == first || $MODE == preread ]]; then OVERLAP=1; fi
+if [[ $MODE == preread ]]; then REPS=${REPS:-1}; fi
 if [[ $MODE == first-gate ]]; then REPS=0; fi
 RUN_BASE=$MODE-$COMMIT
 (( OVERLAP )) && RUN_BASE+=-ov
@@ -110,6 +119,10 @@ LARGE_B_PRESPAWN='{"large_b":{"max_model_len":131072,"prespawn":true,"exec_bank"
 COLD='{"weight_snapshot":"write","fast_graph":true,"startup_profile":true,"exec_bank":"write"}'
 COLD_PRESPAWN='{"weight_snapshot":"write","fast_graph":true,"startup_profile":true,"exec_bank":"write","prespawn":true}'
 FAST_BANK_READ='{"weight_snapshot":"read","weight_snapshot_verify":false,"fast_graph":true,"startup_profile":true,"exec_bank":"read"}'
+# Parked-target pre-read (F3b): each parked target worker's CPU-only child writes its snapshot into the
+# run scope before the release; the released worker restores it and writes the bank.
+# preread_timeout_s 300: a stalled child after T0 falls back within 5 min, not 15 (F3 advisor).
+PREREAD_TARGET='{"weight_snapshot":"read","weight_snapshot_verify":false,"fast_graph":true,"startup_profile":true,"prespawn":true,"preread":true,"preread_timeout_s":300,"exec_bank":"write"}'
 REFERENCE_H=${REFERENCE_H:-}
 SCOPES=()
 H_PREP_RESTORE=$FAST
@@ -184,6 +197,14 @@ ok() {
 switch_complete() {  # complete, exact, accounted, segments reconciled, and every new worker restored from the snapshot
   (( DRY )) && return 0
   .venv/bin/python -c 'import json,sys; r=json.load(open(sys.argv[1]))["measurements"]["result"]; sys.exit(0 if r.get("completed") is True and (r.get("restored") or {}).get("all_restored") is True else 1)' "$1"
+}
+preread_complete() {  # pre-read switch: complete, exact, reconciled, every target worker restored from its pre-read, bank written
+  (( DRY )) && return 0
+  .venv/bin/python -c 'import json,sys; r=json.load(open(sys.argv[1]))["measurements"]["result"]; p=(r.get("timeline") or {}).get("prespawn") or {}; sys.exit(0 if r.get("completed") is True and (r.get("restored") or {}).get("all_restored") is True and p.get("preread_all_used") is True and (r.get("provisioned") or {}).get("bank_written") is True else 1)' "$1"
+}
+compare_local() {  # compare_local <reference fingerprint> <fingerprint> <label>: exactness of a pre-read snapshot (local, hard)
+  if (( DRY )); then show .venv/bin/python scripts/preread_compare.py "$1" "$2" --output "$OUT/$3.json"; return 0; fi
+  .venv/bin/python scripts/preread_compare.py "$1" "$2" --output "$OUT/$3.json" > /dev/null
 }
 cold_complete() {  # first switch: complete, exact, reconciled, every target worker published its snapshot + wrote its bank
   (( DRY )) && return 0
@@ -600,6 +621,73 @@ campaign_first() {  # F2: REPS cold first switches S -> H, then one warm switch 
   validate check H switch-warm-H-post-check --require-restored
   teardown H switch-warm-H
   scope_close "$last" switch-warm-scope-cleanup
+}
+
+# ---------------------------------------------------------------- pre-read (F3b): S -> H, parked-target pre-read
+campaign_preread() {
+  validate preflight S preflight --reserve-bytes "$RESERVE"
+  started=1
+  stage_catalogue
+  validate cleanup S prep-initial-cleanup
+  prep_snapshot S -
+  validate files S prep-snapshot-files
+  # H reference: a device-produced snapshot (normal loader + inline snapshot) in its own scope, its
+  # per-shard file fingerprint, and the greedy reference.
+  local ref=$RUN_BASE-ref
+  validate memory H prep-H-memory --reserve-bytes "$RESERVE"
+  scope_open "$ref"
+  deploy H prep-H-ref-normal "$(scope_settings "$ref" "$COLD")" --max-model-len 131072
+  validate file-fingerprint H prep-H-ref-file-fingerprint --run-scope "$ref"
+  validate validate H prep-H-reference
+  teardown H prep-H-ref-normal
+  scope_close "$ref" prep-H-ref-scope-cleanup
+  deploy S S-restore "$FAST" --max-model-len 16384
+  restored S
+  local r=1 attempt=1 rid
+  while (( r <= REPS )); do
+    rid=$(run_id_for "$r" "$attempt")
+    disk_floor "run-switch $rid"
+    scope_open "$rid"
+    validate pagecache H "switch-r$r-a$attempt-pagecache"
+    mark "switch_start:r$r"
+    if ctl run-switch H "switch-r$r" "$SWITCH_TIMEOUT" --inventory "$INVENTORY" -- \
+        --from-layout S --switch-mode full --phase1 W0 --phase2 W6 --static-target-s 206.2 \
+        --run-id "$rid" --policy "$POLICY" --engine-settings "$(scope_settings "$rid" "$PREREAD_TARGET")" \
+        --max-model-len 131072 "${OVERLAP_ARGS[@]}" \
+        --model "$MODEL" --arm-timeout "$ARM_TIMEOUT" && preread_complete "$OUT/switch-r$r.json"; then
+      mark "switch_end:r$r"
+      current=H
+      record_run "$r" "$attempt" "$rid" true preread
+      state "switched S->H preread $rid"
+      # Outside C: greedy equality with the normal-loader reference, then exactness of the pre-read files.
+      validate validate H "switch-r$r-H-validation" --require-restored --reference "$OUT/prep-H-reference.json" \
+        || { state "validation-failed r$r"; return 1; }
+      validate file-fingerprint H "switch-r$r-file-fingerprint" --run-scope "$rid" \
+        || { state "file-fingerprint-failed r$r"; return 1; }
+      compare_local "$OUT/prep-H-ref-file-fingerprint.json" "$OUT/switch-r$r-file-fingerprint.json" \
+        "switch-r$r-preread-compare" || { state "preread-exactness-failed r$r"; return 1; }
+      teardown H "switch-r$r-H"
+      scope_close "$rid" "switch-r$r-scope-cleanup"
+      deploy S "S-restore-r$((r + 1))" "$FAST" --max-model-len 16384
+      restored S check-only
+      r=$((r + 1)); attempt=1
+    else
+      mark "switch_end:r$r:failed"
+      (( DRY )) || cp -f "$OUT/switch-r$r.json" "$OUT/switch-r$r-a$attempt-failed.json" 2>/dev/null || true
+      record_run "$r" "$attempt" "$rid" false preread
+      diagnose H "$rid"
+      failures=$((failures + 1))
+      state "switch-failed r$r attempt $attempt"
+      (( failures < MAX_ATTEMPTS )) || { echo "run-switch failed $failures times; stopping" >&2; return 1; }
+      teardown H "switch-r$r-failed-H" || true
+      for layout in Mb S; do teardown "$layout" "switch-r$r-failed-$layout" || true; done
+      scope_close "$rid" "switch-r$r-a$attempt-scope-cleanup"
+      deploy S "S-restore-a$((attempt + 1))" "$FAST" --max-model-len 16384
+      restored S check-only
+      attempt=$((attempt + 1))
+    fi
+  done
+  teardown S final
 }
 
 idle

@@ -80,7 +80,8 @@ PHASES = ["init_device", "load_model", "determine_available_memory", "initialize
 # Worker clocks outside PHASES: the graph build (both loaders), the normal loader's weight load
 # (DefaultModelLoader.load_weights), the inline snapshot after load_model (weight_snapshot=write)
 # and the executable bank load / write (after initialize_from_config / compile_or_warm_up_model).
-EXTRA = ["graph_build", "weight_load", "snapshot_write", "exec_bank_load", "exec_bank_write"]
+# preread_wait: the released worker's bounded wait for its parked-target pre-read child (hetero/preread.py).
+EXTRA = ["graph_build", "weight_load", "snapshot_write", "exec_bank_load", "exec_bank_write", "preread_wait"]
 # Normal loader only, summed inside weight_load (tpu_worker._checkpoint_clock): checkpoint iterator
 # (lazy mmaps), host conversion (incl. the checkpoint page faults) and shard selection + H2D.
 NORMAL_LOAD = {"checkpoint_iter": "read_s", "host_convert": "host_convert_s", "shard_place": "shard_place_s"}
@@ -552,6 +553,21 @@ def prespawn_anatomy(deploy_report: Optional[Mapping[str, Any]], T0: float) -> D
             row["holders_seen"] = gate.get("holders_seen")
             row["self_check_clean"] = bool((gate.get("self_check_parked") or {}).get("clean")
                                            and (gate.get("self_check_released") or {}).get("clean"))
+            pre = w.get("preread")
+            if pre is not None:
+                # Parked-target pre-read child: start/end (worker clock) and the released worker's wait.
+                report = pre.get("report") or {}
+                row["preread"] = {
+                    **{f"{k}_s": round(pre[k] - T0, 4) for k in ("started_at", "ended_at", "wait_started_at",
+                                                                 "wait_ended_at") if pre.get(k) is not None},
+                    "used": pre.get("used"), "error": pre.get("error"), "exit_code": pre.get("exit_code"),
+                    "killed": pre.get("killed"), "wall_s": report.get("wall_s"),
+                    "vm_hwm_kb": report.get("vm_hwm_kb"), "bytes": report.get("bytes"),
+                    "phases_s": report.get("phases_s"),
+                    "isolation_clean": bool((report.get("isolation") or {}).get("platforms_cpu_only")
+                                            and (report.get("isolation") or {}).get("self_checks_clean")
+                                            and not (report.get("isolation") or {}).get("audit_events")),
+                    "done_before_T0": pre.get("ended_at") is not None and pre["ended_at"] <= T0}
             workers.append(row)
     block = dict((deploy_report or {}).get("prespawn") or {})
     hold = {iid: {k: round(v - T0, 4) for k, v in h.items() if k.endswith("_at") and v is not None}
@@ -562,7 +578,11 @@ def prespawn_anatomy(deploy_report: Optional[Mapping[str, Any]], T0: float) -> D
             "workers": workers, "all_parked_before_release": bool(workers) and all(
                 r.get("parked_at") is not None and r.get("released_at") is not None
                 and r["parked_at"] <= r["released_at"] for r in workers),
-            "all_self_checks_clean": bool(workers) and all(r["self_check_clean"] for r in workers)}
+            "all_self_checks_clean": bool(workers) and all(r["self_check_clean"] for r in workers),
+            **({"preread_all_used": all((r.get("preread") or {}).get("used") is True for r in workers),
+                "preread_all_done_before_T0": all((r.get("preread") or {}).get("done_before_T0") is True
+                                                  for r in workers)}
+               if any("preread" in r for r in workers) else {})}
 
 
 def prespawn_window(stamps: Mapping[str, float], records1: Sequence[Mapping[str, Any]]) -> Dict[str, Any]:

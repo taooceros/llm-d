@@ -45,7 +45,7 @@ def host_action(action, reserve_bytes, capture_config=False, run_scope=None):
         # A first-switch run scope (hetero/run_scope.py): only its two directories are read or
         # removed; the default snapshot root and every warm cache stay untouched.
         from hetero import run_scope as scopes
-        if action not in ('cleanup', 'files', 'memory'):
+        if action not in ('cleanup', 'files', 'memory', 'file-fingerprint'):
             raise RuntimeError(f'--run-scope is not supported for {action}')
     if action == 'cleanup' and run_scope is None:
         shutil.rmtree(root, ignore_errors=False) if root.exists() else None
@@ -110,43 +110,13 @@ def host_action(action, reserve_bytes, capture_config=False, run_scope=None):
             verified.append(str(path))
         row['verified_manifest_and_sizes'] = verified
     if action == 'file-fingerprint':
-        import fcntl
-        import hashlib
-        import numpy as np
         import time
+        from hetero.weight_snapshot import file_fingerprint
         fingerprint_start = time.perf_counter()
-        from concurrent.futures import ThreadPoolExecutor
-        fingerprints = []
-        for manifest_path in root.glob('*/*/rank*/manifest.json'):
-            with (manifest_path.parent / '.snapshot.lock').open('a+b') as lock:
-                fcntl.flock(lock, fcntl.LOCK_SH | fcntl.LOCK_NB)
-                manifest = json.loads(manifest_path.read_text())
-                jobs = [(number, shard_number, array, shard)
-                        for number, array in enumerate(manifest['arrays'])
-                        for shard_number, shard in enumerate(array['shards'])]
-                def hash_file(job):
-                    number, shard_number, array, shard = job
-                    file = manifest_path.parent / shard['file']
-                    if file.parent != manifest_path.parent or file.stat().st_size != shard['bytes']:
-                        raise RuntimeError(f'missing/wrong-sized shard: {file}')
-                    raw = np.memmap(file, mode='r', dtype=np.uint8) if shard['bytes'] else np.empty(0, np.uint8)
-                    try:
-                        digest = hashlib.sha256(raw).hexdigest()
-                    finally:
-                        if isinstance(raw, np.memmap):
-                            raw._mmap.close()
-                    return {'array': number, 'shard': shard_number, 'path': array['path'],
-                            'device_id': shard['device_id'], 'index': shard['index'],
-                            'shape': shard['shape'], 'dtype': array['dtype'],
-                            'bytes': shard['bytes'], 'sha256': digest}
-                with ThreadPoolExecutor(max_workers=4) as pool:
-                    shards = list(pool.map(hash_file, jobs))
-                shards.sort(key=lambda s: (s['array'], s['shard']))
-                fingerprints.append({'instance': manifest_path.parent.parent.name,
-                    'process_rank': int(manifest_path.parent.name.removeprefix('rank')),
-                    'bytes': sum(s['bytes'] for s in shards), 'shards': shards,
-                    'sha256': hashlib.sha256(json.dumps(shards, sort_keys=True).encode()).hexdigest(),
-                    'generation': manifest.get('generation')})
+        # A run scope fingerprints only that scope's snapshot root (same row format).
+        fingerprint_root = (Path(scopes.scope_roots(run_scope)['weight_snapshot_root'])
+                            if run_scope is not None else root)
+        fingerprints = [file_fingerprint(path) for path in sorted(fingerprint_root.glob('*/*/rank*/manifest.json'))]
         if not fingerprints:
             raise RuntimeError('no published snapshot to fingerprint')
         row['fingerprints'] = fingerprints
@@ -526,7 +496,7 @@ def main():
     parser.add_argument('action', choices=('preflight', 'memory', 'cleanup', 'files', 'file-fingerprint', 'poison', 'pagecache', 'snapshot', 'fingerprint', 'validate', 'check', 'probe', 'analyze'))
     parser.add_argument('--layout', choices=sorted(BUILTIN_LAYOUTS), default='S')
     parser.add_argument('--instances', help='snapshot/fingerprint only these comma-separated instances')
-    parser.add_argument('--run-scope', help='cleanup/files/memory only: act on this first-switch run scope '
+    parser.add_argument('--run-scope', help='cleanup/files/memory/file-fingerprint only: act on this first-switch run scope '
                         '(hetero/run_scope.py) instead of /dev/shm/omp_weights')
     parser.add_argument('--remote', action='store_true')
     parser.add_argument('--output', type=Path)
