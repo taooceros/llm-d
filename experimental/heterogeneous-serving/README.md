@@ -202,6 +202,50 @@ break-even table. Mixed-workload M-to-S and partial-restore projections are
 explicitly estimates: only full H/S restore transitions are measured, and the
 partial projection preserves the historical partial/full effective-cost ratio.
 
+### Scoped fast graph construction
+
+`EngineSettings.fast_graph` (default `false`) applies a load-scoped JAX 0.10
+workaround to both normal checkpoint loading and snapshot restore. It removes
+the expensive tracer-origin formatting from the `Tracer.sharding`
+`AttributeError` swallowed by Flax during abstract graph construction; it does
+not skip graph validation, change weights, or alter device execution. The
+original property is restored even when loading raises. Worker snapshot
+status records the requested flag; both loaders record the abstract
+`nnx.eval_shape` call as `graph_build`, separately from total `load_model`.
+The override is process-global for `load_model`, not thread-local; this does
+not establish safety for concurrent initializers in the same process.
+
+The authorized S A/B is `HEAD_POD=<current-head> flock /tmp/hetero-cluster.lock
+bash scripts/fast_graph_ab.sh`. Run only after higher-priority cluster
+validation has released the slice. Its four arms compare normal/restore with
+the flag off/on, check greedy outputs against ShardedRestore, and retain
+per-worker clocks in `results/restore/FastGraph/summary.json`. The summary
+fails closed on missing workers, flag evidence, restored status, or reference
+agreement. CPU synthetic graph timings are not TPU startup measurements.
+
+The completed S/TP8 four-arm run used frozen runtime source `df46a72`
+([evidence](results/restore/FastGraph/summary.md),
+[provenance](results/restore/FastGraph/source.json)). Medians across eight
+workers, in seconds:
+
+| Loader | Graph: baseline / fast | Total load: baseline / fast |
+|---|---:|---:|
+| Normal checkpoint | 14.739 / 1.790 | 234.675 / 222.587 |
+| Verified snapshot restore | 14.631 / 1.767 | 39.436 / 26.455 |
+
+All four arms matched the reference exactly: 128 greedy outputs and 8,140
+tokens per arm. Both restore arms reported verified restoration on all eight
+workers. Every arm removed its four actors and placement groups; final cleanup
+reported zero snapshot bytes on all eight hosts. The separate CPU synthetic
+graph smoke measured 9.760 / 0.571 seconds; it was not a TPU measurement.
+
+This is one fixed-order A/B, not a throughput result or a cold-filesystem-cache
+experiment. Snapshots were written after the normal baseline, so the normal
+fast arm also had resident snapshot files. Total-load differences are observed
+deltas, not perfectly isolated causal estimates. Worker clocks run in parallel
+and must not be summed into deployment wall-time savings.
+The reducer retains raw worker durations and medians in JSON and rounds only
+the final displayed table; it does not round worker observations before aggregation.
 
 `preflight` uses accelerator-free, node-pinned checks of the native sources on
 the selected hosts and Ray head. `deploy` applies the hash-pinned
