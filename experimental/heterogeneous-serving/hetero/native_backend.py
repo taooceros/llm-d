@@ -14,7 +14,7 @@ import os
 from pathlib import Path
 import stat
 import tempfile
-from typing import Any, Sequence
+from typing import Any, Optional, Sequence
 
 
 _PATCH_BYTES = Path(__file__).with_name("native_backend_patch.json").read_bytes()
@@ -31,6 +31,13 @@ RUNTIME_REVISION = hashlib.sha256(json.dumps({
     for path in sorted(_SOURCE_ROOT.rglob("*"))
     if path.is_file() and path.suffix in (".py", ".json")
 }, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+
+
+def effective_activation_dtype(activation_dtype: Optional[str], model_dtype: str) -> str:
+    """Activation dtype the patched Gemma4 runs: the explicit override, else the model dtype."""
+    if activation_dtype is not None:
+        return activation_dtype
+    return {"half": "float16", "float": "float32"}.get(model_dtype, model_dtype)
 
 
 class BackendPreparationError(RuntimeError):

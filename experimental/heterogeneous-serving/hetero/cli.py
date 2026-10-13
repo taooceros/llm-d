@@ -192,6 +192,7 @@ def _deployment_config(args: argparse.Namespace) -> DeploymentConfig:
     return DeploymentConfig(
         layout=requests[0],
         engine_settings=_engine_settings(args),
+        instance_engine_settings=json.loads(args.instance_engine_settings or "{}"),
         cpu_per_host=args.cpu_per_host,
         pg_ready_timeout_s=args.ready_timeout_s,
         engine_init_timeout_s=args.engine_init_timeout_s,
@@ -558,6 +559,7 @@ def cmd_run_arm(args: argparse.Namespace) -> Dict[str, Any]:
             protocol_path=None if pilot else str(
                 _json_input_path("OMP_HETERO_PROTOCOL_JSON", "--protocol", "protocols")),
             pilot_policy=policy if pilot else None,
+            epp_config=args.epp_config,
         ),
     }
 
@@ -577,6 +579,72 @@ def cmd_run_sequence(args: argparse.Namespace) -> Dict[str, Any]:
             protocol_path=str(_json_input_path("OMP_HETERO_PROTOCOL_JSON", "--protocol", "protocols")),
         ),
     }
+
+
+def _transition_policy(args: argparse.Namespace) -> Dict[str, Any]:
+    if args.policy_file and args.policy:
+        raise ValueError("pass --policy or --policy-file, not both")
+    if args.policy_file:
+        return json.loads(pathlib.Path(args.policy_file).read_text())
+    return json.loads(args.policy) if args.policy else {}
+
+
+def cmd_run_transition(args: argparse.Namespace) -> Dict[str, Any]:
+    """Partial reconfiguration (S<->M, S<->Mb, Mb<->H) between two workloads on the live gateway."""
+    from hetero.transition import run_transition
+
+    if not args.workload2:
+        raise ValueError("--workload2 is required")
+    inventory, source = _resolve_inventory(args, allow_probe=False)
+    target_args = argparse.Namespace(**{**vars(args), "layout": args.to_layout, "layout_file": None})
+    return {
+        "action": "run-transition",
+        "inventory_source": source,
+        "result": run_transition(
+            inventory=inventory,
+            config=_deployment_config(target_args),
+            from_layout=args.from_layout,
+            arm1=args.arm1,
+            workload1=args.workload1,
+            arm2=args.arm2,
+            workload2=args.workload2,
+            run_id=args.run_id,
+            pilot_policy=_transition_policy(args),
+            repetition=args.repetition,
+            arm_timeout_s=args.arm_timeout,
+            drain_timeout_s=args.drain_timeout_s,
+        ),
+    }
+
+
+def cmd_run_switch(args: argparse.Namespace) -> Dict[str, Any]:
+    """Production in-process layout switch (hetero/switch.py): phase 1, then drain/deploy/join with gated phase 2."""
+    from hetero.switch import HttpClient, RayFabric, run_switch
+
+    if not args.phase1 or not args.phase2:
+        raise ValueError("--phase1 and --phase2 are required")
+    inventory, source = _resolve_inventory(args, allow_probe=False)
+    config = _deployment_config(args)
+    fabric = RayFabric(inventory=inventory, config=config, mode=args.switch_mode,
+                       source_layout=args.from_layout, drain_timeout_s=args.drain_timeout_s,
+                       head_node_ip=args.head_node_ip or _head_node_ip(),
+                       prespawn_gate_timeout_s=args.prespawn_gate_timeout_s)
+    try:
+        report = run_switch(
+            fabric, HttpClient(timeout_s=args.arm_timeout), mode=args.switch_mode, source_layout=args.from_layout,
+            target_layout=config.layout.layout_id, phase1=args.phase1, phase2=args.phase2, run_id=args.run_id,
+            policy=_transition_policy(args), static_target_s=args.static_target_s, arm_timeout_s=args.arm_timeout,
+            prespawn_at_s=args.prespawn_at_s, prespawn_park_timeout_s=args.prespawn_park_timeout_s)
+    except Exception as exc:  # noqa: BLE001 - a failed switch still returns its report so the evidence is fetched
+        from hetero.experiment import ARTIFACT_ROOT
+
+        path = ARTIFACT_ROOT / args.run_id / "switch_report.json"
+        report = json.loads(path.read_text()) if path.exists() else {"completed": False}
+        return {"action": "run-switch", "inventory_source": source, "result": report,
+                "artifact_dir": str(ARTIFACT_ROOT / args.run_id), "ok": False,
+                "error": f"{type(exc).__name__}: {str(exc)[-2000:]}"}
+    return {"action": "run-switch", "inventory_source": source, "result": report,
+            "artifact_dir": report["artifact_dir"]}
 
 
 COMMANDS = {
@@ -600,13 +668,15 @@ COMMANDS = {
     "build-manifest": cmd_build_manifest,
     "run-arm": cmd_run_arm,
     "run-sequence": cmd_run_sequence,
+    "run-transition": cmd_run_transition,
+    "run-switch": cmd_run_switch,
 }
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("command", choices=sorted(COMMANDS))
-    parser.add_argument("--layout", default="M", help="built-in layout id (M, H, S)")
+    parser.add_argument("--layout", default="M", help="built-in layout id (M, Mb, H, S)")
     parser.add_argument("--layout-file", help="explicit layout request JSON")
     parser.add_argument("--inventory-file", help="saved slice inventory JSON")
     parser.add_argument("--probe-cpu", type=float, default=1.0)
@@ -617,6 +687,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--cpu-per-host", type=float, default=8.0)
     parser.add_argument("--engine-init-timeout-s", type=float, default=5400.0)
     parser.add_argument("--engine-settings", help="JSON object of engine settings")
+    parser.add_argument("--instance-engine-settings",
+                        help='JSON {instance_id: {setting: value}} merged over the engine settings')
     parser.add_argument("--model", default="/models/gemma-4-31b")
     parser.add_argument("--max-model-len", type=int)
     parser.add_argument("--max-num-seqs", type=int)
@@ -641,10 +713,36 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--repetition", type=int, default=1)
     parser.add_argument("--unfrozen-diagnostic", action="store_true",
                         help="mechanism-cost A/B or run-arm pilot without a frozen cohort; never headline evidence")
+    parser.add_argument("--epp-config",
+                        help="run-arm through the llm-d EPP router serving deploy/epp/<name>.yaml "
+                             "(plain, reserve, latebinding)")
     parser.add_argument("--run-id", default="run")
     parser.add_argument("--arm-timeout", type=float, default=7200.0)
     parser.add_argument("--arms", default="M0,MR")
     parser.add_argument("--repetitions", type=int, default=3)
+    parser.add_argument("--from-layout", default="M",
+                        help="run-transition: source layout (S<->M, S<->Mb, Mb<->H)")
+    parser.add_argument("--to-layout", default="S", help="run-transition: target layout")
+    parser.add_argument("--arm1", default="M0", help="run-transition: phase-1 arm (on --from-layout)")
+    parser.add_argument("--workload1", default=None,
+                        help="run-transition: phase-1 workload; omitted = skip phase 1")
+    parser.add_argument("--arm2", default="S", help="run-transition: phase-2 arm (on --to-layout)")
+    parser.add_argument("--workload2", default=None,
+                        help="run-transition: phase-2 workload (new engines join mid-run)")
+    parser.add_argument("--switch-mode", choices=("full", "partial"), default="full",
+                        help="run-switch: full (drain all, redeploy) or partial (kept engines stay, joiners deploy)")
+    parser.add_argument("--phase1", default=None, help="run-switch: phase-1 manifest on --from-layout")
+    parser.add_argument("--phase2", default=None,
+                        help="run-switch: phase-2 manifest, or a comma list (partial: W0,W6) on --layout")
+    parser.add_argument("--static-target-s", type=float, default=None,
+                        help="run-switch: static target-layout finish time the ramp/C_eff are measured against")
+    parser.add_argument("--prespawn-at-s", type=float, default=0.0,
+                        help="run-switch: pre-spawn the target engines this long after phase 1 begins "
+                             "(only when every deployed instance has engine setting prespawn=true)")
+    parser.add_argument("--prespawn-park-timeout-s", type=float, default=900.0,
+                        help="run-switch: bound on spawning + parking the pre-spawned workers")
+    parser.add_argument("--prespawn-gate-timeout-s", type=float, default=3600.0,
+                        help="run-switch: how long a parked worker waits for its release before failing")
     return parser
 
 
@@ -655,7 +753,7 @@ def main(argv: list[str]) -> int:
     emit_event("COMMAND_BEGIN", command=args.command)
     payload = COMMANDS[args.command](args)
     payload["elapsed_s"] = round(time.time() - started, 3)
-    payload["ok"] = True
+    payload["ok"] = payload.get("ok", True)
     emit_measurements(payload)
     emit_event("COMMAND_COMPLETE", command=args.command, elapsed_s=payload["elapsed_s"])
     return 0

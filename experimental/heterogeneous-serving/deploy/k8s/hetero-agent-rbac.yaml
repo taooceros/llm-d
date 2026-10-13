@@ -1,0 +1,61 @@
+# Namespace-scoped credentials for unattended hetero_ctl campaigns, so they do not stop when the
+# operator's gcloud session needs re-authentication.  Grants only what hetero_ctl and the
+# campaign scripts use in this namespace: pod exec/cp/port-forward/labels, and applying the
+# gateway/router manifests (deploy/k8s/omp-gateway.yaml, omp-router.yaml).
+# Revoke: kubectl -n llm-d-optimized-baseline delete secret hetero-agent-token
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: hetero-agent
+  namespace: llm-d-optimized-baseline
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: hetero-agent
+  namespace: llm-d-optimized-baseline
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch", "patch"]
+  - apiGroups: [""]
+    resources: ["pods/exec", "pods/portforward"]
+    verbs: ["create", "get"]
+  - apiGroups: [""]
+    resources: ["pods/log", "endpoints"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["services", "configmaps"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources: ["roles", "rolebindings"]
+    verbs: ["get", "list", "create", "update", "patch"]
+  - apiGroups: ["inference.networking.k8s.io"]
+    resources: ["inferencepools"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: hetero-agent
+  namespace: llm-d-optimized-baseline
+subjects:
+  - kind: ServiceAccount
+    name: hetero-agent
+    namespace: llm-d-optimized-baseline
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: hetero-agent
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: hetero-agent-token
+  namespace: llm-d-optimized-baseline
+  annotations:
+    kubernetes.io/service-account.name: hetero-agent
+type: kubernetes.io/service-account-token

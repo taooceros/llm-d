@@ -17,3 +17,7 @@ venv/
 .venv*/
 experiments/tp8_preemption_benchmark/reports/
 experiments/tp8_preemption_benchmark/results/
+data/workloads/sharegpt_large.json
+.venv/
+__pycache__/
+*.pyc

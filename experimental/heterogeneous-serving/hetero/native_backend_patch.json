@@ -48,6 +48,18 @@
           "new": "        if inputs_embeds is not None:\n            x = inputs_embeds\n            if self.activation_dtype is not None:\n                x = x.astype(self.activation_dtype)\n        else:\n            x = self.embed_tokens(input_ids)\n            if self.activation_dtype is not None:\n                x = x.astype(self.activation_dtype)\n            # Gemma4: Apply embedding scaling after promoting gathered rows.\n            x = x * self.embedding_scale\n"
         }
       ]
+    },
+    {
+      "name": "rpa_v3_kernel_pristine",
+      "path": "/workspace/tpu_inference/tpu_inference/kernels/ragged_paged_attention/v3/kernel.py",
+      "original_sha256": "b97aa3be868596ca813bd6cbb7423aa77f5ca923f3533c72b98984b7866265f9",
+      "patched_sha256": "bcd21fdaff6b333903a09991d0ad57f3683fef18bf8abef449c0f10d6879609c",
+      "replacements": [
+        {
+          "old": "        assert k.dtype == v.dtype\n        if q_scale is None and k.dtype != q.dtype:\n            # bf16 KV storage with fp32 activations: Mosaic rejects mixed f32 x bf16\n            # matmul operands, so widen the loaded K/V block to the query dtype.\n            k = k.astype(q.dtype)\n            v = v.astype(q.dtype)\n\n        # Follow FlashAttention-2 forward pass.\n",
+          "new": "        assert k.dtype == v.dtype\n\n        # Follow FlashAttention-2 forward pass.\n"
+        }
+      ]
     }
   ]
 }
