@@ -405,6 +405,11 @@
       "bytes": 1556
     },
     {
+      "path": "scripts/fast_snapshot_sequence.sh",
+      "sha256": "eb0ad6d6c8a260e85080c5ac621609b8d554c62014c80170cfbf1d6c1bfffa7c",
+      "bytes": 5420
+    },
+    {
       "path": "scripts/freeze_predeclaration.py",
       "sha256": "117a83d8d7c411b73cc004a87bd1a0250024eab5a2928c8220cb2cc419d0ee30",
       "bytes": 30654
@@ -490,9 +495,19 @@
       "bytes": 1408
     },
     {
+      "path": "scripts/snapshot_bandwidth.py",
+      "sha256": "cdfcf1953d9eb5b9b1ee74ff14c4750266ec3ce2ce038efcc58f11a00ddc5df6",
+      "bytes": 83618
+    },
+    {
       "path": "scripts/snapshot_validate.py",
-      "sha256": "c8c1f629a2ba6931059e454a334a4fdb3e89dbfa8f8a77d431d059737ba03bb6",
-      "bytes": 16012
+      "sha256": "3cb48ab159df00a5881eb0f70b1fd52b77ae10427f5a0c361cee8cd1218b9f87",
+      "bytes": 22568
+    },
+    {
+      "path": "scripts/summarize_fast_snapshot.py",
+      "sha256": "329f13630f4848e4df655d9857e49f41f8f6041eaebbd37a3788c339f51b77b9",
+      "bytes": 6414
     },
     {
       "path": "scripts/summarize_mechanism_ab.py",
@@ -508,6 +523,11 @@
       "path": "scripts/summarize_snapshot.py",
       "sha256": "19d5feeeb227c4cc5621d66f518073e1bd70fe54e6864893e009b64c3bb6d795",
       "bytes": 7629
+    },
+    {
+      "path": "scripts/summarize_snapshot_bandwidth.py",
+      "sha256": "9104f31e2851b1b409f4d161fdeb878bd0f647780077249dcf2e0d01a0ffe9ea",
+      "bytes": 8502
     },
     {
       "path": "scripts/summarize_w3.py",
@@ -553,6 +573,11 @@
       "path": "tests/test_partial_reconfiguration.py",
       "sha256": "e0abfbffef38a51aefc5f5670136a650a4954426c52baa97553dc98a2cdacb0f",
       "bytes": 20008
+    },
+    {
+      "path": "tests/test_snapshot_validation.py",
+      "sha256": "30e0404397badcc815208e21401a9354d950a425fea30ba33ad0bbbd11827e2d",
+      "bytes": 1546
     },
     {
       "path": "uv.lock",

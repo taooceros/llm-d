@@ -13,6 +13,27 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 
+def _host_measurements(action, layout, rows):
+    return {'ok': True, 'action': action, 'layout': layout, 'hosts': rows}
+
+
+def _verify_fingerprint_reference(reference, measured):
+    if not reference.get('layout') or not measured.get('layout'):
+        raise RuntimeError('weight fingerprint reference is missing layout identity')
+
+    def hashes(data):
+        if 'hosts' in data:
+            return {(worker['instance'], worker['process_rank']):
+                    (worker['bytes'], worker['sha256'], worker['shards'])
+                    for host in data['hosts'] for worker in host['fingerprints']}
+        return {(name, worker['process_rank']):
+                (worker['bytes'], worker['sha256'], worker['shards'])
+                for name, workers in data['workers'].items() for worker in workers}
+
+    if reference['layout'] != measured['layout'] or hashes(reference) != hashes(measured):
+        raise RuntimeError('snapshot/source/restored weight byte digest mismatch')
+
+
 def host_action(action, reserve_bytes, capture_config=False):
     import shutil
     import socket
@@ -27,6 +48,32 @@ def host_action(action, reserve_bytes, capture_config=False):
            'tmpfs_free_bytes': free, 'reserve_bytes': reserve_bytes,
            'headroom_bytes': floor, 'cleaned': action == 'cleanup'}
     row['snapshot_directory_bytes'] = sum(p.stat().st_size for p in root.rglob('*') if p.is_file())
+    if action == 'poison':
+        import fcntl
+        import mmap
+        import time
+        import numpy as np
+        begin = time.perf_counter()
+        poisoned = 0
+        for manifest_path in root.glob('*/*/rank*/manifest.json'):
+            with (manifest_path.parent / '.snapshot.lock').open('a+b') as lock:
+                fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                manifest = json.loads(manifest_path.read_text())
+                # Invalidate before modifying bytes; the next snapshot must
+                # rewrite every page, not republish an identical destination.
+                manifest_path.unlink()
+                for array in manifest['arrays']:
+                    for shard in array['shards']:
+                        with (manifest_path.parent / shard['file']).open('r+b') as file:
+                            if shard['bytes']:
+                                with mmap.mmap(file.fileno(), 0) as mapped:
+                                    raw = np.frombuffer(mapped, dtype=np.uint8)
+                                    raw.fill(0xA5)
+                                    poisoned += raw.size
+                                    del raw
+        row.update(poisoned_bytes=poisoned, poison_s=time.perf_counter() - begin)
+        if not poisoned:
+            raise RuntimeError('no published snapshot to poison')
     if action == 'files':
         manifests = list(root.glob('*/*/rank*/manifest.json'))
         if not manifests:
@@ -34,7 +81,7 @@ def host_action(action, reserve_bytes, capture_config=False):
         verified = []
         for path in manifests:
             manifest = json.loads(path.read_text())
-            if manifest.get('version') != 1 or not manifest.get('arrays'):
+            if manifest.get('version') not in (1, 2) or not manifest.get('arrays'):
                 raise RuntimeError(f'incomplete snapshot manifest: {path}')
             for array in manifest['arrays']:
                 for shard in array['shards']:
@@ -43,6 +90,49 @@ def host_action(action, reserve_bytes, capture_config=False):
                         raise RuntimeError(f'missing/wrong-sized snapshot shard: {file}')
             verified.append(str(path))
         row['verified_manifest_and_sizes'] = verified
+    if action == 'file-fingerprint':
+        import fcntl
+        import hashlib
+        import numpy as np
+        import time
+        fingerprint_start = time.perf_counter()
+        from concurrent.futures import ThreadPoolExecutor
+        fingerprints = []
+        for manifest_path in root.glob('*/*/rank*/manifest.json'):
+            with (manifest_path.parent / '.snapshot.lock').open('a+b') as lock:
+                fcntl.flock(lock, fcntl.LOCK_SH | fcntl.LOCK_NB)
+                manifest = json.loads(manifest_path.read_text())
+                jobs = [(number, shard_number, array, shard)
+                        for number, array in enumerate(manifest['arrays'])
+                        for shard_number, shard in enumerate(array['shards'])]
+                def hash_file(job):
+                    number, shard_number, array, shard = job
+                    file = manifest_path.parent / shard['file']
+                    if file.parent != manifest_path.parent or file.stat().st_size != shard['bytes']:
+                        raise RuntimeError(f'missing/wrong-sized shard: {file}')
+                    raw = np.memmap(file, mode='r', dtype=np.uint8) if shard['bytes'] else np.empty(0, np.uint8)
+                    try:
+                        digest = hashlib.sha256(raw).hexdigest()
+                    finally:
+                        if isinstance(raw, np.memmap):
+                            raw._mmap.close()
+                    return {'array': number, 'shard': shard_number, 'path': array['path'],
+                            'device_id': shard['device_id'], 'index': shard['index'],
+                            'shape': shard['shape'], 'dtype': array['dtype'],
+                            'bytes': shard['bytes'], 'sha256': digest}
+                with ThreadPoolExecutor(max_workers=4) as pool:
+                    shards = list(pool.map(hash_file, jobs))
+                shards.sort(key=lambda s: (s['array'], s['shard']))
+                fingerprints.append({'instance': manifest_path.parent.parent.name,
+                    'process_rank': int(manifest_path.parent.name.removeprefix('rank')),
+                    'bytes': sum(s['bytes'] for s in shards), 'shards': shards,
+                    'sha256': hashlib.sha256(json.dumps(shards, sort_keys=True).encode()).hexdigest(),
+                    'generation': manifest.get('generation')})
+        if not fingerprints:
+            raise RuntimeError('no published snapshot to fingerprint')
+        row['fingerprints'] = fingerprints
+        row['validation_s'] = time.perf_counter() - fingerprint_start
+        row['outside_snapshot_and_restore_timer'] = True
     if capture_config:
         config = Path(os.environ.get('OMP_SNAPSHOT_MODEL', '/models/gemma-4-31b')) / 'config.json'
         row['model_config'] = json.loads(config.read_text())
@@ -64,7 +154,7 @@ def remote(args):
         from ray.util import placement_group_table
         if any(row['state'] != 'REMOVED' for row in placement_group_table().values()):
             raise RuntimeError('preflight refuses pre-existing placement groups')
-    if args.action in ('preflight', 'memory', 'cleanup', 'files'):
+    if args.action in ('preflight', 'memory', 'cleanup', 'files', 'file-fingerprint', 'poison'):
         nodes = [n for n in ray.nodes() if n['Alive'] and n['Resources'].get('TPU', 0) > 0]
         if not nodes:
             raise RuntimeError('no live TPU hosts')
@@ -72,7 +162,7 @@ def remote(args):
         rows = ray.get([task.options(scheduling_strategy=NodeAffinitySchedulingStrategy(
             n['NodeID'], soft=False)).remote(args.action, args.reserve_bytes,
                 args.action == 'preflight' and index == 0) for index, n in enumerate(nodes)], timeout=120)
-        result = {'ok': True, 'action': args.action, 'hosts': rows}
+        result = _host_measurements(args.action, args.layout, rows)
     else:
         from hetero.registry import find_registry
         registry = find_registry()
@@ -83,9 +173,11 @@ def remote(args):
         if len(rows) != expected or len({r['instance_id'] for r in rows}) != expected:
             raise RuntimeError(f'incomplete {args.layout} registry: {rows}')
         actors = {r['instance_id']: ray.get_actor(r['engine_actor_name'], namespace=r['ray_namespace']) for r in rows}
-        if args.action == 'snapshot':
-            reports = {name: ray.get(actor.snapshot_weights.remote(), timeout=1800)
-                       for name, actor in sorted(actors.items())}
+        if args.action in ('snapshot', 'fingerprint'):
+            names = sorted(actors)
+            method = 'snapshot_weights' if args.action == 'snapshot' else 'weight_fingerprint'
+            reports = dict(zip(names, ray.get([getattr(actors[name], method).remote()
+                                              for name in names], timeout=1800)))
             if any(not report for report in reports.values()):
                 raise RuntimeError('missing worker snapshot reports')
             result = {'ok': True, 'action': args.action, 'layout': args.layout, 'workers': reports}
@@ -102,7 +194,7 @@ def remote(args):
             if args.action == 'check':
                 emit_measurements({'ok': True, 'layout': args.layout, 'worker_init_phases': phases})
                 return
-            manifest = json.loads(os.environ['OMP_SNAPSHOT_MANIFEST'])
+            manifest = json.loads((ROOT / os.environ['OMP_SNAPSHOT_MANIFEST_FILE']).read_text())
             prompts = manifest['requests'][:32]
             if len(prompts) != 32:
                 raise RuntimeError('W0 must provide 32 validation prompts')
@@ -127,10 +219,15 @@ def submit(args):
     from omp_rcm import StageRunner, stage
     from omp_rcm.ray_job import RayJobSupervisor
     env = {'PYTHONUNBUFFERED': '1', 'OMP_SNAPSHOT_MODEL': os.environ.get('MODEL', '/models/gemma-4-31b')}
+    input_directory = None
     if args.action == 'validate':
+        import tempfile
+        input_directory = tempfile.TemporaryDirectory(prefix='_snapshot_validation_inputs_', dir=ROOT)
+        input_file = Path(input_directory.name) / 'prompts.json'
         manifest = json.loads((ROOT / 'data/manifests/W0.json').read_text())
-        env['OMP_SNAPSHOT_MANIFEST'] = json.dumps({
-            'manifest_sha256': manifest['manifest_sha256'], 'requests': manifest['requests'][:32]})
+        input_file.write_text(json.dumps({
+            'manifest_sha256': manifest['manifest_sha256'], 'requests': manifest['requests'][:32]}))
+        env['OMP_SNAPSHOT_MANIFEST_FILE'] = str(input_file.relative_to(ROOT))
     argv = ['python3', '-u', 'scripts/snapshot_validate.py', args.action, '--remote',
             '--layout', args.layout, '--reserve-bytes', str(args.reserve_bytes)]
     if args.require_restored:
@@ -159,14 +256,29 @@ def submit(args):
             raise RuntimeError('snapshot job missing successful evidence')
         if args.reference:
             reference = json.loads(args.reference.read_text())['measurements']
-            keys = ('layout', 'manifest_sha256', 'prompts', 'sampling', 'outputs')
-            mismatches = [key for key in keys if measured[key] != reference[key]]
-            if mismatches:
-                raise RuntimeError('greedy restored output mismatch: ' + ', '.join(mismatches))
+            if args.action == 'fingerprint':
+                _verify_fingerprint_reference(reference, measured)
+                measured['weight_equality'] = {'passed': True, 'reference': str(args.reference),
+                    'comparison': 'SHA-256 and identity of every shard; cold file vs live source' if 'hosts' in reference else 'SHA-256 and identity of every live device shard',
+                    'outside_snapshot_and_restore_timer': True}
+            else:
+                keys = ('layout', 'manifest_sha256', 'prompts', 'sampling', 'outputs')
+                mismatches = [key for key in keys if measured[key] != reference[key]]
+                if mismatches:
+                    raise RuntimeError('greedy restored output mismatch: ' + ', '.join(mismatches))
+                measured['greedy_equality'] = {'passed': True, 'prompts_per_engine': 32,
+                                              'engines': len(measured['outputs']),
+                                              'reference': str(args.reference),
+                                              'comparison': 'output_token_ids, token for token'}
+            args.output.write_text(json.dumps(evidence, indent=2) + '\n')
     runner = StageRunner(silence_timeout_s=args.timeout)
     runner.register(run)
-    if not runner.run():
-        raise SystemExit(1)
+    try:
+        if not runner.run():
+            raise SystemExit(1)
+    finally:
+        if input_directory is not None:
+            input_directory.cleanup()
 
 
 def analyze(args):
@@ -257,7 +369,7 @@ def analyze(args):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=('preflight', 'memory', 'cleanup', 'files', 'snapshot', 'validate', 'check', 'analyze'))
+    parser.add_argument('action', choices=('preflight', 'memory', 'cleanup', 'files', 'file-fingerprint', 'poison', 'snapshot', 'fingerprint', 'validate', 'check', 'analyze'))
     parser.add_argument('--layout', choices=('S', 'H'), default='S')
     parser.add_argument('--remote', action='store_true')
     parser.add_argument('--output', type=Path)
