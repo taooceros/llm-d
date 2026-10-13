@@ -14,6 +14,8 @@ sys.path.insert(0, str(ROOT))
 
 from hetero import agreement  # noqa: E402
 from hetero.layout import BUILTIN_LAYOUTS  # noqa: E402
+# Engines per layout: the built-in layouts plus T32 (one TP32 engine, deploy/layouts/T32.json).
+LAYOUT_SIZES = {**{name: len(instances) for name, instances in BUILTIN_LAYOUTS.items()}, 'T32': 1}
 
 
 def _host_measurements(action, layout, rows):
@@ -198,7 +200,7 @@ def remote(args):
         if registry is None:
             raise RuntimeError('no registry')
         rows = ray.get(registry.snapshot.remote(args.layout), timeout=60)
-        expected = len(BUILTIN_LAYOUTS[args.layout])
+        expected = LAYOUT_SIZES[args.layout]
         if len(rows) != expected or len({r['instance_id'] for r in rows}) != expected:
             raise RuntimeError(f'incomplete {args.layout} registry: {rows}')
         actors = {r['instance_id']: ray.get_actor(r['engine_actor_name'], namespace=r['ray_namespace']) for r in rows}
@@ -494,7 +496,7 @@ def analyze(args):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('action', choices=('preflight', 'memory', 'cleanup', 'files', 'file-fingerprint', 'poison', 'pagecache', 'snapshot', 'fingerprint', 'validate', 'check', 'probe', 'analyze'))
-    parser.add_argument('--layout', choices=sorted(BUILTIN_LAYOUTS), default='S')
+    parser.add_argument('--layout', choices=sorted(LAYOUT_SIZES), default='S')
     parser.add_argument('--instances', help='snapshot/fingerprint only these comma-separated instances')
     parser.add_argument('--run-scope', help='cleanup/files/memory/file-fingerprint only: act on this first-switch run scope '
                         '(hetero/run_scope.py) instead of /dev/shm/omp_weights')

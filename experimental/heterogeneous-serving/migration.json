@@ -105,6 +105,11 @@
       "bytes": 9088
     },
     {
+      "path": "deploy/layouts/T32.json",
+      "sha256": "b36fcec3272e49d0955568ceacc7e1243d02bd10c26579df7473a9a7c8064a0d",
+      "bytes": 91
+    },
+    {
       "path": "docs/architecture/2x4_topology_experiment_handoff.md",
       "sha256": "6d6b21792ac4fae4c64255536b3da3626886a717949412a54b0084f861374664",
       "bytes": 3221
@@ -226,8 +231,8 @@
     },
     {
       "path": "hetero/cli.py",
-      "sha256": "afe3455e5d838594f76669f612fe97b236df3ead4fd65eeb1ff3a5e98bac8147",
-      "bytes": 32859
+      "sha256": "2c2833f2e6255b358dbdc60d932a5f1a4a13824d1f3ec682bc851c63d5058807",
+      "bytes": 33053
     },
     {
       "path": "hetero/deployment.py",
@@ -561,8 +566,8 @@
     },
     {
       "path": "scripts/snapshot_validate.py",
-      "sha256": "16a037ca35d02a8413c7066f39a8727a0ec7cadeed479a49c5eeef1912d24b29",
-      "bytes": 31055
+      "sha256": "552b466d038affd10d2cb5e780eb161153a32dcf4aacd6b3098795e8a0cbf1d1",
+      "bytes": 31239
     },
     {
       "path": "scripts/staged_sequence.sh",
@@ -593,6 +598,11 @@
       "path": "scripts/summarize_snapshot_bandwidth.py",
       "sha256": "9104f31e2851b1b409f4d161fdeb878bd0f647780077249dcf2e0d01a0ffe9ea",
       "bytes": 8502
+    },
+    {
+      "path": "scripts/summarize_tp32.py",
+      "sha256": "e216a7095d40a01f93e4ee181f09a1a2381f86fde7905174691874895d52feda",
+      "bytes": 5677
     },
     {
       "path": "scripts/summarize_w3.py",
@@ -693,6 +703,11 @@
       "path": "tests/test_switch.py",
       "sha256": "f28d3545e0a972df5bd0d65208ed394ee2fabe16ec14e42912f558467ec43a62",
       "bytes": 27704
+    },
+    {
+      "path": "tests/test_tp32_layout.py",
+      "sha256": "af4a4d47ba2b571d465949a871cb2267c40c0dc8f471a287b9d90ca607c6eb26",
+      "bytes": 3206
     },
     {
       "path": "uv.lock",
