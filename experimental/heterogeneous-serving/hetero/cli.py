@@ -590,7 +590,7 @@ def _transition_policy(args: argparse.Namespace) -> Dict[str, Any]:
 
 
 def cmd_run_transition(args: argparse.Namespace) -> Dict[str, Any]:
-    """Partial S<->M reconfiguration between two workloads on the live gateway."""
+    """Partial reconfiguration (S<->M, S<->Mb, Mb<->H) between two workloads on the live gateway."""
     from hetero.transition import run_transition
 
     if not args.workload2:
@@ -645,7 +645,7 @@ COMMANDS = {
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("command", choices=sorted(COMMANDS))
-    parser.add_argument("--layout", default="M", help="built-in layout id (M, H, S)")
+    parser.add_argument("--layout", default="M", help="built-in layout id (M, Mb, H, S)")
     parser.add_argument("--layout-file", help="explicit layout request JSON")
     parser.add_argument("--inventory-file", help="saved slice inventory JSON")
     parser.add_argument("--probe-cpu", type=float, default=1.0)
@@ -689,8 +689,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--arm-timeout", type=float, default=7200.0)
     parser.add_argument("--arms", default="M0,MR")
     parser.add_argument("--repetitions", type=int, default=3)
-    parser.add_argument("--from-layout", default="M", help="run-transition: source layout (M or S)")
-    parser.add_argument("--to-layout", default="S", help="run-transition: target layout (S or M)")
+    parser.add_argument("--from-layout", default="M",
+                        help="run-transition: source layout (S<->M, S<->Mb, Mb<->H)")
+    parser.add_argument("--to-layout", default="S", help="run-transition: target layout")
     parser.add_argument("--arm1", default="M0", help="run-transition: phase-1 arm (on --from-layout)")
     parser.add_argument("--workload1", default=None,
                         help="run-transition: phase-1 workload; omitted = skip phase 1")

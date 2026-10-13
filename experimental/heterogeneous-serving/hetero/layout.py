@@ -430,6 +430,10 @@ def _validate_disjoint(instances: Sequence[ResolvedInstance]) -> None:
 BUILTIN_LAYOUTS: Dict[str, Tuple[Tuple[str, int], ...]] = {
     # Heterogeneous mixed layout: two dense-batch small instances plus one large.
     "M": (("small_a", 8), ("small_b", 8), ("large", 16)),
+    # M with the TP16 instance named large_b: same request order, so first-fit
+    # placement gives it exactly H's large_b hosts/chips (and S's small_a/small_b),
+    # letting staged S -> Mb -> H transitions keep instances by name.
+    "Mb": (("small_a", 8), ("small_b", 8), ("large_b", 16)),
     # Homogeneous large baseline.
     "H": (("large_a", 16), ("large_b", 16)),
     # Homogeneous small baseline.

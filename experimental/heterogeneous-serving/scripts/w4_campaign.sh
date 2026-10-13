@@ -57,6 +57,7 @@ log "W4 manifest $(python3 -c "import json;m=json.load(open('data/manifests/W4.j
 for layout in $LAYOUTS; do
   case $layout in
     M) arm=M0; deploy_args=(--max-model-len 16384 --instance-engine-settings '{"large":{"max_model_len":36864}}');;
+    Mb) arm=Mb0; deploy_args=(--max-model-len 16384 --instance-engine-settings '{"large_b":{"max_model_len":36864}}');;
     H) arm=H; deploy_args=(--max-model-len 36864);;
     *) log "layout $layout cannot serve W4"; exit 1;;
   esac

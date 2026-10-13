@@ -12,6 +12,8 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from hetero.layout import BUILTIN_LAYOUTS  # noqa: E402
+
 
 def _host_measurements(action, layout, rows):
     return {'ok': True, 'action': action, 'layout': layout, 'hosts': rows}
@@ -169,12 +171,19 @@ def remote(args):
         if registry is None:
             raise RuntimeError('no registry')
         rows = ray.get(registry.snapshot.remote(args.layout), timeout=60)
-        expected = {'S': 4, 'H': 2}[args.layout]
+        expected = len(BUILTIN_LAYOUTS[args.layout])
         if len(rows) != expected or len({r['instance_id'] for r in rows}) != expected:
             raise RuntimeError(f'incomplete {args.layout} registry: {rows}')
         actors = {r['instance_id']: ray.get_actor(r['engine_actor_name'], namespace=r['ray_namespace']) for r in rows}
         if args.action in ('snapshot', 'fingerprint'):
             names = sorted(actors)
+            if args.instances:
+                # Publish only the selected engines, e.g. Mb's large_b for a staged join
+                # whose kept engines never restart (snapshots are keyed by layout/instance).
+                selected = sorted(set(args.instances.split(',')))
+                if not set(selected) <= set(names):
+                    raise RuntimeError(f'{selected} not all registered in {args.layout}: {names}')
+                names = selected
             method = 'snapshot_weights' if args.action == 'snapshot' else 'weight_fingerprint'
             reports = dict(zip(names, ray.get([getattr(actors[name], method).remote()
                                               for name in names], timeout=1800)))
@@ -230,8 +239,8 @@ def submit(args):
         env['OMP_SNAPSHOT_MANIFEST_FILE'] = str(input_file.relative_to(ROOT))
     argv = ['python3', '-u', 'scripts/snapshot_validate.py', args.action, '--remote',
             '--layout', args.layout, '--reserve-bytes', str(args.reserve_bytes)]
-    if args.require_restored:
-        argv.append('--require-restored')
+    if args.instances:
+        argv += ['--instances', args.instances]
 
     @stage(name='snapshot_validation', order_idx=1, expected_s=args.timeout)
     def run(state, timing):
@@ -370,7 +379,8 @@ def analyze(args):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('action', choices=('preflight', 'memory', 'cleanup', 'files', 'file-fingerprint', 'poison', 'snapshot', 'fingerprint', 'validate', 'check', 'analyze'))
-    parser.add_argument('--layout', choices=('S', 'H'), default='S')
+    parser.add_argument('--layout', choices=sorted(BUILTIN_LAYOUTS), default='S')
+    parser.add_argument('--instances', help='snapshot/fingerprint only these comma-separated instances')
     parser.add_argument('--remote', action='store_true')
     parser.add_argument('--output', type=Path)
     parser.add_argument('--reference', type=Path)

@@ -221,8 +221,8 @@
     },
     {
       "path": "hetero/cli.py",
-      "sha256": "ea3c7dc76057a5319ec17f2f24c72450f8a198e1d5b17178a96186930fe1fba3",
-      "bytes": 29511
+      "sha256": "4a538f9189ea8e735be524758e35a52e57a8e525d6f5f2a34c464c590437f961",
+      "bytes": 29563
     },
     {
       "path": "hetero/deployment.py",
@@ -236,8 +236,8 @@
     },
     {
       "path": "hetero/layout.py",
-      "sha256": "014e23647e4af7c1091c640ac36bc00182e88eac20d06ec46e91bd769a0e36c5",
-      "bytes": 16504
+      "sha256": "e59bdbe928024b1a6c61dbd1364152e0e5e13d06c325ef99d7210a9b797a75a0",
+      "bytes": 16798
     },
     {
       "path": "hetero/native_backend.py",
@@ -281,8 +281,8 @@
     },
     {
       "path": "hetero/transition.py",
-      "sha256": "12c235fafec8d67faa923233b1fe71013b461796ea3e4a4ac9915336aaf8be1b",
-      "bytes": 13881
+      "sha256": "2a4fff246908f534ca1c63999f536d0bb6ce6703fa1d73bf0586d5cc2d531058",
+      "bytes": 16663
     },
     {
       "path": "main.py",
@@ -511,8 +511,13 @@
     },
     {
       "path": "scripts/snapshot_validate.py",
-      "sha256": "3cb48ab159df00a5881eb0f70b1fd52b77ae10427f5a0c361cee8cd1218b9f87",
-      "bytes": 22568
+      "sha256": "78ebdab92dacf7f236282fa93c676306deab96b0d0564be7809ef0ad7f00f1e8",
+      "bytes": 23209
+    },
+    {
+      "path": "scripts/staged_sequence.sh",
+      "sha256": "a7374367e15c4c1bb82b6c133310f3da11f87a1225c4a32731ae85129c13a964",
+      "bytes": 11060
     },
     {
       "path": "scripts/summarize_fast_snapshot.py",
@@ -556,8 +561,8 @@
     },
     {
       "path": "scripts/w4_campaign.sh",
-      "sha256": "e5dd6c3dbab4b5c5b1cc62b5d55b2be7f3926db9143b3afa15e5575c149f7e44",
-      "bytes": 4154
+      "sha256": "db440d8a68d3e029287185f81bf7a4df803b750869bfe8fc6cfedc64d265618b",
+      "bytes": 4274
     },
     {
       "path": "skaffold.yaml",
@@ -593,6 +598,11 @@
       "path": "tests/test_snapshot_validation.py",
       "sha256": "30e0404397badcc815208e21401a9354d950a425fea30ba33ad0bbbd11827e2d",
       "bytes": 1546
+    },
+    {
+      "path": "tests/test_staged_transition.py",
+      "sha256": "c580fddb308971acdcc4dcb2a7f31d1cc69c88b545bbd9601605c6a03075ecf6",
+      "bytes": 10589
     },
     {
       "path": "uv.lock",

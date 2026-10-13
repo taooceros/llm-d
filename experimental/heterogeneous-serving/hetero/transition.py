@@ -1,11 +1,19 @@
-"""Partial reconfiguration between the M and S layouts on a live fabric.
+"""Partial reconfiguration between built-in layouts on a live fabric.
 
-M = small_a, small_b (TP8) + large (TP16); S = small_a..small_d (TP8).  The kept
-engines (small_a, small_b) occupy the same chips and hosts in both layouts, so
-they are never restarted: they adopt the target layout's identity in place while
-only the released engines are drained and only the new engines are deployed
-(~355 s engine start-up).  Phase 2 starts serving on the kept engines
+Defined pairs (``PARTIAL_TRANSITIONS``), each matched by instance name:
+
+    S  <-> M    kept small_a, small_b      released/joined large       <-> small_c, small_d
+    S  <-> Mb   kept small_a, small_b      released/joined large_b     <-> small_c, small_d
+    Mb <-> H    kept large_b               released/joined small_a, small_b <-> large_a
+
+S = small_a..small_d (TP8); M = small_a, small_b (TP8) + large (TP16); Mb = M with the
+TP16 instance named large_b; H = large_a, large_b (TP16).  First-fit placement puts
+each kept instance on the same chips and hosts in both layouts, so kept engines are
+never restarted: they adopt the target layout's identity in place while only the
+released engines are drained and only the new engines are deployed (~355 s engine
+start-up without snapshot restore).  Phase 2 starts serving on the kept engines
 immediately and the new engines join the live gateway additively when ready.
+S -> Mb -> H is the staged route from 4xTP8 to 2xTP16 that never stops serving.
 
     phase 1  run_arm on the source layout (optional)
     prepare  verify kept engines occupy identical chips; register the target layout
@@ -26,7 +34,14 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
 
-SUPPORTED_LAYOUTS = frozenset({"M", "S"})
+# Unordered layout pairs with a defined live partial transition.  plan_transition still
+# checks chip conservation, TP and (when given) placement for every pair.
+PARTIAL_TRANSITIONS = frozenset({
+    frozenset({"S", "M"}),
+    frozenset({"S", "Mb"}),
+    frozenset({"Mb", "H"}),
+})
+SUPPORTED_LAYOUTS = frozenset().union(*PARTIAL_TRANSITIONS)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -38,13 +53,31 @@ class TransitionPlan:
     join: Tuple[str, ...]
 
 
+def instance_placement(instance: Mapping[str, Any]) -> Tuple[Any, ...]:
+    """Physical identity of a resolved instance: rank-ordered hosts and their chips."""
+    return (instance["tp_size"], tuple(instance["host_ips"]),
+            tuple((h["node_ip"], tuple(tuple(c) for c in h["chip_coords"]))
+                  for h in instance["hosts"]))
+
+
 def plan_transition(
     from_layout: str, to_layout: str,
     from_instances: Mapping[str, int], to_instances: Mapping[str, int],
+    *,
+    from_placement: Optional[Mapping[str, Mapping[str, Any]]] = None,
+    to_placement: Optional[Mapping[str, Mapping[str, Any]]] = None,
 ) -> TransitionPlan:
-    """Pure membership arithmetic; refuses anything but a chip-conserving S<->M change."""
-    if {from_layout, to_layout} != SUPPORTED_LAYOUTS:
-        raise ValueError(f"only S<->M transitions are supported, not {from_layout}->{to_layout}")
+    """Membership arithmetic for a defined pair; refuses anything not chip-conserving.
+
+    ``*_placement`` map instance ids to resolved instance dicts (``host_ips``,
+    ``hosts[].chip_coords``); when given, every kept instance must occupy exactly
+    the same hosts, in the same rank order, and the same chips in both layouts.
+    """
+    pair = frozenset({from_layout, to_layout})
+    if from_layout == to_layout or pair not in PARTIAL_TRANSITIONS:
+        supported = sorted("<->".join(sorted(p)) for p in PARTIAL_TRANSITIONS)
+        raise ValueError(f"no partial transition is defined for {from_layout}->{to_layout}; "
+                         f"supported: {supported}")
     kept = sorted(set(from_instances) & set(to_instances))
     release = sorted(set(from_instances) - set(to_instances))
     join = sorted(set(to_instances) - set(from_instances))
@@ -54,6 +87,16 @@ def plan_transition(
         raise ValueError("a kept instance may not change tensor-parallel size")
     if sum(from_instances.values()) != sum(to_instances.values()):
         raise ValueError("source and target layouts must allocate the same number of chips")
+    if (from_placement is None) != (to_placement is None):
+        raise ValueError("pass both source and target placements, or neither")
+    if from_placement is not None:
+        missing = sorted(n for n in kept if n not in from_placement or n not in to_placement)
+        if missing:
+            raise ValueError(f"no placement for kept instances {missing}")
+        moved = sorted(n for n in kept
+                       if instance_placement(from_placement[n]) != instance_placement(to_placement[n]))
+        if moved:
+            raise ValueError(f"kept instances would change hosts or chips: {moved}")
     return TransitionPlan(from_layout, to_layout, tuple(kept), tuple(release), tuple(join))
 
 
@@ -115,7 +158,11 @@ def run_transition(
     arm_timeout_s: float = 7200.0,
     drain_timeout_s: float = 600.0,
 ) -> Dict[str, Any]:
-    """Execute one M<->S transition. ``config`` is the TARGET layout's DeploymentConfig.
+    """Execute one partial transition of a ``PARTIAL_TRANSITIONS`` pair.
+
+    ``config`` is the TARGET layout's DeploymentConfig: kept engines must match its
+    settings exactly, and the joiners are deployed with ``config.settings_for(name)``
+    (e.g. weight_snapshot=read + fast_graph for a snapshot-backed join).
 
     Fails closed and leaves the fabric as it is on any error after the drain
     begins; the report (also written under the run's artifact directory) says
@@ -150,7 +197,9 @@ def run_transition(
     target = resolved.to_dict()
     digest = target["layout_digest"]
     plan = plan_transition(from_layout, to_layout, from_instances,
-                           {i.instance_id: i.tp_size for i in resolved.instances})
+                           {i.instance_id: i.tp_size for i in resolved.instances},
+                           from_placement={i["instance_id"]: i for i in source["instances"]},
+                           to_placement={i["instance_id"]: i for i in target["instances"]})
     by_id = {i.instance_id: i for i in resolved.instances}
     rows = {r["instance_id"]: r for r in ray.get(registry.snapshot.remote(from_layout), timeout=60)}
 
