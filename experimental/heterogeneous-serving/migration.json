@@ -435,6 +435,11 @@
       "bytes": 4965
     },
     {
+      "path": "scripts/compile_execution_smoke.py",
+      "sha256": "5293d5576296ba64f276dd22594a5577a66d82597d8157f7e0448d74bfb04047",
+      "bytes": 19448
+    },
+    {
       "path": "scripts/epp_router.sh",
       "sha256": "dc6900d2f2ea08251329d72fdbd896a77da0b6066948762c619598acc6f0baf6",
       "bytes": 1556
@@ -618,6 +623,11 @@
       "path": "scripts/switch_summary.py",
       "sha256": "9285542b72e76c473bf1de090db0d21468c8140707420ede06972d6cef9eacc1",
       "bytes": 18614
+    },
+    {
+      "path": "scripts/unified_runtime_deviceless_probe.py",
+      "sha256": "ae17ba3cd9a4769393051256f7270b6e28ab45985a60309a865732742c002779",
+      "bytes": 5487
     },
     {
       "path": "scripts/w3_campaign.sh",
