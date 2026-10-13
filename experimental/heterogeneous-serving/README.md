@@ -29,6 +29,60 @@ remains `dtype="bfloat16"` by default. These fields participate in attachment
 checks and migration build identity. The supported state profile is FP32/highest;
 drain incompatible live engines rather than silently reconfiguring them.
 
+### Explicit host-RAM weight snapshots
+
+`EngineSettings.weight_snapshot` defaults to `"off"`. For a ready, idle engine,
+its `snapshot_weights()` actor RPC publishes each worker's final runner-state
+arrays under `/dev/shm/omp_weights/<layout>/<instance>/rank<process-rank>/`.
+Alternatively, `"weight_snapshot": "write"` snapshots immediately after the
+normal load and precision checks. Neither mode changes the serving step path.
+
+Redeploy with `--engine-settings '{"weight_snapshot":"read"}'` (or the same
+field in `--instance-engine-settings`) to construct the abstract native nnx
+model and restore final shards before the runner captures its execution
+closures. No checkpoint weight iterator or random-weight allocation runs on
+the successful restore path. By default every shard is checksummed before placement;
+model identity, TP size, weight dtype/quantization, backend revision, physical
+host/chip assignment, ordered JAX mesh, parameter paths/shapes/dtypes and shard
+indices must agree. A worker refusal is voted across the instance before all
+workers fall back to the normal loader; `worker_init_phases()` exposes the
+refusal reason and `weight_snapshot.restored` so fallback timings cannot be
+mistaken for restore timings.
+
+The model fingerprint hashes configuration contents plus checkpoint file
+sizes and modification times, **not all checkpoint contents**: checkpoints
+must remain immutable (rewriting bytes while preserving size and mtime is
+outside this identity contract). Snapshot bytes themselves use SHA-256.
+Quantized/draft abstract graphs currently refuse and use the normal loader.
+`max_model_len` is deliberately absent from weight compatibility.
+For an explicit checksum-cost A/B only, `"weight_snapshot_verify": false`
+skips byte hashes but retains all compatibility and shard-shape checks.
+Worker evidence records `verified_checksums`; this is not equivalent to a
+verified restore. The campaign tries this variant only when SHA verification
+takes at least 15 seconds and still requires exact greedy-output equality.
+`snapshot_verify` includes reading/faulting mapped tmpfs bytes; mapping setup
+and device placement have separate phase clocks.
+
+Run the S/TP8 and H/TP16 validation campaign from an isolated worktree with
+`HEAD_POD` and `KUBECONFIG` set:
+
+```bash
+flock /tmp/hetero-cluster.lock scripts/reconfig_snapshot.sh
+.venv/bin/python scripts/summarize_snapshot.py --root results/restore/ShardedRestore
+XLA_FLAGS=--xla_force_host_platform_device_count=8 .venv/bin/python -m pytest -q tests/test_weight_snapshot.py
+```
+
+The campaign requires 40 GB of RAM and tmpfs headroom after staging, refuses
+pre-existing engines, retains machine-readable evidence under
+`results/restore/ShardedRestore/`, and releases its deployments and removes
+all snapshot copies before relinquishing the cluster lock.
+The summary retains cold-vs-restore timings, snapshot bytes and cost, exact
+greedy validation, restored W0 makespan, measured transition costs and a
+break-even table. Mixed-workload M-to-S and partial-restore projections are
+explicitly estimates: only full H/S restore transitions are measured, and the
+partial projection preserves the historical partial/full effective-cost ratio.
+
+
 `preflight` uses accelerator-free, node-pinned checks of the native sources on
 the selected hosts and Ray head. `deploy` applies the hash-pinned
 `hetero/native_backend_patch.json` before creating engines: native float32 cache

@@ -36,8 +36,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "fd4a4ac10e51e7deec77b8b68bca3eb9a6150ed6fb692f8165cdc6da4b8f52fb",
-      "bytes": 21908
+      "sha256": "b39c0958ce1e21b10e5198b43c297d7587aa95aa78e3bbfd580d189ec5333af3",
+      "bytes": 25114
     },
     {
       "path": "RECONFIGURATION_GOAL.md",
@@ -430,6 +430,11 @@
       "bytes": 2803
     },
     {
+      "path": "scripts/reconfig_snapshot.sh",
+      "sha256": "e3b8333a2c8fa1066c2451696338acf2c18efcbb9d5e3e9f75ac237262944444",
+      "bytes": 6312
+    },
+    {
       "path": "scripts/reconfig_timeline.py",
       "sha256": "f968f0d17844c938715cb614cf01399594111ac3ca1b4ddd6335b8818f6510ef",
       "bytes": 5797
@@ -450,6 +455,11 @@
       "bytes": 1408
     },
     {
+      "path": "scripts/snapshot_validate.py",
+      "sha256": "c8c1f629a2ba6931059e454a334a4fdb3e89dbfa8f8a77d431d059737ba03bb6",
+      "bytes": 16012
+    },
+    {
       "path": "scripts/summarize_mechanism_ab.py",
       "sha256": "dfe427b648a206141749dac29182f8ea603542df66350a29268924900c6b35c5",
       "bytes": 1978
@@ -458,6 +468,11 @@
       "path": "scripts/summarize_reconfig.py",
       "sha256": "f8d28deaa68d02601b6cae1abc1f7c2f1d7d7df4522f093f27bdba525fe8b162",
       "bytes": 4150
+    },
+    {
+      "path": "scripts/summarize_snapshot.py",
+      "sha256": "19d5feeeb227c4cc5621d66f518073e1bd70fe54e6864893e009b64c3bb6d795",
+      "bytes": 7629
     },
     {
       "path": "scripts/summarize_w3.py",
