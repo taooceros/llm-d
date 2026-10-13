@@ -36,8 +36,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "ff5716d7423c7cb5bf9f83ff998714be3a77a6c199cdf5d960409538812039b4",
-      "bytes": 40425
+      "sha256": "216cf3e6049474f8ba13e3ad4f78e8b77f94433e6c9c4230836edc6c0b5e44d0",
+      "bytes": 42108
     },
     {
       "path": "RECONFIGURATION_GOAL.md",
@@ -280,14 +280,19 @@
       "bytes": 8725
     },
     {
+      "path": "hetero/run_scope.py",
+      "sha256": "25f50cc9ca0c12a217a51416025db990fa9d5d2003383bbd7afa3dafdd5a1700",
+      "bytes": 3951
+    },
+    {
       "path": "hetero/slice_inventory.py",
       "sha256": "e876429c5cfd2165259c78c5ef3d8b339438c3c2da9ce27f3210519c0079346a",
       "bytes": 14328
     },
     {
       "path": "hetero/switch.py",
-      "sha256": "09a551ff995c026f951cdc5537a44499a06062eb40ee680f974418d318308cc0",
-      "bytes": 72339
+      "sha256": "f3e2321e51eec5634a79604c9856dd53172b18169f98e4887cf4d6f80df837af",
+      "bytes": 76322
     },
     {
       "path": "hetero/transition.py",
@@ -466,8 +471,8 @@
     },
     {
       "path": "scripts/overlap_check.py",
-      "sha256": "240219a49a7492b6876be6ecb6d25c4df1087d4e6dc4f337661cf096ab92b384",
-      "bytes": 7610
+      "sha256": "1b6d443c94acc884619607834ef7dd81e39288788610861e858accfcb82fdd07",
+      "bytes": 10066
     },
     {
       "path": "scripts/overlap_pilot.py",
@@ -551,8 +556,8 @@
     },
     {
       "path": "scripts/snapshot_validate.py",
-      "sha256": "37dc88a7437d9ab4c4b808934012ff644fc8443511194f03bb7272648b129242",
-      "bytes": 29404
+      "sha256": "e8da8ef9c8a94ec260e8e9bddb47f3911f20d1ae07586fdf5951053f18c72a65",
+      "bytes": 32863
     },
     {
       "path": "scripts/staged_sequence.sh",
@@ -596,8 +601,8 @@
     },
     {
       "path": "scripts/switch_campaign.sh",
-      "sha256": "8023cfac0406c578f3b8de7762a8fd97339b522c26e8897c268dc46d57af8dd7",
-      "bytes": 22708
+      "sha256": "73360768b64831540e684dfb60c9acb8c3cc165596060939fe41c44a8703d1bc",
+      "bytes": 32016
     },
     {
       "path": "scripts/switch_dry_run.py",
@@ -606,8 +611,8 @@
     },
     {
       "path": "scripts/switch_summary.py",
-      "sha256": "a4671d2e22947a59e62dbb3568cde7171609a92326872c2e59384013946ca934",
-      "bytes": 14580
+      "sha256": "9285542b72e76c473bf1de090db0d21468c8140707420ede06972d6cef9eacc1",
+      "bytes": 18614
     },
     {
       "path": "scripts/w3_campaign.sh",
@@ -643,6 +648,11 @@
       "path": "tests/test_fast_graph_summary.py",
       "sha256": "1c151750c85d495f41994ee5c2dbf76307dedaad27dc843811fdacd973c3cc11",
       "bytes": 1044
+    },
+    {
+      "path": "tests/test_first_switch.py",
+      "sha256": "2e49a01edb7f42837856a12c72c75563685affc5d3309a5c04cd88556a7f4a75",
+      "bytes": 23451
     },
     {
       "path": "tests/test_frozen_cohort.py",

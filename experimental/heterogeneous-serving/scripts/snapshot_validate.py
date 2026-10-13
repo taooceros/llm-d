@@ -37,11 +37,17 @@ def _verify_fingerprint_reference(reference, measured):
         raise RuntimeError('snapshot/source/restored weight byte digest mismatch')
 
 
-def host_action(action, reserve_bytes, capture_config=False):
+def host_action(action, reserve_bytes, capture_config=False, run_scope=None):
     import shutil
     import socket
     root = Path('/dev/shm/omp_weights')
-    if action == 'cleanup':
+    if run_scope is not None:
+        # A first-switch run scope (hetero/run_scope.py): only its two directories are read or
+        # removed; the default snapshot root and every warm cache stay untouched.
+        from hetero import run_scope as scopes
+        if action not in ('cleanup', 'files', 'memory'):
+            raise RuntimeError(f'--run-scope is not supported for {action}')
+    if action == 'cleanup' and run_scope is None:
         shutil.rmtree(root, ignore_errors=False) if root.exists() else None
     memory = dict(line.split(':', 1) for line in Path('/proc/meminfo').read_text().splitlines())
     available = int(memory['MemAvailable'].split()[0]) * 1024
@@ -49,8 +55,18 @@ def host_action(action, reserve_bytes, capture_config=False):
     floor = 40_000_000_000
     row = {'host': socket.gethostname(), 'mem_available_bytes': available,
            'tmpfs_free_bytes': free, 'reserve_bytes': reserve_bytes,
-           'headroom_bytes': floor, 'cleaned': action == 'cleanup'}
+           'headroom_bytes': floor, 'cleaned': action == 'cleanup' and run_scope is None}
     row['snapshot_directory_bytes'] = sum(p.stat().st_size for p in root.rglob('*') if p.is_file())
+    if run_scope is not None:
+        row['run_scope'] = run_scope
+        if action == 'cleanup':
+            row['scope_removed'] = scopes.remove_scope(run_scope)
+        else:
+            row['scope_files'] = scopes.scope_files(run_scope)
+            if action == 'files' and not (row['scope_files']['snapshot_manifests']
+                                          and row['scope_files']['bank_manifests']):
+                raise RuntimeError(f'run scope {run_scope}: no snapshot or bank manifest on '
+                                   f'{socket.gethostname()}: ' + json.dumps(row['scope_files']))
     if action == 'poison':
         import fcntl
         import mmap
@@ -77,7 +93,7 @@ def host_action(action, reserve_bytes, capture_config=False):
         row.update(poisoned_bytes=poisoned, poison_s=time.perf_counter() - begin)
         if not poisoned:
             raise RuntimeError('no published snapshot to poison')
-    if action == 'files':
+    if action == 'files' and run_scope is None:
         manifests = list(root.glob('*/*/rank*/manifest.json'))
         if not manifests:
             raise RuntimeError(f'no snapshot manifests on {socket.gethostname()}')
@@ -136,12 +152,51 @@ def host_action(action, reserve_bytes, capture_config=False):
         row['fingerprints'] = fingerprints
         row['validation_s'] = time.perf_counter() - fingerprint_start
         row['outside_snapshot_and_restore_timer'] = True
+    if action == 'pagecache':
+        row['checkpoint_page_cache'] = checkpoint_residency(
+            Path(os.environ.get('OMP_SNAPSHOT_MODEL', '/models/gemma-4-31b')))
+        row['meminfo_kb'] = {k: int(memory[k].split()[0]) for k in (
+            'MemAvailable', 'Cached', 'Shmem', 'Dirty', 'Writeback') if k in memory}
     if capture_config:
         config = Path(os.environ.get('OMP_SNAPSHOT_MODEL', '/models/gemma-4-31b')) / 'config.json'
         row['model_config'] = json.loads(config.read_text())
-    if action != 'cleanup' and min(available, free) - reserve_bytes < floor:
+    if action not in ('cleanup', 'pagecache') and min(available, free) - reserve_bytes < floor:
         raise RuntimeError('insufficient snapshot host headroom: ' + json.dumps(row))
     return row
+
+
+def checkpoint_residency(model_dir):
+    """Page-cache residency of the checkpoint's safetensors files (mincore; reads no file bytes).
+
+    A private, never-written mapping faults nothing; mincore reports the file pages the kernel
+    holds in its page cache, i.e. how warm the next normal-loader read of the checkpoint is."""
+    import ctypes
+    import mmap
+    libc = ctypes.CDLL(None, use_errno=True)
+    libc.mincore.argtypes = (ctypes.c_void_p, ctypes.c_size_t, ctypes.c_void_p)
+    page = os.sysconf('SC_PAGE_SIZE')
+    files, total, resident = [], 0, 0
+    for path in sorted(Path(model_dir).glob('*.safetensors')):
+        size = path.stat().st_size
+        if not size:
+            continue
+        pages = (size + page - 1) // page
+        vector = (ctypes.c_ubyte * pages)()
+        with path.open('rb') as handle, mmap.mmap(handle.fileno(), size, flags=mmap.MAP_PRIVATE,
+                                                   prot=mmap.PROT_READ | mmap.PROT_WRITE) as mapped:
+            anchor = ctypes.c_char.from_buffer(mapped)
+            try:
+                if libc.mincore(ctypes.addressof(anchor), size, vector) != 0:
+                    raise OSError(ctypes.get_errno(), f'mincore failed for {path}')
+            finally:
+                del anchor
+        import numpy as np
+        hot = int((np.frombuffer(vector, dtype=np.uint8) & 1).sum()) * page
+        files.append({'file': path.name, 'bytes': size, 'resident_bytes': min(hot, size)})
+        total += size
+        resident += min(hot, size)
+    return {'model_dir': str(model_dir), 'files': len(files), 'bytes': total, 'resident_bytes': resident,
+            'resident_fraction': round(resident / total, 4) if total else None, 'per_file': files}
 
 
 def remote(args):
@@ -157,14 +212,15 @@ def remote(args):
         from ray.util import placement_group_table
         if any(row['state'] != 'REMOVED' for row in placement_group_table().values()):
             raise RuntimeError('preflight refuses pre-existing placement groups')
-    if args.action in ('preflight', 'memory', 'cleanup', 'files', 'file-fingerprint', 'poison'):
+    if args.action in ('preflight', 'memory', 'cleanup', 'files', 'file-fingerprint', 'poison', 'pagecache'):
         nodes = [n for n in ray.nodes() if n['Alive'] and n['Resources'].get('TPU', 0) > 0]
         if not nodes:
             raise RuntimeError('no live TPU hosts')
         task = ray.remote(num_cpus=0)(host_action)
         rows = ray.get([task.options(scheduling_strategy=NodeAffinitySchedulingStrategy(
             n['NodeID'], soft=False)).remote(args.action, args.reserve_bytes,
-                args.action == 'preflight' and index == 0) for index, n in enumerate(nodes)], timeout=120)
+                args.action == 'preflight' and index == 0, args.run_scope)
+                for index, n in enumerate(nodes)], timeout=120)
         result = _host_measurements(args.action, args.layout, rows)
     else:
         from hetero.registry import find_registry
@@ -329,6 +385,8 @@ def submit(args):
             '--layout', args.layout, '--reserve-bytes', str(args.reserve_bytes)]
     if args.instances:
         argv += ['--instances', args.instances]
+    if args.run_scope:
+        argv += ['--run-scope', args.run_scope]
 
     @stage(name='snapshot_validation', order_idx=1, expected_s=args.timeout)
     def run(state, timing):
@@ -465,9 +523,11 @@ def analyze(args):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=('preflight', 'memory', 'cleanup', 'files', 'file-fingerprint', 'poison', 'snapshot', 'fingerprint', 'validate', 'check', 'probe', 'analyze'))
+    parser.add_argument('action', choices=('preflight', 'memory', 'cleanup', 'files', 'file-fingerprint', 'poison', 'pagecache', 'snapshot', 'fingerprint', 'validate', 'check', 'probe', 'analyze'))
     parser.add_argument('--layout', choices=sorted(BUILTIN_LAYOUTS), default='S')
     parser.add_argument('--instances', help='snapshot/fingerprint only these comma-separated instances')
+    parser.add_argument('--run-scope', help='cleanup/files/memory only: act on this first-switch run scope '
+                        '(hetero/run_scope.py) instead of /dev/shm/omp_weights')
     parser.add_argument('--remote', action='store_true')
     parser.add_argument('--output', type=Path)
     parser.add_argument('--reference', type=Path)

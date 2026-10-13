@@ -265,6 +265,31 @@ hosts. Evidence: `omp_init_phases()["exec_bank"]` and the worker RPC
 `omp_exec_bank_report()`. `exec_bank_sabotage_rank` (read only) makes one
 process rank refuse its bank, for testing the all-rank fallback.
 
+### First-switch provisioning (inline snapshot + bank write, run scopes)
+
+A layout's first deploy provisions itself: a normal (checkpoint) deploy with
+`"weight_snapshot": "write"` publishes every worker's snapshot right after
+`load_model` (`snapshot_write` clock; the runner state is assigned once at load,
+`tpu_runner.py:1194`, and weights are never donated, so it equals the served
+state), and `"exec_bank": "write"` writes the bank after
+`compile_or_warm_up_model` (`exec_bank_write` clock). A later restore deploy
+(`weight_snapshot` / `exec_bank` `"read"`) accepts both: the bank identity
+reads only `tp_size` and `runtime_env` from the instance payload, so the
+loader path, roots, nonce and pre-spawn gate never change it.
+`weight_snapshot_root` (default `/dev/shm/omp_weights`) and `exec_bank_dir`
+select where both live. `hetero/run_scope.py` maps a run scope to
+`/dev/shm/omp_weights_runs/<scope>` and `/root/.cache/omp_exec_bank_runs/<scope>`;
+`scripts/snapshot_validate.py {files,cleanup,memory} --run-scope <scope>` checks
+or removes exactly those two directories on every host (never the default
+roots, the warm banks or the XLA cache). Normal-loader `load_model` sub-phases
+(`worker_init_phases[*].normal_load`, `graph_build`, `weight_load`) split the
+checkpoint iterator, host conversion (`jax_array_from_reshaped_torch`, where
+the lazily mmapped checkpoint bytes are read) and shard placement
+(`assign_and_shard_param`). `scripts/switch_campaign.sh first-gate` (F1) and
+`first` (F2: cold pre-spawned first switches, then one warm switch from the
+last cold scope; `switch_summary.py` reports C_first, C_warm and the amortized
+per-switch cost) drive it on the cluster.
+
 ### Scoped fast graph construction
 
 `EngineSettings.fast_graph` (default `false`) applies a load-scoped JAX 0.10

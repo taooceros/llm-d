@@ -77,6 +77,13 @@ CLOCK_NOTE = ("T0, controller stamps and client dispatch/finish are head-process
 LOAD_SUB = ["snapshot_manifest_verify", "snapshot_read_tmpfs", "snapshot_verify", "snapshot_device_placement"]
 PHASES = ["init_device", "load_model", "determine_available_memory", "initialize_from_config",
           "compile_or_warm_up_model"]
+# Worker clocks outside PHASES: the graph build (both loaders), the normal loader's weight load
+# (DefaultModelLoader.load_weights), the inline snapshot after load_model (weight_snapshot=write)
+# and the executable bank load / write (after initialize_from_config / compile_or_warm_up_model).
+EXTRA = ["graph_build", "weight_load", "snapshot_write", "exec_bank_load", "exec_bank_write"]
+# Normal loader only, summed inside weight_load (tpu_worker._checkpoint_clock): checkpoint iterator
+# (lazy mmaps), host conversion (incl. the checkpoint page faults) and shard selection + H2D.
+NORMAL_LOAD = {"checkpoint_iter": "read_s", "host_convert": "host_convert_s", "shard_place": "shard_place_s"}
 
 
 # --------------------------------------------------------------------------- policy
@@ -425,14 +432,23 @@ def deploy_anatomy(deploy_report: Mapping[str, Any]) -> Dict[str, Any]:
         ends: List[float] = []
         for w in init.get("worker_init_phases", []):
             ph = w["phases"]
+            # Engine ready = the last startup step: the bank write follows compile/warm-up.
+            end = max(ph[p]["end"] for p in ("compile_or_warm_up_model", "exec_bank_write") if p in ph)
             row: Dict[str, Any] = {"instance": name, "rank": w["executor_rank"], "engine_init_started_at": e0,
-                                   "init_device_start": ph["init_device"]["start"],
-                                   "end": ph["compile_or_warm_up_model"]["end"]}
-            for p in PHASES + LOAD_SUB:
+                                   "init_device_start": ph["init_device"]["start"], "end": end,
+                                   "loader": "normal" if "weight_load" in ph else "snapshot"
+                                   if (w.get("weight_snapshot") or {}).get("restored") else "other"}
+            for p in PHASES + LOAD_SUB + EXTRA:
                 if p in ph:
                     row[p] = ph[p]["end"] - ph[p]["start"]
+            for key, field in NORMAL_LOAD.items():
+                if (w.get("normal_load") or {}).get(field) is not None:
+                    row[key] = w["normal_load"][field]
             lm = ph["load_model"]
-            row["load_model_unattributed"] = (lm["end"] - lm["start"]) - sum(row.get(p, 0) for p in LOAD_SUB)
+            if "weight_load" in ph:  # normal loader: graph build + weight load + the rest
+                row["load_model_unattributed"] = (lm["end"] - lm["start"]) - row.get("graph_build", 0) - row["weight_load"]
+            else:
+                row["load_model_unattributed"] = (lm["end"] - lm["start"]) - sum(row.get(p, 0) for p in LOAD_SUB)
             per_worker.append(row)
             ends.append(row["end"])
         if ends:
@@ -442,7 +458,7 @@ def deploy_anatomy(deploy_report: Mapping[str, Any]) -> Dict[str, Any]:
                            "engine_init_started_at_max": max(started) if started else None,
                            "workers": len(per_worker), "complete": bool(per_worker)}
     if per_worker:
-        keys = PHASES + LOAD_SUB + ["load_model_unattributed"]
+        keys = PHASES + LOAD_SUB + EXTRA + list(NORMAL_LOAD) + ["load_model_unattributed"]
         out.update(
             init_device_start_min=min(w["init_device_start"] for w in per_worker),
             init_device_start_max=max(w["init_device_start"] for w in per_worker),
@@ -470,6 +486,42 @@ def restored_flags(deploy_report: Optional[Mapping[str, Any]]) -> Dict[str, Any]
     return {"per_instance": flags,
             "all_restored": bool(flags) and all(v is True for ranks in flags.values() for v in ranks.values())
             and all(ranks for ranks in flags.values())}
+
+
+def provisioned_flags(deploy_report: Optional[Mapping[str, Any]]) -> Dict[str, Any]:
+    """Per instance and worker rank: did this deploy publish its weight snapshot (inline,
+    ``weight_snapshot=write``) and write its executable bank (``exec_bank=write``)?
+
+    A layout's first deploy provisions both; within an instance every rank must share one snapshot
+    generation (the restore vote, hetero/tpu_worker.py) and one bank identity digest.
+    """
+    per: Dict[str, Dict[str, Dict[str, Any]]] = {}
+    for inst in (deploy_report or {}).get("instances", []):
+        init = inst["initialization"]
+        name = init.get("instance_id") or inst["descriptor"]["instance_id"]
+        rows: Dict[str, Dict[str, Any]] = {}
+        for w in init.get("worker_init_phases", []):
+            snap = w.get("weight_snapshot") or {}
+            written = snap.get("snapshot") or {}
+            bank = w.get("exec_bank") or {}
+            bank_written = bank.get("written") or {}
+            rows[str(w.get("executor_rank"))] = {
+                "snapshot_mode": snap.get("mode"), "snapshot_generation": written.get("generation"),
+                "snapshot_bytes": written.get("bytes"), "snapshot_dir": written.get("directory"),
+                "snapshot_s": written.get("snapshot_s"),
+                "bank_mode": bank.get("mode"), "bank_entries": bank_written.get("entries"),
+                "bank_bytes": bank_written.get("bytes"), "bank_skipped": len(bank_written.get("skipped") or []),
+                "bank_path": bank_written.get("path"), "bank_write_error": bank.get("write_error"),
+                "bank_identity_digest": bank.get("identity_digest")}
+        per[name] = rows
+    workers = [r for rows in per.values() for r in rows.values()]
+    snapshot = bool(workers) and all(r["snapshot_generation"] for r in workers) and all(
+        len({r["snapshot_generation"] for r in rows.values()}) == 1 for rows in per.values())
+    bank = bool(workers) and all((r["bank_entries"] or 0) > 0 and not r["bank_write_error"]
+                                 and r["bank_skipped"] == 0 for r in workers) and all(
+        len({r["bank_identity_digest"] for r in rows.values()}) == 1 for rows in per.values())
+    return {"per_instance": per, "snapshot_published": snapshot, "bank_written": bank,
+            "all_provisioned": snapshot and bank}
 
 
 def drain_anatomy(drain_report: Optional[Mapping[str, Any]]) -> Dict[str, Any]:
@@ -634,7 +686,7 @@ def build_timeline(
                     ("device_handoff", anatomy["init_device_start_max"], "engine",
                      "release -> last worker past the gate, libtpu lock and /dev/vfio free (engine-host clocks)"),
                     ("engine_init", anatomy["last_engine_ready"], "engine",
-                     "last init_device start -> last compile_or_warm_up end"),
+                     "last init_device start -> last compile_or_warm_up end (or bank write end)"),
                     ("endpoint_register", st["deploy_end"], "engine", "last engine ready -> commit() return")]
             else:
                 bounds.append(("deploy_unsplit", st["deploy_end"], "engine",
@@ -646,7 +698,7 @@ def build_timeline(
                 ("engine_process_start", anatomy["init_device_start_min"], "engine",
                  "engine_init_started_at -> first init_device"),
                 ("engine_init", anatomy["last_engine_ready"], "engine",
-                 "first init_device -> last compile_or_warm_up end"),
+                 "first init_device -> last compile_or_warm_up end (or bank write end)"),
                 ("endpoint_register", st["deploy_end"], "engine", "last engine ready -> deploy() return")]
         else:
             bounds.append(("deploy_unsplit", st["deploy_end"], "engine",
@@ -1241,7 +1293,8 @@ class _Switch:
                         and timeline["segments_reconcile"])
         self.report.update(
             T0=self.T0, timeline=timeline, segments=timeline["segments"], endpoints=timeline["endpoints"],
-            restored=restored, iteration_capture_one_to_one=stats["one_to_one"],
+            restored=restored, provisioned=provisioned_flags(self.deploy_report),
+            iteration_capture_one_to_one=stats["one_to_one"],
             iteration_rows=stats["rows"], accounting={"phase1": acc1["flags"], "phase2": acc2["flags"]},
             phase1_summary=_stream_summary(self.records1),
             phase2_streams={n: _stream_summary([r for r in self.records2 if r.get("stream") == n])
@@ -1264,6 +1317,7 @@ class _Switch:
         if self.deploy_report is not None:
             _write_gz(self.out_dir / "deploy_report.json.gz", self.deploy_report)
             r.setdefault("restored", restored_flags(self.deploy_report))
+            r.setdefault("provisioned", provisioned_flags(self.deploy_report))
             r["deploy_stage_clocks"] = self.deploy_report.get("stage_clocks")
         if self.retarget_receipt is not None:
             r["retarget"] = {k: self.retarget_receipt.get(k) for k in ("layout_id", "joining", "retargeted_at")}

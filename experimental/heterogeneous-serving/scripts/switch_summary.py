@@ -16,6 +16,11 @@ H -> S cost is computed the way the published harness measures it:
 split into contiguous segments by the driver's timeline marks (local controller clock; T0 and first
 dispatch are head-pod clocks, so the split carries any controller/head clock offset).
 
+First-switch campaigns (``switch_campaign.sh first``) have cold reps r1..rN (pre-spawned target, checkpoint
+load, inline snapshot + bank write into a per-run scope) and one warm follow-up (``kind: warm``, restore +
+bank read from the last cold rep's scope); no harness return.  Means cover the cold reps; the warm rep is
+reported beside them, plus the amortized per-switch cost (C_first + (N - 1) * C_warm) / N.
+
 Usage: switch_summary.py <OUT> [--artifacts results/hetero/artifacts]   -> <OUT>/switch_summary.{json,md}
 """
 from __future__ import annotations
@@ -50,14 +55,21 @@ def read_jsonl(path: pathlib.Path) -> List[Dict[str, Any]]:
     return [json.loads(line) for line in path.read_text().splitlines() if line.strip()] if path.exists() else []
 
 
-def load_run(out: pathlib.Path, run_id: str, artifacts: pathlib.Path, rep: int) -> Dict[str, Any]:
+AMORTIZE_N = (1, 3, 10)
+O3_WARM_C = 27.51  # O3 full S->H production C, mean of 3 (bulk plan, O3 results)
+# The O3 separate provisioning pass as the decision log (2026-10-12) counts it: H normal deploy 255.4 s +
+# per-worker snapshot 7.2 s + bank-writing H restore deploy 88.2 s (hetero_ctl/rcm walls) = 350.8 s.
+SEPARATE_PASS_S = 255.4 + 7.2 + 88.2
+
+
+def load_run(out: pathlib.Path, run_id: str, artifacts: pathlib.Path, rep: Any) -> Dict[str, Any]:
     """Offline recompute of one run-switch from its fetched artifacts."""
     directory = artifacts / run_id
     report_path = directory / "switch_report.json"
     if report_path.exists():
         report = read_json(report_path)
     else:  # the compact report also travels in the hetero_ctl output
-        report = read_json(out / f"switch-r{rep}.json")["measurements"]["result"]
+        report = read_json(out / f"switch-{label_of(rep)}.json")["measurements"]["result"]
     optional = lambda name: read_json(directory / name) if (directory / name).exists() else None  # noqa: E731
     records2 = read_json(directory / "phase2_records.json.gz")
     iter_path = directory / "phase2_r1_iterations.csv.gz"
@@ -76,8 +88,13 @@ def load_run(out: pathlib.Path, run_id: str, artifacts: pathlib.Path, rep: int) 
     return {"run_id": run_id, "rep": rep, "report": report, "timeline": again, "records2": records2,
             "recompute_max_segment_diff_s": drift, "completed": bool(report.get("completed")),
             "restored": report.get("restored", {}).get("all_restored"),
+            "provisioned": report.get("provisioned", {}).get("all_provisioned"),
             "accounting_complete": bool(report.get("accounting", {}).get("phase2", {}).get("complete")
                                         and report.get("accounting", {}).get("phase1", {}).get("complete"))}
+
+
+def label_of(rep: Any) -> str:
+    return rep if isinstance(rep, str) else f"r{rep}"
 
 
 def harness_return(run: Dict[str, Any], marks: Dict[str, float], base: str,
@@ -117,25 +134,28 @@ def summarize(out: pathlib.Path, *, artifacts: pathlib.Path = ARTIFACTS,
               pilot_fn: Optional[Callable[[str], Dict[str, Any]]] = None) -> Dict[str, Any]:
     campaign = read_json(out / "campaign.json") if (out / "campaign.json").exists() else {}
     runs_log = read_jsonl(out / "runs.jsonl")
-    ok_runs: Dict[int, str] = {}
+    ok_runs: Dict[Any, str] = {}
     for row in runs_log:
         if row.get("ok") and "-ret-" not in row["run_id"]:
-            ok_runs[int(row["rep"])] = row["run_id"]
+            ok_runs["warm" if row.get("kind") == "warm" else int(row["rep"])] = row["run_id"]
     if not ok_runs:
         raise SystemExit(f"no successful run-switch recorded in {out}/runs.jsonl")
     marks = {e["event"]: e["t"] for e in read_jsonl(out / "timeline.jsonl")}
     mode = campaign.get("mode")
+    first = mode == "first"
     base = campaign.get("run_base") or next(iter(ok_runs.values())).rsplit("-r", 1)[0]
-    if pilot_fn is None and mode != "partial":
+    if pilot_fn is None and mode not in ("partial", "first"):
         import analyze_overlap
 
         pilot_fn = analyze_overlap.pilot
     reps = []
-    for rep, run_id in sorted(ok_runs.items()):
+    for rep, run_id in sorted(ok_runs.items(), key=lambda kv: (isinstance(kv[0], str), str(kv[0]).zfill(4))):
         run = load_run(out, run_id, artifacts, rep)
         mode = mode or run["report"]["mode"]
         row: Dict[str, Any] = {
-            "rep": rep, "run_id": run_id, "completed": run["completed"], "all_restored": run["restored"],
+            "rep": rep, "label": label_of(rep), "kind": ("warm" if rep == "warm" else "cold") if first else None,
+            "run_id": run_id, "completed": run["completed"], "all_restored": run["restored"],
+            "all_provisioned": run["provisioned"],
             "accounting_complete": run["accounting_complete"],
             "recompute_max_segment_diff_s": run["recompute_max_segment_diff_s"],
             "segments": run["timeline"]["segments"], "segment_sum_s": run["timeline"]["segment_sum_s"],
@@ -153,17 +173,39 @@ def summarize(out: pathlib.Path, *, artifacts: pathlib.Path = ARTIFACTS,
         reps.append(row)
     summary: Dict[str, Any] = {"out": str(out), "mode": mode, "run_base": base, "clock_note": CLOCK_NOTE,
                                "reps": reps}
-    if mode == "full":
+    if mode in ("full", "first"):
         keys = ["gap_dispatch_s", "gap_first_token_s", "ramp_makespan_s", "ramp_deficit_iter_s", "C_production_s",
                 "C_production_ex_capture_s", "C_production_deficit_s", "capture_arm_s", "target_makespan_s"]
-        names = [s["segment"] for s in reps[0]["segments"]]
+        timed = [r for r in reps if r["kind"] != "warm"]
+        names = [s["segment"] for s in timed[0]["segments"]]
+        phases = sorted({p for r in timed for p in r["deploy_anatomy"].get("phase_median_s", {})})
         summary["mean"] = {
-            "endpoints": {k: mean([r["endpoints"].get(k) for r in reps]) for k in keys},
-            "segments_s": {n: mean([next((s["s"] for s in r["segments"] if s["segment"] == n), None) for r in reps])
+            "endpoints": {k: mean([r["endpoints"].get(k) for r in timed]) for k in keys},
+            "segments_s": {n: mean([next((s["s"] for s in r["segments"] if s["segment"] == n), None) for r in timed])
                            for n in names},
-            "C_harness_s": mean([r["harness"]["C_harness_s"] for r in reps]),
-            "harness_gap_s": mean([r["harness"]["gap_s"] for r in reps]),
-            "harness_ramp_deficit_s": mean([r["harness"]["ramp_deficit_s"] for r in reps])}
+            "engine_phase_median_s": {p: mean([r["deploy_anatomy"]["phase_median_s"].get(p) for r in timed])
+                                      for p in phases}}
+        if mode == "full":
+            summary["mean"].update(
+                C_harness_s=mean([r["harness"]["C_harness_s"] for r in reps]),
+                harness_gap_s=mean([r["harness"]["gap_s"] for r in reps]),
+                harness_ramp_deficit_s=mean([r["harness"]["ramp_deficit_s"] for r in reps]))
+        warm = next((r for r in reps if r["kind"] == "warm"), None)
+        if first:
+            c_first = summary["mean"]["endpoints"]["C_production_s"]
+            c_warm = warm["endpoints"].get("C_production_s") if warm else None
+
+            def per_switch(warm_c):
+                return {str(n): None if c_first is None or warm_c is None
+                        else round((c_first + (n - 1) * warm_c) / n, 3) for n in AMORTIZE_N}
+            summary["amortized"] = {
+                "C_first_s": c_first, "C_warm_s": c_warm, "n_cold": len(timed), "n_warm": int(warm is not None),
+                "per_switch_s": per_switch(c_warm),
+                # Second warm basis: the O3 production mean (n = 3, OverlapSwitch full-c762edb-ov).
+                "C_warm_O3_s": O3_WARM_C, "per_switch_O3_warm_s": per_switch(O3_WARM_C),
+                # The separate provisioning pass (SEPARATE_PASS_S, deploy walls) + O3 C per switch.
+                "separate_pass_s": {str(n): round((SEPARATE_PASS_S + n * O3_WARM_C) / n, 3)
+                                    for n in AMORTIZE_N}}
     else:
         flat = ["kept_gap_s", "join_delay_s", "C_eff_s", "target_makespan_s"]
         summary["mean"] = {"endpoints": {k: mean([r["endpoints"].get(k) for r in reps]) for k in flat},
@@ -181,14 +223,16 @@ def markdown(summary: Dict[str, Any]) -> str:
     reps, lines = summary["reps"], []
     lines.append(f"# {summary['mode']} switch: {summary['run_base']} ({summary['n']} reps)\n")
     lines.append(f"_{summary['clock_note']}_\n")
-    head = "| " + " | ".join(["metric"] + [f"r{r['rep']}" for r in reps] + ["mean"]) + " |"
+    first = summary["mode"] == "first"
+    head = "| " + " | ".join(["metric"] + [r.get("label") or f"r{r['rep']}" for r in reps]
+                             + ["mean (cold)" if first else "mean"]) + " |"
     rule = "|" + "---|" * (len(reps) + 2)
 
     def row(label: str, getter: Callable[[Dict[str, Any]], Any], mean_value: Any = None) -> str:
         return "| " + " | ".join([label] + [fmt(getter(r)) for r in reps] + [fmt(mean_value)]) + " |"
 
     m = summary["mean"]
-    if summary["mode"] == "full":
+    if summary["mode"] in ("full", "first"):
         lines += ["## Production C (in-process switch)", head, rule]
         for key in ("gap_dispatch_s", "gap_first_token_s", "ramp_makespan_s", "ramp_deficit_iter_s", "C_production_s",
                     "C_production_ex_capture_s", "C_production_deficit_s"):
@@ -199,6 +243,20 @@ def markdown(summary: Dict[str, Any]) -> str:
             lines.append(row(f"{name} ({cls})", lambda r, n=name: next(
                 (s["s"] for s in r["segments"] if s["segment"] == n), None), m["segments_s"][name]))
         lines.append(row("segment sum", lambda r: r["segment_sum_s"]))
+        lines += ["", "## Engine start-up phases (median over target workers, s)", head, rule]
+        for name, value in m["engine_phase_median_s"].items():
+            lines.append(row(name, lambda r, n=name: r["deploy_anatomy"].get("phase_median_s", {}).get(n), value))
+    if summary["mode"] == "first" and summary.get("amortized"):
+        a = summary["amortized"]
+        lines += ["", "## Amortized per-switch cost (C_first + (N - 1) * C_warm) / N",
+                  f"C_first (mean of {a['n_cold']} cold) = {fmt(a['C_first_s'])} s; "
+                  f"C_warm (this campaign, n = {a['n_warm']}) = {fmt(a['C_warm_s'])} s; "
+                  f"C_warm (O3, n = 3) = {fmt(a['C_warm_O3_s'])} s", "",
+                  "| N | per-switch, this warm | per-switch, O3 warm | separate pass (deploy walls) + O3 warm |",
+                  "|---|---|---|---|"]
+        lines += [f"| {n} | {fmt(a['per_switch_s'][n])} | {fmt(a['per_switch_O3_warm_s'][n])} | "
+                  f"{fmt(a['separate_pass_s'][n])} |" for n in a["per_switch_s"]]
+    if summary["mode"] == "full":
         lines += ["", "## Harness H -> S (published harness, return pilot)", head, rule,
                   row("gap_s", lambda r: r["harness"]["gap_s"], m["harness_gap_s"]),
                   row("ramp_deficit_s", lambda r: r["harness"]["ramp_deficit_s"], m["harness_ramp_deficit_s"]),
@@ -208,7 +266,7 @@ def markdown(summary: Dict[str, Any]) -> str:
             lines.append(row(f"harness: {name}", lambda r, n=name: next(
                 (s["s"] for s in r["harness"]["segments"] if s["segment"] == n), None),
                 mean([next((s["s"] for s in r["harness"]["segments"] if s["segment"] == name), None) for r in reps])))
-    else:
+    elif summary["mode"] == "partial":
         lines += ["## Partial switch endpoints", head, rule]
         for key in ("kept_gap_s", "join_delay_s", "C_eff_s", "target_makespan_s"):
             lines.append(row(key, lambda r, k=key: r["endpoints"].get(k), m["endpoints"].get(key)))
@@ -227,6 +285,7 @@ def markdown(summary: Dict[str, Any]) -> str:
     lines += ["", "## Run health", head, rule,
               row("completed (all requests exact)", lambda r: r["completed"]),
               row("all workers restored", lambda r: r["all_restored"]),
+              row("snapshot + bank provisioned", lambda r: r.get("all_provisioned")),
               row("offline vs in-process max segment diff (s)", lambda r: r["recompute_max_segment_diff_s"])]
     return "\n".join(lines) + "\n"
 

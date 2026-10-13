@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 # Production in-process layout switch campaigns (hetero run-switch), Gemma-4 31B on the 32-chip v5e slice.
 #
-#   flock /tmp/hetero-cluster.lock scripts/switch_campaign.sh full      # P2: S -> H, W0 then W6
-#   flock /tmp/hetero-cluster.lock scripts/switch_campaign.sh partial   # P3: S -> Mb, W0 then W0+W6 mix
-#   scripts/switch_campaign.sh <full|partial> --dry-run                 # print the commands, touch nothing
+#   flock /tmp/hetero-cluster.lock scripts/switch_campaign.sh full        # P2: S -> H, W0 then W6
+#   flock /tmp/hetero-cluster.lock scripts/switch_campaign.sh partial     # P3: S -> Mb, W0 then W0+W6 mix
+#   flock /tmp/hetero-cluster.lock scripts/switch_campaign.sh first-gate  # F1: inline snapshot + bank gate
+#   flock /tmp/hetero-cluster.lock scripts/switch_campaign.sh first       # F2: cold first switch S -> H
+#   scripts/switch_campaign.sh <mode> --dry-run                           # print the commands, touch nothing
 #
 # full    4xTP8 S serves W0 (phase 1); at T0 the in-process controller drains S, deploys H (2xTP16,
 #         max_model_len 131072, snapshot restore) and phase 2 (W6) starts the moment the new gateway routes.
@@ -31,10 +33,24 @@
 #   the bank with exec_bank_sabotage_rank=1 (that process rank reports its bank unusable, so every
 #   rank must fall back without a hang), check, teardown; then the single overlapped switch.
 # OVERLAP=0 (default) runs exactly the published P2/P3 campaign.
+#
+# First switch (F-series): provisioning folds into the target's first deploy.  Each run writes its
+# snapshot and bank into a run scope of its own (hetero/run_scope.py: /dev/shm/omp_weights_runs/<scope>,
+# /root/.cache/omp_exec_bank_runs/<scope>) and removes exactly that scope; the default snapshot root's
+# H files, the warm banks under /root/.cache/omp_exec_bank and the XLA cache are never touched.
+# first-gate (F1): H normal deploy with inline snapshot + bank write (scope <run base>) -> scope files
+#   -> greedy reference -> teardown -> H restore deploy reading both -> check, validation against that
+#   reference, post-validation check (serving bank counters) -> teardown -> scope cleanup.
+# first (F2): S prep (normal -> snapshot -> reference), S restore; REPS cold reps: run-switch S -> H with
+#   the target pre-spawned and loading from the checkpoint with inline snapshot + bank write into scope
+#   <rid> -> H validation against REFERENCE_H -> scope files -> teardown H -> scope cleanup (all but the
+#   last rep) -> S restore; then one warm run-switch (kind warm) restoring + bank-reading the last cold
+#   rep's scope -> validation -> teardown -> scope cleanup.  REFERENCE_H: directory holding
+#   prep-H-reference.json from the same commit (the first-gate OUT); empty -> an H normal-loader prep.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 MODE=${1:-}
-case $MODE in full|partial) shift;; *) echo "usage: $0 <full|partial> [--dry-run]" >&2; exit 2;; esac
+case $MODE in full|partial|first-gate|first) shift;; *) echo "usage: $0 <full|partial|first-gate|first> [--dry-run]" >&2; exit 2;; esac
 DRY=0
 if [[ "${1:-}" == --dry-run ]]; then DRY=1; shift; fi
 (( $# == 0 )) || { echo "usage: $0 <full|partial> [--dry-run]" >&2; exit 2; }
@@ -57,6 +73,8 @@ if (( GATE )); then
   OVERLAP=1
   REPS=1
 fi
+if [[ $MODE == first ]]; then OVERLAP=1; fi
+if [[ $MODE == first-gate ]]; then REPS=0; fi
 RUN_BASE=$MODE-$COMMIT
 (( OVERLAP )) && RUN_BASE+=-ov
 OUT=${OUT:-results/switch/$RUN_BASE}
@@ -87,6 +105,13 @@ FAST_PRESPAWN='{"weight_snapshot":"read","weight_snapshot_verify":false,"fast_gr
 # Mb bank deploy: only large_b has a published Mb snapshot; the kept-shape engines load normally.
 LARGE_B_BANK_WRITE='{"large_b":{"max_model_len":131072,"exec_bank":"write"},"small_a":{"weight_snapshot":"off"},"small_b":{"weight_snapshot":"off"}}'
 LARGE_B_PRESPAWN='{"large_b":{"max_model_len":131072,"prespawn":true,"exec_bank":"read"}}'
+# First switch: the checkpoint loader (FastGraph) with the inline snapshot (weight_snapshot=write, right
+# after load_model) and the bank write (after compile_or_warm_up_model); scope_settings adds the scope roots.
+COLD='{"weight_snapshot":"write","fast_graph":true,"startup_profile":true,"exec_bank":"write"}'
+COLD_PRESPAWN='{"weight_snapshot":"write","fast_graph":true,"startup_profile":true,"exec_bank":"write","prespawn":true}'
+FAST_BANK_READ='{"weight_snapshot":"read","weight_snapshot_verify":false,"fast_graph":true,"startup_profile":true,"exec_bank":"read"}'
+REFERENCE_H=${REFERENCE_H:-}
+SCOPES=()
 H_PREP_RESTORE=$FAST
 H_TARGET=$FAST
 MB_TARGET=$LARGE_B_LONG
@@ -160,6 +185,10 @@ switch_complete() {  # complete, exact, accounted, segments reconciled, and ever
   (( DRY )) && return 0
   .venv/bin/python -c 'import json,sys; r=json.load(open(sys.argv[1]))["measurements"]["result"]; sys.exit(0 if r.get("completed") is True and (r.get("restored") or {}).get("all_restored") is True else 1)' "$1"
 }
+cold_complete() {  # first switch: complete, exact, reconciled, every target worker published its snapshot + wrote its bank
+  (( DRY )) && return 0
+  .venv/bin/python -c 'import json,sys; r=json.load(open(sys.argv[1]))["measurements"]["result"]; sys.exit(0 if r.get("completed") is True and (r.get("provisioned") or {}).get("all_provisioned") is True else 1)' "$1"
+}
 diagnose() {  # diagnose <layout> <rid>: evidence of a failed run-switch before anything is torn down
   local layout=$1 rid=$2
   mark "diagnose_start:$rid"
@@ -184,6 +213,16 @@ ctl() {  # ctl <action> <layout> <label> <timeout> [hetero_ctl args...]
 validate() {
   local action=$1 layout=$2 label=$3; shift 3
   run scripts/snapshot_validate.py "$action" --layout "$layout" --output "$OUT/$label.json" "$@"
+}
+scope_settings() {  # scope_settings <scope> <settings json>: the settings plus the scope's snapshot/bank roots
+  .venv/bin/python -c 'import json,sys; from hetero.run_scope import scope_roots; s=json.loads(sys.argv[1]); s.update(scope_roots(sys.argv[2])); print(json.dumps(s,separators=(",",":")))' "$2" "$1"
+}
+scope_open() { SCOPES+=("$1"); }  # from here on, the EXIT cleanup removes this scope too
+scope_close() {  # scope_close <scope> <label>: remove exactly this scope's two directories on every host
+  validate cleanup H "$2" --run-scope "$1" || return 1
+  local keep=() s
+  for s in ${SCOPES[@]+"${SCOPES[@]}"}; do [[ "$s" == "$1" ]] || keep+=("$s"); done
+  SCOPES=(${keep[@]+"${keep[@]}"})
 }
 deploy() {  # deploy <layout> <label> <engine settings> [--max-model-len N (default 16384)] [cli args...]
   local layout=$1 label=$2 settings=$3; shift 3
@@ -225,7 +264,12 @@ cleanup() {
     for layout in H Mb S; do
       ctl release "$layout" "cleanup-release-$layout" 600 || rc=1
     done
-    if (( ! KEEP_SNAPSHOTS )); then validate cleanup S cleanup-tmpfs || rc=1; fi
+    if (( ! KEEP_SNAPSHOTS )); then
+      for scope in ${SCOPES[@]+"${SCOPES[@]}"}; do
+        validate cleanup H "cleanup-scope-$scope" --run-scope "$scope" || rc=1
+      done
+      validate cleanup S cleanup-tmpfs || rc=1
+    fi
   fi
   exit "$rc"
 }
@@ -266,9 +310,9 @@ stage_catalogue() {  # the longctx catalogue W6 prompts are built from, staged o
   got=$(kubectl -n "$NS" exec "$HEAD_POD" -c ray-head -- sha256sum "$dst" 2>/dev/null | cut -d' ' -f1 || true)
   [[ "$got" == "$want" ]] || { echo "longctx catalogue staging failed (sha $got != $want)" >&2; return 1; }
 }
-record_run() {  # record_run <rep> <attempt> <run_id> <ok>
-  (( DRY )) || printf '{"mode":"%s","rep":%s,"attempt":%s,"run_id":"%s","ok":%s}\n' \
-    "$MODE" "$1" "$2" "$3" "$4" >> "$OUT/runs.jsonl"
+record_run() {  # record_run <rep> <attempt> <run_id> <ok> [kind: cold|warm (first)]
+  (( DRY )) || printf '{"mode":"%s","rep":%s,"attempt":%s,"run_id":"%s","ok":%s,"kind":"%s"}\n' \
+    "$MODE" "$1" "$2" "$3" "$4" "${5:-}" >> "$OUT/runs.jsonl"
 }
 run_id_for() { local id=$RUN_BASE-r$1; (( $2 > 1 )) && id+=-a$2; echo "$id"; }
 write_campaign() {
@@ -446,8 +490,120 @@ campaign_partial() {
   done
 }
 
+# ---------------------------------------------------------------- first switch (F1 gate, F2 cold S -> H)
+campaign_first_gate() {  # F1: an inline-provisioning normal deploy, then a restore deploy consuming it
+  local scope=$RUN_BASE
+  validate preflight S preflight --reserve-bytes "$RESERVE"
+  started=1
+  validate memory H prep-H-memory --reserve-bytes "$RESERVE"
+  scope_open "$scope"
+  deploy H H-first-normal "$(scope_settings "$scope" "$COLD")" --max-model-len 131072
+  validate files H H-first-scope-files --run-scope "$scope"
+  # Greedy reference from this checkpoint-loaded H (the normal loader, as every prep reference).
+  validate validate H prep-H-reference
+  teardown H H-first-normal
+  deploy H H-first-restore "$(scope_settings "$scope" "$FAST_BANK_READ")" --max-model-len 131072
+  validate check H H-first-restore-check --require-restored
+  validate validate H H-first-restore-validation --require-restored --reference "$OUT/prep-H-reference.json"
+  # Bank counters after the 2 x 32 greedy generations (validate collects worker phases before generating).
+  validate check H H-first-restore-post-check --require-restored
+  teardown H H-first-restore
+  scope_close "$scope" H-first-scope-cleanup
+}
+campaign_first() {  # F2: REPS cold first switches S -> H, then one warm switch from the last rep's scope
+  validate preflight S preflight --reserve-bytes "$RESERVE"
+  started=1
+  stage_catalogue
+  validate cleanup S prep-initial-cleanup
+  prep_snapshot S -
+  validate files S prep-snapshot-files
+  local ref=$REFERENCE_H
+  if [[ -z "$ref" ]]; then
+    deploy H prep-H-normal "$NORMAL" --max-model-len 131072
+    validate validate H prep-H-reference
+    teardown H prep-H-normal
+    ref=$OUT
+  fi
+  (( DRY )) || [[ -s "$ref/prep-H-reference.json" ]] || { echo "missing $ref/prep-H-reference.json" >&2; return 1; }
+  deploy S S-restore "$FAST" --max-model-len 16384
+  restored S
+  local r=1 attempt=1 rid last=
+  while (( r <= REPS )); do
+    rid=$(run_id_for "$r" "$attempt")
+    disk_floor "run-switch $rid"
+    scope_open "$rid"
+    # Outside C: checkpoint page-cache residency + meminfo on every host (mincore, reads no bytes),
+    # so each cold rep's checkpoint-read regime is recorded, not assumed.
+    validate pagecache H "switch-r$r-a$attempt-pagecache"
+    mark "switch_start:r$r"
+    if ctl run-switch H "switch-r$r" "$SWITCH_TIMEOUT" --inventory "$INVENTORY" -- \
+        --from-layout S --switch-mode full --phase1 W0 --phase2 W6 --static-target-s 206.2 \
+        --run-id "$rid" --policy "$POLICY" --engine-settings "$(scope_settings "$rid" "$COLD_PRESPAWN")" \
+        --max-model-len 131072 "${OVERLAP_ARGS[@]}" \
+        --model "$MODEL" --arm-timeout "$ARM_TIMEOUT" && cold_complete "$OUT/switch-r$r.json"; then
+      mark "switch_end:r$r"
+      current=H
+      record_run "$r" "$attempt" "$rid" true cold
+      state "switched S->H cold $rid"
+      # Outside C: the checkpoint-loaded H equals the normal-loader reference (hard), and the scope
+      # holds a complete snapshot and bank on every host.
+      validate validate H "switch-r$r-H-validation" --reference "$ref/prep-H-reference.json" \
+        || { state "validation-failed r$r"; return 1; }
+      validate files H "switch-r$r-scope-files" --run-scope "$rid" || { state "scope-files-failed r$r"; return 1; }
+      teardown H "switch-r$r-H"
+      (( r == REPS )) || scope_close "$rid" "switch-r$r-scope-cleanup"
+      last=$rid
+      deploy S "S-restore-r$((r + 1))" "$FAST" --max-model-len 16384
+      restored S check-only
+      r=$((r + 1)); attempt=1
+    else
+      mark "switch_end:r$r:failed"
+      (( DRY )) || cp -f "$OUT/switch-r$r.json" "$OUT/switch-r$r-a$attempt-failed.json" 2>/dev/null || true
+      record_run "$r" "$attempt" "$rid" false cold
+      diagnose H "$rid"
+      failures=$((failures + 1))
+      state "switch-failed r$r attempt $attempt"
+      (( failures < MAX_ATTEMPTS )) || { echo "run-switch failed $failures times; stopping" >&2; return 1; }
+      # Fail closed: release everything and the attempt's scope, rebuild the S start state, new attempt id.
+      teardown H "switch-r$r-failed-H" || true
+      for layout in Mb S; do teardown "$layout" "switch-r$r-failed-$layout" || true; done
+      scope_close "$rid" "switch-r$r-a$attempt-scope-cleanup"
+      deploy S "S-restore-a$((attempt + 1))" "$FAST" --max-model-len 16384
+      restored S check-only
+      attempt=$((attempt + 1))
+    fi
+  done
+  # Warm follow-up (O3 path): a pre-spawned target restores the last cold rep's snapshot and reads its bank.
+  rid=$RUN_BASE-warm
+  disk_floor "run-switch $rid"
+  validate pagecache H switch-warm-pagecache
+  mark "switch_start:warm"
+  if ctl run-switch H switch-warm "$SWITCH_TIMEOUT" --inventory "$INVENTORY" -- \
+      --from-layout S --switch-mode full --phase1 W0 --phase2 W6 --static-target-s 206.2 \
+      --run-id "$rid" --policy "$POLICY" --engine-settings "$(scope_settings "$last" "$FAST_PRESPAWN")" \
+      --max-model-len 131072 "${OVERLAP_ARGS[@]}" \
+      --model "$MODEL" --arm-timeout "$ARM_TIMEOUT" && switch_complete "$OUT/switch-warm.json"; then
+    mark "switch_end:warm"
+    current=H
+    record_run "$((REPS + 1))" 1 "$rid" true warm
+    state "switched S->H warm $rid"
+  else
+    mark "switch_end:warm:failed"
+    record_run "$((REPS + 1))" 1 "$rid" false warm
+    diagnose H "$rid"
+    state "switch-failed warm"
+    return 1
+  fi
+  validate validate H switch-warm-H-validation --require-restored --reference "$ref/prep-H-reference.json" \
+    || { state "validation-failed warm"; return 1; }
+  # Serving bank counters of the warm target after phase 2 + validation (misses/rejections).
+  validate check H switch-warm-H-post-check --require-restored
+  teardown H switch-warm-H
+  scope_close "$last" switch-warm-scope-cleanup
+}
+
 idle
 disk_floor preflight
 write_campaign
-"campaign_$MODE"
+"campaign_${MODE//-/_}"
 # EXIT: release any leftover placement groups; remove /dev/shm/omp_weights on every host unless KEEP_SNAPSHOTS=1.
