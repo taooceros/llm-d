@@ -6,8 +6,8 @@
   "workspace_files": [
     {
       "path": ".gitignore",
-      "sha256": "f21edbaadd47099a23ccd816e77328bee9c77be92f71472fa1d27e97085f5f88",
-      "bytes": 229
+      "sha256": "642ac376f4fbaaf04d255ab76d2a0f2bfc90b3135e6d568067d95f327fb1be90",
+      "bytes": 290
     },
     {
       "path": ".python-version",
@@ -36,8 +36,13 @@
     },
     {
       "path": "README.md",
-      "sha256": "09a2d17ee5453759a05203b80daf1d5f33c9b9f67828940eae2815454bcdbe34",
-      "bytes": 19893
+      "sha256": "fd4a4ac10e51e7deec77b8b68bca3eb9a6150ed6fb692f8165cdc6da4b8f52fb",
+      "bytes": 21908
+    },
+    {
+      "path": "RECONFIGURATION_GOAL.md",
+      "sha256": "1163ad9a79c6d5133cbb8d472ca4f280b5215f2d87ac50788da56813f772abea",
+      "bytes": 7322
     },
     {
       "path": "SCHEDULING_HEADROOM_GOAL.md",
@@ -63,6 +68,31 @@
       "path": "demos/run_vllm_subslice_offline.py",
       "sha256": "81da274179d148bee0558089561f736b03c9de22cb3190768cda88a91f5ec5dc",
       "bytes": 3656
+    },
+    {
+      "path": "deploy/epp/latebinding.yaml",
+      "sha256": "0a14613afa31af5d22be8e3b79704b0dd02077f551bd908c8de9788e381449af",
+      "bytes": 2511
+    },
+    {
+      "path": "deploy/epp/plain.yaml",
+      "sha256": "393d1a5e39da8ea7979de702c766de15bf9c1bb0aa3484d9b075b3200da74ffa",
+      "bytes": 1652
+    },
+    {
+      "path": "deploy/epp/reserve.yaml",
+      "sha256": "4d339217d672dbf677a71b2d5fe4140a891f4cb275b4f006c04cc118bc69d019",
+      "bytes": 1671
+    },
+    {
+      "path": "deploy/k8s/hetero-agent-rbac.yaml",
+      "sha256": "910bf45b6cb43f2d92baaa0c824cb0fae0f1c2528ea2f0488fdd8c21e56abb79",
+      "bytes": 2023
+    },
+    {
+      "path": "deploy/k8s/omp-epp-router.yaml",
+      "sha256": "1c4caa2dd05755cfb9f20f517537afdd0cc7422dd9e436490cac8411f46e0622",
+      "bytes": 15414
     },
     {
       "path": "deploy/k8s/omp-gateway.yaml",
@@ -191,13 +221,13 @@
     },
     {
       "path": "hetero/cli.py",
-      "sha256": "056aac4eef032fcfc12cbfc29ea70d9c8aa99b9eaf816f2a64bd39b0c307bbb9",
-      "bytes": 26901
+      "sha256": "ea3c7dc76057a5319ec17f2f24c72450f8a198e1d5b17178a96186930fe1fba3",
+      "bytes": 29511
     },
     {
       "path": "hetero/deployment.py",
-      "sha256": "e64918d0016f28651e320b993aba27e9d88c8c28970a5177a8388071914f0f8f",
-      "bytes": 21248
+      "sha256": "b50b7e7391892213e0aacd9c10216e1784b86506872fa33f61e111a1a8063097",
+      "bytes": 22622
     },
     {
       "path": "hetero/evidence.py",
@@ -231,8 +261,8 @@
     },
     {
       "path": "hetero/qualify_lifecycle.py",
-      "sha256": "6b23e8835e48bc21bb3d9a3a4a0967c660899bd4362ed9d2fcff402d7c5e592f",
-      "bytes": 13435
+      "sha256": "679018116ff18a98edf5d782855ab2f3b7e5a1527b245a5e107d23884cb12a8a",
+      "bytes": 13467
     },
     {
       "path": "hetero/qualify_migration.py",
@@ -241,13 +271,18 @@
     },
     {
       "path": "hetero/registry.py",
-      "sha256": "16b8d85fbcea5608a522694e35e6e1ba8e88756211915495075e7de4323650d2",
-      "bytes": 8054
+      "sha256": "e046a8e3a8611704e553e6e0c66122bdd36ecf0aee19bd7ff1406903d2b08316",
+      "bytes": 8725
     },
     {
       "path": "hetero/slice_inventory.py",
       "sha256": "e876429c5cfd2165259c78c5ef3d8b339438c3c2da9ce27f3210519c0079346a",
       "bytes": 14328
+    },
+    {
+      "path": "hetero/transition.py",
+      "sha256": "12c235fafec8d67faa923233b1fe71013b461796ea3e4a4ac9915336aaf8be1b",
+      "bytes": 13881
     },
     {
       "path": "main.py",
@@ -360,6 +395,11 @@
       "bytes": 13175
     },
     {
+      "path": "scripts/epp_router.sh",
+      "sha256": "dc6900d2f2ea08251329d72fdbd896a77da0b6066948762c619598acc6f0baf6",
+      "bytes": 1556
+    },
+    {
       "path": "scripts/freeze_predeclaration.py",
       "sha256": "117a83d8d7c411b73cc004a87bd1a0250024eab5a2928c8220cb2cc419d0ee30",
       "bytes": 30654
@@ -371,8 +411,33 @@
     },
     {
       "path": "scripts/hetero_ctl.py",
-      "sha256": "cae33392a374b62066a75c8fa20a77b6825c076b93bd5137e2814f643c2f06cd",
-      "bytes": 13301
+      "sha256": "0276ea892fa303124e8d48999101af0349b6b20a6c2ff711ed44143539321874",
+      "bytes": 13389
+    },
+    {
+      "path": "scripts/reconfig_measure.sh",
+      "sha256": "f4eef632b5d730085fca8983ed4caa263a1cfd8c5f81d5e04db90460f70874f1",
+      "bytes": 4400
+    },
+    {
+      "path": "scripts/reconfig_mix.sh",
+      "sha256": "3214871e4cd48a4148ce31f0041dc0476b6787ccc851b29c688f6f2aa9d5af65",
+      "bytes": 3982
+    },
+    {
+      "path": "scripts/reconfig_partial.sh",
+      "sha256": "c3ee3e5c3959174a44f8f6d71c7a81751cadbc853de3b97ff6d6541e6af3dc50",
+      "bytes": 2803
+    },
+    {
+      "path": "scripts/reconfig_timeline.py",
+      "sha256": "f968f0d17844c938715cb614cf01399594111ac3ca1b4ddd6335b8818f6510ef",
+      "bytes": 5797
+    },
+    {
+      "path": "scripts/reconfig_warm_stage.sh",
+      "sha256": "70ff8679e49d3627a6e96fed1abe84c472c713f77ba551d9c4e9965eabad1596",
+      "bytes": 1545
     },
     {
       "path": "scripts/render_report.py",
@@ -381,13 +446,38 @@
     },
     {
       "path": "scripts/run_pilot.sh",
-      "sha256": "d557f8eeb829ac08e8e0f68d43217a10cd9a259934682c2b35c332bae22df0f5",
-      "bytes": 983
+      "sha256": "6b69308880c4b30fea3bc497480fb167c3fe1dbeb947ee83d67af2f14afdb586",
+      "bytes": 1408
     },
     {
       "path": "scripts/summarize_mechanism_ab.py",
       "sha256": "dfe427b648a206141749dac29182f8ea603542df66350a29268924900c6b35c5",
       "bytes": 1978
+    },
+    {
+      "path": "scripts/summarize_reconfig.py",
+      "sha256": "f8d28deaa68d02601b6cae1abc1f7c2f1d7d7df4522f093f27bdba525fe8b162",
+      "bytes": 4150
+    },
+    {
+      "path": "scripts/summarize_w3.py",
+      "sha256": "419474ffd4f404508a961cee55198f59a0e196b78d67941806c3c202f5b8e154",
+      "bytes": 6418
+    },
+    {
+      "path": "scripts/summarize_w4.py",
+      "sha256": "743bcc444a47186d32105f7d6cf34da8d7f8a3f822c406d0c97915b25825c856",
+      "bytes": 3225
+    },
+    {
+      "path": "scripts/w3_campaign.sh",
+      "sha256": "64e48278b06e0a84e2ae84b29d0a56707cbff85b39711d270b3125bb13a753a4",
+      "bytes": 3942
+    },
+    {
+      "path": "scripts/w4_campaign.sh",
+      "sha256": "e5dd6c3dbab4b5c5b1cc62b5d55b2be7f3926db9143b3afa15e5575c149f7e44",
+      "bytes": 4154
     },
     {
       "path": "skaffold.yaml",
@@ -408,6 +498,11 @@
       "path": "tests/test_goal_audit.py",
       "sha256": "be8350e4dfda2a084a8b5ec56521c7ceb70c7cce24f33f67115e9c15be693c0c",
       "bytes": 7509
+    },
+    {
+      "path": "tests/test_partial_reconfiguration.py",
+      "sha256": "e0abfbffef38a51aefc5f5670136a650a4954426c52baa97553dc98a2cdacb0f",
+      "bytes": 20008
     },
     {
       "path": "uv.lock",

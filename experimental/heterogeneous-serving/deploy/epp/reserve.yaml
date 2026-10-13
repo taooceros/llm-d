@@ -1,0 +1,53 @@
+# EPP arm "reserve": the Python W4 "resv" policy (scripts/w4_campaign.sh):
+# plain + work-conserving fallback, prompts above 16384 tokens are long, and
+# short requests leave 36864 tokens of KV free on large engines.
+apiVersion: llm-d.ai/v1alpha1
+kind: EndpointPickerConfig
+plugins:
+- type: metrics-data-source
+  name: engine-metrics
+- type: core-metrics-extractor
+  name: omp-metrics
+  parameters:
+    defaultEngine: omp-vllm
+    engineConfigs:
+    - name: omp-vllm
+      queuedRequestsSpec: "vllm:num_requests_waiting"
+      runningRequestsSpec: "vllm:num_requests_running"
+      kvUsageSpec: "vllm:kv_cache_usage_perc"
+      loraSpec: ""
+      cacheInfoSpec: ""
+      cacheBlockSizeSpec: "omp:kv_block_size"
+      cacheNumBlocksSpec: "omp:kv_total_blocks"
+      customMetrics:
+      - attributeKey: omp/kv-free-blocks
+        metricSpec: "omp:kv_free_blocks"
+      - attributeKey: omp/kv-total-blocks
+        metricSpec: "omp:kv_total_blocks"
+      - attributeKey: omp/kv-block-size
+        metricSpec: "omp:kv_block_size"
+- type: hetero-placement
+  name: placement
+  parameters:
+    smallPromptTokenLimit: 16384
+    largeFreshTrafficShare: 0.5
+    reserveLargeHeadroomBlocks: 16
+    longReserveTokens: 36864
+    workConservingFallback: true
+    decodeLengthBlind: true
+    admissionGrowthBlocks: 1
+    dynamicLongReserve: false
+    # Harness reset/state surface (POST /hetero/reset, GET /hetero/state).
+    adminAddress: "0.0.0.0:9095"
+- type: max-score-picker
+  name: picker
+schedulingProfiles:
+- name: default
+  plugins:
+  - pluginRef: placement
+  - pluginRef: picker
+dataLayer:
+  sources:
+  - pluginRef: engine-metrics
+    extractors:
+    - pluginRef: omp-metrics

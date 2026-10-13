@@ -192,6 +192,7 @@ def _deployment_config(args: argparse.Namespace) -> DeploymentConfig:
     return DeploymentConfig(
         layout=requests[0],
         engine_settings=_engine_settings(args),
+        instance_engine_settings=json.loads(args.instance_engine_settings or "{}"),
         cpu_per_host=args.cpu_per_host,
         pg_ready_timeout_s=args.ready_timeout_s,
         engine_init_timeout_s=args.engine_init_timeout_s,
@@ -558,6 +559,7 @@ def cmd_run_arm(args: argparse.Namespace) -> Dict[str, Any]:
             protocol_path=None if pilot else str(
                 _json_input_path("OMP_HETERO_PROTOCOL_JSON", "--protocol", "protocols")),
             pilot_policy=policy if pilot else None,
+            epp_config=args.epp_config,
         ),
     }
 
@@ -575,6 +577,42 @@ def cmd_run_sequence(args: argparse.Namespace) -> Dict[str, Any]:
             run_id=args.run_id,
             timeout_s=args.arm_timeout,
             protocol_path=str(_json_input_path("OMP_HETERO_PROTOCOL_JSON", "--protocol", "protocols")),
+        ),
+    }
+
+
+def _transition_policy(args: argparse.Namespace) -> Dict[str, Any]:
+    if args.policy_file and args.policy:
+        raise ValueError("pass --policy or --policy-file, not both")
+    if args.policy_file:
+        return json.loads(pathlib.Path(args.policy_file).read_text())
+    return json.loads(args.policy) if args.policy else {}
+
+
+def cmd_run_transition(args: argparse.Namespace) -> Dict[str, Any]:
+    """Partial S<->M reconfiguration between two workloads on the live gateway."""
+    from hetero.transition import run_transition
+
+    if not args.workload2:
+        raise ValueError("--workload2 is required")
+    inventory, source = _resolve_inventory(args, allow_probe=False)
+    target_args = argparse.Namespace(**{**vars(args), "layout": args.to_layout, "layout_file": None})
+    return {
+        "action": "run-transition",
+        "inventory_source": source,
+        "result": run_transition(
+            inventory=inventory,
+            config=_deployment_config(target_args),
+            from_layout=args.from_layout,
+            arm1=args.arm1,
+            workload1=args.workload1,
+            arm2=args.arm2,
+            workload2=args.workload2,
+            run_id=args.run_id,
+            pilot_policy=_transition_policy(args),
+            repetition=args.repetition,
+            arm_timeout_s=args.arm_timeout,
+            drain_timeout_s=args.drain_timeout_s,
         ),
     }
 
@@ -600,6 +638,7 @@ COMMANDS = {
     "build-manifest": cmd_build_manifest,
     "run-arm": cmd_run_arm,
     "run-sequence": cmd_run_sequence,
+    "run-transition": cmd_run_transition,
 }
 
 
@@ -617,6 +656,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--cpu-per-host", type=float, default=8.0)
     parser.add_argument("--engine-init-timeout-s", type=float, default=5400.0)
     parser.add_argument("--engine-settings", help="JSON object of engine settings")
+    parser.add_argument("--instance-engine-settings",
+                        help='JSON {instance_id: {setting: value}} merged over the engine settings')
     parser.add_argument("--model", default="/models/gemma-4-31b")
     parser.add_argument("--max-model-len", type=int)
     parser.add_argument("--max-num-seqs", type=int)
@@ -641,10 +682,21 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--repetition", type=int, default=1)
     parser.add_argument("--unfrozen-diagnostic", action="store_true",
                         help="mechanism-cost A/B or run-arm pilot without a frozen cohort; never headline evidence")
+    parser.add_argument("--epp-config",
+                        help="run-arm through the llm-d EPP router serving deploy/epp/<name>.yaml "
+                             "(plain, reserve, latebinding)")
     parser.add_argument("--run-id", default="run")
     parser.add_argument("--arm-timeout", type=float, default=7200.0)
     parser.add_argument("--arms", default="M0,MR")
     parser.add_argument("--repetitions", type=int, default=3)
+    parser.add_argument("--from-layout", default="M", help="run-transition: source layout (M or S)")
+    parser.add_argument("--to-layout", default="S", help="run-transition: target layout (S or M)")
+    parser.add_argument("--arm1", default="M0", help="run-transition: phase-1 arm (on --from-layout)")
+    parser.add_argument("--workload1", default=None,
+                        help="run-transition: phase-1 workload; omitted = skip phase 1")
+    parser.add_argument("--arm2", default="S", help="run-transition: phase-2 arm (on --to-layout)")
+    parser.add_argument("--workload2", default=None,
+                        help="run-transition: phase-2 workload (new engines join mid-run)")
     return parser
 
 

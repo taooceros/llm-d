@@ -80,6 +80,22 @@ class InstanceDescriptor:
         return body
 
 
+_DESCRIPTOR_FIELDS = frozenset(f.name for f in dataclasses.fields(InstanceDescriptor))
+
+
+def descriptor_for_layout(row: Dict[str, Any], layout_id: str, config_digest: str) -> Dict[str, Any]:
+    """Re-registration body for a kept live engine adopted by another layout.
+
+    Same instance_id key and same generation (``register`` accepts generation >=
+    existing); only the layout identity and configuration digest change.  The
+    Ray actor and placement-group names stay what they physically are.
+    """
+    body = {k: v for k, v in row.items() if k in _DESCRIPTOR_FIELDS}
+    body["layout_id"] = layout_id
+    body["config_digest"] = config_digest
+    return body
+
+
 @ray.remote(num_cpus=0)
 class ServingInstanceRegistry:
     """Detached named actor holding the live serving-instance descriptors."""

@@ -74,7 +74,8 @@ def run_lifecycle_qualification(
         raise RuntimeError("qualification config differs from the deployed static layout")
     for instance in resolved.instances:
         actor = _find_engine_actor(config.layout.layout_id, instance.instance_id)
-        verdict = ray.get(actor.matches.remote(instance.to_dict(), config.engine_settings), timeout=60)
+        verdict = ray.get(actor.matches.remote(
+            instance.to_dict(), config.settings_for(instance.instance_id)), timeout=60)
         if not verdict["matches"]:
             raise RuntimeError(f"qualification engine settings differ: {verdict}")
     actor_ids_before = {

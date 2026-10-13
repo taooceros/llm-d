@@ -27,6 +27,7 @@ from .placement import (
     release_placement_group,
     verify_bundle_placement,
 )
+from .placement import parse_pg_name
 from .registry import REGISTRY_NAMESPACE, get_or_create_registry
 from .slice_inventory import SliceInventory
 from .native_backend import BACKEND_REVISION, prepare_backend
@@ -47,15 +48,23 @@ class DeploymentConfig:
 
     layout: LayoutRequest
     engine_settings: Dict[str, Any] = dataclasses.field(default_factory=dict)
+    # Per-instance overrides merged over engine_settings, e.g. a longer
+    # max_model_len on the large instance of a mixed layout.
+    instance_engine_settings: Dict[str, Dict[str, Any]] = dataclasses.field(default_factory=dict)
     cpu_per_host: float = DEFAULT_CPU_PER_HOST
     tpu_per_host: float = DEFAULT_TPU_PER_HOST
     pg_ready_timeout_s: float = 600.0
     engine_init_timeout_s: float = 3600.0
 
+    def settings_for(self, instance_id: str) -> Dict[str, Any]:
+        merged = {**self.engine_settings, **self.instance_engine_settings.get(instance_id, {})}
+        return EngineSettings.from_dict(merged).to_dict()
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "layout": self.layout.to_dict(),
             "engine_settings": EngineSettings.from_dict(self.engine_settings).to_dict(),
+            "instance_engine_settings": self.instance_engine_settings,
             "cpu_per_host": self.cpu_per_host,
             "tpu_per_host": self.tpu_per_host,
             "pg_ready_timeout_s": self.pg_ready_timeout_s,
@@ -66,6 +75,14 @@ class DeploymentConfig:
 def _find_engine_actor(layout_id: str, instance_id: str) -> Optional[Any]:
     try:
         return ray.get_actor(engine_actor_name(layout_id, instance_id), namespace=REGISTRY_NAMESPACE)
+    except ValueError:
+        return None
+
+
+def _find_engine_actor_named(name: str) -> Optional[Any]:
+    """Actor by its physical name (a kept engine keeps its original layout's name)."""
+    try:
+        return ray.get_actor(name, namespace=REGISTRY_NAMESPACE)
     except ValueError:
         return None
 
@@ -128,7 +145,9 @@ def deploy(
     layout_body = resolved.to_dict()
     layout_id = config.layout.layout_id
     digest = layout_body["layout_digest"]
-    settings = EngineSettings.from_dict(config.engine_settings).to_dict()
+    unknown = set(config.instance_engine_settings) - {i.instance_id for i in resolved.instances}
+    if unknown:
+        raise ValueError(f"instance engine settings name unknown instances: {sorted(unknown)}")
 
     registry = get_or_create_registry()
     if instance_ids is not None:
@@ -140,16 +159,20 @@ def deploy(
         gateway = find_gateway()
         if gateway is not None:
             status = ray.get(gateway.status.remote(), timeout=60)
+            joining = set(status.get("joining", ()))
             if (status["layout_id"] != layout_id
-                    or set(status.get("maintenance", {}).get("instances", {})) != wanted):
-                raise RuntimeError("partial restart requires matching declared gateway maintenance")
+                    or (set(status.get("maintenance", {}).get("instances", {})) != wanted
+                        and joining != wanted)):
+                raise RuntimeError(
+                    "partial deploy requires matching declared gateway maintenance or joining set")
     existing_actors = {}
-    for instance in resolved.instances:
+    for instance in instances:
         actor = _find_engine_actor(layout_id, instance.instance_id)
         if actor is None:
             continue
         try:
-            verdict = ray.get(actor.matches.remote(instance.to_dict(), settings), timeout=60)
+            verdict = ray.get(actor.matches.remote(
+                instance.to_dict(), config.settings_for(instance.instance_id)), timeout=60)
         except Exception as exc:
             raise RuntimeError(
                 f"live engine actor {engine_actor_name(layout_id, instance.instance_id)} "
@@ -221,7 +244,7 @@ def deploy(
                     instance=instance.to_dict(),
                     layout_id=layout_id,
                     layout_digest=digest,
-                    engine_settings=settings,
+                    engine_settings=config.settings_for(instance.instance_id),
                 )
                 created_actors.append(engine_actor_name(layout_id, instance.instance_id))
                 attached[instance.instance_id] = False
@@ -365,7 +388,7 @@ def inspect_deployment(layout_id: Optional[str] = None) -> Dict[str, Any]:
     )
     observed = []
     for row in snapshot:
-        actor = _find_engine_actor(row["layout_id"], row["instance_id"])
+        actor = _find_engine_actor_named(row["engine_actor_name"])
         if actor is None:
             observed.append({**row, "actor_alive": False, "engine_status": None})
             continue
@@ -419,11 +442,14 @@ def drain_deployment(
     results = []
     for row in targets:
         instance_id, generation = row["instance_id"], row["generation"]
-        if (row["engine_actor_name"] != engine_actor_name(layout_id, instance_id)
-                or row["placement_group_name"] != pg_name(layout_id, instance_id)
+        parsed_pg = parse_pg_name(row["placement_group_name"])
+        if (not row["engine_actor_name"].startswith(f"{ENGINE_ACTOR_PREFIX}--")
+                or not row["engine_actor_name"].endswith(f"--{instance_id}")
+                or parsed_pg is None or parsed_pg[1] != instance_id
                 or row["ray_namespace"] != REGISTRY_NAMESPACE):
             raise RuntimeError("refusing to drain resources not owned by this deployment")
-        actor = _find_engine_actor(layout_id, instance_id)
+        # A kept engine adopted by another layout keeps its original physical names.
+        actor = _find_engine_actor_named(row["engine_actor_name"])
         if actor is None:
             raise RuntimeError(f"cannot acknowledge native drain for missing actor {instance_id}")
         identity = ray.get(actor.identity.remote(), timeout=60)
@@ -452,7 +478,7 @@ def drain_deployment(
                 raise RuntimeError(f"native shutdown was not acknowledged: {entry['shutdown']}")
             ray.kill(actor, no_restart=True)
             entry["actor_removed"] = True
-            entry["placement_group_removed"] = release_placement_group(pg_name(layout_id, instance_id))
+            entry["placement_group_removed"] = release_placement_group(row["placement_group_name"])
             entry["withdrawn"] = ray.get(registry.withdraw.remote(instance_id, generation=generation), timeout=60)
             if not entry["withdrawn"]:
                 raise RuntimeError("registry generation changed before withdrawal")

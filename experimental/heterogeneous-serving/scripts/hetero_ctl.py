@@ -41,6 +41,8 @@ RUNTIME_EXCLUDES = [
     "**/results/**",
     "**/reports/**",
     "data/workloads/sharegpt_large.json",
+    "data/workloads/longdoc_govreport.json",
+    "data/workloads/translation_ted.json",
 ]
 
 parser = argparse.ArgumentParser(description=__doc__)

@@ -1,0 +1,77 @@
+# EPP arm "latebinding": reserve + one gateway-side queue (EPP flow control).
+# A request is bound only when some engine has room for it; the queue is
+# served longest prompt first, a request that fits nowhere does not block
+# later ones, and while the head long request fits no large engine, short
+# requests may not take large-engine blocks below what it needs
+# (dynamicLongReserve replaces the static longReserveTokens).
+apiVersion: llm-d.ai/v1alpha1
+kind: EndpointPickerConfig
+featureGates:
+- flowControl
+plugins:
+- type: metrics-data-source
+  name: engine-metrics
+- type: core-metrics-extractor
+  name: omp-metrics
+  parameters:
+    defaultEngine: omp-vllm
+    engineConfigs:
+    - name: omp-vllm
+      queuedRequestsSpec: "vllm:num_requests_waiting"
+      runningRequestsSpec: "vllm:num_requests_running"
+      kvUsageSpec: "vllm:kv_cache_usage_perc"
+      loraSpec: ""
+      cacheInfoSpec: ""
+      cacheBlockSizeSpec: "omp:kv_block_size"
+      cacheNumBlocksSpec: "omp:kv_total_blocks"
+      customMetrics:
+      - attributeKey: omp/kv-free-blocks
+        metricSpec: "omp:kv_free_blocks"
+      - attributeKey: omp/kv-total-blocks
+        metricSpec: "omp:kv_total_blocks"
+      - attributeKey: omp/kv-block-size
+        metricSpec: "omp:kv_block_size"
+- type: hetero-placement
+  name: placement
+  parameters:
+    smallPromptTokenLimit: 16384
+    largeFreshTrafficShare: 0.5
+    reserveLargeHeadroomBlocks: 16
+    longReserveTokens: 36864
+    workConservingFallback: true
+    decodeLengthBlind: true
+    admissionGrowthBlocks: 1
+    dynamicLongReserve: true
+    # Harness reset/state surface (POST /hetero/reset, GET /hetero/state).
+    adminAddress: "0.0.0.0:9095"
+- type: max-score-picker
+  name: picker
+- type: hetero-longest-prompt-first-ordering-policy
+  name: longest-prompt-first
+# Binds queued requests with the placement plugin's policy, selector and charges.
+- type: hetero-late-binding-gate
+  name: late-binding
+  parameters:
+    placementPluginRef: placement
+schedulingProfiles:
+- name: default
+  plugins:
+  - pluginRef: placement
+  - pluginRef: picker
+flowControl:
+  saturationDetector:
+    pluginRef: late-binding
+  # Requests wait for room as long as they must; the harness owns deadlines.
+  defaultRequestTTL: 0s
+  noEndpointRequestTTL: 0s
+  maxRequests: 100000
+  priorityBands:
+  - priority: 0
+    orderingPolicyRef: longest-prompt-first
+    maxRequests: 100000
+    defaultRequestTTL: 0s
+dataLayer:
+  sources:
+  - pluginRef: engine-metrics
+    extractors:
+    - pluginRef: omp-metrics

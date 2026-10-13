@@ -108,6 +108,40 @@ resident state; inspect its ownership before retrying or cancelling. Never
 resume a source until the destination abort is acknowledged, and never infer
 correct continuation from token counts alone.
 
+### llm-d EPP ingress (unfrozen pilots)
+
+`deploy/k8s/omp-epp-router.yaml` is a second router in which Envoy asks the
+forked llm-d EPP (llm-d-router branch `research/heterogeneous-tpu-20260918`,
+`hetero-placement` and late-binding plugins) for a destination and forwards the
+request itself (`ORIGINAL_DST` on `x-gateway-destination-endpoint`). The
+Python gateway stays deployed for engine bindings, pod labels
+(`omp.llm-d.ai/role`, `/tp`, `/max-model-len`) and iteration capture, but is
+off the request path, so migration is off. Arm configs mirror the W4 policies:
+`deploy/epp/plain.yaml`, `reserve.yaml` (fallback plus a 36,864-token long
+reserve) and `latebinding.yaml` (one EPP queue, longest prompt first, dynamic
+long reserve). Engines serve the EPP contract directly: `/metrics` exports
+`vllm:kv_cache_usage_perc` and `omp:kv_{free,total}_blocks`/`omp:kv_block_size`,
+and `/v1/completions` accepts `prompt` as one token-id array.
+
+```bash
+OMP_EPP_IMAGE=<registry>/llm-d-router-epp:<tag> scripts/epp_router.sh latebinding
+EPP_CONFIG=latebinding WORKLOADS=W4 scripts/run_pilot.sh M M0
+```
+
+`run-arm --epp-config` refuses unless every EPP pod is annotated with that
+file's SHA-256, and accounts each request from the engine response: one
+segment, exact budget, and the Envoy upstream matching the serving instance.
+Without late binding the EPP refuses a request that fits nowhere (429); the
+client then polls at the Python gateway's `admission_poll_s`, as the Python
+admission loop does, and records `capacity_retries`/`retry_request_bytes` per
+request (each retry resends the whole body). `admission_wait_s` is that
+client-clock polling plus Envoy's own `x-omp-epp-queue-ms`. Before warmup and
+before the timed run the harness resets hetero-placement's quota counters and
+projection (`POST :9095/hetero/reset`, waiting out live leases) and checks
+`/hetero/state` holds no reservation after the run. An engine whose client
+disconnects aborts the generation. EPP runs are unfrozen pilots, never cohort
+evidence.
+
 ### Measurement cohort and report
 
 Every timing run is bound to one source freeze. `scripts/freeze_predeclaration.py
