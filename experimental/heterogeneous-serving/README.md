@@ -335,6 +335,34 @@ and must not be summed into deployment wall-time savings.
 The reducer retains raw worker durations and medians in JSON and rounds only
 the final displayed table; it does not round worker observations before aggregation.
 
+Load profiling is opt-in: `OMP_PROFILE_LOAD=1` on `scripts/hetero_ctl.py deploy`
+is carried through the engine configuration to its TPU workers. The normal
+loader and serving step path are unchanged when it is off. Each worker's
+`worker_init_phases` evidence gains `load_profile`: exclusive file-iterator,
+host-processing, synchronized host-to-device, compile/cache-load and post-load
+times, call counts, local transferred bytes, and the twenty slowest boundaries.
+Rank zero also attempts two `py-spy dump` cross-checks if the image has py-spy;
+tool errors are retained in the evidence rather than installing packages.
+
+```bash
+flock /tmp/hetero-cluster.lock bash scripts/load_profile_campaign.sh
+.venv/bin/python scripts/analyze_load_profile.py \
+  results/restore/LoadProfiler/load_profile_S.json \
+  results/restore/LoadProfiler/load_profile_H.json \
+  --output results/restore/LoadProfiler/summary.json
+```
+
+The campaign deploys and releases S, then H, without workload runs. Its client
+deadlines also bound failures before RCM emits a completion event. Transfer
+profiling deliberately serializes TPU puts; throughput is measured at JAX's
+raw batched-put boundary, not inferred from hardware specifications. File
+iterator timing does not separate mmap page faults incurred later in tensor
+conversion. Host residual includes construction/bookkeeping, while compile
+time includes persistent-cache lookup/loading as well as fresh compilation.
+The analyzer checks category closure against the existing `load_model` phase
+clock and reports a transfer-only snapshot lower bound, not achieved restore
+latency: snapshot reads and reconstruction still have to be paid.
+
 `preflight` uses accelerator-free, node-pinned checks of the native sources on
 the selected hosts and Ray head. `deploy` applies the hash-pinned
 `hetero/native_backend_patch.json` before creating engines: native float32 cache
