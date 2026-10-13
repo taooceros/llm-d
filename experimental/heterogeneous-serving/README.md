@@ -72,6 +72,126 @@ flock /tmp/hetero-cluster.lock scripts/reconfig_snapshot.sh
 XLA_FLAGS=--xla_force_host_platform_device_count=8 .venv/bin/python -m pytest -q tests/test_weight_snapshot.py
 ```
 
+### Opt-in next-layout compile overlap experiments
+
+`startup_profile` defaults to `false`. When enabled it records JAX monitoring
+events, actual persistent-cache hits/misses and cache keys, per-bucket AOT and
+synchronized warm-up intervals, and KV allocation intervals in
+`worker_init_phases()[*].startup_profiles`. Parallel intervals are unioned into
+exclusive wall-clock categories; they must not be summed as serial costs.
+Cache-hit lookup/decompression and executable deserialize/load are separate.
+On a miss JAX exposes indivisible `compile_and_load`, so this category is not
+proof of pure host compilation. Warm-up/allocation spans include host dispatch
+and synchronization, with nested compilation subtracted. All hooks are removed
+before serving; disabled engines do not install them.
+`startup_device_trace` also defaults to `false`. Dedicated split runs can enable
+it to capture actual TPU `XLA Modules` device lanes, retain every module span
+used for timing, and separate device-module execution from host compile/load
+clocks. Nested XLA-op lanes and host events are not counted as device module
+time. Missing device lanes/phase annotations yield `null`, not guessed zero.
+Profiler setup/export/parse/cleanup costs are recorded outside the phase clock
+and still belong in deployment elapsed time. Matched switch-C and serving-impact
+runs leave this diagnostic flag off. Private local trace directories are removed
+after their timing evidence is retained in the per-worker profile.
+
+The published warm-up dependency (`8057ab8`, `2a3dd37`) supplies `worker_env`
+and direct JAX configuration after its import-time environment snapshot. Cache
+settings are verified after device initialization and before startup phases;
+an unexpected backend override fails instead of being silently reapplied.
+`worker_env` is trusted deployment configuration, recorded in evidence: do not
+put secrets in it or expose it to inference clients. The explicit
+`compilation_cache_dir` setting takes precedence over cache paths in this map.
+
+`startup_compile_bundle` defaults to `null`. Setting it to a unique experiment
+directory captures process-0 startup modules, exact compiler options, ordered
+devices and original cache keys. This is **prior target graph provisioning**,
+not free first-ever next-layout discovery. Its normal-deploy cost must remain
+in the experiment evidence; an already populated normal cache is the warm
+control. No cache key is rewritten to force a hit.
+
+`scripts/overlap_pilot.py --background-precompile` (off by default) replays those
+modules using an abstract TPU topology in a CPU-only worker process beside
+the existing blind W0 pilot. It never invokes the executable or initializes
+the real TPU backend. The pilot joins the complete background task before
+returning, and its result retains compile start/end and process CPU time.
+Any work extending beyond the last source request belongs in switch cost.
+Replica exports are deduplicated by their observed JAX executable key. Primary
+cold, warm, and background-precompile arms all use coverage-matched zero cache
+write thresholds (seconds and bytes), with compile/miss logging disabled. This
+allows subsecond KV/allocation and warm-up executables to persist without
+confounding cache coverage with overlap scheduling. Effective settings must
+agree in every worker phase and final worker report; environment strings alone
+are not proof. Replay retains its actual effective JAX options too. Target keyed
+deserialize successes and monitoring hits, not precompile key equality alone,
+are retained in the switch evidence. A default-one-second warm cache is not the
+primary matched control.
+Device-only startup traces explicitly set Python tracer level 0 and host tracer
+level 2 to avoid the measured event-volume/time perturbation; trace setup and
+export remain separate clocks. Attribution consolidation marks runs diagnostic
+unless all eight unique worker profiles, effective 16k/512/2048 configuration,
+requested cache directory and coverage-matched options, and (when tracing)
+controlled profiler options and phase/device lanes agree.
+Historical uncontrolled traces remain diagnostic rather than becoming baselines.
+Both sequence scripts run the read-only `analyze_overlap.py --check-deploy` gate
+after each deploy and retain its verdict. Switch consolidation also requires
+complete W0 requests, exact greedy-output equality against the provisioned
+target reference, and normal cleanup evidence before replacing unmeasured
+switch/break-even reports. Output validation runs after the target W0 pilot.
+The existing disjoint protocol warmup still precedes measured W0: C therefore
+ends at the first **measured W0** dispatch, not first-ever target service. The
+gap charges that warmup without useful-W0 credit; this is conservative,
+harness-inclusive overhead rather than the minimum production outage.
+
+Before submission, `scripts/overlap_pilot.py --layout S --run-id input-smoke
+--check-inputs` loads the real catalogue and all five W0/warmup manifests,
+checks referenced source IDs and token budgets, and reports their hashes.
+Pilot jobs ship the small manifests but use the existing staged catalogue at
+`--data-dir` (default `/tmp/omp_hetero/data`), never a duplicate large catalogue
+inside the Ray upload. Local and remote actual input hashes must agree; remote
+catalogue drift is rejected before W0. Historical manifest catalogue hashes
+remain explicit and may differ in these unfrozen pilots: manifests are not
+rewritten, and historical rates are not same-workload measurements. Controls
+and treatment require identical actual staged inputs for current-rate models.
+
+Run each sequence inside one blocking lock, with a unique `RUN_ID`, current
+`HEAD_POD`, and `KUBECONFIG`:
+
+```bash
+LAYOUT=S RUN_ID=s-split DEVICE_TRACE=true BUNDLE_ROOT=/models/omp_overlap_s_bundle \
+  flock /tmp/hetero-cluster.lock scripts/overlap_restore_sequence.sh
+A=S B=H RUN_ID=s-to-h-control TREATMENT=baseline \
+  flock /tmp/hetero-cluster.lock scripts/overlap_switch_sequence.sh
+A=S B=H RUN_ID=s-to-h TREATMENT=overlap \
+  flock /tmp/hetero-cluster.lock scripts/overlap_switch_sequence.sh
+.venv/bin/python scripts/analyze_overlap.py \
+  --campaign results/overlap/OverlapCompile/s-to-h/campaign.json
+```
+Repeat `--campaign` for each measured direction/treatment to consolidate them.
+Break-even rows use only that switch's observed direction and retain both run
+IDs; no cost is borrowed for unmeasured directions or a four-phase cycle.
+The cost ledger retains raw gap-plus-ramp C, precompile wall/CPU work, and
+matched source-W0 slowdown. Positive observed slowdown is charged; a negative
+noisy delta is not credited. Hidden precompile work is not added again, and its
+late join is already inside C. First-use estimates additionally charge the full
+target-provision start-to-release interval, including graph/bundle creation,
+reference generation, and weight snapshot preparation. Reused-provisioning
+estimates are explicitly conditional on that prior work already being paid.
+Matched-current W0 models use observed middle-20–80% median 10-second output
+rates only when workload, routing knobs, serving configuration and actual
+runtime fingerprints match, with no replay counted as useful output. Only the
+small/large instance-binding lists are excluded from routing-knob comparison:
+those bindings are the layout treatment and remain in the raw evidence. These are
+steady-rate projections, not observed crossover experiments. Reused historical
+throughput inputs remain explicitly labeled cross-revision model inputs with
+runtime equivalence unestablished.
+
+The scripts release their own engines, placement groups, tmpfs snapshots and
+uniquely named compile caches before unlocking. Cache cleanup accepts only
+non-symlink `/models/jax_cache_overlap_*` paths; `/models/jax_cache` is untouched.
+Raw worker timings, complete client
+endpoints, serving impact and break-even evidence belong under
+`results/overlap/OverlapCompile/`; cache-file existence alone is not a hit.
+
 The campaign requires 40 GB of RAM and tmpfs headroom after staging, refuses
 pre-existing engines, retains machine-readable evidence under
 `results/restore/ShardedRestore/`, and releases its deployments and removes
