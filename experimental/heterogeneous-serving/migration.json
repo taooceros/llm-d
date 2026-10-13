@@ -36,8 +36,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "216cf3e6049474f8ba13e3ad4f78e8b77f94433e6c9c4230836edc6c0b5e44d0",
-      "bytes": 42108
+      "sha256": "4065be0e1e80e37a530a316cd3368012e7a538d0b3a42298d6cb3f2f47023a04",
+      "bytes": 46199
     },
     {
       "path": "RECONFIGURATION_GOAL.md",
@@ -410,6 +410,11 @@
       "bytes": 13175
     },
     {
+      "path": "scripts/analyze_ici_trace.py",
+      "sha256": "4863f2a30398956e99a1c963eee16248d6989c493d59e169da4d9bd13dd5676b",
+      "bytes": 3002
+    },
+    {
       "path": "scripts/analyze_overlap.py",
       "sha256": "1590a9cfbfe8e0e5130cd7ff267e66c176a9617ca95d30e269c44fef1c53c2f6",
       "bytes": 24021
@@ -433,6 +438,11 @@
       "path": "scripts/cache_hit_summary.py",
       "sha256": "053b01455eb1b355758e6f0f33a4279f0322c5602b6738b528dea82a27bdc1e3",
       "bytes": 4965
+    },
+    {
+      "path": "scripts/collect_ici_trace.py",
+      "sha256": "616bc01e6c7ec9d91a9404b689f6f29e6b5c156119a7fd42d38d7e7c9d2ec9fe",
+      "bytes": 2242
     },
     {
       "path": "scripts/epp_router.sh",
@@ -468,6 +478,16 @@
       "path": "scripts/hetero_ctl.py",
       "sha256": "7ff148189e9b8811d2319845e9bca4dccffa2400f955223326349b4afc7162d7",
       "bytes": 13560
+    },
+    {
+      "path": "scripts/ici_bench.py",
+      "sha256": "d5a17d2f65d6f480867d5e2fb311cf666efaea2ed70e6d882cad908d87ceb5be",
+      "bytes": 7834
+    },
+    {
+      "path": "scripts/ici_sequence.sh",
+      "sha256": "fc49ff5bebb3155d7fd9ac91973c1ca9286f3a62dbc7fc7224b09779825aa460",
+      "bytes": 868
     },
     {
       "path": "scripts/overlap_check.py",
@@ -573,6 +593,11 @@
       "path": "scripts/summarize_fast_snapshot.py",
       "sha256": "329f13630f4848e4df655d9857e49f41f8f6041eaebbd37a3788c339f51b77b9",
       "bytes": 6414
+    },
+    {
+      "path": "scripts/summarize_ici.py",
+      "sha256": "fb083641b238f3145b0cc902d4456daef28c5d82254abb721f7a1fd5bf694e12",
+      "bytes": 8893
     },
     {
       "path": "scripts/summarize_mechanism_ab.py",

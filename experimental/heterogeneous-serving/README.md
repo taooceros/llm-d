@@ -2,6 +2,66 @@
 
 A production-grade Python framework for **clairvoyant oracle scheduling**, **predictive admission control**, and **preemption dynamics simulation** for high-throughput LLM serving with vLLM on **Cloud TPU v5e** clusters.
 
+## Native ICI resident-weight experiment
+
+`scripts/ici_bench.py` reserves existing TPU hosts through Ray and initializes one
+persistent multi-controller JAX runtime. Always use the locked RCM wrapper:
+
+```bash
+flock /tmp/hetero-cluster.lock scripts/ici_sequence.sh subgroup box results/ici/ICIBench/subgroup_run.json
+flock /tmp/hetero-cluster.lock scripts/ici_sequence.sh reshard box results/ici/ICIBench/reshard_box_run.json --profile
+# Only after the complete box run succeeds: both boxes, then concurrent M probe.
+flock /tmp/hetero-cluster.lock scripts/ici_sequence.sh campaign slice results/ici/ICIBench/reshard_slice_run.json --sizes model
+.venv/bin/python scripts/summarize_ici.py results/ici/ICIBench/reshard_box_run.json --output results/ici/ICIBench/reshard_box.json
+.venv/bin/python -m unittest discover -s tests -p test_ici_benchmark.py
+```
+
+The model payload uses the measured resident catalogue (1,028 BF16 leaves,
+62.5462 GB logical bytes), including vision and multimodal projections. Its
+spec-derived weight footprint is 7.8621 GB/chip at TP8 and 3.9561 GB/chip at
+TP16. Values are synthetic; TP-dependent packed-value conversion, KV and
+executable buffers are not benchmarked. The catalogue is committed under
+`results/ici/ICIBench/parameter_catalogue.json` and is passed compressed to Ray.
+Native TP8 meshes use controller sets `{0,2}`
+and `{1,3}`; the independence probe separately tests requested sets `{0,1}` and
+`{2,3}`. Preserve physical libtpu process ranks. Cross-host `device_put` must
+retain the same device set; split to the global replica mesh first, then restrict
+local buffers to submesh handles (explicit dtype on nonparticipants).
+On a 32-chip runtime, v5e reshard compilation rejects 16-device subset assignments.
+The slice campaign therefore uses an all-device mesh with an unused replica-box
+axis. Its M probe uses interleaved order only on box0 and retains box1's native
+order, so only box0 requires weight movement; box1 concurrently executes a
+separate subset collective program. All controllers still issue the reshard.
+
+The measured full-model M probe aborts the pinned libtpu runtime with a launch-group
+leader/launch-ID assertion in `jit_step` while `jit__device_put_reshard` is also
+being compiled. It does not demonstrate safe concurrent neighbor execution.
+The driver saves completed S/H results before attempting M; use `reshard slice`
+instead of `campaign slice` when only the verified full-slice transfers are needed.
+Raw diagnostics and inference boundaries are in `host_safe_mixed_failure.json`.
+
+Measured warm generic transfer medians (slowest controller per repetition):
+one box S→H 0.4123 s and H→S 0.4183 s; the full slice S→H 0.7514 s and
+H→S 1.0763 s. The full-slice reverse transition exceeds the <1 s feasibility
+estimate. Cold generic transfer maxima are 3.2522 s and 3.7076 s on the full
+slice because implicit lowering/compilation is included. All completed transfer
+rounds have zero device-shard checksum mismatches. See `reshard_box.json` and
+`reshard_slice.json` for every route, logical traffic, bandwidth, and HBM peaks.
+
+Summaries use the slowest controller per warm repetition. Logical moved bytes
+are computed from destination shard coverage, not measured wire traffic. HBM
+peaks are lifetime peaks. Internal `device_put` lowering is included in cold
+latency. The benchmark now has a cold-only native JAX listener for trace, MLIR
+lowering, and backend compile-or-cache-restore spans; the listener was CPU-smoked.
+Published TPU runs predate that instrumentation and have null native span
+statistics: supplemental measurements were cancelled while waiting for the
+cluster lock when the user requested wrap-up. Generation/check/slice compilation
+was measured separately. Host compile spans are not pure device-transfer time,
+and first-trial labels do not flush shared JAX caches.
+Interleaved merge eliminates ICI bytes but still materializes local HBM slices.
+The trace collector copies worker-local traces and removes only its own `/tmp`
+paths. This benchmark does not measure end-to-end engine reconfiguration C.
+
 ## Static heterogeneous serving testbed
 
 The execution contract is [HETEROGENEOUS_LLMD_GATEWAY_GOAL.md](HETEROGENEOUS_LLMD_GATEWAY_GOAL.md).
