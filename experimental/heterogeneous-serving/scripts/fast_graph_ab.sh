@@ -13,7 +13,7 @@ fi
 : "${HEAD_POD:?Set HEAD_POD to the current Ray head pod}"
 OUT=${OUT:-results/restore/FastGraph}
 INVENTORY=${INVENTORY:-/tmp/hetero-inventory-only.json}
-REF=${REF:-$HOME/hetero-wt/ShardedRestore/results/restore/ShardedRestore/S-reference.json}
+REF=${REF:?set REF to a bf16-KV reference produced under the current engine settings}
 [[ -f "$REF" ]] || { echo "missing reference $REF" >&2; exit 1; }
 RCM=(.venv/bin/python rcm_exec)
 mkdir -p "$OUT"

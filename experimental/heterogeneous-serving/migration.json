@@ -36,8 +36,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "023514909c1e55d956e3f2a0afa61c8c78e5e640176a4074d6cf42c6c3900996",
-      "bytes": 35768
+      "sha256": "c09769844d0f6b9714a28f9c911003ae556b734477267659f822481a22f50900",
+      "bytes": 36089
     },
     {
       "path": "RECONFIGURATION_GOAL.md",
@@ -210,6 +210,11 @@
       "bytes": 368
     },
     {
+      "path": "hetero/agreement.py",
+      "sha256": "30ba6bc960279c6e68bba8fda9f41fad3273a9192839103c05cdc6a76e638b9d",
+      "bytes": 5960
+    },
+    {
       "path": "hetero/analysis.py",
       "sha256": "b063dbd65166b7fe1b526cc8397e302f6ee1608a52763cd16c13ebe3b4e7d7dd",
       "bytes": 20963
@@ -246,8 +251,8 @@
     },
     {
       "path": "hetero/native_backend_patch.json",
-      "sha256": "148b4295bf83c0eaa473b11fff5c7c643092f1873200cef1f52b07a2265861ed",
-      "bytes": 4626
+      "sha256": "9d8ff441311bc6795a5f1034c02a2e18938b4ab510130bf5dbc6aec5fa229171",
+      "bytes": 5510
     },
     {
       "path": "hetero/placement.py",
@@ -400,14 +405,24 @@
       "bytes": 24021
     },
     {
+      "path": "scripts/bf16_probe_diag.sh",
+      "sha256": "0683b66eb5640754bbeba5b0e0c301e6e007760a8b1f420b9275cd7905bae263",
+      "bytes": 5423
+    },
+    {
+      "path": "scripts/bf16_provision.sh",
+      "sha256": "5d55428859d58437a5f5db995631e04ea9b798003e47239e9a730ae96cfe7b79",
+      "bytes": 8279
+    },
+    {
       "path": "scripts/epp_router.sh",
       "sha256": "dc6900d2f2ea08251329d72fdbd896a77da0b6066948762c619598acc6f0baf6",
       "bytes": 1556
     },
     {
       "path": "scripts/fast_graph_ab.sh",
-      "sha256": "2d9d8cb3ec8c1bbe66513fbc5cd90641c4d278b9095ff7752c83981c76bfe013",
-      "bytes": 4544
+      "sha256": "6c1677447be1c10248a8821a09f43121f8d8f7cb318630d8492e50f47575fbeb",
+      "bytes": 4539
     },
     {
       "path": "scripts/fast_graph_summary.py",
@@ -511,8 +526,8 @@
     },
     {
       "path": "scripts/snapshot_validate.py",
-      "sha256": "78ebdab92dacf7f236282fa93c676306deab96b0d0564be7809ef0ad7f00f1e8",
-      "bytes": 23209
+      "sha256": "1f2419b463ec075444b04547b31e30a304d8b59accea9a24398a892e9a962f15",
+      "bytes": 29129
     },
     {
       "path": "scripts/staged_sequence.sh",
@@ -570,6 +585,11 @@
       "bytes": 704
     },
     {
+      "path": "tests/test_agreement.py",
+      "sha256": "327daa6997da85664f93bea0e053a13654ed03631b57ed1d50eda984694e008e",
+      "bytes": 5022
+    },
+    {
       "path": "tests/test_continuation_qualification.py",
       "sha256": "36d81a5c41bdc1c737d85aeea2ca01eb47c89ccd0d8bcfd705fbb289707bd47d",
       "bytes": 5925
@@ -596,8 +616,8 @@
     },
     {
       "path": "tests/test_snapshot_validation.py",
-      "sha256": "30e0404397badcc815208e21401a9354d950a425fea30ba33ad0bbbd11827e2d",
-      "bytes": 1546
+      "sha256": "5f4903fc9d74d7f9c2f9fc2fa6efc09a21fee1e82f7f977eb2079b9ca88b96b8",
+      "bytes": 3078
     },
     {
       "path": "tests/test_staged_transition.py",

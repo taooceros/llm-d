@@ -22,12 +22,18 @@ to existing actors rather than replacing their weights.
 ./rcm_exec status
 ```
 
-The serving configuration now names `kv_cache_dtype="float32"`,
+The serving configuration now names `kv_cache_dtype="bfloat16"` by default
+(`"float32"` remains selectable; `"auto"` is refused),
 `activation_dtype="float32"`, `matmul_precision="highest"`, the exact native
 `backend_revision`, and the serving-package `runtime_revision`; parameter storage
 remains `dtype="bfloat16"` by default. These fields participate in attachment
 checks and migration build identity. The supported state profile is FP32/highest;
 drain incompatible live engines rather than silently reconfiguring them.
+
+Greedy references are per layout and per `engine_identity` (the `model_build`,
+including the KV dtype). `validate --reference` is exact within a layout;
+`validate --agreement-reference OTHER.json` runs the cross-layout tie gate in
+`hetero/agreement.py`.
 
 ### Explicit host-RAM weight snapshots
 

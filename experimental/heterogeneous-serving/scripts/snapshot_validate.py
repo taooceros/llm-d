@@ -12,6 +12,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from hetero import agreement  # noqa: E402
 from hetero.layout import BUILTIN_LAYOUTS  # noqa: E402
 
 
@@ -203,6 +204,26 @@ def remote(args):
             if args.action == 'check':
                 emit_measurements({'ok': True, 'layout': args.layout, 'worker_init_phases': phases})
                 return
+            if args.action == 'probe':
+                manifest = json.loads((ROOT / os.environ['OMP_SNAPSHOT_MANIFEST_FILE']).read_text())
+                prompts = manifest['requests'][:32]
+                points = manifest['probe_points']
+                probe_rows = []
+                for name in sorted(actors):
+                    for k, point in enumerate(points):
+                        i, prefix = point['prompt_index'], point['prefix']
+                        row = ray.get(actors[name].next_token_diagnostic.remote(
+                            token_ids=prompts[i]['prompt_token_ids'] + prefix,
+                            request_id=f'probe-{args.layout}-{name}-{i}-{len(prefix)}-{k}'), timeout=600)
+                        probe_rows.append({'engine': name, 'prompt_index': i, 'prefix_len': len(prefix),
+                                           'token_id': row['token_id'], 'top_logprobs': row['top_logprobs']})
+                emit_measurements({'ok': True, 'action': 'probe', 'layout': args.layout,
+                    'manifest_sha256': manifest['manifest_sha256'],
+                    'engine_identity': {r['instance_id']: r['model_build'] for r in rows},
+                    'tp_sizes': {name: int(ray.get(actors[name].identity.remote(), timeout=120)['tp_size'])
+                                 for name in sorted(actors)},
+                    'probe_points': points, 'rows': probe_rows})
+                return
             manifest = json.loads((ROOT / os.environ['OMP_SNAPSHOT_MANIFEST_FILE']).read_text())
             prompts = manifest['requests'][:32]
             if len(prompts) != 32:
@@ -215,13 +236,63 @@ def remote(args):
                         max_tokens=64, temperature=0.0, ignore_eos=False,
                         request_id=f'snapshot-{args.layout}-{name}-{index}'), timeout=600)
                     outputs[name].append(row['output_token_ids'])
+            engine_identity = {r['instance_id']: r['model_build'] for r in rows}
+            tp_sizes = {name: int(ray.get(actors[name].identity.remote(), timeout=120)['tp_size'])
+                        for name in sorted(actors)}
+            replica = agreement.replica_equality(outputs, tp_sizes)
+            cross_layout = diagnostics = None
+            if 'other_outputs' in manifest:
+                canonical = agreement.canonical_engine(outputs)
+                diagnostics = []
+                for point in agreement.divergence_points(outputs[canonical], manifest['other_outputs']):
+                    i, d = point['prompt_index'], point['d']
+                    row = ray.get(actors[canonical].next_token_diagnostic.remote(
+                        token_ids=prompts[i]['prompt_token_ids'] + outputs[canonical][i][:d],
+                        request_id=f'agree-{args.layout}-{canonical}-{i}-{d}'), timeout=600)
+                    diagnostics.append({'prompt_index': i, 'd': d, 'token_id': row['token_id'],
+                                        'top_logprobs': row['top_logprobs']})
+                cross = agreement.evaluate_side(outputs[canonical], manifest['other_outputs'], diagnostics)
+                cross_layout = {'canonical_engine': canonical, **cross}
             result = {'ok': True, 'action': args.action, 'layout': args.layout,
                       'manifest_sha256': manifest['manifest_sha256'],
                       'prompts': [p['prompt_token_ids'] for p in prompts],
                       'sampling': {'temperature': 0, 'ignore_eos': False, 'max_tokens': 64},
                       'outputs': outputs, 'worker_init_phases': phases,
-                      'require_restored': args.require_restored}
+                      'require_restored': args.require_restored,
+                      'engine_identity': engine_identity, 'tp_sizes': tp_sizes,
+                      'replica_equality': replica}
+            if not replica['passed']:
+                result['ok'] = False
+                result['error'] = 'replica outputs differ within layout'
+            if cross_layout is not None:
+                result['cross_layout'] = cross_layout
+                result['diagnostics'] = diagnostics
     emit_measurements(result)
+
+
+def _verify_greedy_reference(reference, measured):
+    if 'engine_identity' not in reference:
+        raise RuntimeError('reference has no engine_identity; regenerate it under the current engine settings')
+    keys = ('layout', 'manifest_sha256', 'prompts', 'sampling', 'engine_identity', 'outputs')
+    mismatches = [key for key in keys if measured.get(key) != reference[key]]
+    if mismatches:
+        raise RuntimeError('greedy restored output mismatch: ' + ', '.join(mismatches))
+    return {'passed': True, 'prompts_per_engine': 32, 'engines': len(measured['outputs']),
+            'comparison': 'output_token_ids, token for token'}
+
+
+def _verify_agreement(reference, measured, path):
+    mismatches = [key for key in ('manifest_sha256', 'prompts', 'sampling')
+                  if measured.get(key) != reference.get(key)]
+    if mismatches:
+        raise RuntimeError('agreement reference mismatch: ' + ', '.join(mismatches))
+    cross = measured.get('cross_layout')
+    if not cross:
+        raise RuntimeError('measurement has no cross_layout verdict')
+    return {'reference': str(path), 'other_layout': reference['layout'], 'passed': cross['passed'],
+            'summary': {'exact_prompts': cross['exact_prompts'],
+                        'first_divergence_min': cross['first_divergence_min'],
+                        'divergences': len(cross['divergences'])}}
 
 
 def submit(args):
@@ -229,13 +300,23 @@ def submit(args):
     from omp_rcm.ray_job import RayJobSupervisor
     env = {'PYTHONUNBUFFERED': '1', 'OMP_SNAPSHOT_MODEL': os.environ.get('MODEL', '/models/gemma-4-31b')}
     input_directory = None
-    if args.action == 'validate':
+    if args.action in ('validate', 'probe'):
         import tempfile
         input_directory = tempfile.TemporaryDirectory(prefix='_snapshot_validation_inputs_', dir=ROOT)
         input_file = Path(input_directory.name) / 'prompts.json'
         manifest = json.loads((ROOT / 'data/manifests/W0.json').read_text())
-        input_file.write_text(json.dumps({
-            'manifest_sha256': manifest['manifest_sha256'], 'requests': manifest['requests'][:32]}))
+        shipped = {'manifest_sha256': manifest['manifest_sha256'], 'requests': manifest['requests'][:32]}
+        if args.agreement_reference:
+            ref = json.loads(args.agreement_reference.read_text())['measurements']
+            if ref.get('ok') is not True:
+                raise SystemExit('agreement reference is not a successful measurement')
+            if ref['layout'] == args.layout:
+                raise SystemExit('agreement reference must come from a different layout')
+            shipped['other_outputs'] = ref['outputs'][agreement.canonical_engine(ref['outputs'])]
+            shipped['other_layout'] = ref['layout']
+        if args.action == 'probe':
+            shipped['probe_points'] = json.loads(args.probe_points.read_text())
+        input_file.write_text(json.dumps(shipped))
         env['OMP_SNAPSHOT_MANIFEST_FILE'] = str(input_file.relative_to(ROOT))
     argv = ['python3', '-u', 'scripts/snapshot_validate.py', args.action, '--remote',
             '--layout', args.layout, '--reserve-bytes', str(args.reserve_bytes)]
@@ -262,7 +343,8 @@ def submit(args):
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(json.dumps(evidence, indent=2) + '\n')
         if not measured or measured.get('ok') is not True:
-            raise RuntimeError('snapshot job missing successful evidence')
+            raise RuntimeError('snapshot job missing successful evidence: '
+                               + str((measured or {}).get('error')))
         if args.reference:
             reference = json.loads(args.reference.read_text())['measurements']
             if args.action == 'fingerprint':
@@ -271,15 +353,16 @@ def submit(args):
                     'comparison': 'SHA-256 and identity of every shard; cold file vs live source' if 'hosts' in reference else 'SHA-256 and identity of every live device shard',
                     'outside_snapshot_and_restore_timer': True}
             else:
-                keys = ('layout', 'manifest_sha256', 'prompts', 'sampling', 'outputs')
-                mismatches = [key for key in keys if measured[key] != reference[key]]
-                if mismatches:
-                    raise RuntimeError('greedy restored output mismatch: ' + ', '.join(mismatches))
-                measured['greedy_equality'] = {'passed': True, 'prompts_per_engine': 32,
-                                              'engines': len(measured['outputs']),
-                                              'reference': str(args.reference),
-                                              'comparison': 'output_token_ids, token for token'}
+                measured['greedy_equality'] = _verify_greedy_reference(reference, measured)
+                measured['greedy_equality']['reference'] = str(args.reference)
             args.output.write_text(json.dumps(evidence, indent=2) + '\n')
+        if args.agreement_reference:
+            ref = json.loads(args.agreement_reference.read_text())['measurements']
+            measured['agreement'] = _verify_agreement(ref, measured, args.agreement_reference)
+            args.output.write_text(json.dumps(evidence, indent=2) + '\n')
+            if not measured['agreement']['passed']:
+                failed = {k: v for k, v in measured['cross_layout']['checks'].items() if not v}
+                raise RuntimeError('cross-layout agreement failed: ' + json.dumps(failed))
     runner = StageRunner(silence_timeout_s=args.timeout)
     runner.register(run)
     try:
@@ -378,17 +461,25 @@ def analyze(args):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=('preflight', 'memory', 'cleanup', 'files', 'file-fingerprint', 'poison', 'snapshot', 'fingerprint', 'validate', 'check', 'analyze'))
+    parser.add_argument('action', choices=('preflight', 'memory', 'cleanup', 'files', 'file-fingerprint', 'poison', 'snapshot', 'fingerprint', 'validate', 'check', 'probe', 'analyze'))
     parser.add_argument('--layout', choices=sorted(BUILTIN_LAYOUTS), default='S')
     parser.add_argument('--instances', help='snapshot/fingerprint only these comma-separated instances')
     parser.add_argument('--remote', action='store_true')
     parser.add_argument('--output', type=Path)
     parser.add_argument('--reference', type=Path)
+    parser.add_argument('--agreement-reference', type=Path)
+    parser.add_argument('--probe-points', type=Path, help='probe only: JSON list of {prompt_index, prefix}')
     parser.add_argument('--require-restored', action='store_true')
     parser.add_argument('--reserve-bytes', type=int, default=0)
     parser.add_argument('--ray-url', default='http://127.0.0.1:8265')
     parser.add_argument('--timeout', type=float, default=3600)
     args = parser.parse_args()
+    if args.agreement_reference and args.action != 'validate':
+        raise SystemExit('--agreement-reference is only valid with validate')
+    if args.probe_points and args.action != 'probe':
+        raise SystemExit('--probe-points is only valid with probe')
+    if args.action == 'probe' and not args.probe_points and not args.remote:
+        raise SystemExit('probe requires --probe-points')
     if not args.remote and args.output is None:
         parser.error('--output is required for supervised submission')
     (analyze if args.action == 'analyze' else remote if args.remote else submit)(args)
