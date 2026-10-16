@@ -223,85 +223,137 @@ We present _PhaseMorph_, a reconfiguration system for vLLM on Cloud TPU that rem
 
 #wide-fig(
   svg-fig(```svg
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 314" font-family="Helvetica, Arial, sans-serif" font-size="11.5" fill="#1f2328">
-  <text x="12" y="16" font-size="12.5" font-weight="bold">Critical-Path Reconfiguration Cost C per System Variant (Measured on 32-Chip TPU v5e)</text>
-  <line x1="215" y1="36" x2="800" y2="36" stroke="#d0d7de" stroke-width="1"/>
-  <text x="215" y="32" text-anchor="middle" font-size="10" fill="#59636e">0 s</text>
-  <text x="349" y="32" text-anchor="middle" font-size="10" fill="#59636e">100 s</text>
-  <text x="483" y="32" text-anchor="middle" font-size="10" fill="#59636e">200 s</text>
-  <text x="617" y="32" text-anchor="middle" font-size="10" fill="#59636e">300 s</text>
-  <text x="751" y="32" text-anchor="middle" font-size="10" fill="#59636e">400 s</text>
-  <!-- Row 1: Vanilla vLLM redeploy -->
-  <text x="205" y="56" text-anchor="end" font-weight="bold">Vanilla vLLM Redeploy</text>
-  <text x="205" y="69" text-anchor="end" font-size="10" fill="#59636e">External job + checkpoint load</text>
-  <rect x="215" y="42" width="87" height="28" fill="#8c959f" stroke="#fff"/>
-  <text x="258" y="60" text-anchor="middle" fill="#fff" font-size="10">Harness 65s</text>
-  <rect x="302" y="42" width="30" height="28" fill="#0969da" stroke="#fff"/>
-  <rect x="332" y="42" width="318" height="28" fill="#cf222e" stroke="#fff"/>
-  <text x="491" y="60" text-anchor="middle" fill="#fff" font-size="10.5" font-weight="bold">load_model: Host Convert (128s) + Load JIT (75s) = 237s</text>
-  <rect x="650" y="42" width="35" height="28" fill="#d4a72c" stroke="#fff"/>
-  <rect x="685" y="42" width="91" height="28" fill="#8250df" stroke="#fff"/>
-  <text x="730" y="60" text-anchor="middle" fill="#fff" font-size="10">Trace/Compile 68s</text>
-  <text x="783" y="60" font-weight="bold" fill="#cf222e">419.0 s</text>
-
-  <!-- Row 2: PhaseMorph-Snap -->
-  <text x="205" y="98" text-anchor="end" font-weight="bold">PhaseMorph-Snap</text>
-  <text x="205" y="111" text-anchor="end" font-size="10" fill="#59636e">/dev/shm shards + FastGraph</text>
-  <rect x="215" y="84" width="20" height="28" fill="#8c959f" stroke="#fff"/>
-  <rect x="235" y="84" width="29" height="28" fill="#0969da" stroke="#fff"/>
-  <text x="249" y="102" text-anchor="middle" fill="#fff" font-size="9.5">22s</text>
-  <rect x="264" y="84" width="7" height="28" fill="#1a7f37" stroke="#fff"/>
-  <rect x="271" y="84" width="35" height="28" fill="#d4a72c" stroke="#fff"/>
-  <text x="288" y="102" text-anchor="middle" fill="#fff" font-size="9.5">26s</text>
-  <rect x="306" y="84" width="86" height="28" fill="#8250df" stroke="#fff"/>
-  <text x="349" y="102" text-anchor="middle" fill="#fff" font-size="10">Trace + Warmup 55s</text>
-  <text x="399" y="102" font-weight="bold" fill="#1f2328">132.2 s (-68%)</text>
-
-  <!-- Row 3: PhaseMorph-Cache -->
-  <text x="205" y="140" text-anchor="end" font-weight="bold">PhaseMorph-Cache</text>
-  <text x="205" y="153" text-anchor="end" font-size="10" fill="#59636e">+ zero-threshold XLA cache</text>
-  <rect x="215" y="126" width="21" height="28" fill="#8c959f" stroke="#fff"/>
-  <rect x="236" y="126" width="29" height="28" fill="#0969da" stroke="#fff"/>
-  <text x="250" y="144" text-anchor="middle" fill="#fff" font-size="9.5">22s</text>
-  <rect x="265" y="126" width="10" height="28" fill="#1a7f37" stroke="#fff"/>
-  <rect x="275" y="126" width="60" height="28" fill="#8250df" stroke="#fff"/>
-  <text x="305" y="144" text-anchor="middle" fill="#fff" font-size="9.5">Host Trace 35s</text>
-  <text x="343" y="144" font-weight="bold" fill="#1f2328">89.8 s (-79%)</text>
-
-  <!-- Row 4: PhaseMorph (full system) -->
-  <text x="205" y="182" text-anchor="end" font-weight="bold">PhaseMorph (Full)</text>
-  <text x="205" y="195" text-anchor="end" font-size="10" fill="#59636e">+ pre-spawn + executable bank</text>
-  <rect x="215" y="168" width="9" height="28" fill="#8c959f" stroke="#fff"/>
-  <rect x="224" y="168" width="10" height="28" fill="#1a7f37" stroke="#fff"/>
-  <rect x="234" y="168" width="10" height="28" fill="#2da44e" stroke="#fff"/>
-  <text x="252" y="186" font-weight="bold" fill="#1a7f37">21.1–27.5 s full / 18.8 s partial (-95%)</text>
-
-  <!-- Row 5: PhaseMorph-PreRead (cold first switch) -->
-  <text x="205" y="224" text-anchor="end" font-weight="bold">PhaseMorph-PreRead</text>
-  <text x="205" y="237" text-anchor="end" font-size="10" fill="#59636e">Cold 1st switch, CPU pre-read child</text>
-  <rect x="215" y="210" width="9" height="28" fill="#8c959f" stroke="#fff"/>
-  <rect x="224" y="210" width="114" height="28" fill="#e16f24" stroke="#fff"/>
-  <text x="281" y="228" text-anchor="middle" fill="#fff" font-size="9.5">Wait 80s + 5s restore</text>
-  <rect x="338" y="210" width="56" height="28" fill="#8250df" stroke="#fff"/>
-  <text x="366" y="228" text-anchor="middle" fill="#fff" font-size="9.5">38s</text>
-  <text x="402" y="228" font-weight="bold" fill="#1f2328">134.1 s (vs 222.6 s no pre-read, -40%)</text>
-
-  <!-- Row 6: PhaseMorph-Submesh (unified runtime prototype) -->
-  <text x="205" y="266" text-anchor="end" font-weight="bold">PhaseMorph-Submesh</text>
-  <text x="205" y="279" text-anchor="end" font-size="10" fill="#59636e">In-HBM submesh slice over ICI</text>
-  <rect x="215" y="252" width="3" height="28" fill="#1a7f37"/>
-  <text x="225" y="270" font-weight="bold" fill="#1a7f37">0.012 s (12.0 ms fwd) / 0.048 s (48.0 ms rev) — Hardware Lower Bound</text>
-
-  <!-- Legend -->
-  <rect x="215" y="292" width="10" height="10" fill="#8c959f"/><text x="229" y="301" font-size="10">Control/Handoff</text>
-  <rect x="315" y="292" width="10" height="10" fill="#0969da"/><text x="329" y="301" font-size="10">Process Spawn (22s)</text>
-  <rect x="435" y="292" width="10" height="10" fill="#cf222e"/><text x="449" y="301" font-size="10">Host Weight Convert</text>
-  <rect x="560" y="292" width="10" height="10" fill="#d4a72c"/><text x="574" y="301" font-size="10">Sub-1s Compiles</text>
-  <rect x="665" y="292" width="10" height="10" fill="#8250df"/><text x="679" y="301" font-size="10">Host Trace/Lower</text>
-  <rect x="775" y="292" width="10" height="10" fill="#1a7f37"/><text x="789" y="301" font-size="10">Fast Path</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 326" font-family="Liberation Sans, Arial, Helvetica, sans-serif" font-size="11" fill="#222">
+<defs><pattern id="wr" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="#fff"/><line x1="0" y1="0" x2="0" y2="4" stroke="#444" stroke-width="1.4"/></pattern></defs>
+<line x1="172" y1="22" x2="172" y2="258" stroke="#e2e2e2" stroke-width="1"/>
+<text x="172" y="18" text-anchor="middle" fill="#666">0 s</text>
+<line x1="262.5" y1="22" x2="262.5" y2="258" stroke="#e2e2e2" stroke-width="1"/>
+<text x="262.5" y="18" text-anchor="middle" fill="#666">100 s</text>
+<line x1="353" y1="22" x2="353" y2="258" stroke="#e2e2e2" stroke-width="1"/>
+<text x="353" y="18" text-anchor="middle" fill="#666">200 s</text>
+<line x1="443.4" y1="22" x2="443.4" y2="258" stroke="#e2e2e2" stroke-width="1"/>
+<text x="443.4" y="18" text-anchor="middle" fill="#666">300 s</text>
+<line x1="533.9" y1="22" x2="533.9" y2="258" stroke="#e2e2e2" stroke-width="1"/>
+<text x="533.9" y="18" text-anchor="middle" fill="#666">400 s</text>
+<text x="164" y="34" text-anchor="end" font-size="11.5" font-weight="bold">Vanilla vLLM redeploy</text>
+<text x="164" y="47" text-anchor="end" fill="#666">rep. run; median of 6 = 419.0 s</text>
+<rect x="172" y="26" width="23" height="18" fill="#8c8c8c" stroke="#fff" stroke-width="0.6"/>
+<rect x="195" y="26" width="66.2" height="18" fill="#e4e4e4" stroke="#fff" stroke-width="0.6"/>
+<text x="228.1" y="39" text-anchor="middle">73.2</text>
+<rect x="261.2" y="26" width="214.6" height="18" fill="#CC6677" stroke="#fff" stroke-width="0.6"/>
+<text x="368.5" y="39" text-anchor="middle" fill="#fff">237.2</text>
+<rect x="475.8" y="26" width="56.3" height="18" fill="#AA4499" stroke="#fff" stroke-width="0.6"/>
+<text x="504" y="39" text-anchor="middle" fill="#fff">62.2</text>
+<rect x="532.1" y="26" width="14.1" height="18" fill="#5f5f5f" stroke="#fff" stroke-width="0.6"/>
+<rect x="546.2" y="26" width="5.1" height="18" fill="url(#wr)" stroke="#444" stroke-width="0.5"/>
+<text x="556.3" y="39" font-weight="bold">419.2 s</text>
+<text x="164" y="64" text-anchor="end" font-size="11.5" font-weight="bold">PhaseMorph-Snap</text>
+<text x="164" y="77" text-anchor="end" fill="#666">snapshot + FastGraph</text>
+<rect x="172" y="56" width="3.4" height="18" fill="#8c8c8c" stroke="#fff" stroke-width="0.6"/>
+<rect x="175.4" y="56" width="10.1" height="18" fill="#c8c8c8" stroke="#fff" stroke-width="0.6"/>
+<rect x="185.4" y="56" width="19.5" height="18" fill="#88CCEE" stroke="#fff" stroke-width="0.6"/>
+<rect x="204.9" y="56" width="3.2" height="18" fill="#DDCC77" stroke="#fff" stroke-width="0.6"/>
+<rect x="208.2" y="56" width="4.5" height="18" fill="#CC6677" stroke="#fff" stroke-width="0.6"/>
+<rect x="212.7" y="56" width="23.5" height="18" fill="#999933" stroke="#fff" stroke-width="0.6"/>
+<rect x="236.1" y="56" width="49.4" height="18" fill="#AA4499" stroke="#fff" stroke-width="0.6"/>
+<text x="260.8" y="69" text-anchor="middle" fill="#fff">54.6</text>
+<rect x="285.5" y="56" width="4.6" height="18" fill="#5f5f5f" stroke="#fff" stroke-width="0.6"/>
+<rect x="290.2" y="56" width="1.5" height="18" fill="url(#wr)" stroke="#444" stroke-width="0.5"/>
+<text x="296.6" y="69" font-weight="bold">132.2 s</text>
+<text x="164" y="94" text-anchor="end" font-size="11.5" font-weight="bold">PhaseMorph-Cache</text>
+<text x="164" y="107" text-anchor="end" fill="#666">+ zero-threshold cache</text>
+<rect x="172" y="86" width="3.2" height="18" fill="#8c8c8c" stroke="#fff" stroke-width="0.6"/>
+<rect x="175.2" y="86" width="11" height="18" fill="#c8c8c8" stroke="#fff" stroke-width="0.6"/>
+<rect x="186.2" y="86" width="19.5" height="18" fill="#88CCEE" stroke="#fff" stroke-width="0.6"/>
+<rect x="205.7" y="86" width="3.3" height="18" fill="#DDCC77" stroke="#fff" stroke-width="0.6"/>
+<rect x="209" y="86" width="4.4" height="18" fill="#CC6677" stroke="#fff" stroke-width="0.6"/>
+<rect x="213.3" y="86" width="2.4" height="18" fill="#999933" stroke="#fff" stroke-width="0.6"/>
+<rect x="215.7" y="86" width="31.8" height="18" fill="#AA4499" stroke="#fff" stroke-width="0.6"/>
+<text x="231.6" y="99" text-anchor="middle" fill="#fff">35.1</text>
+<rect x="247.5" y="86" width="3.4" height="18" fill="#5f5f5f" stroke="#fff" stroke-width="0.6"/>
+<rect x="250.9" y="86" width="2.4" height="18" fill="url(#wr)" stroke="#444" stroke-width="0.5"/>
+<text x="258.3" y="99" font-weight="bold">89.8 s</text>
+<text x="164" y="124" text-anchor="end" font-size="11.5" font-weight="bold">PhaseMorph, full S→H</text>
+<text x="164" y="137" text-anchor="end" fill="#666">+ pre-spawn + exec. bank</text>
+<rect x="172" y="116" width="1.8" height="18" fill="#8c8c8c" stroke="#fff" stroke-width="0.6"/>
+<rect x="173.8" y="116" width="0.8" height="18" fill="#c8c8c8" stroke="#fff" stroke-width="0.6"/>
+<rect x="174.6" y="116" width="3.5" height="18" fill="#DDCC77" stroke="#fff" stroke-width="0.6"/>
+<rect x="178.1" y="116" width="4.4" height="18" fill="#CC6677" stroke="#fff" stroke-width="0.6"/>
+<rect x="182.6" y="116" width="2.3" height="18" fill="#999933" stroke="#fff" stroke-width="0.6"/>
+<rect x="184.9" y="116" width="4.5" height="18" fill="#AA4499" stroke="#fff" stroke-width="0.6"/>
+<rect x="189.4" y="116" width="4.3" height="18" fill="#5f5f5f" stroke="#fff" stroke-width="0.6"/>
+<rect x="193.7" y="116" width="3.2" height="18" fill="url(#wr)" stroke="#444" stroke-width="0.5"/>
+<text x="201.9" y="129" font-weight="bold">27.5 s (21.1 s in run B)</text>
+<text x="164" y="154" text-anchor="end" font-size="11.5" font-weight="bold">PhaseMorph, partial S→M</text>
+<text x="164" y="167" text-anchor="end" fill="#666">C<tspan dy="2.6" font-size="8.8">eff</tspan><tspan dy="-2.6">; two TP8 keep serving</tspan></text>
+<rect x="172" y="146" width="1.7" height="18" fill="#8c8c8c" stroke="#fff" stroke-width="0.6"/>
+<rect x="173.7" y="146" width="0.8" height="18" fill="#c8c8c8" stroke="#fff" stroke-width="0.6"/>
+<rect x="174.4" y="146" width="3.4" height="18" fill="#DDCC77" stroke="#fff" stroke-width="0.6"/>
+<rect x="177.8" y="146" width="4.5" height="18" fill="#CC6677" stroke="#fff" stroke-width="0.6"/>
+<rect x="182.3" y="146" width="2.3" height="18" fill="#999933" stroke="#fff" stroke-width="0.6"/>
+<rect x="184.6" y="146" width="4.6" height="18" fill="#AA4499" stroke="#fff" stroke-width="0.6"/>
+<rect x="189.2" y="146" width="3.3" height="18" fill="#5f5f5f" stroke="#fff" stroke-width="0.6"/>
+<line x1="189" y1="143" x2="189" y2="167" stroke="#000" stroke-width="1.6"/>
+<text x="197.5" y="159" font-weight="bold">C<tspan dy="2.6" font-size="8.8">eff</tspan><tspan dy="-2.6"> 18.8 s</tspan></text>
+<text x="164" y="184" text-anchor="end" font-size="11.5" font-weight="bold">Cold first switch</text>
+<text x="164" y="197" text-anchor="end" fill="#666">inline snapshot, no pre-read</text>
+<rect x="172" y="176" width="2.6" height="18" fill="#8c8c8c" stroke="#fff" stroke-width="0.6"/>
+<rect x="174.6" y="176" width="3.5" height="18" fill="#DDCC77" stroke="#fff" stroke-width="0.6"/>
+<rect x="178.2" y="176" width="143.8" height="18" fill="#CC6677" stroke="#fff" stroke-width="0.6"/>
+<text x="250.1" y="189" text-anchor="middle" fill="#fff">158.9</text>
+<rect x="322" y="176" width="6.8" height="18" fill="#882255" stroke="#fff" stroke-width="0.6"/>
+<rect x="328.8" y="176" width="2.4" height="18" fill="#999933" stroke="#fff" stroke-width="0.6"/>
+<rect x="331.2" y="176" width="32.4" height="18" fill="#AA4499" stroke="#fff" stroke-width="0.6"/>
+<text x="347.4" y="189" text-anchor="middle" fill="#fff">35.8</text>
+<rect x="363.5" y="176" width="2" height="18" fill="#882255" stroke="#fff" stroke-width="0.6"/>
+<rect x="365.6" y="176" width="5" height="18" fill="#5f5f5f" stroke="#fff" stroke-width="0.6"/>
+<rect x="370.6" y="176" width="2.9" height="18" fill="url(#wr)" stroke="#444" stroke-width="0.5"/>
+<text x="378.4" y="189" font-weight="bold">222.6 s</text>
+<text x="164" y="214" text-anchor="end" font-size="11.5" font-weight="bold">PhaseMorph-PreRead</text>
+<text x="164" y="227" text-anchor="end" fill="#666">cold first switch</text>
+<rect x="172" y="206" width="2.5" height="18" fill="#8c8c8c" stroke="#fff" stroke-width="0.6"/>
+<rect x="174.5" y="206" width="3.7" height="18" fill="#DDCC77" stroke="#fff" stroke-width="0.6"/>
+<rect x="178.2" y="206" width="72" height="18" fill="#ebbfc7" stroke="#fff" stroke-width="0.6"/>
+<text x="214.2" y="219" text-anchor="middle">79.6</text>
+<rect x="250.2" y="206" width="5.2" height="18" fill="#CC6677" stroke="#fff" stroke-width="0.6"/>
+<rect x="255.4" y="206" width="2.3" height="18" fill="#999933" stroke="#fff" stroke-width="0.6"/>
+<rect x="257.7" y="206" width="31.9" height="18" fill="#AA4499" stroke="#fff" stroke-width="0.6"/>
+<text x="273.7" y="219" text-anchor="middle" fill="#fff">35.3</text>
+<rect x="289.6" y="206" width="2.1" height="18" fill="#882255" stroke="#fff" stroke-width="0.6"/>
+<rect x="291.7" y="206" width="4.4" height="18" fill="#5f5f5f" stroke="#fff" stroke-width="0.6"/>
+<line x1="293.3" y1="203" x2="293.3" y2="227" stroke="#000" stroke-width="1.6"/>
+<text x="301" y="219" font-weight="bold">134.1 s</text>
+<text x="164" y="244" text-anchor="end" font-size="11.5" font-weight="bold">PhaseMorph-Submesh</text>
+<text x="164" y="257" text-anchor="end" fill="#666">synthetic model, 4×4 runtime</text>
+<rect x="172" y="236" width="1.5" height="18" fill="#000"/>
+<text x="178" y="249">12.0 ms (2×TP8 → TP16) / 48.0 ms back; 1.61 GB/chip weights, no vLLM engine</text>
+<rect x="8" y="273" width="10" height="10" fill="#8c8c8c" stroke="#555" stroke-width="0.5"/>
+<text x="22" y="282">drain + release</text>
+<rect x="166" y="273" width="10" height="10" fill="#c8c8c8" stroke="#555" stroke-width="0.5"/>
+<text x="180" y="282">release gate + VFIO</text>
+<rect x="324" y="273" width="10" height="10" fill="#88CCEE" stroke="#555" stroke-width="0.5"/>
+<text x="338" y="282">spawn + imports</text>
+<rect x="482" y="273" width="10" height="10" fill="#DDCC77" stroke="#555" stroke-width="0.5"/>
+<text x="496" y="282">init_device</text>
+<rect x="8" y="288" width="10" height="10" fill="#e4e4e4" stroke="#555" stroke-width="0.5"/>
+<text x="22" y="297">other deploy work</text>
+<rect x="166" y="288" width="10" height="10" fill="#CC6677" stroke="#555" stroke-width="0.5"/>
+<text x="180" y="297">load_model</text>
+<rect x="324" y="288" width="10" height="10" fill="#ebbfc7" stroke="#555" stroke-width="0.5"/>
+<text x="338" y="297">pre-read wait</text>
+<rect x="482" y="288" width="10" height="10" fill="#999933" stroke="#555" stroke-width="0.5"/>
+<text x="496" y="297">KV cache init</text>
+<rect x="8" y="303" width="10" height="10" fill="#AA4499" stroke="#555" stroke-width="0.5"/>
+<text x="22" y="312">compile / warm-up</text>
+<rect x="166" y="303" width="10" height="10" fill="#882255" stroke="#555" stroke-width="0.5"/>
+<text x="180" y="312">snapshot + bank write</text>
+<rect x="324" y="303" width="10" height="10" fill="#5f5f5f" stroke="#555" stroke-width="0.5"/>
+<text x="338" y="312">endpoint + gateway</text>
+<rect x="482" y="303" width="10" height="10" fill="url(#wr)" stroke="#555" stroke-width="0.5"/>
+<text x="496" y="312">ramp; tick = C if ramp &lt; 0</text>
 </svg>
 ```),
-  caption: [[Reconfiguration Latency Reduction] Critical-path reconfiguration cost $C$ of an `S → H` full-slice switch (unless noted) as PhaseMorph's mechanisms are added. Removing software-stack overheads compresses switching from 419.0 s (vanilla vLLM redeploy) to 21.1–27.5 s (18.8 s partial), the cold first switch from 222.6 s to 134.1 s, and in-runtime submesh switching to 12.0 ms.],
+  caption: [[Reconfiguration Latency Reduction] Critical-path reconfiguration cost $C$ as PhaseMorph's mechanisms are added, drawn to scale from the segments of @tab-segments. Rows 2–5 are warm switches (full `S → H` unless noted; for the partial `S → M` switch the tick marks $C_"eff"$); rows 6–7 are cold first switches into `H`. The vanilla bar is one representative redeploy (`M → S`, 419.2 s; the median of six is 419.0 s), whose "other deploy work" covers worker start-up, device and KV-cache initialization, and registration. Hatched: ramp deficit; a black tick marks $C$ when the ramp is negative. The last row is not comparable to the others: PhaseMorph-Submesh switches a synthetic model with 1.61 GB/chip of weights inside one 16-chip ($4 times 4$) runtime, in 12.0 ms.],
 ) <fig-waterfall>
 
 We implement PhaseMorph across vLLM, `tpu-inference` @tpuinference, Ray @moritz2018ray, and the `llm-d` @llmd router, and evaluate it on a 32-chip TPU v5e slice. PhaseMorph reduces warm full-slice reconfiguration by 95%, from 419.0 s to 21.1–27.5 s, and partial reconfiguration to 18.8 s, without measurable slowdown of the source layout; the background pre-read cuts the cold first switch by 40% to 134.1 s. A unified-runtime prototype bounds the in-HBM hardware cost of a layout change at 12.0 ms. With these costs, phase-aware switching beats the best static layout on 82%–88% of a two-phase workload space. In summary, we make the following contributions:
@@ -316,6 +368,61 @@ We implement PhaseMorph across vLLM, `tpu-inference` @tpuinference, Ray @moritz2
 == Parallelism Trade-Offs on Cloud TPU Slices <sec-tradeoffs>
 
 Our testbed is an 8-host, 32-chip Cloud TPU v5e slice @googlev5e arranged as a $4 times 8$ 2D torus with wrap-around inter-chip interconnect (ICI) links, the same torus-of-chips organization introduced with earlier TPU generations @jouppi2023tpuv4. Each host drives four chips, each with 16 GB of HBM2e at 819 GB/s, 197 TFLOPS of BF16 peak compute across four $128 times 128$ matrix units (MXUs), and 1.00 MB of on-chip scalar memory (SMEM) per TensorCore. We serve Gemma-4 31B @gemma2024 in native BF16: 48 layers, hidden size 4,096, FFN intermediate size 21,504, 32 query heads and 16 KV heads (grouped-query attention with ratio $2:1$), head dimension 128, and a 61.4 GB parameter footprint.
+
+@fig-layouts shows how the three layouts studied here partition the slice.
+
+#figure(
+  svg-fig(```svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 238" font-family="Liberation Sans, Arial, Helvetica, sans-serif" font-size="11" fill="#222">
+<text x="63.5" y="14" text-anchor="middle" font-size="13" font-weight="bold" fill="#0072B2">S</text>
+<text x="63.5" y="28" text-anchor="middle">4×TP8</text>
+<path d="M23.5 41.5h38v38h-38zM65.5 41.5h38v38h-38zM23.5 83.5h38v38h-38zM65.5 83.5h38v38h-38zM23.5 125.5h38v38h-38zM65.5 125.5h38v38h-38zM23.5 167.5h38v38h-38zM65.5 167.5h38v38h-38z" fill="#c6dcef" stroke="#9a9a9a" stroke-width="0.6"/>
+<path d="M26 44h15v15h-15zM44 44h15v15h-15zM68 44h15v15h-15zM86 44h15v15h-15zM26 62h15v15h-15zM44 62h15v15h-15zM68 62h15v15h-15zM86 62h15v15h-15zM26 86h15v15h-15zM44 86h15v15h-15zM68 86h15v15h-15zM86 86h15v15h-15zM26 104h15v15h-15zM44 104h15v15h-15zM68 104h15v15h-15zM86 104h15v15h-15zM26 128h15v15h-15zM44 128h15v15h-15zM68 128h15v15h-15zM86 128h15v15h-15zM26 146h15v15h-15zM44 146h15v15h-15zM68 146h15v15h-15zM86 146h15v15h-15zM26 170h15v15h-15zM44 170h15v15h-15zM68 170h15v15h-15zM86 170h15v15h-15zM26 188h15v15h-15zM44 188h15v15h-15zM68 188h15v15h-15zM86 188h15v15h-15z" fill="#fff" stroke="#777" stroke-width="0.6"/>
+<rect x="21.4" y="39.4" width="42.2" height="84.2" fill="none" stroke="#0072B2" stroke-width="1.6" rx="4"/>
+<rect x="29.3" y="73.5" width="26.4" height="15" fill="#fff" stroke="#0072B2" stroke-width="1" rx="3"/>
+<text x="42.5" y="85.5" text-anchor="middle" font-weight="bold" fill="#0072B2">TP8</text>
+<rect x="63.4" y="39.4" width="42.2" height="84.2" fill="none" stroke="#0072B2" stroke-width="1.6" rx="4"/>
+<rect x="71.3" y="73.5" width="26.4" height="15" fill="#fff" stroke="#0072B2" stroke-width="1" rx="3"/>
+<text x="84.5" y="85.5" text-anchor="middle" font-weight="bold" fill="#0072B2">TP8</text>
+<rect x="21.4" y="123.4" width="42.2" height="84.2" fill="none" stroke="#0072B2" stroke-width="1.6" rx="4"/>
+<rect x="29.3" y="157.5" width="26.4" height="15" fill="#fff" stroke="#0072B2" stroke-width="1" rx="3"/>
+<text x="42.5" y="169.5" text-anchor="middle" font-weight="bold" fill="#0072B2">TP8</text>
+<rect x="63.4" y="123.4" width="42.2" height="84.2" fill="none" stroke="#0072B2" stroke-width="1.6" rx="4"/>
+<rect x="71.3" y="157.5" width="26.4" height="15" fill="#fff" stroke="#0072B2" stroke-width="1" rx="3"/>
+<text x="84.5" y="169.5" text-anchor="middle" font-weight="bold" fill="#0072B2">TP8</text>
+<text x="167.5" y="14" text-anchor="middle" font-size="13" font-weight="bold" fill="#D55E00">H</text>
+<text x="167.5" y="28" text-anchor="middle">2×TP16</text>
+<path d="M127.5 41.5h38v38h-38zM169.5 41.5h38v38h-38zM127.5 83.5h38v38h-38zM169.5 83.5h38v38h-38zM127.5 125.5h38v38h-38zM169.5 125.5h38v38h-38zM127.5 167.5h38v38h-38zM169.5 167.5h38v38h-38z" fill="#f6d3bd" stroke="#9a9a9a" stroke-width="0.6"/>
+<path d="M130 44h15v15h-15zM148 44h15v15h-15zM172 44h15v15h-15zM190 44h15v15h-15zM130 62h15v15h-15zM148 62h15v15h-15zM172 62h15v15h-15zM190 62h15v15h-15zM130 86h15v15h-15zM148 86h15v15h-15zM172 86h15v15h-15zM190 86h15v15h-15zM130 104h15v15h-15zM148 104h15v15h-15zM172 104h15v15h-15zM190 104h15v15h-15zM130 128h15v15h-15zM148 128h15v15h-15zM172 128h15v15h-15zM190 128h15v15h-15zM130 146h15v15h-15zM148 146h15v15h-15zM172 146h15v15h-15zM190 146h15v15h-15zM130 170h15v15h-15zM148 170h15v15h-15zM172 170h15v15h-15zM190 170h15v15h-15zM130 188h15v15h-15zM148 188h15v15h-15zM172 188h15v15h-15zM190 188h15v15h-15z" fill="#fff" stroke="#777" stroke-width="0.6"/>
+<rect x="125.4" y="39.4" width="84.2" height="84.2" fill="none" stroke="#D55E00" stroke-width="1.6" rx="4"/>
+<rect x="150.9" y="73.5" width="33.2" height="15" fill="#fff" stroke="#D55E00" stroke-width="1" rx="3"/>
+<text x="167.5" y="85.5" text-anchor="middle" font-weight="bold" fill="#D55E00">TP16</text>
+<rect x="125.4" y="123.4" width="84.2" height="84.2" fill="none" stroke="#D55E00" stroke-width="1.6" rx="4"/>
+<rect x="150.9" y="157.5" width="33.2" height="15" fill="#fff" stroke="#D55E00" stroke-width="1" rx="3"/>
+<text x="167.5" y="169.5" text-anchor="middle" font-weight="bold" fill="#D55E00">TP16</text>
+<text x="271.5" y="14" text-anchor="middle" font-size="13" font-weight="bold" fill="#009E73">M</text>
+<text x="271.5" y="28" text-anchor="middle">TP16 + 2×TP8</text>
+<path d="M231.5 41.5h38v38h-38zM273.5 41.5h38v38h-38zM231.5 83.5h38v38h-38zM273.5 83.5h38v38h-38zM231.5 125.5h38v38h-38zM273.5 125.5h38v38h-38zM231.5 167.5h38v38h-38zM273.5 167.5h38v38h-38z" fill="#c2e6d9" stroke="#9a9a9a" stroke-width="0.6"/>
+<path d="M234 44h15v15h-15zM252 44h15v15h-15zM276 44h15v15h-15zM294 44h15v15h-15zM234 62h15v15h-15zM252 62h15v15h-15zM276 62h15v15h-15zM294 62h15v15h-15zM234 86h15v15h-15zM252 86h15v15h-15zM276 86h15v15h-15zM294 86h15v15h-15zM234 104h15v15h-15zM252 104h15v15h-15zM276 104h15v15h-15zM294 104h15v15h-15zM234 128h15v15h-15zM252 128h15v15h-15zM276 128h15v15h-15zM294 128h15v15h-15zM234 146h15v15h-15zM252 146h15v15h-15zM276 146h15v15h-15zM294 146h15v15h-15zM234 170h15v15h-15zM252 170h15v15h-15zM276 170h15v15h-15zM294 170h15v15h-15zM234 188h15v15h-15zM252 188h15v15h-15zM276 188h15v15h-15zM294 188h15v15h-15z" fill="#fff" stroke="#777" stroke-width="0.6"/>
+<rect x="229.4" y="39.4" width="42.2" height="84.2" fill="none" stroke="#009E73" stroke-width="1.6" rx="4"/>
+<rect x="237.3" y="73.5" width="26.4" height="15" fill="#fff" stroke="#009E73" stroke-width="1" rx="3"/>
+<text x="250.5" y="85.5" text-anchor="middle" font-weight="bold" fill="#009E73">TP8</text>
+<rect x="271.4" y="39.4" width="42.2" height="84.2" fill="none" stroke="#009E73" stroke-width="1.6" rx="4"/>
+<rect x="279.3" y="73.5" width="26.4" height="15" fill="#fff" stroke="#009E73" stroke-width="1" rx="3"/>
+<text x="292.5" y="85.5" text-anchor="middle" font-weight="bold" fill="#009E73">TP8</text>
+<rect x="229.4" y="123.4" width="84.2" height="84.2" fill="none" stroke="#009E73" stroke-width="1.6" rx="4"/>
+<rect x="254.9" y="157.5" width="33.2" height="15" fill="#fff" stroke="#009E73" stroke-width="1" rx="3"/>
+<text x="271.5" y="169.5" text-anchor="middle" font-weight="bold" fill="#009E73">TP16</text>
+<text x="12" y="81.5" text-anchor="middle" fill="#666" transform="rotate(-90 12 81.5)">block A</text>
+<text x="12" y="165.5" text-anchor="middle" fill="#666" transform="rotate(-90 12 165.5)">block B</text>
+<rect x="26" y="222" width="14" height="10" fill="#c6dcef" stroke="#9a9a9a" stroke-width="0.6"/>
+<text x="44" y="231">host (2×2 chips)</text>
+<rect x="146" y="222" width="10" height="10" fill="#fff" stroke="#777" stroke-width="0.6"/>
+<text x="160" y="231">v5e chip, 16 GB HBM</text>
+</svg>
+```),
+  caption: [The three serving layouts on the $4 times 8$ v5e slice (eight hosts of $2 times 2$ chips; ICI links omitted). Instances follow host boundaries: each `TP8` spans two hosts and each `TP16` four. `M` keeps block A (top four hosts) as $2 times$`TP8` and serves block B as one `TP16`.],
+) <fig-layouts>
 
 _Compute favors small meshes._ Raising the TP degree across hosts lowers per-chip utilization through three mechanisms. Each Transformer layer issues two AllReduce collectives (after the attention output projection and after the FFN down projection), or 96 synchronizations per step. A ring of $N$ chips needs $2(N-1)$ routing steps, so moving from `TP=4` (one host, 6 steps) to `TP=8` (two hosts, 14 steps) and `TP=16` (four hosts, 30 steps) introduces an inter-host collective floor of $approx 20" ms"$ at small sequence buckets ($S lt.eq 1024$). TP also shortens the contraction dimension of the reduce-side projections: the MXUs need contraction depths $K gt.double 128$ to amortize systolic pipeline fill and drain, but the per-chip depth $K = d_"model" \/ "TP"$ falls from 512 at `TP=8` to 256 at `TP=16`, only two $128 times 128$ tiles. Finally, the FFN intermediate size shards cleanly at `TP=8` ($21504 \/ 8 = 2688 = 21 times 128$) but not at `TP=16` ($1344 = 10.5 times 128$), so XLA zero-pads every FFN weight matrix to 1,408 columns and wastes 4.5% of FFN FLOPs. @tab-topology quantifies the net effect: on 16 chips, four `TP4` instances deliver $2.22 times$ the aggregate throughput of one `TP16` instance.
 
@@ -332,6 +439,48 @@ _Compute favors small meshes._ Raising the TP degree across hosts lowers per-chi
 ) <tab-topology>
 
 _Memory favors large meshes._ Model weights are fixed across a TP group, so a larger group leaves disproportionately more HBM for the KV cache. On `TP=8` (128 GB of HBM), weights plus XLA scratch space leave 52,864 usable KV tokens (826 blocks of 64 tokens). On `TP=16` (256 GB), per-chip weight shards halve from 7.68 GB to 3.84 GB and usable capacity grows to 145,216 tokens, $2.75 times$ per instance or $1.37 times$ per chip. Decode bandwidth follows the same trend. In a 60-cell sweep of the Pallas `ragged_paged_attention` kernel, a TPU descendant of PagedAttention @kwon2023vllm, decode step latency stays flat at 15–18 ms for batch sizes $B lt.eq 32$ (memory-bandwidth utilization below 11%) and hits the HBM bandwidth wall at $B gt.eq 64$. At $B in {1, 2}$, `TP=16` is 2%–5% slower than `TP=8` because the 16 KV heads shard to a single head per chip (512 B per token per chip), which underuses the HBM burst length; for contexts $L gt.eq 4096$ or $B gt.eq 128$, however, `TP=16` halves per-chip KV traffic and is $1.19"–"1.22 times$ faster.
+
+@fig-kv compares these capacities with the contexts of the mid- and long-context workloads.
+
+#figure(
+  svg-fig(```svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" font-family="Liberation Sans, Arial, Helvetica, sans-serif" font-size="11" fill="#222">
+<rect x="78" y="30" width="45.5" height="120" fill="#ececec"/>
+<rect x="141" y="30" width="128.1" height="120" fill="#ececec"/>
+<line x1="87.1" y1="30" x2="87.1" y2="150" stroke="#999" stroke-width="1" stroke-dasharray="2,2"/>
+<line x1="159.8" y1="30" x2="159.8" y2="150" stroke="#999" stroke-width="1" stroke-dasharray="2,2"/>
+<text x="100.8" y="24" text-anchor="middle" font-weight="bold">W7 contexts</text>
+<text x="205" y="24" text-anchor="middle" font-weight="bold">W6 contexts</text>
+<rect x="50" y="46" width="90.2" height="20" fill="#0072B2"/>
+<text x="44" y="60" text-anchor="end" font-size="11.5" font-weight="bold">TP8</text>
+<text x="135.2" y="60" text-anchor="end" font-weight="bold" fill="#fff">52,864</text>
+<text x="52" y="81">W7: 2 resident · W6: none fits</text>
+<rect x="50" y="100" width="247.8" height="20" fill="#D55E00"/>
+<text x="44" y="114" text-anchor="end" font-size="11.5" font-weight="bold">TP16</text>
+<text x="292.8" y="114" text-anchor="end" font-weight="bold" fill="#fff">145,216</text>
+<text x="52" y="135">W7: 6 resident · W6: 2 resident</text>
+<line x1="50" y1="150" x2="306" y2="150" stroke="#222" stroke-width="1"/>
+<line x1="50" y1="150" x2="50" y2="153" stroke="#222" stroke-width="1"/>
+<text x="50" y="165" text-anchor="middle">0k</text>
+<line x1="92.7" y1="150" x2="92.7" y2="153" stroke="#222" stroke-width="1"/>
+<text x="92.7" y="165" text-anchor="middle">25k</text>
+<line x1="135.3" y1="150" x2="135.3" y2="153" stroke="#222" stroke-width="1"/>
+<text x="135.3" y="165" text-anchor="middle">50k</text>
+<line x1="178" y1="150" x2="178" y2="153" stroke="#222" stroke-width="1"/>
+<text x="178" y="165" text-anchor="middle">75k</text>
+<line x1="220.7" y1="150" x2="220.7" y2="153" stroke="#222" stroke-width="1"/>
+<text x="220.7" y="165" text-anchor="middle">100k</text>
+<line x1="263.3" y1="150" x2="263.3" y2="153" stroke="#222" stroke-width="1"/>
+<text x="263.3" y="165" text-anchor="middle">125k</text>
+<line x1="306" y1="150" x2="306" y2="153" stroke="#222" stroke-width="1"/>
+<text x="306" y="165" text-anchor="middle">150k</text>
+<text x="178" y="180" text-anchor="middle" font-size="11.5" font-weight="bold">Usable KV tokens per instance (BF16)</text>
+<text x="90.1" y="42" fill="#666">p50</text>
+<text x="162.8" y="42" fill="#666">p50</text>
+</svg>
+```),
+  caption: [Usable BF16 KV-cache capacity per instance versus workload contexts (gray: context range; dashed: median). A `TP8` instance holds 52,864 tokens, enough for two resident `W7` requests but for no `W6` request; a `TP16` instance holds 145,216 tokens ($2.75 times$), enough for six `W7` or two `W6` requests.],
+) <fig-kv>
 
 _The SMEM page-table ceiling._ The attention kernel prefetches the entire `int32` page table into the chip's 1.00 MB SMEM:
 $ "Bytes"_"SMEM" (B, L_"max") = B times ceil(L_"max" / P) times 4 "bytes". $
@@ -352,6 +501,111 @@ _Neither extreme suffices._ @tab-workloads shows the resulting regime inversion 
   ),
   caption: [Measured full-BF16 makespans of one workload manifest on the 32-chip TPU v5e slice. `S` dominates short- and medium-context workloads (`W0`, `W4`, `W5`), whereas `H` wins by 17.6% on mid-context `W7` (6 resident requests per `TP16` instance versus 2 per `TP8`) and is mandatory on long-context `W6`. For `M`, the column reports the sub-layout that serves the workload.],
 ) <tab-workloads>
+
+@fig-makespan plots the makespans of @tab-workloads with their repetitions.
+
+#figure(
+  svg-fig(```svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 276" font-family="Liberation Sans, Arial, Helvetica, sans-serif" font-size="11" fill="#222">
+<line x1="76" y1="30" x2="76" y2="239" stroke="#e2e2e2" stroke-width="1"/>
+<line x1="126.5" y1="30" x2="126.5" y2="239" stroke="#e2e2e2" stroke-width="1"/>
+<line x1="177" y1="30" x2="177" y2="239" stroke="#e2e2e2" stroke-width="1"/>
+<line x1="227.5" y1="30" x2="227.5" y2="239" stroke="#e2e2e2" stroke-width="1"/>
+<line x1="278" y1="30" x2="278" y2="239" stroke="#e2e2e2" stroke-width="1"/>
+<rect x="16" y="5" width="10" height="10" fill="#0072B2" stroke="#555" stroke-width="0.5"/>
+<text x="30" y="14">S (4×TP8)</text>
+<rect x="108" y="5" width="10" height="10" fill="#D55E00" stroke="#555" stroke-width="0.5"/>
+<text x="122" y="14">H (2×TP16)</text>
+<rect x="200" y="5" width="10" height="10" fill="#009E73" stroke="#555" stroke-width="0.5"/>
+<text x="214" y="14">M sub-layout</text>
+<rect x="76" y="34" width="48.2" height="10" fill="#0072B2"/>
+<line x1="123.8" y1="39" x2="124.5" y2="39" stroke="#000" stroke-width="1"/>
+<line x1="123.8" y1="36" x2="123.8" y2="42" stroke="#000" stroke-width="1"/>
+<line x1="124.5" y1="36" x2="124.5" y2="42" stroke="#000" stroke-width="1"/>
+<text x="127.5" y="43" font-weight="bold">190.8</text>
+<rect x="76" y="47" width="77.4" height="10" fill="#D55E00"/>
+<line x1="153.2" y1="52" x2="153.6" y2="52" stroke="#000" stroke-width="1"/>
+<line x1="153.2" y1="49" x2="153.2" y2="55" stroke="#000" stroke-width="1"/>
+<line x1="153.6" y1="49" x2="153.6" y2="55" stroke="#000" stroke-width="1"/>
+<text x="156.6" y="56">306.4 (16k)</text>
+<rect x="76" y="60" width="67.6" height="10" fill="#D55E00"/>
+<line x1="142.9" y1="65" x2="144.3" y2="65" stroke="#000" stroke-width="1"/>
+<line x1="142.9" y1="62" x2="142.9" y2="68" stroke="#000" stroke-width="1"/>
+<line x1="144.3" y1="62" x2="144.3" y2="68" stroke="#000" stroke-width="1"/>
+<text x="147.3" y="69">267.8 (131k)</text>
+<rect x="76" y="73" width="89.1" height="10" fill="#009E73"/>
+<line x1="164.3" y1="78" x2="165.9" y2="78" stroke="#000" stroke-width="1"/>
+<line x1="164.3" y1="75" x2="164.3" y2="81" stroke="#000" stroke-width="1"/>
+<line x1="165.9" y1="75" x2="165.9" y2="81" stroke="#000" stroke-width="1"/>
+<text x="168.9" y="82">352.7 (2×TP8)</text>
+<text x="70" y="58.5" text-anchor="end" font-size="11.5" font-weight="bold">W0</text>
+<text x="70" y="71.5" text-anchor="end" fill="#666">chat</text>
+<rect x="76" y="95" width="37.3" height="10" fill="#0072B2"/>
+<line x1="113.1" y1="100" x2="113.4" y2="100" stroke="#000" stroke-width="1"/>
+<line x1="113.1" y1="97" x2="113.1" y2="103" stroke="#000" stroke-width="1"/>
+<line x1="113.4" y1="97" x2="113.4" y2="103" stroke="#000" stroke-width="1"/>
+<text x="116.4" y="104" font-weight="bold">147.7</text>
+<rect x="76" y="108" width="47.3" height="10" fill="#D55E00"/>
+<line x1="122.7" y1="113" x2="124" y2="113" stroke="#000" stroke-width="1"/>
+<line x1="122.7" y1="110" x2="122.7" y2="116" stroke="#000" stroke-width="1"/>
+<line x1="124" y1="110" x2="124" y2="116" stroke="#000" stroke-width="1"/>
+<text x="127" y="117">187.4</text>
+<text x="70" y="106.5" text-anchor="end" font-size="11.5" font-weight="bold">W4</text>
+<text x="70" y="119.5" text-anchor="end" fill="#666">long + chat</text>
+<rect x="76" y="130" width="190.5" height="10" fill="#0072B2"/>
+<line x1="263.8" y1="135" x2="269.1" y2="135" stroke="#000" stroke-width="1"/>
+<line x1="263.8" y1="132" x2="263.8" y2="138" stroke="#000" stroke-width="1"/>
+<line x1="269.1" y1="132" x2="269.1" y2="138" stroke="#000" stroke-width="1"/>
+<text x="272.1" y="139" font-weight="bold">754.3</text>
+<rect x="76" y="143" width="195.5" height="10" fill="#D55E00"/>
+<line x1="271.1" y1="148" x2="272" y2="148" stroke="#000" stroke-width="1"/>
+<line x1="271.1" y1="145" x2="271.1" y2="151" stroke="#000" stroke-width="1"/>
+<line x1="272" y1="145" x2="272" y2="151" stroke="#000" stroke-width="1"/>
+<text x="275" y="152">774.4</text>
+<text x="70" y="141.5" text-anchor="end" font-size="11.5" font-weight="bold">W5</text>
+<text x="70" y="154.5" text-anchor="end" fill="#666">translation</text>
+<rect x="76" y="165" width="62.7" height="10" fill="#0072B2"/>
+<line x1="138.5" y1="170" x2="138.9" y2="170" stroke="#000" stroke-width="1"/>
+<line x1="138.5" y1="167" x2="138.5" y2="173" stroke="#000" stroke-width="1"/>
+<line x1="138.9" y1="167" x2="138.9" y2="173" stroke="#000" stroke-width="1"/>
+<text x="141.9" y="174">248.4</text>
+<rect x="76" y="178" width="51.7" height="10" fill="#D55E00"/>
+<line x1="127.4" y1="183" x2="128.1" y2="183" stroke="#000" stroke-width="1"/>
+<line x1="127.4" y1="180" x2="127.4" y2="186" stroke="#000" stroke-width="1"/>
+<line x1="128.1" y1="180" x2="128.1" y2="186" stroke="#000" stroke-width="1"/>
+<text x="131.1" y="187" font-weight="bold">204.8</text>
+<text x="70" y="176.5" text-anchor="end" font-size="11.5" font-weight="bold">W7</text>
+<text x="70" y="189.5" text-anchor="end" fill="#666">mid docs</text>
+<text x="80" y="209" font-style="italic" fill="#0072B2">infeasible: context &gt; TP8 KV pool</text>
+<rect x="76" y="213" width="52.1" height="10" fill="#D55E00"/>
+<line x1="127.7" y1="218" x2="128.5" y2="218" stroke="#000" stroke-width="1"/>
+<line x1="127.7" y1="215" x2="127.7" y2="221" stroke="#000" stroke-width="1"/>
+<line x1="128.5" y1="215" x2="128.5" y2="221" stroke="#000" stroke-width="1"/>
+<text x="131.5" y="222" font-weight="bold">206.2</text>
+<rect x="76" y="226" width="103.3" height="10" fill="#009E73"/>
+<line x1="178.1" y1="231" x2="180.5" y2="231" stroke="#000" stroke-width="1"/>
+<line x1="178.1" y1="228" x2="178.1" y2="234" stroke="#000" stroke-width="1"/>
+<line x1="180.5" y1="228" x2="180.5" y2="234" stroke="#000" stroke-width="1"/>
+<text x="183.5" y="235">409.2 (TP16)</text>
+<text x="70" y="218" text-anchor="end" font-size="11.5" font-weight="bold">W6</text>
+<text x="70" y="231" text-anchor="end" fill="#666">long docs</text>
+<line x1="76" y1="241" x2="278" y2="241" stroke="#222" stroke-width="1"/>
+<line x1="76" y1="30" x2="76" y2="241" stroke="#222" stroke-width="1"/>
+<line x1="76" y1="241" x2="76" y2="244" stroke="#222" stroke-width="1"/>
+<text x="76" y="255" text-anchor="middle">0</text>
+<line x1="126.5" y1="241" x2="126.5" y2="244" stroke="#222" stroke-width="1"/>
+<text x="126.5" y="255" text-anchor="middle">200</text>
+<line x1="177" y1="241" x2="177" y2="244" stroke="#222" stroke-width="1"/>
+<text x="177" y="255" text-anchor="middle">400</text>
+<line x1="227.5" y1="241" x2="227.5" y2="244" stroke="#222" stroke-width="1"/>
+<text x="227.5" y="255" text-anchor="middle">600</text>
+<line x1="278" y1="241" x2="278" y2="244" stroke="#222" stroke-width="1"/>
+<text x="278" y="255" text-anchor="middle">800</text>
+<text x="177" y="269" text-anchor="middle" font-size="11.5" font-weight="bold">Makespan of one manifest (s)</text>
+</svg>
+```),
+  caption: [Makespan of one manifest per layout (bars: mean of two repetitions; whiskers: both repetitions; bold: faster full-slice layout). `S` cannot run `W6`. The two `H` bars for `W0` use 16k and 131k context limits; `M` bars show the sub-layout that serves the workload ($2 times$`TP8` for `W0`, `TP16` for `W6`).],
+) <fig-makespan>
 
 == Limitations of Static Heterogeneity and Live Request Migration <sec-static>
 
@@ -389,6 +643,71 @@ _Environment initialization._ This model-agnostic part spawns Ray worker process
 
 _Worker initialization._ This part builds model- and layout-specific state: device initialization, weight loading, KV cache allocation, and compilation. Weight loading dominates the baseline at 237.0 s, or 67% of the 355 s engine initialization. Instrumenting the loader shows that disk iteration and file reads take 0.16 s and host-to-device DMA 2.76 s, whereas host-CPU tensor transposes, reshapes, and dtype conversions take 128.4 s, load-time JIT compilation of parameter shardings 75.3 s, and Flax `nnx.eval_shape` graph construction 14.6 s. Even once weight loading is fast, KV cache initialization takes 25.9 s and compilation and warm-up 54.6 s with a warm persistent XLA cache, whose hit rates are only 2.6% (48 of 1,848 programs) and 6.0% (264 of 4,416).
 
+@fig-load breaks down one worker's `load_model` call.
+
+#figure(
+  svg-fig(```svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 206" font-family="Liberation Sans, Arial, Helvetica, sans-serif" font-size="11" fill="#222">
+<line x1="8" y1="10" x2="8" y2="140" stroke="#e2e2e2" stroke-width="1"/>
+<line x1="60" y1="10" x2="60" y2="140" stroke="#e2e2e2" stroke-width="1"/>
+<line x1="112" y1="10" x2="112" y2="140" stroke="#e2e2e2" stroke-width="1"/>
+<line x1="164" y1="10" x2="164" y2="140" stroke="#e2e2e2" stroke-width="1"/>
+<line x1="216" y1="10" x2="216" y2="140" stroke="#e2e2e2" stroke-width="1"/>
+<line x1="268" y1="10" x2="268" y2="140" stroke="#e2e2e2" stroke-width="1"/>
+<text x="8" y="18" font-size="11.5" font-weight="bold">Checkpoint loader, TP8 (S)</text>
+<rect x="8" y="22" width="133.1" height="18" fill="#CC6677" stroke="#fff" stroke-width="0.6"/>
+<text x="74.5" y="35" text-anchor="middle" fill="#fff">128.0</text>
+<rect x="141.1" y="22" width="12" height="18" fill="#dc96a2" stroke="#fff" stroke-width="0.6"/>
+<rect x="153.1" y="22" width="18.1" height="18" fill="#efc6cd" stroke="#fff" stroke-width="0.6"/>
+<rect x="171.2" y="22" width="77.9" height="18" fill="#AA4499" stroke="#fff" stroke-width="0.6"/>
+<text x="210.2" y="35" text-anchor="middle" fill="#fff">74.9</text>
+<rect x="249.1" y="22" width="3.1" height="18" fill="#444444" stroke="#fff" stroke-width="0.6"/>
+<rect x="252.2" y="22" width="4.5" height="18" fill="#b5b5b5" stroke="#fff" stroke-width="0.6"/>
+<text x="260.7" y="35" font-weight="bold">239.1 s</text>
+<text x="8" y="60" font-size="11.5" font-weight="bold">Checkpoint loader, TP16 (H)</text>
+<rect x="8" y="64" width="132.7" height="18" fill="#CC6677" stroke="#fff" stroke-width="0.6"/>
+<text x="74.3" y="77" text-anchor="middle" fill="#fff">127.6</text>
+<rect x="140.7" y="64" width="12" height="18" fill="#dc96a2" stroke="#fff" stroke-width="0.6"/>
+<rect x="152.6" y="64" width="18.2" height="18" fill="#efc6cd" stroke="#fff" stroke-width="0.6"/>
+<rect x="170.8" y="64" width="79.9" height="18" fill="#AA4499" stroke="#fff" stroke-width="0.6"/>
+<text x="210.7" y="77" text-anchor="middle" fill="#fff">76.8</text>
+<rect x="250.7" y="64" width="2.1" height="18" fill="#444444" stroke="#fff" stroke-width="0.6"/>
+<rect x="252.7" y="64" width="4.6" height="18" fill="#b5b5b5" stroke="#fff" stroke-width="0.6"/>
+<text x="261.3" y="77" font-weight="bold">240.0 s</text>
+<text x="8" y="102" font-size="11.5" font-weight="bold">PhaseMorph restore (snapshot + FastGraph)</text>
+<rect x="8" y="106" width="5.2" height="18" fill="#332288" stroke="#fff" stroke-width="0.6"/>
+<text x="17.2" y="119" font-weight="bold">5.0 s</text>
+<line x1="8" y1="140" x2="268" y2="140" stroke="#222" stroke-width="1"/>
+<line x1="8" y1="140" x2="8" y2="143" stroke="#222" stroke-width="1"/>
+<text x="8" y="155" text-anchor="middle">0</text>
+<line x1="60" y1="140" x2="60" y2="143" stroke="#222" stroke-width="1"/>
+<text x="60" y="155" text-anchor="middle">50</text>
+<line x1="112" y1="140" x2="112" y2="143" stroke="#222" stroke-width="1"/>
+<text x="112" y="155" text-anchor="middle">100</text>
+<line x1="164" y1="140" x2="164" y2="143" stroke="#222" stroke-width="1"/>
+<text x="164" y="155" text-anchor="middle">150</text>
+<line x1="216" y1="140" x2="216" y2="143" stroke="#222" stroke-width="1"/>
+<text x="216" y="155" text-anchor="middle">200</text>
+<line x1="268" y1="140" x2="268" y2="143" stroke="#222" stroke-width="1"/>
+<text x="268" y="155" text-anchor="middle">250</text>
+<text x="272" y="155" fill="#666" dx="6">s</text>
+<rect x="8" y="165" width="10" height="10" fill="#CC6677" stroke="#555" stroke-width="0.5"/>
+<text x="22" y="174">host tensor convert</text>
+<rect x="164" y="165" width="10" height="10" fill="#dc96a2" stroke="#555" stroke-width="0.5"/>
+<text x="178" y="174">other host ops</text>
+<rect x="8" y="180" width="10" height="10" fill="#efc6cd" stroke="#555" stroke-width="0.5"/>
+<text x="22" y="189">graph build + unattributed</text>
+<rect x="164" y="180" width="10" height="10" fill="#AA4499" stroke="#555" stroke-width="0.5"/>
+<text x="178" y="189">load-time JIT / cache</text>
+<rect x="8" y="195" width="10" height="10" fill="#444444" stroke="#555" stroke-width="0.5"/>
+<text x="22" y="204">host → device</text>
+<rect x="164" y="195" width="10" height="10" fill="#b5b5b5" stroke="#555" stroke-width="0.5"/>
+<text x="178" y="204">post-load + file reads</text>
+</svg>
+```),
+  caption: [Per-worker `load_model` time of the stock checkpoint loader (medians of eight profiled workers per layout) versus PhaseMorph's snapshot restore with shape-only graph construction (PhaseMorph-Snap in @tab-segments). Host tensor conversion and load-time sharding JIT dominate; file reads (0.18 s) and host-to-device transfer (2.0–3.0 s) are negligible. Profiled loads take 239–240 s; unprofiled loads take 234–239 s.],
+) <fig-load>
+
 _Pitfall 1: RAM staging and peer transfer._ GPU systems accelerate weight loading with faster storage paths, host caching, or RDMA transfer from peers @fu2024serverlessllm @zhang2025blitzscale. These remedies target the wrong cost on TPUs: staging the 61.4 GB checkpoint in `/dev/shm` tmpfs leaves `load_model` unchanged (237.6 s), because the time goes to host-side conversion and sharding compilation, not to bytes in flight.
 
 _Pitfall 2: Background compilation on a live host._ The persistent cache cannot remove JAX's Python tracing and StableHLO lowering (28.6 s on `H` and 45.5 s on `S`), which run on the main thread before any cache lookup because JAX's trace cache is process-local. A natural workaround is to compile the target layout in a second process on each host while the source layout serves. However, a process launched with `JAX_PLATFORMS=cpu` that requests TPU topology descriptors to compile for the target immediately aborts with `ABORTED: The TPU is already in use` on `/tmp/libtpu_lockfile`, because querying the topology unconditionally initializes the PJRT TPU plugin.
@@ -403,63 +722,106 @@ PhaseMorph operates in two stages that mirror the save/load split of recent cold
 
 #wide-fig(
   svg-fig(```svg
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 235" font-family="Helvetica, Arial, sans-serif" font-size="11" fill="#1f2328">
-  <text x="12" y="15" font-size="12" font-weight="bold">PhaseMorph Overlap Timeline: Clean-Room CPU Pre-Spawn, Pre-Read Child &amp; Post-T0 Fast Handoff</text>
-
-  <!-- Time axis -->
-  <line x1="145" y1="36" x2="840" y2="36" stroke="#8c959f" stroke-width="1"/>
-  <line x1="510" y1="30" x2="510" y2="215" stroke="#cf222e" stroke-width="1.5" stroke-dasharray="4,3"/>
-  <text x="515" y="28" text-anchor="start" font-size="10" font-weight="bold" fill="#cf222e">T0: Phase 1 Drain Complete</text>
-  <text x="320" y="31" text-anchor="middle" font-size="9.5" fill="#59636e">← Phase 1 Serving Window (Zero Source Slowdown) →</text>
-  <text x="720" y="28" text-anchor="middle" font-size="9.5" fill="#1a7f37">← Critical Path C = 21.1–27.5 s →</text>
-  <!-- Lane 1: TPU Hardware / Source S -->
-  <text x="138" y="62" text-anchor="end" font-weight="bold">Source S Workers</text>
-  <text x="138" y="75" text-anchor="end" font-size="9.5" fill="#59636e">(Owns /dev/vfio/0..3)</text>
-  <rect x="145" y="45" width="365" height="34" rx="4" fill="#dafbe1" stroke="#1a7f37"/>
-  <text x="327" y="66" text-anchor="middle" fill="#1a7f37" font-weight="bold">S (4×TP8) Serving W0 @ 100% Rate (3,978–4,070 tok/s)</text>
-  <rect x="510" y="45" width="28" height="34" rx="3" fill="#ffebe9" stroke="#cf222e"/>
-  <text x="524" y="66" text-anchor="middle" font-size="9.5" fill="#cf222e">2.0s</text>
-
-  <!-- Lane 2: Target H Pre-Spawned Worker -->
-  <text x="138" y="114" text-anchor="end" font-weight="bold">Target H Workers</text>
-  <text x="138" y="127" text-anchor="end" font-size="9.5" fill="#59636e">(clean-room pre-spawn)</text>
-  <rect x="175" y="97" width="180" height="34" rx="4" fill="#ddf4ff" stroke="#0969da"/>
-  <text x="265" y="118" text-anchor="middle" fill="#0969da">CPU Spawn + Imports (34.3s)</text>
-  <rect x="355" y="97" width="155" height="34" rx="4" fill="#f6f8fa" stroke="#8c959f" stroke-dasharray="3,2"/>
-  <text x="432" y="113" text-anchor="middle" font-size="10" fill="#59636e">Parked on ReleaseGate</text>
-  <text x="432" y="125" text-anchor="middle" font-size="9.5" fill="#59636e">(0 libtpu / 0 vfio fds)</text>
-
-  <!-- Post-T0 Critical Path on Target H -->
-  <rect x="538" y="97" width="32" height="34" rx="3" fill="#fff8c5" stroke="#9a6700"/>
-  <text x="554" y="112" text-anchor="middle" font-size="9" fill="#9a6700">VFIO</text>
-  <text x="554" y="123" text-anchor="middle" font-size="9" fill="#9a6700">0.8s</text>
-  <rect x="570" y="97" width="48" height="34" rx="3" fill="#dafbe1" stroke="#1a7f37"/>
-  <text x="594" y="112" text-anchor="middle" font-size="9.5" fill="#1a7f37">init_dev</text>
-  <text x="594" y="123" text-anchor="middle" font-size="9.5" fill="#1a7f37">3.9s</text>
-  <rect x="618" y="97" width="58" height="34" rx="3" fill="#dafbe1" stroke="#1a7f37"/>
-  <text x="647" y="112" text-anchor="middle" font-size="9.5" fill="#1a7f37">FastRestore</text>
-  <text x="647" y="123" text-anchor="middle" font-size="9.5" fill="#1a7f37">4.9s</text>
-  <rect x="676" y="97" width="34" height="34" rx="3" fill="#dafbe1" stroke="#1a7f37"/>
-  <text x="693" y="112" text-anchor="middle" font-size="9.5" fill="#1a7f37">KV</text>
-  <text x="693" y="123" text-anchor="middle" font-size="9.5" fill="#1a7f37">2.6s</text>
-  <rect x="710" y="97" width="65" height="34" rx="3" fill="#dafbe1" stroke="#1a7f37"/>
-  <text x="742" y="112" text-anchor="middle" font-size="9.5" fill="#1a7f37" font-weight="bold">ExecBank</text>
-  <text x="742" y="123" text-anchor="middle" font-size="9.5" fill="#1a7f37">5.0s (0 trace)</text>
-  <rect x="775" y="97" width="42" height="34" rx="3" fill="#dafbe1" stroke="#1a7f37"/>
-  <text x="796" y="112" text-anchor="middle" font-size="9.5" fill="#1a7f37">Route</text>
-  <text x="796" y="123" text-anchor="middle" font-size="9.5" fill="#1a7f37">3.1s</text>
-
-  <!-- Lane 3: Optional Cold Pre-Read Subprocess -->
-  <text x="138" y="168" text-anchor="end" font-weight="bold">CPU Pre-Read Child</text>
-  <text x="138" y="181" text-anchor="end" font-size="9.5" fill="#59636e">(PreRead: cold 1st switch)</text>
-  <rect x="195" y="151" width="315" height="34" rx="4" fill="#fff8c5" stroke="#9a6700"/>
-  <text x="352" y="166" text-anchor="middle" fill="#9a6700" font-weight="bold">JAX_PLATFORMS=cpu (nice 10, 16 fake host devs)</text>
-  <text x="352" y="179" text-anchor="middle" font-size="9" fill="#9a6700">Streams load_weights → 32,896 shards to /dev/shm (absorbs 165s before T0)</text>
-  <rect x="510" y="151" width="95" height="34" rx="3" fill="#fff8c5" stroke="#9a6700" stroke-dasharray="3,2"/>
-  <text x="557" y="172" text-anchor="middle" font-size="9.5" fill="#9a6700">Residual 79.6s</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 236" font-family="Liberation Sans, Arial, Helvetica, sans-serif" font-size="11" fill="#222">
+<defs><pattern id="ar" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="#fff"/><line x1="0" y1="0" x2="0" y2="4" stroke="#444" stroke-width="1.4"/></pattern></defs>
+<text x="267" y="12" text-anchor="middle" font-size="11.5" font-weight="bold">PREPARE (during the source phase)</text>
+<text x="514" y="12" text-anchor="middle" font-size="11.5" font-weight="bold">HANDOFF / RESTORE (after T<tspan dy="2.6" font-size="9.2">0</tspan><tspan dy="-2.6">)</tspan></text>
+<line x1="150" y1="34" x2="384" y2="34" stroke="#666" stroke-width="1"/>
+<line x1="400" y1="34" x2="628" y2="34" stroke="#666" stroke-width="1"/>
+<line x1="150" y1="31" x2="150" y2="34" stroke="#666" stroke-width="1"/>
+<text x="150" y="28" text-anchor="middle" fill="#666">-200</text>
+<line x1="208.5" y1="31" x2="208.5" y2="34" stroke="#666" stroke-width="1"/>
+<text x="208.5" y="28" text-anchor="middle" fill="#666">-150</text>
+<line x1="267" y1="31" x2="267" y2="34" stroke="#666" stroke-width="1"/>
+<text x="267" y="28" text-anchor="middle" fill="#666">-100</text>
+<line x1="325.5" y1="31" x2="325.5" y2="34" stroke="#666" stroke-width="1"/>
+<text x="325.5" y="28" text-anchor="middle" fill="#666">-50</text>
+<line x1="384" y1="31" x2="384" y2="34" stroke="#666" stroke-width="1"/>
+<text x="384" y="28" text-anchor="middle" fill="#666">0</text>
+<line x1="400" y1="31" x2="400" y2="34" stroke="#666" stroke-width="1"/>
+<text x="400" y="28" text-anchor="middle" fill="#666">0</text>
+<line x1="438" y1="31" x2="438" y2="34" stroke="#666" stroke-width="1"/>
+<text x="438" y="28" text-anchor="middle" fill="#666">5</text>
+<line x1="476" y1="31" x2="476" y2="34" stroke="#666" stroke-width="1"/>
+<text x="476" y="28" text-anchor="middle" fill="#666">10</text>
+<line x1="514" y1="31" x2="514" y2="34" stroke="#666" stroke-width="1"/>
+<text x="514" y="28" text-anchor="middle" fill="#666">15</text>
+<line x1="552" y1="31" x2="552" y2="34" stroke="#666" stroke-width="1"/>
+<text x="552" y="28" text-anchor="middle" fill="#666">20</text>
+<line x1="590" y1="31" x2="590" y2="34" stroke="#666" stroke-width="1"/>
+<text x="590" y="28" text-anchor="middle" fill="#666">25</text>
+<line x1="628" y1="31" x2="628" y2="34" stroke="#666" stroke-width="1"/>
+<text x="628" y="28" text-anchor="middle" fill="#666">30</text>
+<text x="628" y="46" text-anchor="end" fill="#666">s after T<tspan dy="2.6" font-size="8.8">0</tspan><tspan dy="-2.6"> </tspan></text>
+<text x="150" y="46" fill="#666">s before T<tspan dy="2.6" font-size="8.8">0</tspan><tspan dy="-2.6"> </tspan></text>
+<line x1="387" y1="38" x2="393" y2="30" stroke="#666" stroke-width="1"/>
+<line x1="391" y1="38" x2="397" y2="30" stroke="#666" stroke-width="1"/>
+<text x="142" y="65" text-anchor="end" font-size="11.5" font-weight="bold">Source S (4×TP8)</text>
+<text x="142" y="78" text-anchor="end" fill="#666">owns the TPUs</text>
+<text x="142" y="111" text-anchor="end" font-size="11.5" font-weight="bold">Target H workers</text>
+<text x="142" y="124" text-anchor="end" fill="#666">CPU-only Ray bundles</text>
+<text x="142" y="157" text-anchor="end" font-size="11.5" font-weight="bold">Controller + gateway</text>
+<text x="142" y="170" text-anchor="end" fill="#666">in-process</text>
+<line x1="384" y1="36" x2="384" y2="180" stroke="#000" stroke-width="1" stroke-dasharray="3,2"/>
+<line x1="400" y1="36" x2="400" y2="180" stroke="#000" stroke-width="1" stroke-dasharray="3,2"/>
+<rect x="159.1" y="52" width="224.9" height="30" fill="#0072B2"/>
+<text x="271.6" y="65" text-anchor="middle" fill="#fff">S serves W0 (phase 1, 190.7–194.6 s)</text>
+<text x="271.6" y="78" text-anchor="middle" fill="#fff">no measurable slowdown</text>
+<rect x="400" y="52" width="15" height="30" fill="#8c8c8c" stroke="#fff" stroke-width="0.6"/>
+<text x="419" y="71">drain + release 2.0 s</text>
+<rect x="159.1" y="98" width="40.7" height="30" fill="#88CCEE" stroke="#fff" stroke-width="0.6"/>
+<text x="179.5" y="111" text-anchor="middle">spawn</text>
+<text x="179.5" y="124" text-anchor="middle">≈34 s</text>
+<rect x="199.8" y="99" width="184.2" height="28" fill="#fafafa" stroke="#888" stroke-width="0.8" stroke-dasharray="3,2"/>
+<text x="291.9" y="111" text-anchor="middle">parked on release gate</text>
+<text x="291.9" y="124" text-anchor="middle" fill="#666">no libtpu, no /dev/vfio handle</text>
+<rect x="400" y="99" width="15" height="28" fill="#fafafa" stroke="#888" stroke-width="0.8" stroke-dasharray="3,2"/>
+<rect x="415" y="98" width="6.5" height="30" fill="#c8c8c8" stroke="#fff" stroke-width="0.6"/>
+<rect x="421.6" y="98" width="29.8" height="30" fill="#DDCC77" stroke="#fff" stroke-width="0.6"/>
+<text x="436.5" y="111" text-anchor="middle">dev</text>
+<text x="436.5" y="124" text-anchor="middle">3.9</text>
+<rect x="451.4" y="98" width="37.3" height="30" fill="#CC6677" stroke="#fff" stroke-width="0.6"/>
+<text x="470" y="111" text-anchor="middle" fill="#fff">load</text>
+<text x="470" y="124" text-anchor="middle" fill="#fff">4.9</text>
+<rect x="488.7" y="98" width="19.5" height="30" fill="#999933" stroke="#fff" stroke-width="0.6"/>
+<text x="498.5" y="111" text-anchor="middle" fill="#fff">KV</text>
+<text x="498.5" y="124" text-anchor="middle" fill="#fff">2.6</text>
+<rect x="508.2" y="98" width="37.8" height="30" fill="#AA4499" stroke="#fff" stroke-width="0.6"/>
+<text x="527.1" y="111" text-anchor="middle" fill="#fff">bank</text>
+<text x="527.1" y="124" text-anchor="middle" fill="#fff">5.0</text>
+<text x="550.1" y="111">0 traces,</text>
+<text x="550.1" y="124">0 compiles</text>
+<rect x="415" y="144" width="2" height="30" fill="#8c8c8c"/>
+<text x="421" y="163">release gate</text>
+<rect x="546.1" y="144" width="36.2" height="30" fill="#5f5f5f" stroke="#fff" stroke-width="0.6"/>
+<text x="564.2" y="163" text-anchor="middle" fill="#fff">4.8</text>
+<rect x="582.2" y="144" width="26.8" height="30" fill="url(#ar)" stroke="#444" stroke-width="0.5"/>
+<line x1="582.2" y1="140" x2="582.2" y2="178" stroke="#000" stroke-width="1.2"/>
+<line x1="609.1" y1="140" x2="609.1" y2="178" stroke="#000" stroke-width="1.6"/>
+<text x="628" y="189" text-anchor="end" font-weight="bold">first W6 dispatch 24.0 s;  C = 27.5 s</text>
+<rect x="8" y="205" width="10" height="10" fill="#0072B2" stroke="#555" stroke-width="0.5"/>
+<text x="22" y="214">S serving W0</text>
+<rect x="134" y="205" width="10" height="10" fill="#88CCEE" stroke="#555" stroke-width="0.5"/>
+<text x="148" y="214">spawn + imports</text>
+<rect x="260" y="205" width="10" height="10" fill="#8c8c8c" stroke="#555" stroke-width="0.5"/>
+<text x="274" y="214">drain / control</text>
+<rect x="386" y="205" width="10" height="10" fill="#c8c8c8" stroke="#555" stroke-width="0.5"/>
+<text x="400" y="214">VFIO handoff</text>
+<rect x="512" y="205" width="10" height="10" fill="#DDCC77" stroke="#555" stroke-width="0.5"/>
+<text x="526" y="214">init_device</text>
+<rect x="8" y="220" width="10" height="10" fill="#CC6677" stroke="#555" stroke-width="0.5"/>
+<text x="22" y="229">restore weights</text>
+<rect x="134" y="220" width="10" height="10" fill="#999933" stroke="#555" stroke-width="0.5"/>
+<text x="148" y="229">KV cache init</text>
+<rect x="260" y="220" width="10" height="10" fill="#AA4499" stroke="#555" stroke-width="0.5"/>
+<text x="274" y="229">bank load + warm-up</text>
+<rect x="386" y="220" width="10" height="10" fill="#5f5f5f" stroke="#555" stroke-width="0.5"/>
+<text x="400" y="229">endpoint + gateway</text>
+<rect x="512" y="220" width="10" height="10" fill="url(#ar)" stroke="#555" stroke-width="0.5"/>
+<text x="526" y="229">ramp</text>
 </svg>
 ```),
-  caption: [PhaseMorph workflow for a full `S → H` switch. During the source phase (PREPARE), target `H` workers spawn in CPU-only bundles, verify that they hold no `libtpu` or `/dev/vfio` handle, and park on a release gate; for a cold first switch, a CPU child additionally materializes the weight snapshot. After $T_0$ (HANDOFF/RESTORE), workers wait out the kernel's VFIO reset, restore pre-sharded weights from `/dev/shm` (4.9 s), and load 187 serialized executables from the executable bank (3.45 s).],
+  caption: [PhaseMorph workflow for a warm full `S → H` switch, to scale (left: seconds before $T_0$, means of three runs; right: seconds after $T_0$, Full A column of @tab-segments). During PREPARE, target `H` workers spawn in CPU-only bundles, verify that they hold no `libtpu` or `/dev/vfio` handle, and park on a release gate. After $T_0$ (HANDOFF/RESTORE), the source drains and releases its chips, the workers wait out the kernel's VFIO reset, restore pre-sharded weights from `/dev/shm` (4.9 s), and load 187 serialized executables from the executable bank (3.45 s of the 5.0 s warm-up). The remaining 4.8 s before the first `W6` dispatch is endpoint registration and gateway roll-out. Cold first switches add a CPU pre-read child (@fig-coldswitch).],
 ) <fig-architecture>
 
 _PREPARE stage._ The first deployment of a layout writes two artifacts as a by-product of normal initialization: a per-worker snapshot of post-conversion weight shards in host shared memory (7.53 s) and a bank of serialized, ahead-of-time compiled executables (2.26 s). When a switch is planned, PhaseMorph spawns the target layout's workers in CPU-only processes while the source layout keeps serving; the workers import the serving stack, build tokenizers, and park on a release gate without touching the TPU. If the target layout has never been deployed, each parked worker also launches a low-priority CPU child that produces the weight snapshot in the background.
@@ -520,42 +882,183 @@ To establish the hardware lower bound of a layout change—weights stay in HBM a
 
 #figure(
   svg-fig(```svg
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 205" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#1f2328">
-  <!-- Left: x-split fails -->
-  <text x="105" y="16" text-anchor="middle" font-weight="bold" fill="#cf222e">Column Split (x-halves): FAILS</text>
-  <text x="105" y="29" text-anchor="middle" font-size="9.5" fill="#59636e">x-lower IDs [0,1,4,5,8,9,12,13] non-dense</text>
-  <rect x="22" y="38" width="80" height="128" rx="5" fill="#ffebe9" stroke="#cf222e" stroke-width="1.5"/>
-  <rect x="108" y="38" width="80" height="128" rx="5" fill="#f6f8fa" stroke="#8c959f" stroke-width="1"/>
-  <text x="62" y="58" text-anchor="middle" font-weight="bold" fill="#cf222e">0, 1</text>
-  <text x="62" y="88" text-anchor="middle" font-weight="bold" fill="#cf222e">4, 5</text>
-  <text x="62" y="118" text-anchor="middle" font-weight="bold" fill="#cf222e">8, 9</text>
-  <text x="62" y="148" text-anchor="middle" font-weight="bold" fill="#cf222e">12, 13</text>
-  <text x="148" y="58" text-anchor="middle" fill="#59636e">2, 3</text>
-  <text x="148" y="88" text-anchor="middle" fill="#59636e">6, 7</text>
-  <text x="148" y="118" text-anchor="middle" fill="#59636e">10, 11</text>
-  <text x="148" y="148" text-anchor="middle" fill="#59636e">14, 15</text>
-  <text x="105" y="182" text-anchor="middle" font-size="9.5" fill="#cf222e">libtpu net_util.cc:2304 RET_CHECK</text>
-  <text x="105" y="194" text-anchor="middle" font-size="9.5" fill="#cf222e">device_id &lt; kMaxDeviceCount (8 vs 8)</text>
-
-  <!-- Right: y-split passes -->
-  <text x="315" y="16" text-anchor="middle" font-weight="bold" fill="#1a7f37">Host-Row Split (y-halves): PASSES</text>
-  <text x="315" y="29" text-anchor="middle" font-size="9.5" fill="#59636e">y-lower [0..7] &amp; y-upper [8..15] dense</text>
-  <rect x="232" y="38" width="166" height="61" rx="5" fill="#dafbe1" stroke="#1a7f37" stroke-width="1.5"/>
-  <rect x="232" y="105" width="166" height="61" rx="5" fill="#ddf4ff" stroke="#0969da" stroke-width="1.5"/>
-  <text x="315" y="62" text-anchor="middle" font-weight="bold" fill="#1a7f37">y-lower (Hosts 0–1): IDs 0, 1, 2, 3</text>
-  <text x="315" y="84" text-anchor="middle" font-weight="bold" fill="#1a7f37">IDs 4, 5, 6, 7 (Origin + Dense)</text>
-  <text x="315" y="129" text-anchor="middle" font-weight="bold" fill="#0969da">y-upper (Hosts 2–3): IDs 8, 9, 10, 11</text>
-  <text x="315" y="151" text-anchor="middle" font-weight="bold" fill="#0969da">IDs 12, 13, 14, 15 (Independent TP8)</text>
-  <text x="315" y="182" text-anchor="middle" font-size="9.5" fill="#1a7f37" font-weight="bold">2×TP8 → TP16 in 12.0 ms (0 compiles)</text>
-  <text x="315" y="194" text-anchor="middle" font-size="9.5" fill="#1a7f37">TP16 → 2×TP8 in 48.0 ms (ICI swap)</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" font-family="Liberation Sans, Arial, Helvetica, sans-serif" font-size="11" fill="#222">
+<defs><pattern id="sx" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="#fbe3e1"/><line x1="0" y1="0" x2="0" y2="5" stroke="#b3261e" stroke-width="1.2"/></pattern></defs>
+<rect x="14" y="38" width="25" height="25" fill="url(#sx)" stroke="#777" stroke-width="0.6"/>
+<text x="26.5" y="54.5" text-anchor="middle">0</text>
+<rect x="42" y="38" width="25" height="25" fill="url(#sx)" stroke="#777" stroke-width="0.6"/>
+<text x="54.5" y="54.5" text-anchor="middle">1</text>
+<rect x="70" y="38" width="25" height="25" fill="#eeeeee" stroke="#777" stroke-width="0.6"/>
+<text x="82.5" y="54.5" text-anchor="middle">2</text>
+<rect x="98" y="38" width="25" height="25" fill="#eeeeee" stroke="#777" stroke-width="0.6"/>
+<text x="110.5" y="54.5" text-anchor="middle">3</text>
+<rect x="14" y="66" width="25" height="25" fill="url(#sx)" stroke="#777" stroke-width="0.6"/>
+<text x="26.5" y="82.5" text-anchor="middle">4</text>
+<rect x="42" y="66" width="25" height="25" fill="url(#sx)" stroke="#777" stroke-width="0.6"/>
+<text x="54.5" y="82.5" text-anchor="middle">5</text>
+<rect x="70" y="66" width="25" height="25" fill="#eeeeee" stroke="#777" stroke-width="0.6"/>
+<text x="82.5" y="82.5" text-anchor="middle">6</text>
+<rect x="98" y="66" width="25" height="25" fill="#eeeeee" stroke="#777" stroke-width="0.6"/>
+<text x="110.5" y="82.5" text-anchor="middle">7</text>
+<rect x="14" y="94" width="25" height="25" fill="url(#sx)" stroke="#777" stroke-width="0.6"/>
+<text x="26.5" y="110.5" text-anchor="middle">8</text>
+<rect x="42" y="94" width="25" height="25" fill="url(#sx)" stroke="#777" stroke-width="0.6"/>
+<text x="54.5" y="110.5" text-anchor="middle">9</text>
+<rect x="70" y="94" width="25" height="25" fill="#eeeeee" stroke="#777" stroke-width="0.6"/>
+<text x="82.5" y="110.5" text-anchor="middle">10</text>
+<rect x="98" y="94" width="25" height="25" fill="#eeeeee" stroke="#777" stroke-width="0.6"/>
+<text x="110.5" y="110.5" text-anchor="middle">11</text>
+<rect x="14" y="122" width="25" height="25" fill="url(#sx)" stroke="#777" stroke-width="0.6"/>
+<text x="26.5" y="138.5" text-anchor="middle">12</text>
+<rect x="42" y="122" width="25" height="25" fill="url(#sx)" stroke="#777" stroke-width="0.6"/>
+<text x="54.5" y="138.5" text-anchor="middle">13</text>
+<rect x="70" y="122" width="25" height="25" fill="#eeeeee" stroke="#777" stroke-width="0.6"/>
+<text x="82.5" y="138.5" text-anchor="middle">14</text>
+<rect x="98" y="122" width="25" height="25" fill="#eeeeee" stroke="#777" stroke-width="0.6"/>
+<text x="110.5" y="138.5" text-anchor="middle">15</text>
+<rect x="12.5" y="36.5" width="56" height="56" fill="none" stroke="#222" stroke-width="0.9" rx="3" stroke-dasharray="3,2"/>
+<rect x="68.5" y="36.5" width="56" height="56" fill="none" stroke="#222" stroke-width="0.9" rx="3" stroke-dasharray="3,2"/>
+<rect x="12.5" y="92.5" width="56" height="56" fill="none" stroke="#222" stroke-width="0.9" rx="3" stroke-dasharray="3,2"/>
+<rect x="68.5" y="92.5" width="56" height="56" fill="none" stroke="#222" stroke-width="0.9" rx="3" stroke-dasharray="3,2"/>
+<line x1="68.5" y1="34" x2="68.5" y2="151" stroke="#000" stroke-width="2"/>
+<text x="62.5" y="14" text-anchor="middle" font-size="12" font-weight="bold">Column split</text>
+<path d="M109.5,5 L119.5,15 M109.5,15 L119.5,5" fill="none" stroke="#b3261e" stroke-width="2" stroke-linecap="round"/>
+<text x="68.5" y="28" text-anchor="middle" fill="#666">IDs 0,1,4,5,8,9,12,13</text>
+<text x="68.5" y="163" text-anchor="middle">libtpu RET_CHECK</text>
+<text x="68.5" y="177" text-anchor="middle">net_util.cc:2304</text>
+<rect x="194" y="38" width="25" height="25" fill="#d4d4d4" stroke="#777" stroke-width="0.6"/>
+<text x="206.5" y="54.5" text-anchor="middle">0</text>
+<rect x="222" y="38" width="25" height="25" fill="#d4d4d4" stroke="#777" stroke-width="0.6"/>
+<text x="234.5" y="54.5" text-anchor="middle">1</text>
+<rect x="250" y="38" width="25" height="25" fill="#d4d4d4" stroke="#777" stroke-width="0.6"/>
+<text x="262.5" y="54.5" text-anchor="middle">2</text>
+<rect x="278" y="38" width="25" height="25" fill="#d4d4d4" stroke="#777" stroke-width="0.6"/>
+<text x="290.5" y="54.5" text-anchor="middle">3</text>
+<rect x="194" y="66" width="25" height="25" fill="#d4d4d4" stroke="#777" stroke-width="0.6"/>
+<text x="206.5" y="82.5" text-anchor="middle">4</text>
+<rect x="222" y="66" width="25" height="25" fill="#d4d4d4" stroke="#777" stroke-width="0.6"/>
+<text x="234.5" y="82.5" text-anchor="middle">5</text>
+<rect x="250" y="66" width="25" height="25" fill="#d4d4d4" stroke="#777" stroke-width="0.6"/>
+<text x="262.5" y="82.5" text-anchor="middle">6</text>
+<rect x="278" y="66" width="25" height="25" fill="#d4d4d4" stroke="#777" stroke-width="0.6"/>
+<text x="290.5" y="82.5" text-anchor="middle">7</text>
+<rect x="194" y="94" width="25" height="25" fill="#f4f4f4" stroke="#777" stroke-width="0.6"/>
+<text x="206.5" y="110.5" text-anchor="middle">8</text>
+<rect x="222" y="94" width="25" height="25" fill="#f4f4f4" stroke="#777" stroke-width="0.6"/>
+<text x="234.5" y="110.5" text-anchor="middle">9</text>
+<rect x="250" y="94" width="25" height="25" fill="#f4f4f4" stroke="#777" stroke-width="0.6"/>
+<text x="262.5" y="110.5" text-anchor="middle">10</text>
+<rect x="278" y="94" width="25" height="25" fill="#f4f4f4" stroke="#777" stroke-width="0.6"/>
+<text x="290.5" y="110.5" text-anchor="middle">11</text>
+<rect x="194" y="122" width="25" height="25" fill="#f4f4f4" stroke="#777" stroke-width="0.6"/>
+<text x="206.5" y="138.5" text-anchor="middle">12</text>
+<rect x="222" y="122" width="25" height="25" fill="#f4f4f4" stroke="#777" stroke-width="0.6"/>
+<text x="234.5" y="138.5" text-anchor="middle">13</text>
+<rect x="250" y="122" width="25" height="25" fill="#f4f4f4" stroke="#777" stroke-width="0.6"/>
+<text x="262.5" y="138.5" text-anchor="middle">14</text>
+<rect x="278" y="122" width="25" height="25" fill="#f4f4f4" stroke="#777" stroke-width="0.6"/>
+<text x="290.5" y="138.5" text-anchor="middle">15</text>
+<rect x="192.5" y="36.5" width="56" height="56" fill="none" stroke="#222" stroke-width="0.9" rx="3" stroke-dasharray="3,2"/>
+<rect x="248.5" y="36.5" width="56" height="56" fill="none" stroke="#222" stroke-width="0.9" rx="3" stroke-dasharray="3,2"/>
+<rect x="192.5" y="92.5" width="56" height="56" fill="none" stroke="#222" stroke-width="0.9" rx="3" stroke-dasharray="3,2"/>
+<rect x="248.5" y="92.5" width="56" height="56" fill="none" stroke="#222" stroke-width="0.9" rx="3" stroke-dasharray="3,2"/>
+<line x1="190" y1="92.5" x2="307" y2="92.5" stroke="#000" stroke-width="2"/>
+<text x="242.5" y="14" text-anchor="middle" font-size="12" font-weight="bold">Host-row split</text>
+<path d="M296.5,10 L299.8,13.2 L306.5,6.5" fill="none" stroke="#1b7a3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="248.5" y="28" text-anchor="middle" fill="#666">IDs 0–7 | 8–15</text>
+<text x="248.5" y="163" text-anchor="middle">2×TP8 → TP16: 12.0 ms</text>
+<text x="248.5" y="177" text-anchor="middle">TP16 → 2×TP8: 48.0 ms</text>
 </svg>
 ```),
-  caption: [Submesh partitioning of a 16-chip ($4 times 4$) torus under `libtpu 0.0.43`. Splitting by columns (`x`) aborts in `net_util.cc:2304` because the origin half has non-contiguous device IDs; splitting by host rows (`y`: IDs `0..7` and `8..15`) yields independent submeshes and 12.0 ms in-HBM switching.],
+  caption: [Submesh partitioning of a 16-chip ($4 times 4$) runtime under `libtpu 0.0.43` (device ID $= x + 4y$; dashed boxes are hosts of $2 times 2$ chips). Splitting by columns aborts in `net_util.cc:2304` because the origin half has non-dense device IDs; splitting by host rows (IDs `0..7` and `8..15`) compiles and switches $2 times$`TP8` → `TP16` in 12.0 ms (48.0 ms back) on a synthetic model with 1.61 GB/chip of weights.],
 ) <fig-submesh>
 
 _Bypassing the sub-box routing bug._ Our first partition split the $4 times 4$ grid along columns, giving the origin half device IDs `[0,1,4,5,8,9,12,13]`. Compiling any collective for this submesh fails inside `libtpu` (`net_util.cc:2304`, `RET_CHECK device_id < kMaxDeviceCount (8 vs. 8)`), because the library assumes that a sub-box anchored at the origin has dense device IDs `0..N-1`. Rotating the split to host rows (IDs `0..7` and `8..15`) satisfies this invariant, both for live `jax.jit` compilation and for `deserialize_and_load` of banked executables (@fig-submesh).
 
 _Isolation and switching._ With host-row halves, the two `TP8` submeshes step concurrently at $1.05"–"1.08 times$ their solo step time, and stalling one half in a 30 s barrier leaves the other at 97%–99% of its throughput. Switching `2×TP8 → TP16` with nested local device order takes 12.04 ms (0.08 ms to stop, 6.14 ms to re-slice the weights on chip, and 5.82 ms for the first step), with no compilation; the reverse switch over ICI takes 48.02 ms.
+
+On the full $4 times 8$ slice, in-runtime submeshes fail outright: no layout has all of its instances compile in one 32-chip runtime (@fig-fullmesh).
+
+#figure(
+  svg-fig(```svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 182" font-family="Liberation Sans, Arial, Helvetica, sans-serif" font-size="11" fill="#222">
+<defs><pattern id="fx" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="#fbe3e1"/><line x1="0" y1="0" x2="0" y2="4" stroke="#b3261e" stroke-width="1.2"/></pattern></defs>
+<text x="33.2" y="13" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#0072B2">S</text>
+<text x="33.2" y="27" text-anchor="middle">4×TP8</text>
+<rect x="8.5" y="38.5" width="25.5" height="49.5" fill="url(#fx)" rx="2"/>
+<rect x="32.5" y="38.5" width="25.5" height="49.5" fill="#c6dcef" rx="2"/>
+<rect x="8.5" y="86.5" width="25.5" height="49.5" fill="#c6dcef" rx="2"/>
+<rect x="32.5" y="86.5" width="25.5" height="49.5" fill="#c6dcef" rx="2"/>
+<path d="M10 40h10.5v10.5h-10.5zM22 40h10.5v10.5h-10.5zM34 40h10.5v10.5h-10.5zM46 40h10.5v10.5h-10.5zM10 52h10.5v10.5h-10.5zM22 52h10.5v10.5h-10.5zM34 52h10.5v10.5h-10.5zM46 52h10.5v10.5h-10.5zM10 64h10.5v10.5h-10.5zM22 64h10.5v10.5h-10.5zM34 64h10.5v10.5h-10.5zM46 64h10.5v10.5h-10.5zM10 76h10.5v10.5h-10.5zM22 76h10.5v10.5h-10.5zM34 76h10.5v10.5h-10.5zM46 76h10.5v10.5h-10.5zM10 88h10.5v10.5h-10.5zM22 88h10.5v10.5h-10.5zM34 88h10.5v10.5h-10.5zM46 88h10.5v10.5h-10.5zM10 100h10.5v10.5h-10.5zM22 100h10.5v10.5h-10.5zM34 100h10.5v10.5h-10.5zM46 100h10.5v10.5h-10.5zM10 112h10.5v10.5h-10.5zM22 112h10.5v10.5h-10.5zM34 112h10.5v10.5h-10.5zM46 112h10.5v10.5h-10.5zM10 124h10.5v10.5h-10.5zM22 124h10.5v10.5h-10.5zM34 124h10.5v10.5h-10.5zM46 124h10.5v10.5h-10.5z" fill="none" stroke="#8a8a8a" stroke-width="0.5"/>
+<rect x="8.5" y="38.5" width="25.5" height="49.5" fill="none" stroke="#b3261e" stroke-width="1.2" rx="2"/>
+<path d="M17.2,59.2 L25.2,67.2 M17.2,67.2 L25.2,59.2" fill="none" stroke="#b3261e" stroke-width="2" stroke-linecap="round"/>
+<rect x="32.5" y="38.5" width="25.5" height="49.5" fill="none" stroke="#333" stroke-width="1.2" rx="2"/>
+<path d="M40.8,63.2 L43.8,66.2 L49.8,60.1" fill="none" stroke="#1b7a3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="8.5" y="86.5" width="25.5" height="49.5" fill="none" stroke="#333" stroke-width="1.2" rx="2"/>
+<path d="M16.8,111.2 L19.8,114.2 L25.8,108.1" fill="none" stroke="#1b7a3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="32.5" y="86.5" width="25.5" height="49.5" fill="none" stroke="#333" stroke-width="1.2" rx="2"/>
+<path d="M40.8,111.2 L43.8,114.2 L49.8,108.1" fill="none" stroke="#1b7a3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="15.2" cy="45.2" r="2.4" fill="#000"/>
+<text x="33.2" y="149.5" text-anchor="middle" font-weight="bold" fill="#b3261e">1 of 4 fails</text>
+<text x="96.2" y="13" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#D55E00">H</text>
+<text x="96.2" y="27" text-anchor="middle">2×TP16</text>
+<rect x="71.5" y="38.5" width="49.5" height="49.5" fill="url(#fx)" rx="2"/>
+<rect x="71.5" y="86.5" width="49.5" height="49.5" fill="#f6d3bd" rx="2"/>
+<path d="M73 40h10.5v10.5h-10.5zM85 40h10.5v10.5h-10.5zM97 40h10.5v10.5h-10.5zM109 40h10.5v10.5h-10.5zM73 52h10.5v10.5h-10.5zM85 52h10.5v10.5h-10.5zM97 52h10.5v10.5h-10.5zM109 52h10.5v10.5h-10.5zM73 64h10.5v10.5h-10.5zM85 64h10.5v10.5h-10.5zM97 64h10.5v10.5h-10.5zM109 64h10.5v10.5h-10.5zM73 76h10.5v10.5h-10.5zM85 76h10.5v10.5h-10.5zM97 76h10.5v10.5h-10.5zM109 76h10.5v10.5h-10.5zM73 88h10.5v10.5h-10.5zM85 88h10.5v10.5h-10.5zM97 88h10.5v10.5h-10.5zM109 88h10.5v10.5h-10.5zM73 100h10.5v10.5h-10.5zM85 100h10.5v10.5h-10.5zM97 100h10.5v10.5h-10.5zM109 100h10.5v10.5h-10.5zM73 112h10.5v10.5h-10.5zM85 112h10.5v10.5h-10.5zM97 112h10.5v10.5h-10.5zM109 112h10.5v10.5h-10.5zM73 124h10.5v10.5h-10.5zM85 124h10.5v10.5h-10.5zM97 124h10.5v10.5h-10.5zM109 124h10.5v10.5h-10.5z" fill="none" stroke="#8a8a8a" stroke-width="0.5"/>
+<rect x="71.5" y="38.5" width="49.5" height="49.5" fill="none" stroke="#b3261e" stroke-width="1.2" rx="2"/>
+<path d="M92.2,59.2 L100.2,67.2 M92.2,67.2 L100.2,59.2" fill="none" stroke="#b3261e" stroke-width="2" stroke-linecap="round"/>
+<rect x="71.5" y="86.5" width="49.5" height="49.5" fill="none" stroke="#333" stroke-width="1.2" rx="2"/>
+<path d="M91.8,111.2 L94.8,114.2 L100.8,108.1" fill="none" stroke="#1b7a3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="78.2" cy="45.2" r="2.4" fill="#000"/>
+<text x="96.2" y="149.5" text-anchor="middle" font-weight="bold" fill="#b3261e">1 of 2 fails</text>
+<text x="159.2" y="13" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#009E73">M</text>
+<text x="159.2" y="27" text-anchor="middle">TP16+2×TP8</text>
+<rect x="134.5" y="38.5" width="25.5" height="49.5" fill="url(#fx)" rx="2"/>
+<rect x="158.5" y="38.5" width="25.5" height="49.5" fill="#c2e6d9" rx="2"/>
+<rect x="134.5" y="86.5" width="49.5" height="49.5" fill="#c2e6d9" rx="2"/>
+<path d="M136 40h10.5v10.5h-10.5zM148 40h10.5v10.5h-10.5zM160 40h10.5v10.5h-10.5zM172 40h10.5v10.5h-10.5zM136 52h10.5v10.5h-10.5zM148 52h10.5v10.5h-10.5zM160 52h10.5v10.5h-10.5zM172 52h10.5v10.5h-10.5zM136 64h10.5v10.5h-10.5zM148 64h10.5v10.5h-10.5zM160 64h10.5v10.5h-10.5zM172 64h10.5v10.5h-10.5zM136 76h10.5v10.5h-10.5zM148 76h10.5v10.5h-10.5zM160 76h10.5v10.5h-10.5zM172 76h10.5v10.5h-10.5zM136 88h10.5v10.5h-10.5zM148 88h10.5v10.5h-10.5zM160 88h10.5v10.5h-10.5zM172 88h10.5v10.5h-10.5zM136 100h10.5v10.5h-10.5zM148 100h10.5v10.5h-10.5zM160 100h10.5v10.5h-10.5zM172 100h10.5v10.5h-10.5zM136 112h10.5v10.5h-10.5zM148 112h10.5v10.5h-10.5zM160 112h10.5v10.5h-10.5zM172 112h10.5v10.5h-10.5zM136 124h10.5v10.5h-10.5zM148 124h10.5v10.5h-10.5zM160 124h10.5v10.5h-10.5zM172 124h10.5v10.5h-10.5z" fill="none" stroke="#8a8a8a" stroke-width="0.5"/>
+<rect x="134.5" y="38.5" width="25.5" height="49.5" fill="none" stroke="#b3261e" stroke-width="1.2" rx="2"/>
+<path d="M143.2,59.2 L151.2,67.2 M143.2,67.2 L151.2,59.2" fill="none" stroke="#b3261e" stroke-width="2" stroke-linecap="round"/>
+<rect x="158.5" y="38.5" width="25.5" height="49.5" fill="none" stroke="#333" stroke-width="1.2" rx="2"/>
+<path d="M166.8,63.2 L169.8,66.2 L175.8,60.1" fill="none" stroke="#1b7a3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="134.5" y="86.5" width="49.5" height="49.5" fill="none" stroke="#333" stroke-width="1.2" rx="2"/>
+<path d="M154.8,111.2 L157.8,114.2 L163.8,108.1" fill="none" stroke="#1b7a3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="141.2" cy="45.2" r="2.4" fill="#000"/>
+<text x="159.2" y="149.5" text-anchor="middle" font-weight="bold" fill="#b3261e">1 of 3 fails</text>
+<text x="222.2" y="13" text-anchor="middle" font-size="11.5" font-weight="bold">TP32 /</text>
+<text x="222.2" y="27" text-anchor="middle">lockstep</text>
+<rect x="197.5" y="38.5" width="49.5" height="97.5" fill="#e3e3e3" rx="2"/>
+<path d="M199 40h10.5v10.5h-10.5zM211 40h10.5v10.5h-10.5zM223 40h10.5v10.5h-10.5zM235 40h10.5v10.5h-10.5zM199 52h10.5v10.5h-10.5zM211 52h10.5v10.5h-10.5zM223 52h10.5v10.5h-10.5zM235 52h10.5v10.5h-10.5zM199 64h10.5v10.5h-10.5zM211 64h10.5v10.5h-10.5zM223 64h10.5v10.5h-10.5zM235 64h10.5v10.5h-10.5zM199 76h10.5v10.5h-10.5zM211 76h10.5v10.5h-10.5zM223 76h10.5v10.5h-10.5zM235 76h10.5v10.5h-10.5zM199 88h10.5v10.5h-10.5zM211 88h10.5v10.5h-10.5zM223 88h10.5v10.5h-10.5zM235 88h10.5v10.5h-10.5zM199 100h10.5v10.5h-10.5zM211 100h10.5v10.5h-10.5zM223 100h10.5v10.5h-10.5zM235 100h10.5v10.5h-10.5zM199 112h10.5v10.5h-10.5zM211 112h10.5v10.5h-10.5zM223 112h10.5v10.5h-10.5zM235 112h10.5v10.5h-10.5zM199 124h10.5v10.5h-10.5zM211 124h10.5v10.5h-10.5zM223 124h10.5v10.5h-10.5zM235 124h10.5v10.5h-10.5z" fill="none" stroke="#8a8a8a" stroke-width="0.5"/>
+<rect x="197.5" y="38.5" width="49.5" height="97.5" fill="none" stroke="#333" stroke-width="1.2" rx="2"/>
+<path d="M217.8,87.2 L220.8,90.2 L226.8,84.1" fill="none" stroke="#1b7a3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="204.2" cy="45.2" r="2.4" fill="#000"/>
+<text x="222.2" y="149.5" text-anchor="middle" font-weight="bold" fill="#1b7a3a">compiles</text>
+<text x="285.2" y="13" text-anchor="middle" font-size="11.5" font-weight="bold">Per-block</text>
+<text x="285.2" y="27" text-anchor="middle">4×4 runtime</text>
+<rect x="260.5" y="38.5" width="49.5" height="25.5" fill="#e3e3e3" rx="2"/>
+<rect x="260.5" y="62.5" width="49.5" height="25.5" fill="#e3e3e3" rx="2"/>
+<rect x="260.5" y="86.5" width="49.5" height="25.5" fill="#e3e3e3" rx="2"/>
+<rect x="260.5" y="110.5" width="49.5" height="25.5" fill="#e3e3e3" rx="2"/>
+<path d="M262 40h10.5v10.5h-10.5zM274 40h10.5v10.5h-10.5zM286 40h10.5v10.5h-10.5zM298 40h10.5v10.5h-10.5zM262 52h10.5v10.5h-10.5zM274 52h10.5v10.5h-10.5zM286 52h10.5v10.5h-10.5zM298 52h10.5v10.5h-10.5zM262 64h10.5v10.5h-10.5zM274 64h10.5v10.5h-10.5zM286 64h10.5v10.5h-10.5zM298 64h10.5v10.5h-10.5zM262 76h10.5v10.5h-10.5zM274 76h10.5v10.5h-10.5zM286 76h10.5v10.5h-10.5zM298 76h10.5v10.5h-10.5zM262 88h10.5v10.5h-10.5zM274 88h10.5v10.5h-10.5zM286 88h10.5v10.5h-10.5zM298 88h10.5v10.5h-10.5zM262 100h10.5v10.5h-10.5zM274 100h10.5v10.5h-10.5zM286 100h10.5v10.5h-10.5zM298 100h10.5v10.5h-10.5zM262 112h10.5v10.5h-10.5zM274 112h10.5v10.5h-10.5zM286 112h10.5v10.5h-10.5zM298 112h10.5v10.5h-10.5zM262 124h10.5v10.5h-10.5zM274 124h10.5v10.5h-10.5zM286 124h10.5v10.5h-10.5zM298 124h10.5v10.5h-10.5z" fill="none" stroke="#8a8a8a" stroke-width="0.5"/>
+<rect x="260.5" y="38.5" width="49.5" height="25.5" fill="none" stroke="#333" stroke-width="1.2" rx="2"/>
+<path d="M280.8,51.2 L283.8,54.2 L289.8,48.1" fill="none" stroke="#1b7a3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="260.5" y="62.5" width="49.5" height="25.5" fill="none" stroke="#333" stroke-width="1.2" rx="2"/>
+<path d="M280.8,75.2 L283.8,78.2 L289.8,72.1" fill="none" stroke="#1b7a3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="260.5" y="86.5" width="49.5" height="25.5" fill="none" stroke="#333" stroke-width="1.2" rx="2"/>
+<path d="M280.8,99.2 L283.8,102.2 L289.8,96.1" fill="none" stroke="#1b7a3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="260.5" y="110.5" width="49.5" height="25.5" fill="none" stroke="#333" stroke-width="1.2" rx="2"/>
+<path d="M280.8,123.2 L283.8,126.2 L289.8,120.1" fill="none" stroke="#1b7a3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<line x1="259" y1="86.8" x2="311.5" y2="86.8" stroke="#000" stroke-width="2.2"/>
+<circle cx="267.2" cy="45.2" r="2.4" fill="#000"/>
+<text x="285.2" y="149.5" text-anchor="middle" font-weight="bold" fill="#1b7a3a">all compile</text>
+<circle cx="14" cy="172" r="2.4" fill="#000"/>
+<text x="21" y="176">chip 0 (origin)</text>
+<rect x="108" y="167" width="11" height="9" fill="url(#fx)" stroke="#b3261e" stroke-width="1"/>
+<text x="123" y="176">proper subset with chip 0: fails</text>
+</svg>
+```),
+  caption: [Deviceless compile matrix on the $4 times 8$ v5e topology (`libtpu` 0.0.43, 0.0.43.2, and 0.0.48). In a 32-chip runtime, `libtpu` enters a limited-ICI-routing mode in which every multi-chip program over a proper subset containing chip 0 fails to compile, so `S`, `H`, and `M` each have one instance that cannot run on its own. Programs over all 32 chips (`TP32`, lockstep DP4$times$`TP8` and DP2$times$`TP16`) compile, as do host-row instances inside per-block 16-chip ($4 times 4$) runtimes, where this mode is off.],
+) <fig-fullmesh>
 
 _Why PhaseMorph keeps process isolation._ Retrofitting unified submeshes into vLLM would require refactoring roughly 1.5k–3k lines around process-global singletons (the TPU worker, `jax.clear_caches()`, and Ray executor bindings) and would merge four hosts into one failure domain. Yet it would only trim the warm switch cost from 21.1–27.5 s to $approx 9"–"10" s"$, improving the median bulk makespan gain by 0.3 percentage points. Process-isolated switching already captures 99.7% of the achievable gain (@sec-eval-submesh), so PhaseMorph uses it in production and treats the unified runtime as a lower bound.
 
@@ -610,9 +1113,213 @@ _Warm full switch._ @tab-segments decomposes the cost of a warm `S → H` switch
   caption: [[Reconfiguration Latency Reduction] Segment breakdown of warm reconfiguration cost for PhaseMorph-Snap, PhaseMorph-Cache, and PhaseMorph. Full A and Full B are full `S → H` switches from two measurement campaigns (B with inline provisioning); Partial is an `S → M` switch, whose cost is $C_"eff"$. Parenthesized pre-spawn times overlap the source phase.],
 ) <tab-segments>
 
+@fig-segments stacks the same segments on one time axis.
+
+#figure(
+  svg-fig(```svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 262" font-family="Liberation Sans, Arial, Helvetica, sans-serif" font-size="11" fill="#222">
+<defs><pattern id="sr" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="#fff"/><line x1="0" y1="0" x2="0" y2="4" stroke="#444" stroke-width="1.4"/></pattern><pattern id="sp" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="#d5edf7"/><line x1="0" y1="0" x2="0" y2="4" stroke="#3b8fb5" stroke-width="1.2"/></pattern></defs>
+<line x1="35" y1="233.5" x2="198" y2="233.5" stroke="#e2e2e2" stroke-width="1"/>
+<text x="32" y="237.5" text-anchor="end">-30</text>
+<line x1="35" y1="196" x2="198" y2="196" stroke="#222" stroke-width="1"/>
+<text x="32" y="200" text-anchor="end">0</text>
+<line x1="35" y1="158.5" x2="198" y2="158.5" stroke="#e2e2e2" stroke-width="1"/>
+<text x="32" y="162.5" text-anchor="end">30</text>
+<line x1="35" y1="121" x2="198" y2="121" stroke="#e2e2e2" stroke-width="1"/>
+<text x="32" y="125" text-anchor="end">60</text>
+<line x1="35" y1="83.5" x2="198" y2="83.5" stroke="#e2e2e2" stroke-width="1"/>
+<text x="32" y="87.5" text-anchor="end">90</text>
+<line x1="35" y1="46" x2="198" y2="46" stroke="#e2e2e2" stroke-width="1"/>
+<text x="32" y="50" text-anchor="end">120</text>
+<text x="10" y="127.2" text-anchor="middle" font-size="11.5" font-weight="bold" transform="rotate(-90 10 127.2)">Seconds after T<tspan dy="2.6" font-size="9.2">0</tspan><tspan dy="-2.6"> </tspan></text>
+<rect x="44" y="191.3" width="22" height="4.7" fill="#8c8c8c" stroke="#fff" stroke-width="0.4"/>
+<rect x="44" y="177.4" width="22" height="13.9" fill="#c8c8c8" stroke="#fff" stroke-width="0.4"/>
+<rect x="44" y="150.5" width="22" height="26.9" fill="#88CCEE" stroke="#fff" stroke-width="0.4"/>
+<rect x="44" y="146.1" width="22" height="4.4" fill="#DDCC77" stroke="#fff" stroke-width="0.4"/>
+<rect x="44" y="139.8" width="22" height="6.3" fill="#CC6677" stroke="#fff" stroke-width="0.4"/>
+<rect x="44" y="107.4" width="22" height="32.4" fill="#999933" stroke="#fff" stroke-width="0.4"/>
+<rect x="44" y="39.1" width="22" height="68.3" fill="#AA4499" stroke="#fff" stroke-width="0.4"/>
+<rect x="44" y="32.7" width="22" height="6.4" fill="#5f5f5f" stroke="#fff" stroke-width="0.4"/>
+<rect x="44" y="30.7" width="22" height="2" fill="url(#sr)" stroke="#444" stroke-width="0.4"/>
+<text x="55" y="26.7" text-anchor="middle" font-weight="bold">132.2</text>
+<text x="55" y="254.5" text-anchor="middle">Snap</text>
+<rect x="76" y="191.6" width="22" height="4.4" fill="#8c8c8c" stroke="#fff" stroke-width="0.4"/>
+<rect x="76" y="176.4" width="22" height="15.2" fill="#c8c8c8" stroke="#fff" stroke-width="0.4"/>
+<rect x="76" y="149.5" width="22" height="26.9" fill="#88CCEE" stroke="#fff" stroke-width="0.4"/>
+<rect x="76" y="144.9" width="22" height="4.5" fill="#DDCC77" stroke="#fff" stroke-width="0.4"/>
+<rect x="76" y="138.9" width="22" height="6" fill="#CC6677" stroke="#fff" stroke-width="0.4"/>
+<rect x="76" y="135.6" width="22" height="3.3" fill="#999933" stroke="#fff" stroke-width="0.4"/>
+<rect x="76" y="91.7" width="22" height="43.9" fill="#AA4499" stroke="#fff" stroke-width="0.4"/>
+<rect x="76" y="87" width="22" height="4.7" fill="#5f5f5f" stroke="#fff" stroke-width="0.4"/>
+<rect x="76" y="83.7" width="22" height="3.3" fill="url(#sr)" stroke="#444" stroke-width="0.4"/>
+<text x="87" y="79.7" text-anchor="middle" font-weight="bold">89.8</text>
+<text x="87" y="254.5" text-anchor="middle">Cache</text>
+<rect x="108" y="196" width="22" height="42.9" fill="url(#sp)" stroke="#3b8fb5" stroke-width="0.6"/>
+<rect x="108" y="193.5" width="22" height="2.5" fill="#8c8c8c" stroke="#fff" stroke-width="0.4"/>
+<rect x="108" y="192.4" width="22" height="1.1" fill="#c8c8c8" stroke="#fff" stroke-width="0.4"/>
+<rect x="108" y="187.6" width="22" height="4.9" fill="#DDCC77" stroke="#fff" stroke-width="0.4"/>
+<rect x="108" y="181.4" width="22" height="6.1" fill="#CC6677" stroke="#fff" stroke-width="0.4"/>
+<rect x="108" y="178.2" width="22" height="3.2" fill="#999933" stroke="#fff" stroke-width="0.4"/>
+<rect x="108" y="172" width="22" height="6.2" fill="#AA4499" stroke="#fff" stroke-width="0.4"/>
+<rect x="108" y="166" width="22" height="5.9" fill="#5f5f5f" stroke="#fff" stroke-width="0.4"/>
+<rect x="108" y="161.6" width="22" height="4.4" fill="url(#sr)" stroke="#444" stroke-width="0.4"/>
+<text x="119" y="157.6" text-anchor="middle" font-weight="bold">27.5</text>
+<text x="119" y="254.5" text-anchor="middle">Full A</text>
+<rect x="140" y="196" width="22" height="42.6" fill="url(#sp)" stroke="#3b8fb5" stroke-width="0.6"/>
+<rect x="140" y="193.6" width="22" height="2.4" fill="#8c8c8c" stroke="#fff" stroke-width="0.4"/>
+<rect x="140" y="192.5" width="22" height="1.1" fill="#c8c8c8" stroke="#fff" stroke-width="0.4"/>
+<rect x="140" y="187.6" width="22" height="4.9" fill="#DDCC77" stroke="#fff" stroke-width="0.4"/>
+<rect x="140" y="181.5" width="22" height="6.1" fill="#CC6677" stroke="#fff" stroke-width="0.4"/>
+<rect x="140" y="178.3" width="22" height="3.2" fill="#999933" stroke="#fff" stroke-width="0.4"/>
+<rect x="140" y="172.2" width="22" height="6.2" fill="#AA4499" stroke="#fff" stroke-width="0.4"/>
+<rect x="140" y="166.5" width="22" height="5.7" fill="#5f5f5f" stroke="#fff" stroke-width="0.4"/>
+<line x1="137" y1="169.6" x2="165" y2="169.6" stroke="#000" stroke-width="1.6"/>
+<text x="151" y="162.5" text-anchor="middle" font-weight="bold">21.1</text>
+<text x="151" y="254.5" text-anchor="middle">Full B</text>
+<rect x="172" y="196" width="22" height="40.5" fill="url(#sp)" stroke="#3b8fb5" stroke-width="0.6"/>
+<rect x="172" y="193.7" width="22" height="2.3" fill="#8c8c8c" stroke="#fff" stroke-width="0.4"/>
+<rect x="172" y="192.6" width="22" height="1.1" fill="#c8c8c8" stroke="#fff" stroke-width="0.4"/>
+<rect x="172" y="188" width="22" height="4.7" fill="#DDCC77" stroke="#fff" stroke-width="0.4"/>
+<rect x="172" y="181.8" width="22" height="6.2" fill="#CC6677" stroke="#fff" stroke-width="0.4"/>
+<rect x="172" y="178.6" width="22" height="3.2" fill="#999933" stroke="#fff" stroke-width="0.4"/>
+<rect x="172" y="172.2" width="22" height="6.3" fill="#AA4499" stroke="#fff" stroke-width="0.4"/>
+<rect x="172" y="167.7" width="22" height="4.5" fill="#5f5f5f" stroke="#fff" stroke-width="0.4"/>
+<line x1="169" y1="172.4" x2="197" y2="172.4" stroke="#000" stroke-width="1.6"/>
+<text x="183" y="166.2" text-anchor="middle" font-weight="bold">18.8</text>
+<text x="183" y="254.5" text-anchor="middle">Partial</text>
+<text x="42" y="213.5" fill="#2f6f8f">pre-spawn</text>
+<text x="42" y="226.5" fill="#2f6f8f">hidden →</text>
+<rect x="206" y="21" width="10" height="10" fill="#8c8c8c" stroke="#555" stroke-width="0.5"/>
+<text x="220" y="30">drain + release</text>
+<rect x="206" y="36" width="10" height="10" fill="#c8c8c8" stroke="#555" stroke-width="0.5"/>
+<text x="220" y="45">gate + VFIO</text>
+<rect x="206" y="51" width="10" height="10" fill="#88CCEE" stroke="#555" stroke-width="0.5"/>
+<text x="220" y="60">spawn + imports</text>
+<rect x="206" y="66" width="10" height="10" fill="#DDCC77" stroke="#555" stroke-width="0.5"/>
+<text x="220" y="75">init_device</text>
+<rect x="206" y="81" width="10" height="10" fill="#CC6677" stroke="#555" stroke-width="0.5"/>
+<text x="220" y="90">load_model</text>
+<rect x="206" y="96" width="10" height="10" fill="#999933" stroke="#555" stroke-width="0.5"/>
+<text x="220" y="105">KV init</text>
+<rect x="206" y="111" width="10" height="10" fill="#AA4499" stroke="#555" stroke-width="0.5"/>
+<text x="220" y="120">compile/warm-up</text>
+<rect x="206" y="126" width="10" height="10" fill="#5f5f5f" stroke="#555" stroke-width="0.5"/>
+<text x="220" y="135">gateway + other</text>
+<rect x="206" y="141" width="10" height="10" fill="url(#sr)" stroke="#555" stroke-width="0.5"/>
+<text x="220" y="150">ramp (+)</text>
+<rect x="206" y="156" width="10" height="10" fill="url(#sp)" stroke="#555" stroke-width="0.5"/>
+<text x="220" y="165">hidden pre-spawn</text>
+<line x1="206" y1="186" x2="218" y2="186" stroke="#000" stroke-width="1.6"/>
+<text x="222" y="190">C if ramp &lt; 0</text>
+</svg>
+```),
+  caption: [Segments of @tab-segments stacked on one axis (seconds after $T_0$). Bars below zero are pre-spawn time hidden in the source phase. The hatched cap is the ramp deficit; when the ramp is negative, a black tick marks $C$ below the end of the dispatch gap.],
+) <fig-segments>
+
 _Warm partial switch._ A partial `S → M` switch rebuilds only half of the slice. Its effective cost falls from 186.0 s with vanilla redeployment to 128.9 s with PhaseMorph-Snap, 87.3 s with PhaseMorph-Cache, and 18.84 s with PhaseMorph. Throughout the switch, the two kept `TP8` instances pause for only about 2.1 s, and the first long request is dispatched to the new `TP16` instance 20.6 s after $T_0$. Once running, the new instance serves `W6` at the static-`M` rate (407.4 s from first dispatch to finish versus 409.2 s), so the switch leaves no join tail.
 
 _Cold first switch and amortization._ Without pre-read, inline provisioning makes the first switch into `H` cost 222.63 s, avoiding a separate 350.8 s provisioning pass. PhaseMorph-PreRead converts weights during the source phase; the child absorbs about 165 s of conversion before $T_0$ and finishes about 79.6 s after it, so the cold switch costs 134.10 s, 88.5 s (40%) less. Amortized over 1, 3, and 10 switches, the per-switch cost is 134.1, 58.8, and 32.4 s, compared with 222.6, 88.3, and 41.3 s without pre-read and 378.3, 144.4, and 62.6 s with a separate provisioning pass.
+
+@fig-coldswitch places both cold switches on one time axis.
+
+#wide-fig(
+  svg-fig(```svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 270" font-family="Liberation Sans, Arial, Helvetica, sans-serif" font-size="11" fill="#222">
+<defs><pattern id="cr" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="#fff"/><line x1="0" y1="0" x2="0" y2="4" stroke="#444" stroke-width="1.4"/></pattern><pattern id="cc" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="#f7e1e5"/><line x1="0" y1="0" x2="0" y2="5" stroke="#CC6677" stroke-width="1.2"/></pattern></defs>
+<line x1="150" y1="26" x2="616" y2="26" stroke="#666" stroke-width="1"/>
+<line x1="150" y1="23" x2="150" y2="26" stroke="#666" stroke-width="1"/>
+<text x="150" y="20" text-anchor="middle" fill="#666">-200</text>
+<line x1="204.2" y1="23" x2="204.2" y2="26" stroke="#666" stroke-width="1"/>
+<text x="204.2" y="20" text-anchor="middle" fill="#666">-150</text>
+<line x1="258.4" y1="23" x2="258.4" y2="26" stroke="#666" stroke-width="1"/>
+<text x="258.4" y="20" text-anchor="middle" fill="#666">-100</text>
+<line x1="312.6" y1="23" x2="312.6" y2="26" stroke="#666" stroke-width="1"/>
+<text x="312.6" y="20" text-anchor="middle" fill="#666">-50</text>
+<line x1="366.7" y1="23" x2="366.7" y2="26" stroke="#666" stroke-width="1"/>
+<text x="366.7" y="20" text-anchor="middle" fill="#666">0</text>
+<line x1="420.9" y1="23" x2="420.9" y2="26" stroke="#666" stroke-width="1"/>
+<text x="420.9" y="20" text-anchor="middle" fill="#666">50</text>
+<line x1="475.1" y1="23" x2="475.1" y2="26" stroke="#666" stroke-width="1"/>
+<text x="475.1" y="20" text-anchor="middle" fill="#666">100</text>
+<line x1="529.3" y1="23" x2="529.3" y2="26" stroke="#666" stroke-width="1"/>
+<text x="529.3" y="20" text-anchor="middle" fill="#666">150</text>
+<line x1="583.5" y1="23" x2="583.5" y2="26" stroke="#666" stroke-width="1"/>
+<text x="583.5" y="20" text-anchor="middle" fill="#666">200</text>
+<text x="616" y="38" text-anchor="end" fill="#666">s relative to T<tspan dy="2.6" font-size="8.8">0</tspan><tspan dy="-2.6"> </tspan></text>
+<line x1="366.7" y1="26" x2="366.7" y2="206" stroke="#000" stroke-width="1" stroke-dasharray="3,2"/>
+<text x="8" y="42" font-size="11.5" font-weight="bold">Cold, inline snapshot</text>
+<text x="142" y="66" text-anchor="end" font-weight="bold">Source S</text>
+<rect x="158.5" y="52" width="208.2" height="20" fill="#0072B2"/>
+<text x="262.6" y="66" text-anchor="middle" fill="#fff">serves W0</text>
+<text x="142" y="92" text-anchor="end" font-weight="bold">Target H</text>
+<rect x="158.5" y="78" width="36.4" height="20" fill="#88CCEE" stroke="#fff" stroke-width="0.6"/>
+<rect x="194.9" y="79" width="171.8" height="18" fill="#fafafa" stroke="#888" stroke-width="0.8" stroke-dasharray="3,2"/>
+<text x="280.8" y="92" text-anchor="middle" fill="#666">parked (CPU only)</text>
+<rect x="366.7" y="78" width="3.1" height="20" fill="#8c8c8c" stroke="#fff" stroke-width="0.5"/>
+<rect x="369.9" y="78" width="4.2" height="20" fill="#DDCC77" stroke="#fff" stroke-width="0.5"/>
+<rect x="374.1" y="78" width="172.2" height="20" fill="#CC6677" stroke="#fff" stroke-width="0.5"/>
+<text x="460.2" y="92" text-anchor="middle" fill="#fff">load_model 158.9</text>
+<rect x="546.3" y="78" width="8.2" height="20" fill="#882255" stroke="#fff" stroke-width="0.5"/>
+<rect x="554.5" y="78" width="2.9" height="20" fill="#999933" stroke="#fff" stroke-width="0.5"/>
+<rect x="557.4" y="78" width="38.8" height="20" fill="#AA4499" stroke="#fff" stroke-width="0.5"/>
+<text x="576.8" y="92" text-anchor="middle" fill="#fff">35.8</text>
+<rect x="596.1" y="78" width="2.4" height="20" fill="#882255" stroke="#fff" stroke-width="0.5"/>
+<rect x="598.6" y="78" width="6" height="20" fill="#5f5f5f" stroke="#fff" stroke-width="0.5"/>
+<rect x="604.6" y="78" width="3.4" height="20" fill="url(#cr)" stroke="#444" stroke-width="0.5"/>
+<line x1="608" y1="75" x2="608" y2="101" stroke="#000" stroke-width="1.8"/>
+<text x="608" y="72" text-anchor="end" font-weight="bold">C<tspan dy="2.6" font-size="8.8">first</tspan><tspan dy="-2.6"> = 222.6 s</tspan></text>
+<text x="8" y="114" font-size="11.5" font-weight="bold">PhaseMorph-PreRead</text>
+<text x="142" y="138" text-anchor="end" font-weight="bold">Source S</text>
+<rect x="161.4" y="124" width="205.3" height="20" fill="#0072B2"/>
+<text x="264.1" y="138" text-anchor="middle" fill="#fff">serves W0 (no measurable slowdown)</text>
+<text x="142" y="164" text-anchor="end" font-weight="bold">Pre-read child</text>
+<rect x="198.2" y="150" width="262" height="20" fill="url(#cc)" stroke="#CC6677" stroke-width="1"/>
+<text x="329.2" y="164" text-anchor="middle">CPU convert → snapshot in /dev/shm</text>
+<text x="142" y="190" text-anchor="end" font-weight="bold">Target H</text>
+<rect x="161.4" y="176" width="36.9" height="20" fill="#88CCEE" stroke="#fff" stroke-width="0.6"/>
+<rect x="198.3" y="177" width="168.4" height="18" fill="#fafafa" stroke="#888" stroke-width="0.8" stroke-dasharray="3,2"/>
+<text x="282.5" y="190" text-anchor="middle" fill="#666">parked (CPU only)</text>
+<rect x="366.7" y="176" width="3" height="20" fill="#8c8c8c" stroke="#fff" stroke-width="0.5"/>
+<rect x="369.8" y="176" width="4.4" height="20" fill="#DDCC77" stroke="#fff" stroke-width="0.5"/>
+<rect x="374.2" y="176" width="86.2" height="20" fill="#ebbfc7" stroke="#fff" stroke-width="0.5"/>
+<text x="417.3" y="190" text-anchor="middle">wait 79.6</text>
+<rect x="460.4" y="176" width="6.2" height="20" fill="#CC6677" stroke="#fff" stroke-width="0.5"/>
+<rect x="466.6" y="176" width="2.8" height="20" fill="#999933" stroke="#fff" stroke-width="0.5"/>
+<rect x="469.4" y="176" width="38.2" height="20" fill="#AA4499" stroke="#fff" stroke-width="0.5"/>
+<text x="488.5" y="190" text-anchor="middle" fill="#fff">35.3</text>
+<rect x="507.6" y="176" width="2.5" height="20" fill="#882255" stroke="#fff" stroke-width="0.5"/>
+<rect x="510.1" y="176" width="5.2" height="20" fill="#5f5f5f" stroke="#fff" stroke-width="0.5"/>
+<line x1="512.1" y1="173" x2="512.1" y2="199" stroke="#000" stroke-width="1.8"/>
+<text x="512.1" y="170" text-anchor="middle" font-weight="bold">C<tspan dy="2.6" font-size="8.8">first</tspan><tspan dy="-2.6"> = 134.1 s</tspan></text>
+<line x1="460.2" y1="170" x2="460.2" y2="176" stroke="#CC6677" stroke-width="1.2"/>
+<rect x="8" y="215" width="10" height="10" fill="#0072B2" stroke="#555" stroke-width="0.5"/>
+<text x="22" y="224">S serving</text>
+<rect x="166" y="215" width="10" height="10" fill="#88CCEE" stroke="#555" stroke-width="0.5"/>
+<text x="180" y="224">spawn + imports</text>
+<rect x="324" y="215" width="10" height="10" fill="#8c8c8c" stroke="#555" stroke-width="0.5"/>
+<text x="338" y="224">drain / handoff</text>
+<rect x="482" y="215" width="10" height="10" fill="#DDCC77" stroke="#555" stroke-width="0.5"/>
+<text x="496" y="224">init_device</text>
+<rect x="8" y="230" width="10" height="10" fill="#CC6677" stroke="#555" stroke-width="0.5"/>
+<text x="22" y="239">load_model</text>
+<rect x="166" y="230" width="10" height="10" fill="#ebbfc7" stroke="#555" stroke-width="0.5"/>
+<text x="180" y="239">pre-read wait</text>
+<rect x="324" y="230" width="10" height="10" fill="#882255" stroke="#555" stroke-width="0.5"/>
+<text x="338" y="239">snapshot / bank write</text>
+<rect x="482" y="230" width="10" height="10" fill="#999933" stroke="#555" stroke-width="0.5"/>
+<text x="496" y="239">KV cache init</text>
+<rect x="8" y="245" width="10" height="10" fill="#AA4499" stroke="#555" stroke-width="0.5"/>
+<text x="22" y="254">compile / warm-up</text>
+<rect x="166" y="245" width="10" height="10" fill="#5f5f5f" stroke="#555" stroke-width="0.5"/>
+<text x="180" y="254">endpoint + gateway</text>
+<rect x="324" y="245" width="10" height="10" fill="url(#cc)" stroke="#555" stroke-width="0.5"/>
+<text x="338" y="254">pre-read child</text>
+<rect x="482" y="245" width="10" height="10" fill="url(#cr)" stroke="#555" stroke-width="0.5"/>
+<text x="496" y="254">ramp</text>
+</svg>
+```),
+  caption: [Cold first switch into `H` with inline snapshot provisioning (top) and with PhaseMorph-PreRead (bottom), to scale. Left of $T_0$: means of the phase-start and parking timestamps (three and two runs); right of $T_0$: mean segments. The pre-read child starts when the workers park, about 156 s before $T_0$, and finishes about 86 s after it. The target worker waits 79.6 s for the child, so `load_model` time on the critical path falls from 158.9 s to 85.3 s and $C_"first"$ from 222.6 s to 134.1 s.],
+) <fig-coldswitch>
 
 == Foreground Serving Throughput Preservation <sec-eval-foreground>
 
@@ -632,6 +1339,79 @@ PhaseMorph's preparation runs on the same hosts as the source layout, so it must
   caption: [[Foreground Throughput Preservation] Source-phase `S` ($4 times$`TP8`) throughput on `W0` while the target layout is prepared (ranges over three repetitions, two for pre-read). "None (Cache)" runs PhaseMorph-Cache without pre-spawning; "None (cold control)" is the cold first switch without a pre-read child. For pre-spawn rows, the early window is the first $approx 34" s"$ of the phase, during which workers spawn and `W0` ramps up, and the late window spans from parking until $T_0$; for pre-read rows, the windows are during and after the CPU child.],
 ) <tab-foreground>
 
+@fig-source plots every repetition of @tab-foreground.
+
+#figure(
+  svg-fig(```svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 182" font-family="Liberation Sans, Arial, Helvetica, sans-serif" font-size="11" fill="#222">
+<text x="159" y="14" text-anchor="middle" font-weight="bold">Early window</text>
+<text x="159" y="28" text-anchor="middle" fill="#666">S tok/s</text>
+<rect x="112" y="32" width="94" height="108" fill="none" stroke="#222" stroke-width="0.8"/>
+<line x1="137.6" y1="32" x2="137.6" y2="140" stroke="#e2e2e2" stroke-width="1"/>
+<text x="137.6" y="154" text-anchor="middle">2,650</text>
+<line x1="180.4" y1="32" x2="180.4" y2="140" stroke="#e2e2e2" stroke-width="1"/>
+<text x="180.4" y="154" text-anchor="middle">2,700</text>
+<line x1="128.2" y1="44" x2="152.2" y2="44" stroke="#0072B2" stroke-width="1.2"/>
+<circle cx="128.2" cy="44" r="3.1" fill="#fff" stroke="#0072B2" stroke-width="1.3"/>
+<circle cx="150.5" cy="44" r="3.1" fill="#fff" stroke="#0072B2" stroke-width="1.3"/>
+<circle cx="152.2" cy="44" r="3.1" fill="#fff" stroke="#0072B2" stroke-width="1.3"/>
+<line x1="147" y1="64" x2="157.3" y2="64" stroke="#0072B2" stroke-width="1.2"/>
+<circle cx="147.0" cy="64" r="3.3" fill="#0072B2"/>
+<circle cx="147.0" cy="64" r="3.3" fill="#0072B2"/>
+<circle cx="157.3" cy="64" r="3.3" fill="#0072B2"/>
+<line x1="147.9" y1="84" x2="160.7" y2="84" stroke="#0072B2" stroke-width="1.2"/>
+<circle cx="147.9" cy="84" r="3.3" fill="#0072B2"/>
+<circle cx="155.6" cy="84" r="3.3" fill="#0072B2"/>
+<circle cx="160.7" cy="84" r="3.3" fill="#0072B2"/>
+<line x1="184.6" y1="104" x2="189.8" y2="104" stroke="#0072B2" stroke-width="1.2"/>
+<circle cx="184.6" cy="104" r="3.1" fill="#fff" stroke="#0072B2" stroke-width="1.3"/>
+<circle cx="189.8" cy="104" r="3.1" fill="#fff" stroke="#0072B2" stroke-width="1.3"/>
+<circle cx="184.6" cy="104" r="3.1" fill="#fff" stroke="#0072B2" stroke-width="1.3"/>
+<line x1="162.4" y1="124" x2="190.6" y2="124" stroke="#0072B2" stroke-width="1.2"/>
+<circle cx="162.4" cy="124" r="3.3" fill="#0072B2"/>
+<circle cx="190.6" cy="124" r="3.3" fill="#0072B2"/>
+<line x1="112" y1="94" x2="206" y2="94" stroke="#999" stroke-width="0.8" stroke-dasharray="3,2"/>
+<text x="267" y="14" text-anchor="middle" font-weight="bold">Late window</text>
+<text x="267" y="28" text-anchor="middle" fill="#666">S tok/s</text>
+<rect x="220" y="32" width="94" height="108" fill="none" stroke="#222" stroke-width="0.8"/>
+<line x1="239.6" y1="32" x2="239.6" y2="140" stroke="#e2e2e2" stroke-width="1"/>
+<text x="239.6" y="154" text-anchor="middle">3,950</text>
+<line x1="278.8" y1="32" x2="278.8" y2="140" stroke="#e2e2e2" stroke-width="1"/>
+<text x="278.8" y="154" text-anchor="middle">4,050</text>
+<line x1="239.2" y1="44" x2="264.3" y2="44" stroke="#0072B2" stroke-width="1.2"/>
+<circle cx="264.3" cy="44" r="3.1" fill="#fff" stroke="#0072B2" stroke-width="1.3"/>
+<circle cx="239.2" cy="44" r="3.1" fill="#fff" stroke="#0072B2" stroke-width="1.3"/>
+<circle cx="249.4" cy="44" r="3.1" fill="#fff" stroke="#0072B2" stroke-width="1.3"/>
+<line x1="232.5" y1="64" x2="270.9" y2="64" stroke="#0072B2" stroke-width="1.2"/>
+<circle cx="232.5" cy="64" r="3.3" fill="#0072B2"/>
+<circle cx="268.6" cy="64" r="3.3" fill="#0072B2"/>
+<circle cx="270.9" cy="64" r="3.3" fill="#0072B2"/>
+<line x1="246.6" y1="84" x2="303.4" y2="84" stroke="#0072B2" stroke-width="1.2"/>
+<circle cx="296.4" cy="84" r="3.3" fill="#0072B2"/>
+<circle cx="246.6" cy="84" r="3.3" fill="#0072B2"/>
+<circle cx="303.4" cy="84" r="3.3" fill="#0072B2"/>
+<line x1="231.4" y1="104" x2="267.4" y2="104" stroke="#0072B2" stroke-width="1.2"/>
+<circle cx="253.3" cy="104" r="3.1" fill="#fff" stroke="#0072B2" stroke-width="1.3"/>
+<circle cx="267.4" cy="104" r="3.1" fill="#fff" stroke="#0072B2" stroke-width="1.3"/>
+<circle cx="231.4" cy="104" r="3.1" fill="#fff" stroke="#0072B2" stroke-width="1.3"/>
+<line x1="279.1" y1="124" x2="280.3" y2="124" stroke="#0072B2" stroke-width="1.2"/>
+<circle cx="279.1" cy="124" r="3.3" fill="#0072B2"/>
+<circle cx="280.3" cy="124" r="3.3" fill="#0072B2"/>
+<line x1="220" y1="94" x2="314" y2="94" stroke="#999" stroke-width="0.8" stroke-dasharray="3,2"/>
+<text x="104" y="48" text-anchor="end">No prep (Cache)</text>
+<text x="104" y="68" text-anchor="end">Pre-spawn, full</text>
+<text x="104" y="88" text-anchor="end">Pre-spawn, partial</text>
+<text x="104" y="108" text-anchor="end">No child (cold)</text>
+<text x="104" y="128" text-anchor="end">Pre-read child</text>
+<circle cx="18" cy="170" r="3.1" fill="#fff" stroke="#0072B2" stroke-width="1.3"/>
+<text x="25" y="174">control</text>
+<circle cx="82" cy="170" r="3.3" fill="#0072B2"/>
+<text x="89" y="174">with preparation (one dot per rep)</text>
+</svg>
+```),
+  caption: [Source-phase `S` throughput on `W0`, one dot per repetition of @tab-foreground (open: no preparation; filled: with preparation; rows below the dashed line come from the cold-switch campaign; windows as defined in @tab-foreground). Prepared runs overlap the control spreads; the largest shortfall below a control's minimum is 1.0% (pre-read child, early window).],
+) <fig-source>
+
 Correctness is preserved as well. Banked executables served every call of the target phase with no misses or rejections (65,956 model-step calls), greedy outputs of banked engines matched those of natively loaded engines token for token on 32 prompts per engine, and deliberately invalidating one rank's bank caused all ranks to fall back to normal compilation without failing the deployment.
 
 == End-to-End Multi-Phase Makespan and Break-Even Analysis <sec-eval-e2e>
@@ -640,56 +1420,59 @@ We evaluate switching across the two-phase job space $(k_s, k_l) in [0, 8] times
 
 #figure(
   svg-fig(```svg
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 265" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#1f2328">
-  <text x="215" y="16" text-anchor="middle" font-weight="bold" font-size="11.5">Winning Strategy per (k_l, k_s) at PhaseMorph Switch Cost</text>
-  <!-- Plot area: x from 55 to 395 (k_l: 0 to 8, 42.5 px/unit), y from 225 down to 33 (k_s: 0 to 8, 24 px/unit) -->
-  <!-- Region 4: Partial S -> M (top left, k_s > 0.053 + 1.160 k_l) -->
-  <polygon points="55,206 168,142 365,33 55,33" fill="#ddf4ff"/>
-  <!-- Region 3: Static M (narrow band between k_s = 1.064 k_l - 0.144 and k_s = 1.160 k_l + 0.053) -->
-  <polygon points="168,142 365,33 395,33 395,45 192,162" fill="#fff8c5"/>
-  <!-- Region 2: Full S -> H (right of Static M, above k_s = 0.78 -> y = 206.3) -->
-  <polygon points="55,206 168,142 192,162 395,45 395,206" fill="#dafbe1"/>
-  <!-- Region 1: Static H (bottom strip k_s < 0.78 -> y in [206.3, 225]) -->
-  <rect x="55" y="206.3" width="340" height="18.7" fill="#ffebe9"/>
-
-  <!-- Boundary lines -->
-  <line x1="55" y1="206.3" x2="395" y2="206.3" stroke="#1a7f37" stroke-width="1.8"/>
-  <line x1="168" y1="142" x2="365" y2="33" stroke="#0969da" stroke-width="1.5"/>
-  <line x1="192" y1="162" x2="395" y2="45" stroke="#9a6700" stroke-width="1.5"/>
-
-  <!-- Break-even lines of earlier variants (dashed) -->
-  <line x1="55" y1="173.6" x2="395" y2="173.6" stroke="#cf222e" stroke-width="1.2" stroke-dasharray="5,3"/>
-  <text x="392" y="170" text-anchor="end" font-size="9" fill="#cf222e">PhaseMorph-Snap k_s* = 2.14 (C = 132.2 s)</text>
-  <line x1="55" y1="186.8" x2="395" y2="186.8" stroke="#8250df" stroke-width="1.2" stroke-dasharray="3,3"/>
-  <text x="392" y="184" text-anchor="end" font-size="9" fill="#8250df">PhaseMorph-Cache k_s* = 1.59 (C = 89.8 s)</text>
-  <text x="392" y="203" text-anchor="end" font-size="9.5" font-weight="bold" fill="#1a7f37">PhaseMorph k_s* = 0.78 (C = 27.5 s)</text>
-
-  <!-- Region labels -->
-  <text x="145" y="88" text-anchor="middle" font-weight="bold" fill="#0969da">Partial Switch S → M</text>
-  <text x="145" y="102" text-anchor="middle" font-size="9.5" fill="#0969da">(41% of grid: short-heavy)</text>
-  <text x="254" y="113" text-anchor="middle" font-size="9" font-weight="bold" fill="#9a6700" transform="rotate(-29 254 110)">Static M (6%)</text>
-  <text x="305" y="138" text-anchor="middle" font-weight="bold" fill="#1a7f37">Full Switch S → H</text>
-  <text x="305" y="152" text-anchor="middle" font-size="9.5" fill="#1a7f37">(41% of grid: long-heavy)</text>
-  <text x="225" y="219" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#cf222e">Static H (12% of grid: k_s &lt; 0.78 W0 manifests)</text>
-
-  <!-- Axes -->
-  <rect x="55" y="33" width="340" height="192" fill="none" stroke="#1f2328" stroke-width="1.2"/>
-  <text x="50" y="225" text-anchor="end" font-size="9.5">0</text>
-  <text x="50" y="177" text-anchor="end" font-size="9.5">2</text>
-  <text x="50" y="129" text-anchor="end" font-size="9.5">4</text>
-  <text x="50" y="81" text-anchor="end" font-size="9.5">6</text>
-  <text x="50" y="37" text-anchor="end" font-size="9.5">8</text>
-  <text x="18" y="130" text-anchor="middle" font-weight="bold" transform="rotate(-90 18 130)">Short Phase Size k_s (W0 Manifests)</text>
-
-  <text x="55" y="240" text-anchor="middle" font-size="9.5">0</text>
-  <text x="140" y="240" text-anchor="middle" font-size="9.5">2</text>
-  <text x="225" y="240" text-anchor="middle" font-size="9.5">4</text>
-  <text x="310" y="240" text-anchor="middle" font-size="9.5">6</text>
-  <text x="395" y="240" text-anchor="middle" font-size="9.5">8</text>
-  <text x="225" y="257" text-anchor="middle" font-weight="bold">Long Phase Size k_l (W6 Manifests)</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 300" font-family="Liberation Sans, Arial, Helvetica, sans-serif" font-size="11" fill="#222">
+<polygon points="46,252 312,252 312,228.8 67.5,228.8 48.6,241 47.7,238.2 46,237.8" fill="#f3c3a2" stroke="#f3c3a2" stroke-width="0.6"/>
+<polygon points="46,237.8 49.4,238.3 271.7,14.8 271.7,14 46,14" fill="#c6dcef" stroke="#c6dcef" stroke-width="0.6"/>
+<polygon points="48.6,241 67.5,228.6 300,14.1 300,14 272.5,14 49.4,238.3 48.6,239.9" fill="#b5e0cf" stroke="#b5e0cf" stroke-width="0.6"/>
+<polygon points="48.6,239.9 48.6,238.4" fill="#f3c3a2" stroke="#f3c3a2" stroke-width="0.6"/>
+<polygon points="67.5,228.8 312,228.8 312,14 300,14.1 67.5,228.6" fill="#e2c6e8" stroke="#e2c6e8" stroke-width="0.6"/>
+<path d="M46.0,237.8 L47.7,238.2 L48.6,241.0 L67.5,228.8 L312.0,228.8" fill="none" stroke="#333" stroke-width="0.9"/>
+<path d="M46.0,237.8 L49.4,238.3 L271.7,14.8" fill="none" stroke="#333" stroke-width="0.9"/>
+<path d="M48.6,241.0 L67.5,228.6 L300.0,14.1" fill="none" stroke="#333" stroke-width="0.9"/>
+<path d="M48.6,239.9 L49.4,238.3 L272.5,14.0 L300.0,14.0" fill="none" stroke="#333" stroke-width="0.9"/>
+<path d="M48.6,239.9" fill="none" stroke="#333" stroke-width="0.9"/>
+<path d="M48.6,238.4" fill="none" stroke="#333" stroke-width="0.9"/>
+<path d="M67.5,228.8 L312.0,228.8" fill="none" stroke="#333" stroke-width="0.9"/>
+<path d="M67.5,228.6 L300.0,14.1 L312.0,14.0" fill="none" stroke="#333" stroke-width="0.9"/>
+<line x1="46" y1="192.5" x2="312" y2="192.5" stroke="#fff" stroke-width="0.6" stroke-opacity="0.7"/>
+<line x1="46" y1="133" x2="312" y2="133" stroke="#fff" stroke-width="0.6" stroke-opacity="0.7"/>
+<line x1="46" y1="73.5" x2="312" y2="73.5" stroke="#fff" stroke-width="0.6" stroke-opacity="0.7"/>
+<rect x="46" y="14" width="266" height="238" fill="none" stroke="#222" stroke-width="1"/>
+<line x1="43" y1="252" x2="46" y2="252" stroke="#222" stroke-width="1"/>
+<text x="41" y="256" text-anchor="end">0</text>
+<line x1="43" y1="192.5" x2="46" y2="192.5" stroke="#222" stroke-width="1"/>
+<text x="41" y="196.5" text-anchor="end">2</text>
+<line x1="43" y1="133" x2="46" y2="133" stroke="#222" stroke-width="1"/>
+<text x="41" y="137" text-anchor="end">4</text>
+<line x1="43" y1="73.5" x2="46" y2="73.5" stroke="#222" stroke-width="1"/>
+<text x="41" y="77.5" text-anchor="end">6</text>
+<line x1="43" y1="14" x2="46" y2="14" stroke="#222" stroke-width="1"/>
+<text x="41" y="18" text-anchor="end">8</text>
+<line x1="46" y1="252" x2="46" y2="255" stroke="#222" stroke-width="1"/>
+<text x="46" y="267" text-anchor="middle">0.25</text>
+<line x1="106.1" y1="252" x2="106.1" y2="255" stroke="#222" stroke-width="1"/>
+<text x="106.1" y="267" text-anchor="middle">2</text>
+<line x1="174.7" y1="252" x2="174.7" y2="255" stroke="#222" stroke-width="1"/>
+<text x="174.7" y="267" text-anchor="middle">4</text>
+<line x1="243.4" y1="252" x2="243.4" y2="255" stroke="#222" stroke-width="1"/>
+<text x="243.4" y="267" text-anchor="middle">6</text>
+<line x1="312" y1="252" x2="312" y2="255" stroke="#222" stroke-width="1"/>
+<text x="312" y="267" text-anchor="middle">8</text>
+<text x="179" y="282" text-anchor="middle" font-size="11.5" font-weight="bold">Long phase k<tspan dy="2.6" font-size="9.2">l</tspan><tspan dy="-2.6"> (W6 manifests)</tspan></text>
+<text x="13" y="133" text-anchor="middle" font-size="11.5" font-weight="bold" transform="rotate(-90 13 133.0)">Short phase k<tspan dy="2.6" font-size="9.2">s</tspan><tspan dy="-2.6"> (W0 manifests)</tspan></text>
+<text x="102.6" y="64.6" text-anchor="middle" font-size="12" font-weight="bold">Partial S→M</text>
+<text x="102.6" y="78.6" text-anchor="middle">41% of grid</text>
+<text x="239.9" y="174.6" text-anchor="middle" font-size="12" font-weight="bold">Full S→H</text>
+<text x="239.9" y="188.6" text-anchor="middle">41% of grid</text>
+<text x="214.2" y="85.2" text-anchor="middle" font-weight="bold" transform="rotate(-44.0 214.2 81.2)">static M 6%</text>
+<text x="195.3" y="244.4" text-anchor="middle" font-weight="bold">static H 12%  (k<tspan dy="2.6" font-size="8.8">s</tspan><tspan dy="-2.6"> &lt; k</tspan><tspan dy="2.6" font-size="8.8">s</tspan><tspan dy="-2.6">* = 0.78)</tspan></text>
+<circle cx="71.7" cy="222.2" r="4" fill="#fff" stroke="#000" stroke-width="1.6"/>
+<line x1="70.7" y1="218.2" x2="68.3" y2="149.4" stroke="#000" stroke-width="0.8"/>
+<text x="49.4" y="122.6">measured O3 runs</text>
+<text x="49.4" y="135.6">k<tspan dy="2.6" font-size="8.8">s</tspan><tspan dy="-2.6"> = k</tspan><tspan dy="2.6" font-size="8.8">l</tspan><tspan dy="-2.6"> = 1</tspan></text>
 </svg>
 ```),
-  caption: [[Phase-Space Break-Even Coverage] Best strategy across $(k_l, k_s) in [0.25, 8] times [0, 8]$ (`W6` and `W0` manifests) at PhaseMorph's switch costs ($C_"full" = 27.5" s"$, $C_"part" = 18.8" s"$). Switching wins 82% of the grid (41% full `S → H`, 41% partial `S → M`) and lowers the short-phase break-even threshold $k_s^*$ from 2.14 (PhaseMorph-Snap) to 0.78 `W0` manifests (0.36 if $O = 0$).],
+  caption: [[Phase-Space Break-Even Coverage] Best strategy across $(k_l, k_s) in [0.25, 8] times [0, 8]$ (`W6` and `W0` manifests), computed by the bulk cost model at PhaseMorph's measured costs ($C_"full" = 27.5" s"$, $C_"part" = 18.8" s"$, $O = 32.6" s"$); percentages are shares of the model's 0.25-step grid. Switching wins 82% of the grid (41% full `S → H`, 41% partial `S → M`); static `H` wins only below $k_s^* = 0.78$, and static `M` only in a 6% band. The circle marks $k_s = k_l = 1$, the job size of the measured switch runs.],
 ) <fig-regions>
 
 #wide-fig(
@@ -709,6 +1492,73 @@ We evaluate switching across the two-phase job space $(k_s, k_l) in [0, 8] times
 _Coverage and gains._ As @fig-regions and @tab-breakeven show, vanilla redeployment makes switching worthwhile on only 29% of the job space. PhaseMorph raises this share to 82%, split evenly between full and partial switches, with median and maximum makespan reductions of 9.9% and 26.8% over the best static layout. Static `M` remains best only in the 6% band where its two halves finish together, and static `H` only when the short phase is too small to amortize a switch.
 
 _Break-even job sizes._ Compressing $C$ from 419.0 s to 27.5 s lowers the short-phase break-even threshold $k_s^* = (C + O) \/ (a_"0H" - a_"0S")$ by $7.5 times$, from 5.86 `W0` manifests (4.23M output tokens) to 0.78 manifests (563k output tokens, or 149 s of `S` serving) with conservative tail drain, and to 0.36 manifests (260k tokens) when dispatch is tail-aware ($O = 0$). For mid-context `W0 → W7` jobs, in which `S` remains feasible in both phases, PhaseMorph lowers the `W7` break-even threshold $k_m^*$ from 3.78 to 1.38 manifests (110k output tokens).
+
+@fig-breakeven shows how $k_s^*$ scales with the switch cost.
+
+#figure(
+  svg-fig(```svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" font-family="Liberation Sans, Arial, Helvetica, sans-serif" font-size="11" fill="#222">
+<line x1="44" y1="196" x2="272" y2="196" stroke="#e2e2e2" stroke-width="1"/>
+<text x="39" y="200" text-anchor="end">0</text>
+<line x1="44" y1="168" x2="272" y2="168" stroke="#e2e2e2" stroke-width="1"/>
+<text x="39" y="172" text-anchor="end">1</text>
+<line x1="44" y1="140" x2="272" y2="140" stroke="#e2e2e2" stroke-width="1"/>
+<text x="39" y="144" text-anchor="end">2</text>
+<line x1="44" y1="112" x2="272" y2="112" stroke="#e2e2e2" stroke-width="1"/>
+<text x="39" y="116" text-anchor="end">3</text>
+<line x1="44" y1="84" x2="272" y2="84" stroke="#e2e2e2" stroke-width="1"/>
+<text x="39" y="88" text-anchor="end">4</text>
+<line x1="44" y1="56" x2="272" y2="56" stroke="#e2e2e2" stroke-width="1"/>
+<text x="39" y="60" text-anchor="end">5</text>
+<line x1="44" y1="28" x2="272" y2="28" stroke="#e2e2e2" stroke-width="1"/>
+<text x="39" y="32" text-anchor="end">6</text>
+<line x1="44" y1="196" x2="44" y2="199" stroke="#222" stroke-width="1"/>
+<text x="44" y="211" text-anchor="middle">0</text>
+<line x1="94.7" y1="196" x2="94.7" y2="199" stroke="#222" stroke-width="1"/>
+<text x="94.7" y="211" text-anchor="middle">100</text>
+<line x1="145.3" y1="196" x2="145.3" y2="199" stroke="#222" stroke-width="1"/>
+<text x="145.3" y="211" text-anchor="middle">200</text>
+<line x1="196" y1="196" x2="196" y2="199" stroke="#222" stroke-width="1"/>
+<text x="196" y="211" text-anchor="middle">300</text>
+<line x1="246.7" y1="196" x2="246.7" y2="199" stroke="#222" stroke-width="1"/>
+<text x="246.7" y="211" text-anchor="middle">400</text>
+<line x1="272" y1="196" x2="275" y2="196" stroke="#222" stroke-width="1"/>
+<text x="278" y="200">0</text>
+<line x1="272" y1="157.2" x2="275" y2="157.2" stroke="#222" stroke-width="1"/>
+<text x="278" y="161.2">1M</text>
+<line x1="272" y1="118.4" x2="275" y2="118.4" stroke="#222" stroke-width="1"/>
+<text x="278" y="122.4">2M</text>
+<line x1="272" y1="79.6" x2="275" y2="79.6" stroke="#222" stroke-width="1"/>
+<text x="278" y="83.6">3M</text>
+<line x1="272" y1="40.8" x2="275" y2="40.8" stroke="#222" stroke-width="1"/>
+<text x="278" y="44.8">4M</text>
+<rect x="44" y="14" width="228" height="182" fill="none" stroke="#222"/>
+<text x="158" y="226" text-anchor="middle" font-size="11.5" font-weight="bold">Reconfiguration cost C (s)</text>
+<text x="11" y="105" text-anchor="middle" font-size="11.5" font-weight="bold" transform="rotate(-90 11 105.0)">Break-even k<tspan dy="2.6" font-size="9.2">s</tspan><tspan dy="-2.6">* (W0 manifests)</tspan></text>
+<text x="312" y="105" text-anchor="middle" font-size="11.5" font-weight="bold" transform="rotate(90 312 105.0)">Short-phase output tokens</text>
+<line x1="44" y1="184.1" x2="272" y2="20.5" stroke="#222" stroke-width="1.3"/>
+<line x1="44" y1="196" x2="272" y2="32.4" stroke="#222" stroke-width="1.3" stroke-dasharray="4,3"/>
+<text x="152.9" y="96.6" text-anchor="end">O = 32.6 s</text>
+<text x="226.4" y="79.1">O = 0</text>
+<circle cx="256.3" cy="31.8" r="3.4" fill="#b3261e"/>
+<circle cx="111.0" cy="136.1" r="3.4" fill="#555"/>
+<circle cx="89.5" cy="151.5" r="3.4" fill="#555"/>
+<circle cx="57.9" cy="174.1" r="3.4" fill="#000"/>
+<circle cx="54.7" cy="176.5" r="3.4" fill="#000"/>
+<text x="249.3" y="35.8" text-anchor="end" font-weight="bold" fill="#b3261e">vanilla 5.86</text>
+<text x="119" y="151.1" font-weight="bold">Snap 2.14</text>
+<text x="97.5" y="166.5" font-weight="bold">Cache 1.59</text>
+<circle cx="57.9" cy="186.0" r="3.4" fill="#fff" stroke="#000" stroke-width="1.3"/>
+<circle cx="256.3" cy="43.6" r="3.4" fill="#fff" stroke="#b3261e" stroke-width="1.3"/>
+<line x1="56.9" y1="170.2" x2="54.1" y2="71.6" stroke="#000" stroke-width="0.8"/>
+<text x="46" y="47.6" font-weight="bold">PhaseMorph</text>
+<text x="46" y="60.6">0.70–0.78 (C 21.1–27.5 s)</text>
+<line x1="60.9" y1="187" x2="99.7" y2="180.6" stroke="#000" stroke-width="0.8"/>
+<text x="102.7" y="184.6">0.36 with O = 0</text>
+</svg>
+```),
+  caption: [Short-phase break-even size $k_s^* = (C + O) \/ (a_"0H" - a_"0S")$, with $a_"0H" - a_"0S" = 77.0" s"$ per `W0` manifest (right axis: output tokens at 721,595 per manifest). Solid line: conservative tail drain ($O = 32.6" s"$); dashed line: tail-aware dispatch ($O = 0$). Points are the measured costs of @tab-segments and @tab-breakeven; PhaseMorph spans $C = 21.1"–"27.5" s"$.],
+) <fig-breakeven>
 
 == Comparison with In-Runtime Submesh Switching <sec-eval-submesh>
 
