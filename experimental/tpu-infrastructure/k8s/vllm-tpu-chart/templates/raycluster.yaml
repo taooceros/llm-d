@@ -8,6 +8,10 @@ metadata:
     {{- include "vllm-tpu.labels" . | nindent 4 }}
 spec:
   rayVersion: {{ .Values.rayVersion | quote }}
+  # An image or template change deletes and recreates every pod (KubeRay >= 1.5);
+  # without it, existing pods keep the old image.
+  upgradeStrategy:
+    type: Recreate
   headGroupSpec:
     serviceType: ClusterIP
     rayStartParams:

@@ -1,11 +1,15 @@
 # Persistent KubeRay infrastructure only; model loading belongs to hetero_ctl.
 # The image must contain the selected Ray version and the required TPU runtime.
 # These inherited defaults are not a compatibility guarantee for other images.
+# Pinned nightly (tpu-inference 672546d, vLLM 273a049): jax/jaxlib 0.11.2,
+# libtpu 0.0.48, flax 0.12.10, Ray 2.59.0. Release tags v0.27.0-v0.31.0 ship jax 0.11.0.
+# Previous image: v0.26.0@sha256:186f1940c353d2703bf80f80fff101b38fa8e26a9562a767b37e103f212d3d79
+# (jax 0.10.2, Ray 2.56).
 image:
   repository: vllm/vllm-tpu
-  tag: v0.26.0
+  tag: nightly-20261016-672546d-273a049@sha256:b1fc7cbca8e083e19edc1e808794871c963b6f6ddc508ff4fc390c1d441b87ce
   pullPolicy: IfNotPresent
-rayVersion: "2.56.0"
+rayVersion: "2.59.0"
 serviceAccountName: default
 nameOverride: ""
 fullnameOverride: ""

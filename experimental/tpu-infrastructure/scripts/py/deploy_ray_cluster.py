@@ -63,7 +63,7 @@ def deploy_ray_cluster(
   accelerator_type: tpu/v5e, tpu/v5p, tpu/v6e, or tpu/v7.
   image_repository: Image containing the selected Ray version and TPU runtime.
     Operator must verify compatibility; this command does not load a model.
-  ray_version: Ray version installed in the image (default from chart: 2.56.0).
+  ray_version: Ray version installed in the image (default from chart: 2.59.0).
   dry_run: Print the command offline; no subprocesses or dependency checks.
   yes: Confirm execution without an interactive prompt.
   """

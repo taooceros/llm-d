@@ -3,4 +3,4 @@ name: vllm-tpu
 description: Persistent standalone KubeRay infrastructure on GKE TPUs
 type: application
 version: 0.1.0
-appVersion: "2.56.0"
+appVersion: "2.59.0"
