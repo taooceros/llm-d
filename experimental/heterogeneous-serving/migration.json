@@ -105,6 +105,11 @@
       "bytes": 9088
     },
     {
+      "path": "deploy/lld/envoy-v0.9.0-standalone.yaml.tpl",
+      "sha256": "3c5be70b390cf6a6c19a8f01a29a7a5ff5e33ce312da691f7010cb604948fd9e",
+      "bytes": 8467
+    },
+    {
       "path": "docs/architecture/2x4_topology_experiment_handoff.md",
       "sha256": "6d6b21792ac4fae4c64255536b3da3626886a717949412a54b0084f861374664",
       "bytes": 3221
@@ -553,6 +558,41 @@
       "path": "scripts/host_watchdog.sh",
       "sha256": "3b0b7029dc527f61a4f140f5327b6b20d7059e1c2a4f32b8719ce6d57800e84a",
       "bytes": 3546
+    },
+    {
+      "path": "scripts/lld.py",
+      "sha256": "1a99d5078a6d4c6cb6ec2d69c27374d93993975918344daf5a384d3e964ad881",
+      "bytes": 51297
+    },
+    {
+      "path": "scripts/lld/inventory-template-2x4.json",
+      "sha256": "87c581abea97e8297fccd41983c9878920f2b210829b578c8967dc9cf9b94064",
+      "bytes": 1503
+    },
+    {
+      "path": "scripts/lld/jax-S-small_a-reference-966399c.json",
+      "sha256": "705d91b7dc5a258d70d0735afd18c02d8b441fc1aaa0a53d735e1892c5369e90",
+      "bytes": 13440
+    },
+    {
+      "path": "scripts/lld_paper.py",
+      "sha256": "40c7920582d1977fbddd8a185acf1a6fdf9b2b3f87947f0931419ecf40aada25",
+      "bytes": 22475
+    },
+    {
+      "path": "scripts/lld_pod.py",
+      "sha256": "073dd7e172f9e760d42c6c7422dba27cf0357d8e19b4f3e771b9f5b351bfa3bb",
+      "bytes": 32106
+    },
+    {
+      "path": "scripts/lld_report.py",
+      "sha256": "763e8ef217f12e5ded24a2b70792750141bac54c8997ef9aa8f8691f6f63e22c",
+      "bytes": 67798
+    },
+    {
+      "path": "scripts/lld_sampler.py",
+      "sha256": "0082db302962b0da01b8fd4518d78b6f7feae8674dc89b623979c2f6bb4479bf",
+      "bytes": 2089
     },
     {
       "path": "scripts/matrix_summary.py",
