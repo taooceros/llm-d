@@ -605,6 +605,11 @@
       "bytes": 10066
     },
     {
+      "path": "scripts/overlap_key_only.py",
+      "sha256": "9942679846fe1b9484c3b68b30812eda50c8ab9f7f428c987753b9a063bab2a0",
+      "bytes": 14269
+    },
+    {
       "path": "scripts/overlap_pilot.py",
       "sha256": "b798bf2633ad9d393511b81bcaf75ef24d5e1c21c5a1431accb8ec08bfb478ed",
       "bytes": 10836
@@ -680,9 +685,24 @@
       "bytes": 1545
     },
     {
+      "path": "scripts/recover_overlap_key_only.py",
+      "sha256": "cd8d1f8d1c4fa32d6038474466f0854e3d7c9667351f1379a97a11d4ab900eeb",
+      "bytes": 1856
+    },
+    {
+      "path": "scripts/recover_overlap_key_only.sh",
+      "sha256": "49e5639d12a3800037dffa8502d6e63c52e3f6d608bcaedd054a6a149b543269",
+      "bytes": 518
+    },
+    {
       "path": "scripts/render_report.py",
       "sha256": "0b89bf2922552e1aefd036e979e4381dab1fa073c52658fac1031148daafca4d",
       "bytes": 29912
+    },
+    {
+      "path": "scripts/run_overlap_key_only.sh",
+      "sha256": "23e371b2bb823fe733c9084dacddddd0f08aff95ebd7427df56adcb06009adf8",
+      "bytes": 1152
     },
     {
       "path": "scripts/run_pilot.sh",
@@ -818,6 +838,11 @@
       "path": "tests/test_goal_audit.py",
       "sha256": "be8350e4dfda2a084a8b5ec56521c7ceb70c7cce24f33f67115e9c15be693c0c",
       "bytes": 7509
+    },
+    {
+      "path": "tests/test_overlap_key_only.py",
+      "sha256": "2f1d8de0e5b3564e9f2c8a98a6fb7d08eba267bbe2c090e7546d66ab7a26ef25",
+      "bytes": 4704
     },
     {
       "path": "tests/test_partial_reconfiguration.py",
