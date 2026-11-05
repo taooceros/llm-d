@@ -2,17 +2,17 @@
   "format": 1,
   "branch": "research/heterogeneous-tpu-20260918",
   "original_source_commit": "20c83c18189b18d7898b615814bec0479eb981d4",
-  "research_runtime_revision": "d9ea76010c9eb5ae4e5fa221fb4fe7f6b9c404ec2dbdcd8e7a729bf2ae71f344",
+  "research_runtime_revision": "f07784c006c2b0e705ecbb1b12e8572d1ef8a0244d32bdadd1bc506cb8747bce",
   "native_patch_revision": "8116446273d15158c39a04ff10869205eb993dd7bb74976a4cf738e279d5fc7c",
   "repositories": {
     "vllm": {
       "url": "https://github.com/taooceros/vllm",
-      "commit": "7052f7125e39c8314b28dd6604b0d93d53fcb238",
+      "commit": "7331c427b5315b4cc9237fad531a5c87049278f0",
       "native_base": "0ba2aa35a81dcc3246b26291368b53fa2389c7d7"
     },
     "tpu-inference": {
       "url": "https://github.com/taooceros/tpu-inference",
-      "commit": "0f79ecad765f7d6ae36ad9794fcdffa6c6fc32e3",
+      "commit": "34e89323f63773292631df1b9152fa89133a7984",
       "native_base": "8d31f0866147d394dafce923c7cce090a862ad70"
     },
     "llm-d-router": {
@@ -21,18 +21,29 @@
     },
     "llm-d-async": {
       "url": "https://github.com/taooceros/llm-d-async",
-      "commit": "0f7a855adba713950c5f7963b8171530fb03af1d"
+      "commit": "8d5b55ee3110c2d84fe97cf8780fe3142b20a485"
     },
     "llm-d": {
       "url": "https://github.com/taooceros/llm-d",
       "orchestration_source_commit": "7b2429c07b825e755bb44f16d58d7f797aebb2e4",
-      "note": "The containing commit on pr/hetero-chain-20261012 adds this lock update and the 20261012 evidence index; the chain commits before it carry the copied runtime sources."
+      "note": "The containing commit on pr/hetero-chain-20261105 adds this lock update and the 20261105 evidence index; the chain commits before it carry the copied runtime sources."
     }
   },
-  "qualification_scope": "Revisions are computed from the assembled chain tip (hetero/*.py|*.json, native_backend_patch.json). The native patch now also covers tpu_inference kernels/ragged_paged_attention/v3/kernel.py (bf16-kv); the forks' native source files were not changed by this publication. No accelerator workload or new distributed qualification was run for this source-copy port.",
-  "research_source_commit": "5f9468aa7354403d7dba790c8770dedc60c49218",
-  "research_source": "hetero-research research/first-switch-preread (local workspace, no remote), ported by file ownership on pr/hetero-chain-20261012",
+  "qualification_scope": "Revisions are computed from the assembled 2026-11-05 chain tip (hetero/*.py|*.json, native_backend_patch.json). llm-d-router has no 2026-11-05 chain commits, so its pin stays at pr/hetero-chain-20261012. The forks' native source files were not changed by this publication. No accelerator workload or new distributed qualification was run for this source-copy port.",
+  "research_source_commit": "c8975352103572c90e2bb1300815809f0c76da0e",
+  "research_source": "hetero-research publish/chain-20261105 (research/llmd-autoscale 54a52a4c plus the public-alias commit; local workspace, no remote), ported by file ownership on pr/hetero-chain-20261105",
   "previous": {
+    "20261012": {
+      "research_runtime_revision": "d9ea76010c9eb5ae4e5fa221fb4fe7f6b9c404ec2dbdcd8e7a729bf2ae71f344",
+      "native_patch_revision": "8116446273d15158c39a04ff10869205eb993dd7bb74976a4cf738e279d5fc7c",
+      "commits": {
+        "vllm": "7052f7125e39c8314b28dd6604b0d93d53fcb238",
+        "tpu-inference": "0f79ecad765f7d6ae36ad9794fcdffa6c6fc32e3",
+        "llm-d-router": "ff0e8212e47f50991b6742114609ae70999cdad0",
+        "llm-d-async": "0f7a855adba713950c5f7963b8171530fb03af1d"
+      },
+      "research_source_commit": "5f9468aa7354403d7dba790c8770dedc60c49218"
+    },
     "20260918": {
       "research_runtime_revision": "27c198dd51d9df1ffe681288039cbb6f038e62a8b235b08a39b06a21d3041d4f",
       "native_patch_revision": "148b4295bf83c0eaa473b11fff5c7c643092f1873200cef1f52b07a2265861ed",

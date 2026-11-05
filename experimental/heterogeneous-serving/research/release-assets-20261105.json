@@ -1,0 +1,68 @@
+{
+ "repository": "taooceros/llm-d",
+ "tag": "research-evidence-20261105",
+ "assets": [
+  {
+   "path": "/dev/shm/hetero-scratch/publish/evidence/release/results-001.tar.gz",
+   "name": "results-001.tar.gz",
+   "size": 353566172,
+   "sha256": "b5f990f711bbe3730a381a58121113c469a06022ca31e83f565597ca58453115"
+  },
+  {
+   "path": "/dev/shm/hetero-scratch/publish/evidence/release/archive-inventory-001.json",
+   "name": "archive-inventory-001.json",
+   "size": 960850,
+   "sha256": "71135cb61c64668d86eb5e44f989a48d1821147571fc64eb10fb12be0866bbf0"
+  },
+  {
+   "path": "/dev/shm/hetero-scratch/publish/evidence/release/archive-inventory-002.json",
+   "name": "archive-inventory-002.json",
+   "size": 965754,
+   "sha256": "d58e652023e2f19f039fe25f2747e68f7445a6a6b52ca914e067b6fd36264aad"
+  },
+  {
+   "path": "/dev/shm/hetero-scratch/publish/evidence/release/archive-inventory-003.json",
+   "name": "archive-inventory-003.json",
+   "size": 969124,
+   "sha256": "a242f6f1ab5db620d9140e902ac1caf5895a1fb21c3f85e19bc7c8912aa859b0"
+  },
+  {
+   "path": "/dev/shm/hetero-scratch/publish/evidence/release/archive-inventory-004.json",
+   "name": "archive-inventory-004.json",
+   "size": 758542,
+   "sha256": "e794079e237e9495ce17d0ebb8aaf4dc13bf8b64b6f1913fa75129a4b8a30366"
+  },
+  {
+   "path": "/dev/shm/hetero-scratch/publish/evidence/release/asset-index.json",
+   "name": "asset-index.json",
+   "size": 46862,
+   "sha256": "3b00b6890074ad1c3cc82b425e1ae7f432dcded447424d8d238d787c7f193468"
+  },
+  {
+   "path": "/dev/shm/hetero-scratch/publish/evidence/release/branch-results-001.json",
+   "name": "branch-results-001.json",
+   "size": 951787,
+   "sha256": "4e92b4529d09e3e83d5c42b23a36b6fe54c8ee2e3915b3a0fbdc8cf16f2bb074"
+  },
+  {
+   "path": "/dev/shm/hetero-scratch/publish/evidence/release/branch-results-002.json",
+   "name": "branch-results-002.json",
+   "size": 815299,
+   "sha256": "d1be33a67e422f5b3f261f1ee86dfa04c91e7ace16e4a70ad034f80f5b9d90c7"
+  },
+  {
+   "path": "/dev/shm/hetero-scratch/publish/evidence/release/publication-audit.json",
+   "name": "publication-audit.json",
+   "size": 40745,
+   "sha256": "150e7838099cba616e781c4151f9afba6dba45af2bf178709e0d36c5918c18e4"
+  },
+  {
+   "path": "/dev/shm/hetero-scratch/publish/evidence/release/alias-rewrites.json",
+   "name": "alias-rewrites.json",
+   "size": 198897,
+   "sha256": "0b471c9b21147720cdcd6cc05e22619715b55976910d8347a21c44abc252b078"
+  }
+ ],
+ "upload_performed": false,
+ "publication_record": "../publication.json"
+}
