@@ -94,6 +94,12 @@
 #     peer-ov|gcs-ov  peer|gcs with the fetch overlapping large_b's boot: the deploy job runs the fetch as a
 #                child from its start (hetero.cli deploy --state-delivery) and large_b's workers wait for
 #                their rank's delivery marker right before the first device touch (state_gate_timeout_s)
+#     snap-xla-ov|snap-bank-ov|snap-ov|gcs-nofg-ov  leave-one-out of gcs-ov, overlapped like it (partition):
+#                no bank | no shipped XLA cache | neither | FastGraph off
+#     runai-bank-ov  leave-one-out of the snapshot (partition): Run:ai streamer weights (as runai-jax) + bank +
+#                XLA cache overlapped.  The bank identity names the model path, so a second seed boot
+#                (seed-runai: Run:ai, on the seed's XLA cache, bank write in scope <seed>-r) writes that bank;
+#                its bank + XLA cache are uploaded to gs://.../omp_autoscale/<run base>-runai.
 #   each: evict-pagecache -> fetch (-ov: inside the deploy) -> H deploy -> check, greedy validation against
 #   the seed reference -> teardown -> scope cleanup.  End: GCS prefix and seed scope removed (also by the
 #   EXIT trap).
@@ -450,7 +456,7 @@ cleanup() {
       # AS_KEEP_GCS=1: the uploaded startup state outlives the campaign (another cell reads it).
       for gcs in ${GCS_PREFIXES[@]+"${GCS_PREFIXES[@]}"}; do
         [[ ${AS_KEEP_GCS:-0} == 1 ]] && { state "gcs-kept $gcs"; continue; }
-        run scripts/startup_state.py delete --gcs "$gcs" --output "$OUT/cleanup-gcs-delete.json" --timeout 900 || rc=1
+        run scripts/startup_state.py delete --gcs "$gcs" --output "$OUT/cleanup-gcs-delete-${gcs##*/}.json" --timeout 900 || rc=1
       done
       # The default snapshot root is shared by every campaign on these hosts; a partition run never uses it.
       [[ -n $AS_PART ]] || validate cleanup S cleanup-tmpfs || rc=1
@@ -1002,9 +1008,24 @@ snap = {k: v for k, v in restore.items() if k != "exec_bank"}
 jax = {"JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS": "1.0"}  # jax 0.10.2's default (layout env: "0")
 def ckpt_of(s):  # the normal loader on the checkpoint copy in scope s, with s's XLA cache
     return {**raw, "compilation_cache_dir": scope_xla_dir(s), "model": scope_checkpoint_dir(s) + "/" + model}
+# Run:ai model streamer straight from the bucket /models mounts (vLLM --load-format runai_streamer).
+# Deviations from the streamer defaults, after the default boot drove a host into disk-pressure
+# eviction (autoscale-60271da-psb): the tokenizer comes from the /models FUSE mount (with the
+# tokenizer at gs://, vLLM pulls every non-weight object under the prefix, ~80 GB of stale
+# .incomplete files, to local disk), and the streamer buffer is 8 GiB instead of 40 GB.
+def runai_of(xla_dir):
+    return {**raw, "compilation_cache_dir": xla_dir, "model": os.environ["AS_CKPT_GCS"],
+            "load_format": "runai_streamer", "worker_env": jax, "tokenizer": "/models/" + model,
+            "model_loader_extra_config": {"memory_limit": 8589934592}}
+def runai_pm(r):  # TPUFlex minus the snapshot: Run:ai weights, the layout's 0 s cache threshold, FastGraph
+    return {**{k: v for k, v in runai_of(r["compilation_cache_dir"]).items() if k != "worker_env"},
+            "fast_graph": True, **r}
 if arm == "seed":
     a = {**base, "weight_snapshot": "write", "fast_graph": True, "exec_bank": "write", **roots(seed)}
     b = {**raw, "compilation_cache_dir": scope_xla_dir(seed_b)}
+elif arm == "seed-runai":  # leave-one-out seed: the bank of a Run:ai-loaded boot (the bank identity names
+    # the model path), on the seed's XLA cache fetched into its own scope <seed>-r beforehand
+    a, b = None, {**runai_pm(roots(seed + "-r")), "exec_bank": "write"}
 elif arm == "warm-ckpt-jax":  # stock restart: the kept stock boot's checkpoint copy and XLA cache
     warm = os.environ.get("AS_WARM_STOCK_SCOPE")
     if not warm:
@@ -1015,14 +1036,8 @@ elif arm == "warm-pm":  # TPUFlex restart: the seed's own snapshot + bank + XLA 
 else:
     a, r = {**restore, **roots(seed)}, roots(scope)
     ckpt = ckpt_of(scope)
-    # Run:ai model streamer straight from the bucket /models mounts (vLLM --load-format runai_streamer).
-    # Deviations from the streamer defaults, after the default boot drove a host into disk-pressure
-    # eviction (autoscale-60271da-psb): the tokenizer comes from the /models FUSE mount (with the
-    # tokenizer at gs://, vLLM pulls every non-weight object under the prefix, ~80 GB of stale
-    # .incomplete files, to local disk), and the streamer buffer is 8 GiB instead of 40 GB.
-    runai = {**raw, "compilation_cache_dir": r["compilation_cache_dir"], "model": os.environ["AS_CKPT_GCS"],
-             "load_format": "runai_streamer", "worker_env": jax, "tokenizer": "/models/" + model,
-             "model_loader_extra_config": {"memory_limit": 8589934592}}
+    runai = runai_of(r["compilation_cache_dir"])
+    gate = {"state_gate_timeout_s": 900.0}
     b = {"raw": {**raw, "compilation_cache_dir": r["compilation_cache_dir"]},
          "raw-pf": {**raw, "compilation_cache_dir": r["compilation_cache_dir"], "safetensors_load_strategy": "prefetch"},
          "raw-xla": {**raw, "compilation_cache_dir": r["compilation_cache_dir"]},
@@ -1034,8 +1049,14 @@ else:
                        "exec_bank_dir": r["exec_bank_dir"], "compilation_cache_dir": r["compilation_cache_dir"]},
          "peer": {**restore, **r}, "gcs": {**restore, **r}, "fuse": {**restore, **r},
          "snap": {**snap, **r}, "snap-xla": {**snap, **r}, "snap-bank": {**restore, **r},
-         "peer-ov": {**restore, **r, "state_gate_timeout_s": 900.0},
-         "gcs-ov": {**restore, **r, "state_gate_timeout_s": 900.0}}[arm]
+         "peer-ov": {**restore, **r, **gate},
+         "gcs-ov": {**restore, **r, **gate},
+         # Leave-one-out of gcs-ov (each overlapped exactly like it; scripts/loo_summary.py):
+         "runai-bank-ov": {**runai_pm(r), "exec_bank": "read", **gate},  # - snapshot: Run:ai weights
+         "snap-xla-ov": {**snap, **r, **gate},                           # - bank
+         "snap-bank-ov": {**restore, **r, **gate},                       # - shipped XLA cache
+         "snap-ov": {**snap, **r, **gate},                               # - bank and XLA cache
+         "gcs-nofg-ov": {**restore, **r, "fast_graph": False, **gate}}[arm]  # - FastGraph
 if part:  # one instance: it seeds (a's settings), then boots as the new instance (b's)
     print(json.dumps({part: a if arm == "seed" else b}, separators=(",", ":")))
 else:
@@ -1082,7 +1103,7 @@ autoscale_fetch() {  # autoscale_fetch <arm> <arm scope>: ship the arm's startup
   local arm=$1 rid=$2 method parts src=()
   case $arm in
     # -ov: the fetch runs inside the deploy job (autoscale_delivery); warm-*: the state is already local.
-    raw|raw-pf|raw-jax|runai-jax|peer-ov|gcs-ov|warm-ckpt-jax|warm-pm) return 0;;
+    raw|raw-pf|raw-jax|runai-jax|*-ov|warm-ckpt-jax|warm-pm) return 0;;
     runai-jax-xla) method=gcs parts=xla src=(--gcs "$AS_STOCK_GCS");;
     ckpt-gcs|ckpt-gcs-xla|ckpt-fuse|ckpt-gcs-jax|ckpt-gcs-jax-xla)
       mark "ckpt_fetch_start:$rid"
@@ -1112,16 +1133,26 @@ autoscale_fetch() {  # autoscale_fetch <arm> <arm scope>: ship the arm's startup
   mark "fetch_end:$rid"
 }
 autoscale_delivery() {  # autoscale_delivery <arm> <arm scope>: deploy --state-delivery JSON for an -ov arm
-  local method=${1%-ov} argv src=()
-  if [[ $method == peer ]]; then read -ra src <<<"$(peer_src)"; else src=(--gcs "$AS_GCS"); fi
+  local method=${1%-ov} parts=snapshot,bank,xla gcs=$AS_GCS argv src=()
+  case $1 in  # leave-one-out arms of gcs-ov: a subset of its state, or the Run:ai seed's bank + XLA cache
+    runai-bank-ov) method=gcs parts=bank,xla gcs=$AS_GCS_RUNAI;;
+    snap-xla-ov) method=gcs parts=snapshot,xla;;
+    snap-bank-ov) method=gcs parts=snapshot,bank;;
+    snap-ov) method=gcs parts=snapshot;;
+    gcs-nofg-ov) method=gcs;;
+  esac
+  if [[ $method == peer ]]; then read -ra src <<<"$(peer_src)"; else src=(--gcs "$gcs"); fi
   argv=$(.venv/bin/python scripts/startup_state.py fetch --print-remote-argv --inventory "$INVENTORY" \
-    --method "$method" --parts snapshot,bank,xla "${src[@]}" --target "$AS_LAYOUT:$AS_TARGET" --target-scope "$2" \
+    --method "$method" --parts "$parts" "${src[@]}" --target "$AS_LAYOUT:$AS_TARGET" --target-scope "$2" \
     --timeout 1800) || return 1
   printf '{"argv":%s,"timeout_s":1800}' "$argv"
 }
 autoscale_arm() {  # autoscale_arm <arm> <rid>: one boot of $AS_TARGET; nonzero on any failed step
   local arm=$1 rid=$2 restored_flag=() delivery=() spec
-  case $arm in peer|gcs|fuse|peer-ov|gcs-ov|snap|snap-xla|snap-bank|warm-pm) restored_flag=(--require-restored);; esac
+  case $arm in
+    peer|gcs|fuse|peer-ov|gcs-ov|snap|snap-xla|snap-bank|warm-pm|snap-xla-ov|snap-bank-ov|snap-ov|gcs-nofg-ov)
+      restored_flag=(--require-restored);;
+  esac
   # warm-*: a restart on hosts that keep their state boots from a kept scope, not from a fresh one.
   [[ $arm == warm-* ]] || scope_open "$rid"
   cotenants "$rid-start"
@@ -1161,12 +1192,16 @@ campaign_autoscale() {
   AS_GCS=${AS_GCS:-gs://hongtaozhang-tpu-model-cache-us-west1/omp_autoscale/$RUN_BASE}
   AS_STOCK_GCS=${AS_STOCK_GCS:-$AS_GCS/stock-xla}
   AS_CKPT_GCS=${AS_CKPT_GCS:-gs://hongtaozhang-tpu-model-cache-us-west1/$(basename "$MODEL")}  # what /models mounts
+  # runai-bank-ov (leave-one-out of the snapshot): the bank + XLA cache of a second, Run:ai-loaded seed boot.
+  AS_GCS_RUNAI=$AS_GCS-runai
+  local want_runai_bank=0
   local arms=(${ARMS:-raw peer gcs bank-ckpt raw-xla fuse peer gcs raw})
   # Partition: the seed's hosts are the new instance's hosts, so the seed's own state cannot be fetched
   # peer-to-peer (raw-xla and bank-ckpt ship it from the seed's hosts); ckpt-gcs-xla takes its XLA cache
   # from the upload, and peer arms need another instance's kept seed (AS_PEER_SRC).
   if [[ -n $AS_PART ]]; then
     allowed='raw|raw-pf|raw-jax|ckpt-gcs|ckpt-gcs-xla|ckpt-fuse|ckpt-gcs-jax|ckpt-gcs-jax-xla|runai-jax|runai-jax-xla|gcs|fuse|snap|snap-xla|snap-bank|gcs-ov|warm-ckpt-jax|warm-pm'
+    allowed+='|runai-bank-ov|snap-xla-ov|snap-bank-ov|snap-ov|gcs-nofg-ov'
     if [[ -n $AS_PEER_SRC ]]; then
       [[ $AS_PEER_SRC != "$AS_PART" && -n $AS_PEER_SCOPE ]] || { echo "AS_PEER_SRC: another instance, with AS_PEER_SCOPE" >&2; return 2; }
       allowed+='|peer|peer-ov'
@@ -1186,6 +1221,7 @@ campaign_autoscale() {
         AS_WANT_WARM=1 last_warm_stock=$i;;
       warm-pm) last_warm_pm=$i;;
       peer|peer-ov) last_peer=$i;;
+      runai-bank-ov) want_runai_bank=1;;
     esac
   done
   if (( ! DRY )); then
@@ -1222,6 +1258,28 @@ campaign_autoscale() {
   run scripts/startup_state.py upload --inventory "$INVENTORY" --source "$AS_LAYOUT:$AS_SEEDER" --source-scope "$AS_SEED" \
     --gcs "$AS_GCS" --parts snapshot,bank,xla --output "$OUT/upload.json" --timeout 1800
   mark "upload_end"
+  if (( want_runai_bank )); then
+    # The bank identity names the model path, so the snapshot seed's bank never matches a Run:ai boot
+    # (model gs://...).  A second seed boot, Run:ai-loaded on the seed's XLA cache (fetched from the upload
+    # into its own scope), writes the bank for that model path; its bank + XLA cache go to AS_GCS_RUNAI.
+    scope_open "$AS_SEED-r"
+    mark "runai_seed_xla_fetch_start"
+    run scripts/startup_state.py fetch --inventory "$INVENTORY" --method gcs --parts xla --gcs "$AS_GCS" \
+      --target "$AS_LAYOUT:$AS_TARGET" --target-scope "$AS_SEED-r" --output "$OUT/seed-runai-xla-fetch.json" --timeout 1800
+    validate evict-pagecache "$AS_LAYOUT" seed-runai-fresh
+    deploy "$AS_LAYOUT" seed-runai "$AS_BASE" --max-model-len "$AS_MAXLEN" "${AS_SHAPE[@]}" \
+      --instance-engine-settings "$(autoscale_settings seed-runai -)"
+    validate check "$AS_LAYOUT" seed-runai-check
+    validate validate "$AS_LAYOUT" seed-runai-validation --reference "$OUT/prep-$AS_LAYOUT-reference.json"
+    validate bank-manifests "$AS_LAYOUT" seed-runai-bank-manifests --run-scope "$AS_SEED-r"
+    teardown "$AS_LAYOUT" seed-runai
+    gzip_evidence seed-runai
+    GCS_PREFIXES+=("$AS_GCS_RUNAI")
+    run scripts/startup_state.py upload --inventory "$INVENTORY" --source "$AS_LAYOUT:$AS_SEEDER" --source-scope "$AS_SEED-r" \
+      --gcs "$AS_GCS_RUNAI" --parts bank,xla --output "$OUT/upload-runai.json" --timeout 1800
+    scope_close "$AS_SEED-r" seed-runai-scope-cleanup
+    mark "runai_seed_end"
+  fi
   if [[ -n $AS_PART ]]; then
     # Peer source: other instances' peer arms read the seed scope now; this campaign waits for them.
     if [[ -n $AS_SEED_READY ]]; then
@@ -1274,9 +1332,13 @@ campaign_autoscale() {
     fi
   done
   if (( AS_KEEP_GCS )) || (( ${#GCS_PREFIXES[@]} == 0 )); then
-    state "gcs-kept-or-unused $AS_GCS"
+    state "gcs-kept-or-unused ${GCS_PREFIXES[*]:-$AS_GCS}"
   else
-    run scripts/startup_state.py delete --gcs "$AS_GCS" --output "$OUT/gcs-delete.json" --timeout 900
+    local gcs suffix
+    for gcs in "${GCS_PREFIXES[@]}"; do
+      suffix=${gcs#"$AS_GCS"}  # "" for the seed upload, -runai for the Run:ai seed's
+      run scripts/startup_state.py delete --gcs "$gcs" --output "$OUT/gcs-delete$suffix.json" --timeout 900
+    done
   fi
   GCS_PREFIXES=()
   [[ -n $AS_PART ]] || scope_close "$AS_SEED" seed-scope-cleanup
