@@ -341,8 +341,8 @@
     },
     {
       "path": "omp_rcm/ray_job.py",
-      "sha256": "f850402a1312f65be3686497e4b1482ad2f584a801b5d14a59d990c275a1d863",
-      "bytes": 27072
+      "sha256": "400d57120877455a99c43ccfd098017426006f336689b064be902588ef76f5fc",
+      "bytes": 27467
     },
     {
       "path": "pyproject.toml",
@@ -543,6 +543,11 @@
       "path": "scripts/freeze_predeclaration.py",
       "sha256": "5c6c99054fdba9636e9e1cd97db2ba2e1dce1dd2dea3ecfe6cf9b7d2bef264a2",
       "bytes": 30765
+    },
+    {
+      "path": "scripts/gke_autoscale_probe.py",
+      "sha256": "83defe5571c6d6386b57c26b6ebcd81abf256648d290b61240c96fda6efbecee",
+      "bytes": 20260
     },
     {
       "path": "scripts/goal_audit.py",
@@ -833,6 +838,11 @@
       "path": "tests/test_probe_drift.py",
       "sha256": "89ebc56d6c4b3960fd0be66faee223750d47f963e602480ab231857ab8e0dfda",
       "bytes": 2235
+    },
+    {
+      "path": "tests/test_rcm_payload.py",
+      "sha256": "ce9d92c3c34e29e881c6b1b1f18f2cc34855424b122a2fe68991eb6923ac797e",
+      "bytes": 1610
     },
     {
       "path": "tests/test_snapshot_validation.py",

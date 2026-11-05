@@ -556,6 +556,10 @@ class RayJobSupervisor:
         patterns = [
             r"EMPIRICAL TPU HARDWARE MEASUREMENTS \(JSON OUTPUT\)\n=+\n(\{.*?\})\n\n\[OMP_EVENT",
             r"EMPIRICAL TPU HARDWARE MEASUREMENTS \(JSON OUTPUT\)\n=+\n(\{.*?\})\n=+",
+            # hetero.evidence emits the payload as one line.  Forwarded worker log lines (Ray prints them
+            # from another thread) can land between it and the MEASUREMENTS_EMITTED event, which defeats
+            # the first pattern, so also accept the whole line after the banner rule on its own.
+            r"EMPIRICAL TPU HARDWARE MEASUREMENTS \(JSON OUTPUT\)\n=+\n(\{[^\n]*\})$",
             r"TOPOLOGY_RESULT_JSON=(\{.*?\})$",
         ]
         for pat in patterns:
