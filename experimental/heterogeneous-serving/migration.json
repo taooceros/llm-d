@@ -36,8 +36,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "d01ab5916ec2821828117c0e96ec395abf663609a6daa64c1da976b18a282526",
-      "bytes": 43028
+      "sha256": "630a824cb048ba1e2da7107d522474c16ee1976d1a1fde6b94c7bdb13cdd855b",
+      "bytes": 45571
     },
     {
       "path": "RECONFIGURATION_GOAL.md",
@@ -665,6 +665,11 @@
       "bytes": 2803
     },
     {
+      "path": "scripts/reconfig_results_tables.py",
+      "sha256": "852c1799c737665d3f5af8e34fd1a792491b1b8f7b7296988aa56615817b09a9",
+      "bytes": 61346
+    },
+    {
       "path": "scripts/reconfig_snapshot.sh",
       "sha256": "e3b8333a2c8fa1066c2451696338acf2c18efcbb9d5e3e9f75ac237262944444",
       "bytes": 6312
@@ -833,6 +838,11 @@
       "path": "tests/test_probe_drift.py",
       "sha256": "89ebc56d6c4b3960fd0be66faee223750d47f963e602480ab231857ab8e0dfda",
       "bytes": 2235
+    },
+    {
+      "path": "tests/test_reconfig_results_tables.py",
+      "sha256": "ab765bde98136e3b2ab016480e0ea4b165bb915228d06ec7b2e515285d849fe0",
+      "bytes": 24915
     },
     {
       "path": "tests/test_snapshot_validation.py",

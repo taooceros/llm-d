@@ -710,3 +710,41 @@ results = sim.simulate_all_policies([r.to_dict() for r in requests])
 for res in results:
     print(f"{res['policy_name']}: {res['total_preemptions']} preemptions, {res['goodput_tok_per_s']:.1f} tok/s")
 ```
+
+## Reconfiguration evidence tables
+
+Run `python scripts/reconfig_results_tables.py` to regenerate
+`results/helper/ResultsFable/current_tables.{md,json}` from local owner artifacts
+(no cluster access). Override `--fast`, `--overlap`, `--baseline`, `--helper`,
+`--audit` and `--table` when evidence lives elsewhere.
+
+Startup controls use `startup_projection.json` when present, verifying its compact
+source hashes and retaining raw archive provenance without reopening large profiles.
+Unprojected startup archives remain explicitly unaccepted. The legacy path requires
+matching source/submission qualification in `warmup_split.json`, plus resolved production configuration and agreement between
+requested and effective cache directories. Owner exclusions veto acceptance;
+missing qualification remains unqualified. Successful warm startup alone is not
+a control. Diagnostic rows remain visible but do not become accepted attribution.
+
+Snapshot destination reuse is reported separately from cold-destination publication;
+PJRT-cached source reuse is not cold-D2H evidence. Independent outside-timer SHA256
+fingerprints do not imply in-path checksum verification. Synthetic pinned DMA and
+weak sum/XOR reduction have separate stage boundaries and are not full snapshot
+or restore timings. Audit manifests are rehashed locally and their match status
+is retained. No switch cost or break-even is synthesized from component timings.
+
+Switch rows separate `observation_verdict` from `performance_eligible`. Both source
+and target must explicitly prove completion, and C must match the retained client
+timestamps plus measured ramp deficit. An unfrozen completed pilot may qualify as
+`OBSERVED ONLY`, without becoming a headline performance comparison. Actual
+manifest/catalogue digests, source/control qualification and matching frozen
+runtime identities are required for performance eligibility. Compact
+`*-transition-observed.json` takes precedence over duplicate campaign rows.
+Failed or unmeasured arms retain null C and are labeled incomplete/rejected evidence,
+not pilot observations. Failed background attempts cannot establish compile interference.
+
+Break-even requires the throughput evidence to identify the same actual inputs
+and explicitly qualified rate sources/controls. Mismatched or unknown provenance
+retains the candidate and its sources but suppresses the crossover number.
+Compatible evidence without frozen matching runtime proof remains `ESTIMATE ONLY`;
+even qualified rate-model estimates are never labeled observed crossovers.
