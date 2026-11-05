@@ -45,7 +45,7 @@ def host_action(action, reserve_bytes, capture_config=False, run_scope=None):
         # A first-switch run scope (hetero/run_scope.py): only its two directories are read or
         # removed; the default snapshot root and every warm cache stay untouched.
         from hetero import run_scope as scopes
-        if action not in ('cleanup', 'files', 'memory', 'file-fingerprint'):
+        if action not in ('cleanup', 'files', 'memory', 'file-fingerprint', 'bank-manifests'):
             raise RuntimeError(f'--run-scope is not supported for {action}')
     if action == 'cleanup' and run_scope is None:
         shutil.rmtree(root, ignore_errors=False) if root.exists() else None
@@ -109,6 +109,14 @@ def host_action(action, reserve_bytes, capture_config=False, run_scope=None):
                         raise RuntimeError(f'missing/wrong-sized snapshot shard: {file}')
             verified.append(str(path))
         row['verified_manifest_and_sizes'] = verified
+    if action == 'bank-manifests':
+        # Read-only: every rank bank under the scope's bank root (or the warm default root) with
+        # the per-entry sha256, so banks of congruent placements can be compared byte for byte.
+        from hetero import exec_bank
+        bank_root = (scopes.scope_roots(run_scope)['exec_bank_dir'] if run_scope is not None
+                     else exec_bank.DEFAULT_DIR)
+        row['bank_root'] = bank_root
+        row['banks'] = exec_bank.bank_inventory(bank_root)
     if action == 'file-fingerprint':
         import time
         from hetero.weight_snapshot import file_fingerprint
@@ -130,7 +138,7 @@ def host_action(action, reserve_bytes, capture_config=False, run_scope=None):
     if capture_config:
         config = Path(os.environ.get('OMP_SNAPSHOT_MODEL', '/models/gemma-4-31b')) / 'config.json'
         row['model_config'] = json.loads(config.read_text())
-    if action not in ('cleanup', 'pagecache') and min(available, free) - reserve_bytes < floor:
+    if action not in ('cleanup', 'pagecache', 'bank-manifests') and min(available, free) - reserve_bytes < floor:
         raise RuntimeError('insufficient snapshot host headroom: ' + json.dumps(row))
     return row
 
@@ -182,7 +190,8 @@ def remote(args):
         from ray.util import placement_group_table
         if any(row['state'] != 'REMOVED' for row in placement_group_table().values()):
             raise RuntimeError('preflight refuses pre-existing placement groups')
-    if args.action in ('preflight', 'memory', 'cleanup', 'files', 'file-fingerprint', 'poison', 'pagecache'):
+    if args.action in ('preflight', 'memory', 'cleanup', 'files', 'file-fingerprint', 'poison', 'pagecache',
+                       'bank-manifests'):
         nodes = [n for n in ray.nodes() if n['Alive'] and n['Resources'].get('TPU', 0) > 0]
         if not nodes:
             raise RuntimeError('no live TPU hosts')
@@ -191,6 +200,9 @@ def remote(args):
             n['NodeID'], soft=False)).remote(args.action, args.reserve_bytes,
                 args.action == 'preflight' and index == 0, args.run_scope)
                 for index, n in enumerate(nodes)], timeout=120)
+        if args.action == 'bank-manifests':
+            for row, node in zip(rows, nodes):
+                row['node_ip'] = node['NodeManagerAddress']
         result = _host_measurements(args.action, args.layout, rows)
     else:
         from hetero.registry import find_registry
@@ -493,11 +505,11 @@ def analyze(args):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=('preflight', 'memory', 'cleanup', 'files', 'file-fingerprint', 'poison', 'pagecache', 'snapshot', 'fingerprint', 'validate', 'check', 'probe', 'analyze'))
+    parser.add_argument('action', choices=('preflight', 'memory', 'cleanup', 'files', 'file-fingerprint', 'poison', 'pagecache', 'bank-manifests', 'snapshot', 'fingerprint', 'validate', 'check', 'probe', 'analyze'))
     parser.add_argument('--layout', choices=sorted(BUILTIN_LAYOUTS), default='S')
     parser.add_argument('--instances', help='snapshot/fingerprint only these comma-separated instances')
-    parser.add_argument('--run-scope', help='cleanup/files/memory/file-fingerprint only: act on this first-switch run scope '
-                        '(hetero/run_scope.py) instead of /dev/shm/omp_weights')
+    parser.add_argument('--run-scope', help='cleanup/files/memory/file-fingerprint/bank-manifests only: act on this '
+                        'first-switch run scope (hetero/run_scope.py) instead of the default roots')
     parser.add_argument('--remote', action='store_true')
     parser.add_argument('--output', type=Path)
     parser.add_argument('--reference', type=Path)

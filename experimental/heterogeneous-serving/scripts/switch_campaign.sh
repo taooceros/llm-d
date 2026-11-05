@@ -6,6 +6,7 @@
 #   flock /tmp/hetero-cluster.lock scripts/switch_campaign.sh first-gate  # F1: inline snapshot + bank gate
 #   flock /tmp/hetero-cluster.lock scripts/switch_campaign.sh first       # F2: cold first switch S -> H
 #   flock /tmp/hetero-cluster.lock scripts/switch_campaign.sh preread     # F3b: S -> H with the parked-target pre-read
+#   flock /tmp/hetero-cluster.lock scripts/switch_campaign.sh portable    # bank written on one placement, read on another
 #   scripts/switch_campaign.sh <mode> --dry-run                           # print the commands, touch nothing
 #
 # full    4xTP8 S serves W0 (phase 1); at T0 the in-process controller drains S, deploys H (2xTP16,
@@ -55,10 +56,21 @@
 #   -> preread_complete (completed, every worker restored, bank written) -> greedy validation against the
 #   reference -> file-fingerprint of the pre-read snapshot -> local exactness comparison with the
 #   reference fingerprint (scripts/preread_compare.py, hard) -> teardown H -> scope cleanup -> S restore].
+# portable (REPS default 1): the executable bank identity names no hosts (hetero/exec_bank.py
+#   engine_identity), so a bank compiled on one placement serves every congruent one.
+#   (1) read-only: the warm banks under /root/.cache/omp_exec_bank, compared across hosts.
+#   (2) H normal deploy (inline snapshot into scope <run base>-snap): large_a writes its bank into scope
+#   <run base>, large_b its own into <run base>-b (comparison only) -> greedy reference -> per-entry
+#   sha256 comparison of the two placements' banks -> teardown.  (3) scripts/bank_relocate.py copies
+#   large_a's bank onto large_b's hosts (rank r -> rank r; refuses an existing directory).
+#   (4) gate: H restore deploy, both instances read scope <run base> (large_a its own bank, large_b the
+#   relocated copy) -> check, greedy validation, post check -> scripts/portable_check.py (hard) -> teardown.
+#   (5) autoscale: the partial S -> Mb prep without the Mb bank deploy; REPS x run-switch S -> Mb where
+#   the pre-spawned joiner large_b reads the relocated bank -> validation -> portable_check (hard).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 MODE=${1:-}
-case $MODE in full|partial|first-gate|first|preread) shift;; *) echo "usage: $0 <full|partial|first-gate|first|preread> [--dry-run]" >&2; exit 2;; esac
+case $MODE in full|partial|first-gate|first|preread|portable) shift;; *) echo "usage: $0 <full|partial|first-gate|first|preread|portable> [--dry-run]" >&2; exit 2;; esac
 DRY=0
 if [[ "${1:-}" == --dry-run ]]; then DRY=1; shift; fi
 (( $# == 0 )) || { echo "usage: $0 <full|partial> [--dry-run]" >&2; exit 2; }
@@ -81,8 +93,8 @@ if (( GATE )); then
   OVERLAP=1
   REPS=1
 fi
-if [[ $MODE == first || $MODE == preread ]]; then OVERLAP=1; fi
-if [[ $MODE == preread ]]; then REPS=${REPS:-1}; fi
+if [[ $MODE == first || $MODE == preread || $MODE == portable ]]; then OVERLAP=1; fi
+if [[ $MODE == preread || $MODE == portable ]]; then REPS=${REPS:-1}; fi
 if [[ $MODE == first-gate ]]; then REPS=0; fi
 RUN_BASE=$MODE-$COMMIT
 (( OVERLAP )) && RUN_BASE+=-ov
@@ -688,6 +700,105 @@ campaign_preread() {
     fi
   done
   teardown S final
+}
+
+# ---------------------------------------------------------------- portable bank (one placement -> another)
+scope_dir() {  # scope_dir <scope> <weight_snapshot_root|exec_bank_dir>
+  .venv/bin/python -c 'import sys; from hetero.run_scope import scope_roots; print(scope_roots(sys.argv[1])[sys.argv[2]])' "$1" "$2"
+}
+local_check() {  # local_check <script> [args...]: a local evidence check (hard unless the caller ignores it)
+  if (( DRY )); then show .venv/bin/python "$@"; return 0; fi
+  .venv/bin/python "$@"
+}
+campaign_portable() {
+  local bank=$RUN_BASE bank_b=$RUN_BASE-b snap=$RUN_BASE-snap
+  local bank_dir bank_b_dir snap_dir write read target
+  bank_dir=$(scope_dir "$bank" exec_bank_dir); bank_b_dir=$(scope_dir "$bank_b" exec_bank_dir)
+  snap_dir=$(scope_dir "$snap" weight_snapshot_root)
+  validate preflight S preflight --reserve-bytes "$RESERVE"
+  started=1
+  # (1) Read-only: whatever warm banks the hosts still hold, compared across placements (not a gate).
+  validate bank-manifests H warm-bank-manifests
+  local_check scripts/bank_compare.py "$OUT/warm-bank-manifests.json" --output "$OUT/warm-bank-compare.json" || true
+  stage_catalogue
+  scope_open "$bank"; scope_open "$bank_b"; scope_open "$snap"
+  # (2) Provisioning on placement A only: large_a's bank is the one every later step reads.
+  validate memory H prep-H-memory --reserve-bytes "$RESERVE"
+  write=$(printf '{"weight_snapshot":"write","fast_graph":true,"startup_profile":true,"weight_snapshot_root":"%s","exec_bank_dir":"%s"}' "$snap_dir" "$bank_dir")
+  deploy H A-write "$write" --max-model-len 131072 --instance-engine-settings \
+    "$(printf '{"large_a":{"exec_bank":"write"},"large_b":{"exec_bank":"write","exec_bank_dir":"%s"}}' "$bank_b_dir")"
+  validate validate H prep-H-reference
+  validate bank-manifests H A-write-bank-manifests --run-scope "$bank"
+  validate bank-manifests H A-write-bank-b-manifests --run-scope "$bank_b"
+  # Each placement compiled its own bank: are the serialized executables byte-identical? (recorded)
+  local_check scripts/bank_compare.py "$OUT/A-write-bank-manifests.json" "$OUT/A-write-bank-b-manifests.json" \
+    --output "$OUT/A-write-bank-compare.json" || true
+  teardown H A-write
+  # (3) large_a's bank onto large_b's hosts, rank for rank.
+  run scripts/bank_relocate.py --inventory "$INVENTORY" --run-scope "$bank" --source H:large_a --target H:large_b \
+    --output "$OUT/relocate.json" --timeout 900
+  validate bank-manifests H relocated-bank-manifests --run-scope "$bank"
+  local_check scripts/bank_compare.py "$OUT/relocated-bank-manifests.json" --output "$OUT/relocated-bank-compare.json" \
+    --require-identical
+  # (4) Gate: one H deploy, large_a reads its own bank, large_b the relocated copy.
+  read=$(printf '{"weight_snapshot":"read","weight_snapshot_verify":false,"fast_graph":true,"startup_profile":true,"exec_bank":"read","weight_snapshot_root":"%s","exec_bank_dir":"%s"}' "$snap_dir" "$bank_dir")
+  deploy H A-read "$read" --max-model-len 131072
+  validate check H A-read-check --require-restored
+  validate validate H A-read-validation --require-restored --reference "$OUT/prep-H-reference.json"
+  validate check H A-read-post-check --require-restored
+  local_check scripts/portable_check.py "$OUT/A-read-deploy.json" --relocate "$OUT/relocate.json" \
+    --relocated large_b --json "$OUT/portable-A-read.json" || { state "portable-gate-failed"; return 1; }
+  local_check scripts/overlap_check.py --deploy "$OUT/A-read-deploy.json" --validation "$OUT/A-read-validation.json" \
+    --json "$OUT/overlap-A-read.json" || true
+  teardown H A-read
+  scope_close "$snap" A-snap-scope-cleanup
+  # (5) Autoscale: large_b joins on its hosts during the partial switch, from the relocated bank.
+  validate cleanup S prep-initial-cleanup
+  prep_snapshot S -
+  prep_snapshot Mb large_b --instance-engine-settings "$LARGE_B_LONG"
+  validate files S prep-snapshot-files
+  target=$(printf '{"large_b":{"max_model_len":131072,"prespawn":true,"exec_bank":"read","exec_bank_dir":"%s"}}' "$bank_dir")
+  local r=1 attempt=1 rid
+  while (( r <= REPS )); do
+    rid=$(run_id_for "$r" "$attempt")
+    deploy S "S-restore-r$r-a$attempt" "$FAST" --max-model-len 16384
+    if (( r == 1 && attempt == 1 )); then restored S; else restored S check-only; fi
+    disk_floor "run-switch $rid"
+    mark "switch_start:r$r"
+    if ctl run-switch Mb "switch-r$r" "$SWITCH_TIMEOUT" --inventory "$INVENTORY" -- \
+        --from-layout S --switch-mode partial --phase1 W0 --phase2 W0,W6 --static-target-s 409.2 \
+        --run-id "$rid" --policy "$POLICY" --engine-settings "$FAST" \
+        --instance-engine-settings "$target" --max-model-len 16384 "${OVERLAP_ARGS[@]}" \
+        --model "$MODEL" --arm-timeout "$ARM_TIMEOUT" && switch_complete "$OUT/switch-r$r.json"; then
+      mark "switch_end:r$r"
+      current=Mb
+      record_run "$r" "$attempt" "$rid" true
+      state "switched S->Mb portable $rid"
+      validate check Mb "Mb-restore-check-r$r" --require-restored
+      validate validate Mb "Mb-restored-validation-r$r" \
+        --reference "$REFERENCE/prep-Mb-reference.json" || { state "bank-validation-failed r$r"; return 1; }
+      local_check scripts/portable_check.py "results/hetero/artifacts/$rid/deploy_report.json.gz" \
+        --relocate "$OUT/relocate.json" --relocated large_b --json "$OUT/portable-switch-r$r.json" \
+        || { state "portable-switch-check-failed r$r"; return 1; }
+      local_check scripts/overlap_check.py "$rid" --validation "$OUT/Mb-restored-validation-r$r.json" \
+        --json "$OUT/overlap-switch-r$r.json" || true
+      teardown Mb "switch-r$r-Mb"
+      teardown S "switch-r$r-leftover-S" || true  # kept engines keep their S placement-group names
+      r=$((r + 1)); attempt=1
+    else
+      mark "switch_end:r$r:failed"
+      (( DRY )) || cp -f "$OUT/switch-r$r.json" "$OUT/switch-r$r-a$attempt-failed.json" 2>/dev/null || true
+      record_run "$r" "$attempt" "$rid" false
+      diagnose Mb "$rid"
+      failures=$((failures + 1))
+      state "switch-failed r$r attempt $attempt"
+      for layout in Mb S; do teardown "$layout" "switch-r$r-failed-$layout" || true; done
+      (( failures < MAX_ATTEMPTS )) || { echo "run-switch failed $failures times; stopping" >&2; return 1; }
+      attempt=$((attempt + 1))
+    fi
+  done
+  scope_close "$bank" bank-scope-cleanup
+  scope_close "$bank_b" bank-b-scope-cleanup
 }
 
 idle

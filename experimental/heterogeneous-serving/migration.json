@@ -36,8 +36,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "216cf3e6049474f8ba13e3ad4f78e8b77f94433e6c9c4230836edc6c0b5e44d0",
-      "bytes": 42108
+      "sha256": "d01ab5916ec2821828117c0e96ec395abf663609a6daa64c1da976b18a282526",
+      "bytes": 43028
     },
     {
       "path": "RECONFIGURATION_GOAL.md",
@@ -420,6 +420,16 @@
       "bytes": 8624
     },
     {
+      "path": "scripts/bank_compare.py",
+      "sha256": "48bd3a74e0e92c5c012d625dddb639b82cc9fd3a88f29e00c45d5e7a96c623e7",
+      "bytes": 3283
+    },
+    {
+      "path": "scripts/bank_relocate.py",
+      "sha256": "084c33726b9c22301b04c03185df108bd1eeb33b32f78e7813eb6d48dbb492d9",
+      "bytes": 9285
+    },
+    {
       "path": "scripts/bf16_probe_diag.sh",
       "sha256": "f5cc22c72cf35b3075874fab3cc23063ad6a5d8415f54244ec5cda9ce69185cd",
       "bytes": 5645
@@ -505,6 +515,11 @@
       "bytes": 6915
     },
     {
+      "path": "scripts/portable_check.py",
+      "sha256": "19d8fa5f3c28cce8b25a81f72c297f00c2f0063ed61dd470b4d439fe40508dd8",
+      "bytes": 5385
+    },
+    {
       "path": "scripts/preread_compare.py",
       "sha256": "8b231a656768e9d4beda38fe02af6f5be93f1325ff6667a173bd4ec28601cdbc",
       "bytes": 4786
@@ -561,8 +576,8 @@
     },
     {
       "path": "scripts/snapshot_validate.py",
-      "sha256": "16a037ca35d02a8413c7066f39a8727a0ec7cadeed479a49c5eeef1912d24b29",
-      "bytes": 31055
+      "sha256": "2758970814f8aa17bf6f5cd19de8ff29fbcb201de2850ebb96d647276f1537bc",
+      "bytes": 31816
     },
     {
       "path": "scripts/staged_sequence.sh",
@@ -606,8 +621,8 @@
     },
     {
       "path": "scripts/switch_campaign.sh",
-      "sha256": "bc35fb22019b6e3d189332b50b825c5278065eee716c9fce7a42d26bc00c6734",
-      "bytes": 37665
+      "sha256": "04762ace67ce26f40e132b344b7750b016f4aecece39ffb8a11288b1b04f17b0",
+      "bytes": 45310
     },
     {
       "path": "scripts/switch_dry_run.py",
