@@ -690,6 +690,16 @@
       "bytes": 18614
     },
     {
+      "path": "scripts/tpu_e2e.py",
+      "sha256": "52ad0fc5595582243b80d3f00c362b78e8e480cd7b76f666792f83481f00f048",
+      "bytes": 70623
+    },
+    {
+      "path": "scripts/tpu_e2e_summary.py",
+      "sha256": "aec58fdc741f893ce5e5f46d0706482692a036d0365017c3372a943a4be8f698",
+      "bytes": 26678
+    },
+    {
       "path": "scripts/w3_campaign.sh",
       "sha256": "64e48278b06e0a84e2ae84b29d0a56707cbff85b39711d270b3125bb13a753a4",
       "bytes": 3942
