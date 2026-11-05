@@ -141,6 +141,20 @@ class SettingsTests(unittest.TestCase):
             with self.assertRaises(ValueError, msg=bad):
                 EngineSettings(**bad)
 
+    def test_safetensors_load_strategy_reaches_engine_args_only_when_set(self):
+        from hetero.engine_actor import EngineSettings
+        self.assertEqual(EngineSettings().load_kwargs(), {})
+        self.assertEqual(EngineSettings(safetensors_load_strategy="prefetch").load_kwargs(),
+                         {"safetensors_load_strategy": "prefetch"})
+        self.assertEqual(EngineSettings(safetensors_load_strategy="prefetch",
+                                        safetensors_prefetch_num_threads=32).load_kwargs(),
+                         {"safetensors_load_strategy": "prefetch", "safetensors_prefetch_num_threads": 32})
+        for bad in ({"safetensors_load_strategy": "fast"}, {"safetensors_prefetch_num_threads": 8},
+                    {"safetensors_load_strategy": "prefetch", "safetensors_prefetch_num_threads": 0},
+                    {"safetensors_load_strategy": "prefetch", "safetensors_prefetch_num_threads": True}):
+            with self.assertRaises(ValueError, msg=bad):
+                EngineSettings(**bad)
+
 
 if __name__ == "__main__":
     unittest.main()

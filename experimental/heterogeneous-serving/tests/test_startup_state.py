@@ -183,7 +183,8 @@ class PeerTransportTests(unittest.TestCase):
         try:
             for obj in (ss.Receiver, ss.send_files, ss.prepare_target, ss.finalize, ss.source_files,
                         ss.gcs_upload, ss.gcs_fetch, ss.fuse_fetch, ss.gcs_delete, ss.gcs_absent,
-                        ss.probe_write, ss.probe_cleanup, ss.checkpoint_fetch):
+                        ss.probe_write, ss.probe_cleanup, ss.checkpoint_fetch, ss.gcs_download_dir,
+                        ss.checkpoint_fuse_fetch, ss.ckpt_io_variant, ss.io_cleanup):
                 cloudpickle.dumps(obj)
         finally:
             cloudpickle.unregister_pickle_by_value(ss)
@@ -229,6 +230,63 @@ class PeerTransportTests(unittest.TestCase):
             ss.send_files("127.0.0.1", receiver.port(), [[0, str(path), 3]], streams=1, timeout=30)
             thread.join(30)
             self.assertIn("missing=1", box["error"])
+
+
+class CheckpointReadTests(unittest.TestCase):
+    """fetch-checkpoint --method fuse and the ckpt-io probe, against a directory standing in for /models."""
+
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.root = pathlib.Path(tmp.name)
+        for target, name, value in ((ss, "FUSE_MOUNT", self.root / "models"),
+                                    (run_scope, "CKPT_RUNS_PARENT", str(self.root / "shm/omp_ckpt_runs")),
+                                    (ss, "IO_ROOT", str(self.root / "shm/omp_ckpt_io"))):
+            patcher = mock.patch.object(target, name, value)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        self.ckpt = self.root / "models" / "gemma-test"
+        self.ckpt.mkdir(parents=True)
+        rng = np.random.default_rng(1)
+        self.files = {"model-00001-of-00002.safetensors": (3 << 20) + 7, "model-00002-of-00002.safetensors": 1,
+                      "config.json": 11, "empty.txt": 0}
+        for name, size in self.files.items():
+            (self.ckpt / name).write_bytes(rng.integers(0, 256, size, dtype=np.uint8).tobytes())
+
+    def test_chunks_cover_every_byte_once(self):
+        jobs = ss.chunk_jobs([("a", 10), ("b", 0), ("c", 4)], 4)
+        self.assertEqual(jobs, [("a", 0, 4), ("a", 4, 4), ("a", 8, 2), ("c", 0, 4)])
+
+    def test_fuse_checkpoint_copy_is_byte_identical_and_refuses_a_second_copy(self):
+        report = ss.checkpoint_fuse_fetch("gemma-test", "arm", workers=3, chunk_bytes=1 << 20)
+        dest = pathlib.Path(run_scope.scope_checkpoint_dir("arm")) / "gemma-test"
+        self.assertEqual(report["directory"], str(dest))
+        self.assertEqual(sorted(p.name for p in dest.iterdir()), sorted(n for n, s in self.files.items() if s))
+        for path in dest.iterdir():
+            self.assertEqual(path.read_bytes(), (self.ckpt / path.name).read_bytes(), path.name)
+        self.assertEqual(report["bytes"], sum(self.files.values()))
+        with self.assertRaises(RuntimeError):
+            ss.checkpoint_fuse_fetch("gemma-test", "arm", workers=3)
+
+    def test_io_variants_read_every_safetensors_byte(self):
+        safetensors = sum(s for n, s in self.files.items() if n.endswith(".safetensors"))
+        for variant in ("seq", "par-3", "vpf"):
+            row = ss.ckpt_io_variant(ss.FUSE_BUCKET, "gemma-test", variant)
+            self.assertEqual(row["bytes"], safetensors, variant)
+            self.assertTrue(0.0 <= row["resident_before"] <= 1.0)
+        with self.assertRaises(ValueError):
+            ss.ckpt_io_variant(ss.FUSE_BUCKET, "gemma-test", "mmap")
+
+    def test_cli_refuses_unknown_variants_and_peer_checkpoints(self):
+        for argv in (["ckpt-io", "--gcs", "gs://b/m", "--target", "H:large_b", "--variants", "par-x"],
+                     ["ckpt-io", "--gcs", "gs://b/m", "--target", "H:large_b", "--variants", "st-lazy,mmap"],
+                     ["ckpt-io", "--gcs", "gs://b/m", "--target", "H:large_b", "--variants", "st-lazy+seq"],
+                     ["ckpt-io", "--gcs", "gs://b/m", "--target", "H:large_b", "--variants", "st-lazy+gcs-8"],
+                     ["fetch-checkpoint", "--gcs", "gs://b/m", "--target", "H:large_b", "--target-scope", "arm",
+                      "--method", "peer"]):
+            with mock.patch.object(sys, "argv", ["startup_state.py", *argv]), \
+                    mock.patch("sys.stderr"), self.assertRaises(SystemExit, msg=argv):
+                ss.main()
 
 
 if __name__ == "__main__":

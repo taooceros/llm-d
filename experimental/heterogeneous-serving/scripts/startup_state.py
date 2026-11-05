@@ -25,9 +25,13 @@ Actions:
     delete  every object under gs://<bucket>/<prefix>/
     probe   peer transport check without any run state: --probe-bytes per rank pair of synthetic
             files, source -> target hosts, under /dev/shm/omp_peer_probe (removed afterwards)
-    fetch-checkpoint   the vanilla alternative: every target host downloads the full HF checkpoint
-            gs://<bucket>/<model dir>/ (top-level files) with sliced GCS downloads into the run scope's
-            checkpoint dir (hetero/run_scope.py scope_checkpoint_dir), for a normal-loader boot from local tmpfs
+    fetch-checkpoint   the vanilla alternative: every target host copies the full HF checkpoint
+            gs://<bucket>/<model dir>/ (top-level files) into the run scope's checkpoint dir
+            (hetero/run_scope.py scope_checkpoint_dir), for a normal-loader boot from local tmpfs.
+            --method gcs (default): sliced transfer_manager downloads; fuse: --workers threads of 64 MiB
+            pread/pwrite ranges through the /models GCS-fuse mount
+    ckpt-io  checkpoint read characterization, no engine: on every target host at once, per --variants
+            entry, evict the checkpoint's page cache and read all of it once (ckpt_io_variant), bytes discarded
 
 Fetch refuses a target that already holds any of the requested parts or a delivery marker. It lands
 files under their final names, except for the two publication points, and publishes those last:
@@ -522,9 +526,15 @@ def gcs_absent(bucket, prefix):
 
 def checkpoint_fetch(bucket, prefix, scope, workers, worker_type="process", chunk_bytes=64 << 20):
     """Download every top-level object of gs://bucket/prefix/ into <scope checkpoint dir>/<basename>/."""
-    from google.cloud.storage import transfer_manager as tm
     from hetero.run_scope import scope_checkpoint_dir
-    dest = Path(scope_checkpoint_dir(scope)) / Path(prefix).name
+    return gcs_download_dir(bucket, prefix, Path(scope_checkpoint_dir(scope)) / Path(prefix).name, workers,
+                            worker_type, chunk_bytes)
+
+
+def gcs_download_dir(bucket, prefix, dest, workers, worker_type="process", chunk_bytes=64 << 20):
+    """Sliced transfer_manager download of every top-level object of gs://bucket/prefix/ into dest/."""
+    from google.cloud.storage import transfer_manager as tm
+    dest = Path(dest)
     if dest.exists() and any(dest.iterdir()):
         raise RuntimeError(f"target checkpoint directory is not empty: {dest}")
     dest.mkdir(parents=True, exist_ok=True)
@@ -554,6 +564,300 @@ def checkpoint_fetch(bucket, prefix, scope, workers, worker_type="process", chun
     total = sum(b.size for b in blobs)
     return {"host": socket.gethostname(), "directory": str(dest), "files": len(blobs), "bytes": total,
             "list_s": started - listed, "seconds": time.time() - started, "large_files": files}
+
+
+# ------------------------------------------------------------------ checkpoint reads through GCS FUSE
+
+CKPT_CHUNK = 64 << 20
+
+
+def fuse_checkpoint_files(prefix, suffixes=None):
+    """[(path, bytes)] of the non-empty top-level files of the checkpoint as the /models mount shows it."""
+    source = FUSE_MOUNT / prefix.strip("/")
+    files = [(str(p), p.stat().st_size) for p in sorted(source.iterdir())
+             if p.is_file() and p.stat().st_size and (suffixes is None or p.suffix in suffixes)]
+    if not any(p.endswith(".safetensors") for p, _ in files):
+        raise RuntimeError(f"{source}: no safetensors files")
+    return files
+
+
+def chunk_jobs(files, chunk):
+    """(path, bytes) -> [(path, offset, length)] covering every byte once, file by file."""
+    return [(path, offset, min(chunk, size - offset)) for path, size in files for offset in range(0, size, chunk)]
+
+
+def read_chunks(jobs, workers, sink=None, shared_fd=False):
+    """pread every (path, offset, length) on ``workers`` threads; ``sink(path, offset, view)`` consumes it.
+
+    Each read opens its own descriptor unless ``shared_fd``: then all threads pread one descriptor per
+    file (as fastsafetensors' reader does)."""
+    from concurrent.futures import ThreadPoolExecutor
+    local = threading.local()
+    shared = {path: os.open(path, os.O_RDONLY) for path in {job[0] for job in jobs}} if shared_fd else {}
+
+    def one(job):
+        path, offset, length = job
+        if getattr(local, "buf", None) is None or len(local.buf) < length:
+            local.buf = bytearray(max(length, CKPT_CHUNK))
+        view = memoryview(local.buf)[:length]
+        fd = shared[path] if shared_fd else os.open(path, os.O_RDONLY)
+        try:
+            got = 0
+            while got < length:
+                n = os.preadv(fd, [view[got:]], offset + got)
+                if n <= 0:
+                    raise RuntimeError(f"short read: {path} at {offset + got}")
+                got += n
+        finally:
+            if not shared_fd:
+                os.close(fd)
+        if sink is not None:
+            sink(path, offset, view)
+        return length
+
+    try:
+        with ThreadPoolExecutor(max(1, int(workers))) as pool:
+            return sum(pool.map(one, jobs))
+    finally:
+        for fd in shared.values():
+            os.close(fd)
+
+
+def checkpoint_fuse_fetch(prefix, scope, workers, chunk_bytes=CKPT_CHUNK):
+    """Copy the checkpoint from the /models GCS FUSE mount into <scope checkpoint dir>/<basename>/:
+    ``workers`` threads, each pread/pwrite-ing 64 MiB ranges (large files stream in parallel too)."""
+    from hetero.run_scope import scope_checkpoint_dir
+    dest = Path(scope_checkpoint_dir(scope)) / Path(prefix).name
+    if dest.exists() and any(dest.iterdir()):
+        raise RuntimeError(f"target checkpoint directory is not empty: {dest}")
+    dest.mkdir(parents=True, exist_ok=True)
+    listed = time.time()
+    files = fuse_checkpoint_files(prefix)
+    started = time.time()
+    fds = {}
+    try:
+        for path, size in files:
+            fd = os.open(dest / Path(path).name, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o644)
+            fds[path] = fd
+            os.posix_fallocate(fd, 0, size)  # tmpfs: ENOSPC now, not half-way through
+
+        def sink(path, offset, view):
+            done = 0
+            while done < len(view):
+                done += os.pwrite(fds[path], view[done:], offset + done)
+
+        total = read_chunks(chunk_jobs(files, chunk_bytes), workers, sink)
+    finally:
+        for fd in fds.values():
+            os.close(fd)
+    for path, size in files:
+        if (dest / Path(path).name).stat().st_size != size:
+            raise RuntimeError(f"copied size mismatch: {path}")
+    return {"host": socket.gethostname(), "directory": str(dest), "files": len(files), "bytes": total,
+            "list_s": started - listed, "seconds": time.time() - started, "workers": int(workers)}
+
+
+IO_ROOT = "/dev/shm/omp_ckpt_io"
+IO_VARIANTS = ("st-lazy", "seq", "par-8", "par-32", "par-64", "gcs-32")
+
+
+def safetensors_touch(paths):
+    """The default loader's checkpoint access without its conversion: files in sorted order, one thread,
+    safe_open(framework='pt') and get_tensor per key in key order (vllm safetensors_weights_iterator);
+    clone() faults in every byte of each tensor the way the conversion's first read does."""
+    from safetensors import safe_open
+    total = 0
+    for path in sorted(paths):
+        with safe_open(path, framework="pt") as handle:
+            for name in handle.keys():
+                tensor = handle.get_tensor(name).clone()
+                total += tensor.numel() * tensor.element_size()
+                del tensor
+    return total
+
+
+def evict_files(paths):
+    """posix_fadvise(DONTNEED) each file: its next read starts cold (as snapshot_validate evict-pagecache)."""
+    for path in paths:
+        fd = os.open(path, os.O_RDONLY)
+        try:
+            os.posix_fadvise(fd, 0, 0, os.POSIX_FADV_DONTNEED)
+        finally:
+            os.close(fd)
+
+
+def resident_fraction(paths):
+    """Fraction of the files' bytes in the page cache (mincore, as snapshot_validate checkpoint_residency:
+    a private, never-written map faults nothing, so this reads no file bytes)."""
+    import ctypes
+    import mmap
+    libc = ctypes.CDLL(None, use_errno=True)
+    libc.mincore.argtypes = (ctypes.c_void_p, ctypes.c_size_t, ctypes.c_void_p)
+    page, total, resident = os.sysconf("SC_PAGE_SIZE"), 0, 0
+    for path in paths:
+        size = os.path.getsize(path)
+        if not size:
+            continue
+        vector = (ctypes.c_ubyte * ((size + page - 1) // page))()
+        with open(path, "rb") as handle, mmap.mmap(handle.fileno(), size, flags=mmap.MAP_PRIVATE,
+                                                     prot=mmap.PROT_READ | mmap.PROT_WRITE) as mapped:
+            anchor = ctypes.c_char.from_buffer(mapped)
+            try:
+                if libc.mincore(ctypes.addressof(anchor), size, vector) != 0:
+                    raise OSError(ctypes.get_errno(), f"mincore failed for {path}")
+            finally:
+                del anchor
+        total += size
+        resident += min(size, sum(b & 1 for b in bytes(vector)) * page)
+    return resident / total if total else 0.0
+
+
+def ckpt_io_variant(bucket, prefix, variant, worker_type="process"):
+    """One cold read of the whole checkpoint on this host by ``variant``; bytes are discarded.
+
+    st-lazy   safetensors_touch over the FUSE mount (the default loader's I/O, no conversion)
+    seq       one thread, 64 MiB sequential preads, file by file, over the FUSE mount
+    par-N     N threads of 64 MiB range preads over the FUSE mount (all files' ranges in one pool)
+    gcs-N     transfer_manager sliced download with N process workers into IO_ROOT (tmpfs), then
+              safetensors_touch on that local copy (``local_touch_s``: the access pattern without network)
+    vpf       vLLM's safetensors prefetch alone (vllm weight_utils._prefetch_all_checkpoints at its defaults:
+              8-thread pool, one task per file, 16 MiB sequential reads; ``files``: per-file seconds)
+    st-lazy+B safetensors_touch with background reader B (vpf or par-N) started at the same instant;
+              ``seconds`` is the walk, ``background_s`` when B finished (the loader waits on the walk only)
+    fst[-N]   fastsafetensors (vLLM load_format=fastsafetensors) on the host CPU: SafeTensorsFileLoader
+              with nogds pread + bounce buffer, N copy threads (default 16, its default), then
+              get_tensor of every key; the library is pip-installed into FST_ROOT outside the timing.
+              Its O_DIRECT policy treats only listed network file systems (not fuse) as remote, so on
+              GCS FUSE it reads with O_DIRECT, bypassing kernel readahead
+    fstb[-N]  the same with FASTSAFETENSORS_ODIRECT=0 (buffered reads)
+    sfd-N     N threads of 64 MiB preads sharing one descriptor per file, first SFD_CHUNKS ranges only
+    ofd-N     the same ranges with a descriptor per read (as par-N)
+    (vLLM's other alternative loader, instanttensor, refuses non-CUDA devices, so it has no TPU variant)
+    """
+    files = fuse_checkpoint_files(prefix, suffixes=(".safetensors",))
+    paths = [p for p, _ in files]
+    evict_files(paths)
+    row = {"variant": variant, "host": socket.gethostname(), "resident_before": resident_fraction(paths)}
+    started = time.time()
+    if variant == "st-lazy":
+        row["bytes"] = safetensors_touch(paths)
+    elif variant == "vpf":
+        row["files"] = vllm_prefetch(paths)
+        row["bytes"] = sum(f["bytes"] for f in row["files"])
+    elif variant.startswith("st-lazy+"):
+        background = variant[len("st-lazy+"):]
+        result = {}
+
+        def run_background():
+            began = time.time()
+            if background == "vpf":
+                result["files"] = vllm_prefetch(paths)
+            else:
+                read_chunks(chunk_jobs(files, CKPT_CHUNK), int(background[4:]))
+            result["seconds"] = time.time() - began
+
+        thread = threading.Thread(target=run_background, daemon=True)
+        thread.start()
+        row["bytes"] = safetensors_touch(paths)
+        row["seconds"] = time.time() - started
+        thread.join()
+        row["background_s"] = result.get("seconds")
+        row["background_files"] = result.get("files")
+    elif variant == "seq":
+        row["bytes"] = read_chunks(chunk_jobs(files, CKPT_CHUNK), 1)
+    elif variant.startswith("par-"):
+        row["bytes"] = read_chunks(chunk_jobs(files, CKPT_CHUNK), int(variant[4:]))
+    elif variant.split("-")[0] in ("sfd", "ofd"):
+        # fd-sharing control: the first SFD_CHUNKS 64 MiB ranges of the checkpoint on N threads, every
+        # thread on one shared descriptor per file (sfd, as fastsafetensors) or its own per read (ofd)
+        kind, _, count = variant.partition("-")
+        jobs = chunk_jobs(files, CKPT_CHUNK)[:SFD_CHUNKS]
+        row["bytes"] = read_chunks(jobs, int(count), shared_fd=kind == "sfd")
+    elif variant.startswith("gcs-"):
+        scratch = Path(IO_ROOT) / Path(prefix).name
+        shutil.rmtree(IO_ROOT, ignore_errors=True)
+        try:
+            got = gcs_download_dir(bucket, prefix, scratch, int(variant[4:]), worker_type)
+            row["seconds"] = got["seconds"]
+            local = sorted(str(p) for p in scratch.glob("*.safetensors"))
+            touched = time.time()
+            row["local_touch_bytes"] = safetensors_touch(local)
+            row["local_touch_s"] = time.time() - touched
+            row["bytes"] = sum(os.path.getsize(p) for p in local)
+        finally:
+            shutil.rmtree(IO_ROOT, ignore_errors=True)
+    elif variant.split("-")[0] in ("fst", "fstb"):
+        kind, _, count = variant.partition("-")
+        row.update(fastsafetensors_read(paths, int(count) if count else FST_THREADS, buffered=kind == "fstb"))
+    else:
+        raise ValueError(f"unknown checkpoint I/O variant {variant!r}")
+    row.setdefault("seconds", time.time() - started)
+    row["gbps"] = row["bytes"] / row["seconds"] / 1e9
+    evict_files(paths)
+    return row
+
+
+VPF_THREADS, VPF_BLOCK = 8, 16 << 20  # vllm.config.load DEFAULT_SAFETENSORS_PREFETCH_{NUM_THREADS,BLOCK_SIZE}
+
+
+def vllm_prefetch(paths):
+    """vLLM's prefetch: a VPF_THREADS pool, one task per file, ``while f.read(VPF_BLOCK)`` (buffered Python
+    reads, as vllm weight_utils._prefetch_checkpoint).  Returns [{name, bytes, seconds}] in file order."""
+    from concurrent.futures import ThreadPoolExecutor
+    began = time.time()
+
+    def one(path):
+        total = 0
+        with open(path, "rb") as handle:
+            while True:
+                chunk = handle.read(VPF_BLOCK)
+                if not chunk:
+                    break
+                total += len(chunk)
+        return {"name": Path(path).name, "bytes": total, "seconds": time.time() - began}
+
+    with ThreadPoolExecutor(VPF_THREADS) as pool:
+        return list(pool.map(one, sorted(paths)))
+
+
+FST_VERSION, FST_THREADS, FST_ROOT = "0.5.0", 16, "/dev/shm/omp_fst"
+SFD_CHUNKS = 64  # 4 GiB: enough for a steady rate at ~5 MB/s without an hour per host
+
+
+def fastsafetensors_read(paths, threads, buffered=False):
+    """Read ``paths`` into host memory with fastsafetensors (CPU device, no GDS) and fetch every tensor."""
+    import subprocess
+    if buffered:
+        os.environ["FASTSAFETENSORS_ODIRECT"] = "0"
+    else:
+        os.environ.pop("FASTSAFETENSORS_ODIRECT", None)
+    if not Path(FST_ROOT, "fastsafetensors").exists():
+        subprocess.run([sys.executable, "-m", "pip", "install", "-q", "--no-deps", "--target", FST_ROOT,
+                        f"fastsafetensors=={FST_VERSION}", "typer"], check=True)
+    if FST_ROOT not in sys.path:
+        sys.path.insert(0, FST_ROOT)
+    from fastsafetensors import SafeTensorsFileLoader
+    began = time.time()
+    loader = SafeTensorsFileLoader(None, "cpu", nogds=True, max_threads=threads)
+    try:
+        loader.add_filenames({0: sorted(paths)})
+        buffers = loader.copy_files_to_device()
+        copied = time.time() - began
+        total = 0
+        for key in loader.get_keys():
+            tensor = buffers.get_tensor(key)
+            total += tensor.numel() * tensor.element_size()
+        buffers.close()
+    finally:
+        loader.close()
+    return {"bytes": sum(os.path.getsize(p) for p in paths), "tensor_bytes": total,
+            "copy_s": copied, "seconds": time.time() - began, "threads": threads, "buffered": buffered}
+
+
+def io_cleanup():
+    shutil.rmtree(IO_ROOT, ignore_errors=True)
+    shutil.rmtree(FST_ROOT, ignore_errors=True)
+    return {"host": socket.gethostname(), "absent_after": not Path(IO_ROOT).exists() and not Path(FST_ROOT).exists()}
 
 
 # ------------------------------------------------------------------ remote driver (a Ray job)
@@ -588,17 +892,46 @@ def remote(args):
         return
 
     if args.action == "fetch-checkpoint":
-        rows = ray.get([task(checkpoint_fetch).options(scheduling_strategy=on(p["target_host"])).remote(
-            bucket, prefix, args.target_scope, args.workers, args.worker_type) for p in pairs], timeout=args.timeout)
+        method = args.method or "gcs"
+        if method == "fuse":
+            if bucket != FUSE_BUCKET:
+                raise RuntimeError(f"only gs://{FUSE_BUCKET} is mounted at {FUSE_MOUNT}")
+            refs = [task(checkpoint_fuse_fetch).options(scheduling_strategy=on(p["target_host"])).remote(
+                prefix, args.target_scope, args.workers) for p in pairs]
+        else:
+            refs = [task(checkpoint_fetch).options(scheduling_strategy=on(p["target_host"])).remote(
+                bucket, prefix, args.target_scope, args.workers, args.worker_type) for p in pairs]
+        rows = ray.get(refs, timeout=args.timeout)
         for row, pair in zip(rows, pairs):
             row.update(rank=pair["rank"], target_host=pair["target_host"])
         wall = time.time() - started
         total = sum(r["bytes"] for r in rows)
-        emit_measurements({**common, "method": "gcs-checkpoint", "ranks": rows, "bytes": total,
-                           "files": sum(r["files"] for r in rows), "wall_s": wall, "transfer_s": wall,
-                           "finalize_s": 0.0, "transfer_gbps": total / wall / 1e9,
+        emit_measurements({**common, "method": f"{method}-checkpoint", "workers": args.workers, "ranks": rows,
+                           "bytes": total, "files": sum(r["files"] for r in rows), "wall_s": wall,
+                           "transfer_s": wall, "finalize_s": 0.0, "transfer_gbps": total / wall / 1e9,
                            "per_host_gbps": [r["bytes"] / r["seconds"] / 1e9 for r in rows],
                            "directory": rows[0]["directory"] if rows else None})
+        return
+
+    if args.action == "ckpt-io":
+        if bucket != FUSE_BUCKET:
+            raise RuntimeError(f"only gs://{FUSE_BUCKET} is mounted at {FUSE_MOUNT}")
+        variants = {}
+        try:
+            for variant in args.variants.split(","):
+                began = time.time()
+                rows = ray.get([task(ckpt_io_variant).options(scheduling_strategy=on(p["target_host"])).remote(
+                    bucket, prefix, variant, args.worker_type) for p in pairs], timeout=args.timeout)
+                for row, pair in zip(rows, pairs):
+                    row.update(rank=pair["rank"], target_host=pair["target_host"])
+                variants[variant] = {"ranks": rows, "wall_s": time.time() - began,
+                                     "per_host_gbps": [r["gbps"] for r in rows],
+                                     "max_host_s": max(r["seconds"] for r in rows)}
+                print(json.dumps({variant: {k: v for k, v in variants[variant].items() if k != "ranks"}}), flush=True)
+        finally:
+            ray.get([task(io_cleanup).options(scheduling_strategy=on(p["target_host"])).remote() for p in pairs],
+                    timeout=300)
+        emit_measurements({**common, "variants": variants, "wall_s": time.time() - started})
         return
 
     if args.action == "probe":
@@ -731,7 +1064,7 @@ def placement_pairs(inventory, args):
         return [{"rank": rank, "source_host": ip} for rank, ip, _ in hosts]
     if (args.action == "fetch" and args.method == "peer") or args.action == "probe":
         return congruent_pairs(inventory, args.source, args.target)
-    if args.action == "fetch" or args.action == "fetch-checkpoint":
+    if args.action in ("fetch", "fetch-checkpoint", "ckpt-io"):
         hosts, _, _ = placement(inventory, args.target)
         return [{"rank": rank, "target_host": ip} for rank, ip, _ in hosts]
     return []
@@ -748,7 +1081,7 @@ def remote_argv(args):
     argv = ["python3", "-u", "scripts/startup_state.py", args.action, "--remote", "--parts", args.parts,
             "--pairs", json.dumps(pairs), "--timeout", str(args.timeout), "--workers", str(args.workers),
             "--worker-type", args.worker_type, "--streams", str(args.streams),
-            "--probe-bytes", str(args.probe_bytes)]
+            "--probe-bytes", str(args.probe_bytes), "--variants", args.variants]
     for flag, value in (("--method", args.method), ("--source", args.source), ("--target", args.target),
                         ("--source-scope", args.source_scope), ("--target-scope", args.target_scope),
                         ("--gcs", args.gcs)):
@@ -794,8 +1127,11 @@ def submit(args):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("action", choices=("upload", "fetch", "delete", "probe", "fetch-checkpoint"))
-    parser.add_argument("--method", choices=METHODS, help="fetch: gcs, fuse or peer")
+    parser.add_argument("action", choices=("upload", "fetch", "delete", "probe", "fetch-checkpoint", "ckpt-io"))
+    parser.add_argument("--method", choices=METHODS, help="fetch: gcs, fuse or peer; fetch-checkpoint: gcs or fuse")
+    parser.add_argument("--variants", default=",".join(IO_VARIANTS),
+                        help=f"ckpt-io: comma list, run in order, each a cold whole-checkpoint read on every "
+                             f"target host at once (st-lazy, seq, par-N, gcs-N; default {','.join(IO_VARIANTS)})")
     parser.add_argument("--parts", default="snapshot,bank,xla", help="comma list of snapshot,bank,xla")
     parser.add_argument("--source", help="LAYOUT:INSTANCE whose state is shipped (upload, fetch --method peer)")
     parser.add_argument("--source-scope", help="run scope holding the source state (upload, fetch --method peer)")
@@ -821,7 +1157,18 @@ def main():
     parse_parts(args.parts)
     need = {"upload": ("source", "source_scope", "gcs"), "delete": ("gcs",), "probe": ("source", "target"),
             "fetch": ("method", "target", "target_scope"),
-            "fetch-checkpoint": ("gcs", "target", "target_scope")}[args.action]
+            "fetch-checkpoint": ("gcs", "target", "target_scope"), "ckpt-io": ("gcs", "target")}[args.action]
+    if args.action == "fetch-checkpoint" and args.method == "peer":
+        parser.error("fetch-checkpoint --method is gcs or fuse")
+    if args.action == "ckpt-io":
+        for variant in args.variants.split(","):
+            name, _, count = variant.removeprefix("st-lazy+").partition("-")
+            base = variant.removeprefix("st-lazy+")
+            if variant.startswith("st-lazy+") and not (base == "vpf" or (name == "par" and count.isdigit() and int(count) > 0)):
+                parser.error(f"unknown ckpt-io variant {variant!r}")
+            if not variant.startswith("st-lazy+") and variant not in ("st-lazy", "seq", "vpf", "fst", "fstb") \
+                    and not (name in ("par", "gcs", "fst", "fstb", "sfd", "ofd") and count.isdigit() and int(count) > 0):
+                parser.error(f"unknown ckpt-io variant {variant!r}")
     if args.action == "fetch":
         need += ("source", "source_scope") if args.method == "peer" else ("gcs",)
     missing = [n for n in need if not getattr(args, n)]

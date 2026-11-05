@@ -218,12 +218,21 @@ def cmd_preflight(args: argparse.Namespace) -> Dict[str, Any]:
 
 
 def cmd_deploy(args: argparse.Namespace) -> Dict[str, Any]:
-    """Reconciles owned engines and their gateway as one deployment."""
+    """Reconciles owned engines and their gateway as one deployment.
+
+    ``--partition``: deploy only ``--instances``, on hosts a partition-mode campaign owns, with no
+    gateway (another campaign may own the rest of the slice)."""
     inventory, source = _resolve_inventory(args)
     config = _deployment_config(args)
     state_delivery = json.loads(args.state_delivery) if args.state_delivery else None
-    report = deploy(inventory, config, state_delivery=state_delivery)
-    gateway = cmd_gateway_up(args)["gateway"]
+    if args.partition and not args.instances:
+        raise ValueError("--partition deploys name --instances")
+    if args.instances and not args.partition:
+        raise ValueError("deploy --instances is a partition deploy: add --partition")
+    report = deploy(inventory, config, state_delivery=state_delivery,
+                    instance_ids=args.instances.split(",") if args.partition else None,
+                    partition=args.partition)
+    gateway = None if args.partition else cmd_gateway_up(args)["gateway"]
     return {"action": "deploy", "inventory_source": source,
             "deployment": report, "gateway": gateway}
 
@@ -699,6 +708,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--max-num-seqs", type=int)
     parser.add_argument("--max-num-batched-tokens", type=int)
     parser.add_argument("--instances", help="comma separated instance ids")
+    parser.add_argument("--partition", action="store_true",
+                        help="deploy: only --instances, no gateway (partition-mode campaigns)")
     parser.add_argument("--keep-resources", action="store_true")
     parser.add_argument("--drain-timeout-s", type=float, default=600.0)
     parser.add_argument("--prompts-per-instance", type=int, default=8)

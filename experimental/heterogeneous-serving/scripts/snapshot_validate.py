@@ -222,35 +222,65 @@ def remote(args):
     from ray.util.scheduling_strategies import NodeAffinitySchedulingStrategy
     from hetero.evidence import emit_measurements
     ray.init(address='auto', ignore_reinit_error=True)
+    hosts = set(args.hosts.split(',')) if args.hosts else None
+    selected = sorted(set(args.instances.split(','))) if args.instances else None
+    alive = [n for n in ray.nodes() if n['Alive'] and n['Resources'].get('TPU', 0) > 0]
+    if hosts is not None:
+        # Partition mode: this campaign owns only these hosts; other TPU hosts may carry another
+        # campaign's engines and state, and nothing here may touch or judge them.
+        missing = hosts - {n['NodeManagerAddress'] for n in alive}
+        if missing:
+            raise RuntimeError(f'--hosts not live TPU hosts: {sorted(missing)}')
+        alive = [n for n in alive if n['NodeManagerAddress'] in hosts]
     if args.action == 'preflight':
         from hetero.registry import find_registry
         registry = find_registry()
-        if registry is not None and ray.get(registry.snapshot.remote(), timeout=60):
-            raise RuntimeError('preflight refuses pre-existing registered engines')
+        registered = ray.get(registry.snapshot.remote(), timeout=60) if registry is not None else []
+        if hosts is not None:
+            registered = [r for r in registered if r['instance_id'] in (selected or ())]
+        if registered:
+            raise RuntimeError('preflight refuses pre-existing registered engines: '
+                               + ', '.join(sorted(r['instance_id'] for r in registered)))
         from ray.util import placement_group_table
-        if any(row['state'] != 'REMOVED' for row in placement_group_table().values()):
-            raise RuntimeError('preflight refuses pre-existing placement groups')
+        ours = {n['NodeID'] for n in alive}
+        live = [row for row in placement_group_table().values() if row['state'] != 'REMOVED']
+        if hosts is not None:
+            # A placement group still waiting for nodes may yet land on ours.
+            live = [row for row in live if not row.get('bundles_to_node_id')
+                    or set(row['bundles_to_node_id'].values()) & ours]
+        if live:
+            raise RuntimeError('preflight refuses pre-existing placement groups: '
+                               + ', '.join(sorted(row.get('name') or '?' for row in live)))
     if args.action in ('preflight', 'memory', 'cleanup', 'files', 'file-fingerprint', 'poison', 'pagecache',
                        'evict-pagecache', 'bank-manifests'):
-        nodes = [n for n in ray.nodes() if n['Alive'] and n['Resources'].get('TPU', 0) > 0]
+        nodes = alive
         if not nodes:
             raise RuntimeError('no live TPU hosts')
+        if hosts is not None and args.action == 'cleanup' and args.run_scope is None:
+            raise RuntimeError('--hosts cleanup needs --run-scope: the default roots are shared')
         task = ray.remote(num_cpus=0)(host_action)
         rows = ray.get([task.options(scheduling_strategy=NodeAffinitySchedulingStrategy(
             n['NodeID'], soft=False)).remote(args.action, args.reserve_bytes,
                 args.action == 'preflight' and index == 0, args.run_scope)
                 for index, n in enumerate(nodes)], timeout=120)
-        if args.action in ('bank-manifests', 'evict-pagecache'):
+        if args.action in ('bank-manifests', 'evict-pagecache') or hosts is not None:
             for row, node in zip(rows, nodes):
                 row['node_ip'] = node['NodeManagerAddress']
         result = _host_measurements(args.action, args.layout, rows)
+        if hosts is not None:
+            result['partition_hosts'] = sorted(hosts)
     else:
         from hetero.registry import find_registry
         registry = find_registry()
         if registry is None:
             raise RuntimeError('no registry')
         rows = ray.get(registry.snapshot.remote(args.layout), timeout=60)
-        expected = len(BUILTIN_LAYOUTS[args.layout])
+        if hosts is not None:
+            # Partition mode: only the selected instances of the layout are deployed (by this campaign).
+            rows = [r for r in rows if r['instance_id'] in selected]
+            expected = len(selected)
+        else:
+            expected = len(BUILTIN_LAYOUTS[args.layout])
         if len(rows) != expected or len({r['instance_id'] for r in rows}) != expected:
             raise RuntimeError(f'incomplete {args.layout} registry: {rows}')
         actors = {r['instance_id']: ray.get_actor(r['engine_actor_name'], namespace=r['ray_namespace']) for r in rows}
@@ -409,6 +439,8 @@ def submit(args):
         argv += ['--instances', args.instances]
     if args.run_scope:
         argv += ['--run-scope', args.run_scope]
+    if args.hosts:
+        argv += ['--hosts', args.hosts]
 
     @stage(name='snapshot_validation', order_idx=1, expected_s=args.timeout)
     def run(state, timing):
@@ -547,7 +579,11 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('action', choices=('preflight', 'memory', 'cleanup', 'files', 'file-fingerprint', 'poison', 'pagecache', 'evict-pagecache', 'bank-manifests', 'snapshot', 'fingerprint', 'validate', 'check', 'probe', 'analyze'))
     parser.add_argument('--layout', choices=sorted(BUILTIN_LAYOUTS), default='S')
-    parser.add_argument('--instances', help='snapshot/fingerprint only these comma-separated instances')
+    parser.add_argument('--instances', help='snapshot/fingerprint only these comma-separated instances; with '
+                        '--hosts, the instances of the layout this campaign deployed')
+    parser.add_argument('--hosts', help='partition mode: comma-separated host IPs this campaign owns. Host actions '
+                        'run only there and preflight judges only them; registry actions use only --instances '
+                        '(the rest of the layout may be absent or another campaign\'s)')
     parser.add_argument('--run-scope', help='cleanup/files/memory/file-fingerprint/bank-manifests only: act on this '
                         'first-switch run scope (hetero/run_scope.py) instead of the default roots')
     parser.add_argument('--remote', action='store_true')
@@ -566,6 +602,9 @@ def main():
         raise SystemExit('--probe-points is only valid with probe')
     if args.action == 'probe' and not args.probe_points and not args.remote:
         raise SystemExit('probe requires --probe-points')
+    if args.hosts and args.action in ('preflight', 'snapshot', 'fingerprint', 'validate', 'check', 'probe') \
+            and not args.instances:
+        raise SystemExit(f'--hosts {args.action} needs --instances')
     if not args.remote and args.output is None:
         parser.error('--output is required for supervised submission')
     (analyze if args.action == 'analyze' else remote if args.remote else submit)(args)

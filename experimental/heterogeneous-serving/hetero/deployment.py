@@ -161,6 +161,20 @@ def _check_partial_gateway(registry: Any, layout_id: str, digest: str, wanted: s
                 "partial deploy requires matching declared gateway maintenance or joining set")
 
 
+def _check_partition(registry: Any, layout_id: str, digest: str) -> None:
+    """A partition deploy: these instances only, on hosts this campaign owns; no gateway serves them.
+
+    The rest of the layout may be absent or another campaign's partition. Nothing may route to these
+    engines, so no gateway may exist; the layout must be unregistered or registered unchanged."""
+    existing = ray.get(registry.get_layout.remote(layout_id), timeout=60)
+    if existing and existing["layout_digest"] != digest:
+        raise RuntimeError("partition deploy cannot change the registered static layout")
+    from .gateway.lifecycle import find_gateway
+
+    if find_gateway() is not None:
+        raise RuntimeError("partition deploy refuses a live gateway: it serves a whole-slice deployment")
+
+
 def _existing_engine_actors(
     instances: Sequence[ResolvedInstance], layout_id: str, config: DeploymentConfig
 ) -> Dict[str, Any]:
@@ -366,14 +380,19 @@ def deploy(
     smoke_tokens: int = 0,
     instance_ids: Optional[Sequence[str]] = None,
     state_delivery: Optional[Dict[str, Any]] = None,
+    partition: bool = False,
 ) -> Dict[str, Any]:
     """Reconcile all or an explicit maintenance subset of the same static layout.
 
+    ``partition``: ``instance_ids`` is a partition deploy (``_check_partition``), not maintenance.
     ``state_delivery`` (hetero/state_delivery.py): the startup-state fetch runs as a child process
     from the start of the reconcile, while engines come up. Engines with engine setting
     ``state_gate_timeout_s`` wait for it before their first device touch.
     """
     from .state_delivery import Delivery, await_initialized
+
+    if partition and instance_ids is None:
+        raise ValueError("a partition deploy names its instances")
 
     started_at = time.time()
     resolved, instances, layout_body, layout_id, digest = _select_instances(inventory, config, instance_ids)
@@ -385,7 +404,9 @@ def deploy(
                          f"{'given' if state_delivery is not None else 'missing'}: they come together")
 
     registry = get_or_create_registry()
-    if instance_ids is not None:
+    if partition:
+        _check_partition(registry, layout_id, digest)
+    elif instance_ids is not None:
         _check_partial_gateway(registry, layout_id, digest, {i.instance_id for i in instances})
     existing_actors = _existing_engine_actors(instances, layout_id, config)
     if gated and any(existing_actors.get(iid) is not None for iid in gated):

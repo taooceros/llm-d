@@ -120,6 +120,10 @@ def summarize(directory):
     directory = Path(directory)
     runs = [json.loads(line) for line in (directory / "runs.jsonl").read_text().splitlines() if line.strip()]
     timeline = marks(directory)
+    # Partition mode (switch_campaign.sh AS_PART): one H instance is both seed and new instance.
+    config = json.loads((directory / "autoscale.json").read_text()) if (directory / "autoscale.json").exists() else {}
+    part = config.get("partition") or None
+    target = part or "large_b"
     rows = []
     for run in runs:
         rid, arm = run["run_id"], run.get("kind")
@@ -148,9 +152,10 @@ def summarize(directory):
         row["overlap"] = delivery is not None
         if deploy:
             dep = deploy["measurements"]["deployment"]
-            b = instance(deploy, "large_b")
+            b = instance(deploy, target)
             row.update(summarize_boot(b))
-            row["seed_large_a_boot_s"] = instance(deploy, "large_a").get("init_s")
+            if not part:
+                row["seed_large_a_boot_s"] = instance(deploy, "large_a").get("init_s")
             row["stage_clocks"] = dep.get("stage_clocks")
             t0 = dep.get("started_at")
             if t0 is not None and b.get("engine_init_started_at") is not None and "ready_at" in row:
@@ -177,10 +182,12 @@ def summarize(directory):
         rows.append(row)
     seed = load(directory, "seed-deploy.json")
     upload = load(directory, "upload.json")
-    result = {"directory": str(directory), "arms": rows}
+    result = {"directory": str(directory), "partition": config.get("partition"),
+              "partition_hosts": config.get("hosts"), "arms": rows}
     if seed:
-        result["seed"] = {"large_a_write": summarize_boot(instance(seed, "large_a")),
-                          "large_b_normal": summarize_boot(instance(seed, "large_b"))}
+        result["seed"] = ({f"{part}_write": summarize_boot(instance(seed, part))} if part else
+                          {"large_a_write": summarize_boot(instance(seed, "large_a")),
+                           "large_b_normal": summarize_boot(instance(seed, "large_b"))})
     if upload:
         m = upload["measurements"]
         result["upload"] = {"bytes": m.get("bytes"), "files": m.get("files"), "wall_s": round(m["wall_s"], 2),
