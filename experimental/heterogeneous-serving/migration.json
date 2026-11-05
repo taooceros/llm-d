@@ -155,6 +155,11 @@
       "bytes": 3398
     },
     {
+      "path": "docs/case-study-design.md",
+      "sha256": "f521657e124159b915f1f876c5ede41e5c2fd30aedc7dc773e591a02bee0c89f",
+      "bytes": 27331
+    },
+    {
       "path": "docs/experiments/en/continuous_surgical_preemption_study.md",
       "sha256": "71b1793cd0c7799e09049d2aa74ef7fde3eccfd0c690f007dd1de44b0c3ad8af",
       "bytes": 8231
@@ -550,6 +555,11 @@
       "bytes": 20430
     },
     {
+      "path": "scripts/gpu_e2e_summary.py",
+      "sha256": "504de39af93319b44486fdc5440b23e72ff63ff832e182d7de9e25bcd2a3c821",
+      "bytes": 12373
+    },
+    {
       "path": "scripts/hetero_ctl.py",
       "sha256": "76241bb1bdded5d804545d669fb95c8852652a55dd7dc81bd24839ede376a583",
       "bytes": 13682
@@ -593,6 +603,16 @@
       "path": "scripts/lld_sampler.py",
       "sha256": "0082db302962b0da01b8fd4518d78b6f7feae8674dc89b623979c2f6bb4479bf",
       "bytes": 2089
+    },
+    {
+      "path": "scripts/matrix_2x2.py",
+      "sha256": "919afdcbebd2a6e0dafe08a0e43e46d8b99b7e90c58aa8170814b14dcd64c1db",
+      "bytes": 26541
+    },
+    {
+      "path": "scripts/matrix_2x2_figures.py",
+      "sha256": "d32e2a1dbfc7a4f0859b7ab530d6a57b5698eb6c44e1bcd1ca07c86ab5a94ad4",
+      "bytes": 15537
     },
     {
       "path": "scripts/matrix_summary.py",
