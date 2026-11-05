@@ -550,6 +550,16 @@
       "bytes": 20430
     },
     {
+      "path": "scripts/gpu_autoscale.py",
+      "sha256": "cf4a392a388b5d57f78ef5093819364f786dbd7f201ef7e6bcc8b1b4acd22597",
+      "bytes": 98270
+    },
+    {
+      "path": "scripts/gpu_autoscale_figure.py",
+      "sha256": "54cf51af29b71af62bd3c5fcd4b78c899df09f5504925b581bb7f8807a31bbe1",
+      "bytes": 11181
+    },
+    {
       "path": "scripts/hetero_ctl.py",
       "sha256": "76241bb1bdded5d804545d669fb95c8852652a55dd7dc81bd24839ede376a583",
       "bytes": 13682
