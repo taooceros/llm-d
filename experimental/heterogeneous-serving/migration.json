@@ -430,6 +430,36 @@
       "bytes": 24021
     },
     {
+      "path": "scripts/asb.py",
+      "sha256": "02cc2edd08ab489de43cccb18c6cac15e66b06673f409683487376783b706a07",
+      "bytes": 31921
+    },
+    {
+      "path": "scripts/asb_calibrate.py",
+      "sha256": "346f76f762dee1d9b6658c1f2721130f9eadc37645a8a14df903f913ec248be9",
+      "bytes": 3768
+    },
+    {
+      "path": "scripts/asb_hot_standby.py",
+      "sha256": "4ccbd993c0e8ca5ab6990f49a4bc4c81500bae9646048593ae166f5b399a7943",
+      "bytes": 10525
+    },
+    {
+      "path": "scripts/asb_metrics.py",
+      "sha256": "d38e41d07bd18fc0a7e387c3b79b2788729656e952e79a8638687c175aee106c",
+      "bytes": 4281
+    },
+    {
+      "path": "scripts/asb_report.py",
+      "sha256": "88cef5dbb11df0cbf3670973bb0da30f4d645c45da3f5a9cf372e0cdaa8eaa12",
+      "bytes": 29995
+    },
+    {
+      "path": "scripts/asb_run.py",
+      "sha256": "182c8d2c4edad6fe8b5db060ca510c6d463ba3db28d496e515876ef7d422fc21",
+      "bytes": 33302
+    },
+    {
       "path": "scripts/autoscale_ablation.py",
       "sha256": "d843b6c2ec1a40aaabcae026bfe84ac4dd8c23160269f1773b14c0811c531092",
       "bytes": 4939
@@ -636,8 +666,8 @@
     },
     {
       "path": "scripts/startup_state.py",
-      "sha256": "9f4949fa79ca460676ef189adfec844c2b136975f5ab464934d05e207d3941d6",
-      "bytes": 60355
+      "sha256": "f2891f62f44df43bfc8a8fc9ee162c1a485bcb037c6210794d99cef3e450a241",
+      "bytes": 71339
     },
     {
       "path": "scripts/summarize_fast_snapshot.py",

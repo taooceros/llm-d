@@ -64,7 +64,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 PARTS = ("snapshot", "bank", "xla")
-METHODS = ("gcs", "fuse", "peer")
+METHODS = ("gcs", "fuse", "peer", "xpeer")
 FUSE_MOUNT = Path("/models")
 FUSE_BUCKET = "hongtaozhang-tpu-model-cache-us-west1"
 SNAPSHOT_MANIFEST = "manifest.json"
@@ -420,17 +420,126 @@ def send_files(host, port, items, streams, timeout):
             "host": socket.gethostname()}
 
 
+# ------------------------------------------------------------------ cross-cluster peer (xpeer)
+#
+# The autoscale-burst harness runs every 2x4 slice under its own private Ray head, so a peer fetch's source
+# (a serving instance on another slice) is not a node of the target's Ray cluster.  `xpeer-serve`, submitted
+# to the SOURCE cluster, leaves one detached PeerAgent actor per source host listening on --agent-port; a
+# `fetch --method xpeer --xpeer-agents {rank: "ip:port"}` in the TARGET cluster asks each rank's agent for
+# its file list, starts the usual Receiver on the target host, and has the agent run the usual send_files
+# to it: the data path (source rank r -> target rank r, --streams TCP streams, sendfile) is the peer
+# method's, only the control messages cross clusters (one JSON line each way per request).
+XPEER_NAMESPACE = "asb_xpeer"
+
+
+def xpeer_agent_name(rank):
+    return f"asb-xpeer-rank{int(rank)}"
+
+
+class PeerAgent:
+    """Source-host end of an xpeer fetch: answers `list` (source_files of a scope/spec/rank) and `send`
+    (send_files to a target Receiver) on a TCP control port; one request per connection."""
+
+    def __init__(self, port):
+        self.server = socket.create_server(("", int(port)), backlog=16, reuse_port=True)
+        self.served = []
+        self.thread = threading.Thread(target=self._serve, daemon=True)
+        self.thread.start()
+
+    def info(self):
+        return {"host": socket.gethostname(), "port": self.server.getsockname()[1], "served": self.served[-20:]}
+
+    def _serve(self):
+        while True:
+            conn, peer = self.server.accept()
+            threading.Thread(target=self._handle, args=(conn, peer), daemon=True).start()
+
+    def _handle(self, conn, peer):
+        started = time.time()
+        try:
+            with conn, conn.makefile("rwb") as stream:
+                request = json.loads(stream.readline())
+                try:
+                    if request["op"] == "list":
+                        reply = {"ok": True, "files": source_files(request["scope"], request["spec"], request["rank"],
+                                                                    request["parts"])}
+                    elif request["op"] == "send":
+                        reply = {"ok": True, "result": send_files(request["host"], request["port"], request["items"],
+                                                                  int(request["streams"]), float(request["timeout"]))}
+                    else:
+                        reply = {"ok": False, "error": f"unknown op {request['op']!r}"}
+                except Exception as exc:  # noqa: BLE001 - returned to the caller
+                    reply = {"ok": False, "error": f"{type(exc).__name__}: {exc}"}
+                stream.write((json.dumps(reply) + "\n").encode())
+                stream.flush()
+            self.served.append({"op": request.get("op"), "peer": peer[0], "ok": reply["ok"],
+                                "seconds": round(time.time() - started, 3), "at": started})
+        except Exception as exc:  # noqa: BLE001 - a broken control connection only affects that caller
+            self.served.append({"peer": peer[0], "error": repr(exc)[:300], "at": started})
+
+
+def xpeer_request(address, request, timeout):
+    host, _, port = address.rpartition(":")
+    with socket.create_connection((host, int(port)), timeout=timeout) as sock, sock.makefile("rwb") as stream:
+        stream.write((json.dumps(request) + "\n").encode())
+        stream.flush()
+        line = stream.readline()
+    if not line:
+        raise ConnectionError(f"xpeer agent {address} closed the control connection")
+    reply = json.loads(line)
+    if not reply.get("ok"):
+        raise RuntimeError(f"xpeer agent {address}: {reply.get('error')}")
+    return reply
+
+
+
 # ------------------------------------------------------------------ GCS transport
 
-def _storage():
+def _storage(token=None):
     from google.cloud import storage
+    if token:
+        from google.oauth2.credentials import Credentials
+        return storage.Client(project=token["project"], credentials=Credentials(token["access_token"]))
     return storage.Client()
 
 
-def gcs_upload(bucket, prefix, scope, spec, rank, parts, workers, worker_type="process"):
+TOKEN_FILE = "/tmp/asb_gcs_token.json"
+
+
+def driver_token():
+    """A short-lived access token for GCS writes from the TPU hosts (their node scopes are read-only).
+    First choice: TOKEN_FILE on the driver's host (the private Ray head of the autoscale-burst harness),
+    {"access_token", "project", "account", "expires_at"}, staged there by the workstation (scripts/asb.py
+    stage-token, from `gcloud auth print-access-token`) because the private namespace's head pod has no
+    workload-identity binding with write access.  Otherwise the driver's metadata-server identity (the
+    shared cluster's head pod: workload identity).  None when neither exists."""
+    import urllib.request
+    try:
+        staged = json.loads(Path(TOKEN_FILE).read_text())
+        if float(staged.get("expires_at", 0)) > time.time() + 300:
+            return {"access_token": staged["access_token"], "project": staged["project"],
+                    "account": staged.get("account", "staged"),
+                    "expires_in": int(float(staged["expires_at"]) - time.time())}
+    except (OSError, ValueError, KeyError):
+        pass
+    base = "http://169.254.169.254/computeMetadata/v1/"
+
+    def get(path):
+        request = urllib.request.Request(base + path, headers={"Metadata-Flavor": "Google"})
+        with urllib.request.urlopen(request, timeout=5) as response:
+            return response.read().decode()
+    try:
+        token = json.loads(get("instance/service-accounts/default/token"))
+        return {"access_token": token["access_token"], "expires_in": token.get("expires_in"),
+                "project": get("project/project-id"), "account": get("instance/service-accounts/default/email")}
+    except Exception:  # noqa: BLE001 - not on GCE/GKE
+        return None
+
+
+def gcs_upload(bucket, prefix, scope, spec, rank, parts, workers, worker_type="process", token=None):
     from google.cloud.storage import transfer_manager as tm
     files = source_files(scope, spec, rank, parts)
-    client = _storage()
+    client = _storage(token)
     b = client.bucket(bucket)
     started = time.time()
     results = tm.upload_many([(f["path"], b.blob(gcs_object(prefix, rank, f["part"], f["rel"]))) for f in files],
@@ -509,8 +618,8 @@ def _require_parts(rows, parts, where):
         raise RuntimeError(f"{where}: snapshot without its manifest")
 
 
-def gcs_delete(bucket, prefix):
-    client = _storage()
+def gcs_delete(bucket, prefix, token=None):
+    client = _storage(token)
     blobs = list(client.list_blobs(bucket, prefix=prefix.rstrip("/") + "/"))
     total = sum(b.size or 0 for b in blobs)
     for start in range(0, len(blobs), 100):
@@ -520,8 +629,8 @@ def gcs_delete(bucket, prefix):
     return {"objects": len(blobs), "bytes": total, "host": socket.gethostname()}
 
 
-def gcs_absent(bucket, prefix):
-    return not any(True for _ in _storage().list_blobs(bucket, prefix=prefix.rstrip("/") + "/", max_results=1))
+def gcs_absent(bucket, prefix, token=None):
+    return not any(True for _ in _storage(token).list_blobs(bucket, prefix=prefix.rstrip("/") + "/", max_results=1))
 
 
 def checkpoint_fetch(bucket, prefix, scope, workers, worker_type="process", chunk_bytes=64 << 20):
@@ -885,10 +994,51 @@ def remote(args):
     common = {"ok": True, "action": args.action, "parts": parts, "source": args.source, "target": args.target,
               "source_scope": args.source_scope, "target_scope": args.target_scope, "gcs": args.gcs}
 
+    # GCS writes (delete, upload) run on TPU hosts with the driver's token (see driver_token).
+    token = driver_token() if args.action in ("delete", "upload") else None
+    if token:
+        common["write_credentials"] = {"account": token["account"], "expires_in": token["expires_in"]}
+
     if args.action == "delete":
-        report = ray.get(task(gcs_delete).options(scheduling_strategy=on(tpu_hosts[0])).remote(bucket, prefix),
+        report = ray.get(task(gcs_delete).options(scheduling_strategy=on(tpu_hosts[0])).remote(bucket, prefix, token),
                          timeout=args.timeout)
         emit_measurements({**common, **report, "wall_s": time.time() - started})
+        return
+
+    if args.action == "xpeer-serve":
+        # One detached agent per source host (this cluster), listening on --agent-port until xpeer-stop.
+        agent_cls = ray.remote(num_cpus=0, max_restarts=0)(PeerAgent)
+        agents, rows = [], []
+        for p in pairs:
+            name = xpeer_agent_name(p["rank"])
+            try:
+                ray.kill(ray.get_actor(name, namespace=XPEER_NAMESPACE), no_restart=True)
+                time.sleep(1.0)
+            except ValueError:
+                pass
+            agents.append(agent_cls.options(name=name, namespace=XPEER_NAMESPACE, lifetime="detached",
+                                            scheduling_strategy=on(p["source_host"])).remote(args.agent_port))
+        for p, agent in zip(pairs, agents):
+            info = ray.get(agent.info.remote(), timeout=120)
+            rows.append({**p, **info, "address": f"{p['source_host']}:{info['port']}"})
+        emit_measurements({**common, "agents": rows, "xpeer_agents": {str(r["rank"]): r["address"] for r in rows},
+                           "wall_s": time.time() - started})
+        return
+
+    if args.action == "xpeer-stop":
+        rows = []
+        for rank in range(16):
+            try:
+                agent = ray.get_actor(xpeer_agent_name(rank), namespace=XPEER_NAMESPACE)
+            except ValueError:
+                continue
+            try:
+                info = ray.get(agent.info.remote(), timeout=30)
+            except Exception as exc:  # noqa: BLE001
+                info = {"error": repr(exc)[:200]}
+            ray.kill(agent, no_restart=True)
+            rows.append({"rank": rank, **info})
+        emit_measurements({**common, "stopped": rows, "wall_s": time.time() - started})
         return
 
     if args.action == "fetch-checkpoint":
@@ -962,12 +1112,12 @@ def remote(args):
         return
 
     if args.action == "upload":
-        if not ray.get(task(gcs_absent).options(scheduling_strategy=on(pairs[0]["source_host"])).remote(bucket, prefix),
-                       timeout=120):
+        if not ray.get(task(gcs_absent).options(scheduling_strategy=on(pairs[0]["source_host"])).remote(
+                bucket, prefix, token), timeout=120):
             raise RuntimeError(f"{args.gcs} already holds objects; refusing to mix uploads")
         refs = [task(gcs_upload).options(scheduling_strategy=on(p["source_host"])).remote(
             bucket, prefix, args.source_scope, args.source, p["rank"],
-            parts, args.workers, args.worker_type) for p in pairs]
+            parts, args.workers, args.worker_type, token) for p in pairs]
         rows = ray.get(refs, timeout=args.timeout)
         wall = time.time() - started
         emit_measurements({**common, "ranks": rows, "bytes": sum(r["bytes"] for r in rows),
@@ -986,6 +1136,46 @@ def remote(args):
         rows = ray.get([task(fn).options(scheduling_strategy=on(p["target_host"])).remote(
             bucket, prefix, args.target_scope, args.target, p["rank"], parts, args.workers, *extra) for p in pairs],
             timeout=args.timeout)
+    elif args.method == "xpeer":
+        agents = {int(k): v for k, v in json.loads(args.xpeer_agents).items()}
+        for pair in pairs:
+            pair["source_host"] = agents[pair["rank"]].rpartition(":")[0]
+        listings = [xpeer_request(agents[p["rank"]], {"op": "list", "scope": args.source_scope, "spec": args.source,
+                                                      "rank": p["rank"], "parts": parts}, 120)["files"] for p in pairs]
+        receiver_cls = ray.remote(num_cpus=0, max_restarts=0)(Receiver)
+        receivers = []
+        for pair, files in zip(pairs, listings):
+            plan = [[str(dest_path(args.target_scope, args.target, pair["rank"], f["part"], f["rel"])), f["bytes"]]
+                    for f in files]
+            receivers.append(receiver_cls.options(scheduling_strategy=on(pair["target_host"])).remote(
+                plan, args.streams, args.timeout))
+        ports = ray.get([r.port.remote() for r in receivers], timeout=120)
+        transfer_started = time.time()
+        runs = [r.run.remote() for r in receivers]
+        replies, errors = [None] * len(pairs), []
+
+        def ask(k, pair, port, files):
+            try:
+                replies[k] = xpeer_request(agents[pair["rank"]], {
+                    "op": "send", "host": pair["target_host"], "port": port, "streams": args.streams,
+                    "timeout": args.timeout, "items": [[i, f["path"], f["bytes"]] for i, f in enumerate(files)]},
+                    args.timeout)["result"]
+            except BaseException as exc:  # noqa: BLE001 - raised below
+                errors.append(f"rank {pair['rank']}: {type(exc).__name__}: {exc}")
+
+        askers = [threading.Thread(target=ask, args=(k, pair, port, files), daemon=True)
+                  for k, (pair, port, files) in enumerate(zip(pairs, ports, listings))]
+        for thread in askers:
+            thread.start()
+        for thread in askers:
+            thread.join(args.timeout)
+        if errors or any(r is None for r in replies):
+            raise RuntimeError(f"xpeer send failed: {errors[:4]}")
+        senders = replies
+        received = ray.get(runs, timeout=args.timeout)
+        rows = [{"rank": pair["rank"], **got, "by_part": {p: sum(f["bytes"] for f in files if f["part"] == p)
+                                                           for p in parts}}
+                for pair, files, got in zip(pairs, listings, received)]
     else:
         lister = task(source_files)
         listings = ray.get([lister.options(scheduling_strategy=on(p["source_host"])).remote(
@@ -1059,7 +1249,7 @@ def probe_cleanup():
 def placement_pairs(inventory, args):
     sys.path.insert(0, str(ROOT / "scripts"))
     from bank_relocate import congruent_pairs, placement
-    if args.action == "upload":
+    if args.action in ("upload", "xpeer-serve"):
         hosts, _, _ = placement(inventory, args.source)
         return [{"rank": rank, "source_host": ip} for rank, ip, _ in hosts]
     if (args.action == "fetch" and args.method == "peer") or args.action == "probe":
@@ -1074,7 +1264,7 @@ def remote_argv(args):
     """The remote driver's command line, with the rank pairs resolved from the local inventory."""
     from hetero.slice_inventory import SliceInventory
     pairs = []
-    if args.action != "delete":
+    if args.action not in ("delete", "xpeer-stop"):
         data = json.loads(Path(args.inventory).read_text())
         inventory = SliceInventory.from_dict(data.get("measurements", {}).get("inventory", data))
         pairs = placement_pairs(inventory, args)
@@ -1084,9 +1274,11 @@ def remote_argv(args):
             "--probe-bytes", str(args.probe_bytes), "--variants", args.variants]
     for flag, value in (("--method", args.method), ("--source", args.source), ("--target", args.target),
                         ("--source-scope", args.source_scope), ("--target-scope", args.target_scope),
-                        ("--gcs", args.gcs)):
+                        ("--gcs", args.gcs), ("--xpeer-agents", args.xpeer_agents)):
         if value:
             argv += [flag, value]
+    if args.action == "xpeer-serve":
+        argv += ["--agent-port", str(args.agent_port)]
     return argv, pairs
 
 
@@ -1127,8 +1319,13 @@ def submit(args):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("action", choices=("upload", "fetch", "delete", "probe", "fetch-checkpoint", "ckpt-io"))
-    parser.add_argument("--method", choices=METHODS, help="fetch: gcs, fuse or peer; fetch-checkpoint: gcs or fuse")
+    parser.add_argument("action", choices=("upload", "fetch", "delete", "probe", "fetch-checkpoint", "ckpt-io",
+                                           "xpeer-serve", "xpeer-stop"))
+    parser.add_argument("--method", choices=METHODS,
+                        help="fetch: gcs, fuse, peer or xpeer; fetch-checkpoint: gcs or fuse")
+    parser.add_argument("--xpeer-agents", help='fetch --method xpeer: JSON {rank: "ip:port"} of the source '
+                                               "cluster's agents (the measurements of xpeer-serve)")
+    parser.add_argument("--agent-port", type=int, default=47100, help="xpeer-serve: agent control port")
     parser.add_argument("--variants", default=",".join(IO_VARIANTS),
                         help=f"ckpt-io: comma list, run in order, each a cold whole-checkpoint read on every "
                              f"target host at once (st-lazy, seq, par-N, gcs-N; default {','.join(IO_VARIANTS)})")
@@ -1157,8 +1354,9 @@ def main():
     parse_parts(args.parts)
     need = {"upload": ("source", "source_scope", "gcs"), "delete": ("gcs",), "probe": ("source", "target"),
             "fetch": ("method", "target", "target_scope"),
-            "fetch-checkpoint": ("gcs", "target", "target_scope"), "ckpt-io": ("gcs", "target")}[args.action]
-    if args.action == "fetch-checkpoint" and args.method == "peer":
+            "fetch-checkpoint": ("gcs", "target", "target_scope"), "ckpt-io": ("gcs", "target"),
+            "xpeer-serve": ("source",), "xpeer-stop": ()}[args.action]
+    if args.action == "fetch-checkpoint" and args.method in ("peer", "xpeer"):
         parser.error("fetch-checkpoint --method is gcs or fuse")
     if args.action == "ckpt-io":
         for variant in args.variants.split(","):
@@ -1170,7 +1368,8 @@ def main():
                     and not (name in ("par", "gcs", "fst", "fstb", "sfd", "ofd") and count.isdigit() and int(count) > 0):
                 parser.error(f"unknown ckpt-io variant {variant!r}")
     if args.action == "fetch":
-        need += ("source", "source_scope") if args.method == "peer" else ("gcs",)
+        need += {"peer": ("source", "source_scope"), "xpeer": ("source", "source_scope", "xpeer_agents")}.get(
+            args.method, ("gcs",))
     missing = [n for n in need if not getattr(args, n)]
     if missing:
         parser.error(f"{args.action} needs " + ", ".join("--" + n.replace("_", "-") for n in missing))
@@ -1186,7 +1385,7 @@ def main():
             parser.error("--print-remote-argv is for fetch, with --inventory")
         print(json.dumps(remote_argv(args)[0]))
     else:
-        if (args.action != "delete" and not args.inventory) or args.output is None:
+        if (args.action not in ("delete", "xpeer-stop") and not args.inventory) or args.output is None:
             parser.error("--inventory (except delete) and --output are required for supervised submission")
         submit(args)
 
