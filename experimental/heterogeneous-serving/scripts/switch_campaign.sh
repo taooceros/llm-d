@@ -7,6 +7,7 @@
 #   flock /tmp/hetero-cluster.lock scripts/switch_campaign.sh first       # F2: cold first switch S -> H
 #   flock /tmp/hetero-cluster.lock scripts/switch_campaign.sh preread     # F3b: S -> H with the parked-target pre-read
 #   flock /tmp/hetero-cluster.lock scripts/switch_campaign.sh portable    # bank written on one placement, read on another
+#   flock /tmp/hetero-cluster.lock scripts/switch_campaign.sh autoscale   # new TP16 instance on fresh hosts, per weight-delivery arm
 #   scripts/switch_campaign.sh <mode> --dry-run                           # print the commands, touch nothing
 #
 # full    4xTP8 S serves W0 (phase 1); at T0 the in-process controller drains S, deploys H (2xTP16,
@@ -67,10 +68,32 @@
 #   relocated copy) -> check, greedy validation, post check -> scripts/portable_check.py (hard) -> teardown.
 #   (5) autoscale: the partial S -> Mb prep without the Mb bank deploy; REPS x run-switch S -> Mb where
 #   the pre-spawned joiner large_b reads the relocated bank -> validation -> portable_check (hard).
+# autoscale (ARMS, default "raw peer gcs bank-ckpt raw-xla fuse peer gcs raw"): a new TP16 instance (H:large_b)
+#   boots on hosts without its startup state while H:large_a (the seed) restores beside it.  Every arm uses a
+#   fresh run scope <run base>-<arm>-r<n> (snapshot, bank and XLA cache roots, hetero/run_scope.py) and starts
+#   with the checkpoint's page cache evicted on every host (snapshot_validate.py evict-pagecache).
+#   seed: H deploy, large_a cold (checkpoint + FastGraph, inline snapshot + bank write, XLA cache into scope
+#   <run base>-seed), large_b normal loader into a throwaway XLA scope -> greedy reference -> teardown ->
+#   scripts/startup_state.py upload of large_a's snapshot + bank + XLA cache to gs://.../omp_autoscale/<run base>.
+#   arms (large_b settings; large_a always restores its seed snapshot + bank):
+#     raw        normal loader, empty XLA cache: a vanilla instance on a new host
+#     raw-xla    normal loader + the seed's XLA cache shipped peer-to-peer (vanilla with a shared compile cache)
+#     ckpt-gcs   the full HF checkpoint downloaded from GCS (sliced, every host) into the arm scope's tmpfs,
+#                then the normal loader from that local copy, empty XLA cache (vanilla, fast checkpoint pull)
+#     ckpt-gcs-xla  ckpt-gcs + the seed's XLA cache shipped peer-to-peer (best vanilla)
+#     bank-ckpt  checkpoint + FastGraph (CPU conversion on the new host) + bank and XLA cache shipped peer-to-peer
+#     peer|gcs|fuse  snapshot + bank + XLA cache fetched (TCP from large_a's hosts | GCS transfer_manager |
+#                the /models GCS-fuse mount), then snapshot restore + bank read
+#     peer-ov|gcs-ov  peer|gcs with the fetch overlapping large_b's boot: the deploy job runs the fetch as a
+#                child from its start (hetero.cli deploy --state-delivery) and large_b's workers wait for
+#                their rank's delivery marker right before the first device touch (state_gate_timeout_s)
+#   each: evict-pagecache -> fetch (-ov: inside the deploy) -> H deploy -> check, greedy validation against
+#   the seed reference -> teardown -> scope cleanup.  End: GCS prefix and seed scope removed (also by the
+#   EXIT trap).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 MODE=${1:-}
-case $MODE in full|partial|first-gate|first|preread|portable) shift;; *) echo "usage: $0 <full|partial|first-gate|first|preread|portable> [--dry-run]" >&2; exit 2;; esac
+case $MODE in full|partial|first-gate|first|preread|portable|autoscale) shift;; *) echo "usage: $0 <full|partial|first-gate|first|preread|portable|autoscale> [--dry-run]" >&2; exit 2;; esac
 DRY=0
 if [[ "${1:-}" == --dry-run ]]; then DRY=1; shift; fi
 (( $# == 0 )) || { echo "usage: $0 <full|partial> [--dry-run]" >&2; exit 2; }
@@ -137,6 +160,7 @@ FAST_BANK_READ='{"weight_snapshot":"read","weight_snapshot_verify":false,"fast_g
 PREREAD_TARGET='{"weight_snapshot":"read","weight_snapshot_verify":false,"fast_graph":true,"startup_profile":true,"prespawn":true,"preread":true,"preread_timeout_s":300,"exec_bank":"write"}'
 REFERENCE_H=${REFERENCE_H:-}
 SCOPES=()
+GCS_PREFIXES=()  # autoscale: uploaded startup state, deleted at the end and by the EXIT trap
 H_PREP_RESTORE=$FAST
 H_TARGET=$FAST
 MB_TARGET=$LARGE_B_LONG
@@ -300,6 +324,9 @@ cleanup() {
     if (( ! KEEP_SNAPSHOTS )); then
       for scope in ${SCOPES[@]+"${SCOPES[@]}"}; do
         validate cleanup H "cleanup-scope-$scope" --run-scope "$scope" || rc=1
+      done
+      for gcs in ${GCS_PREFIXES[@]+"${GCS_PREFIXES[@]}"}; do
+        run scripts/startup_state.py delete --gcs "$gcs" --output "$OUT/cleanup-gcs-delete.json" --timeout 900 || rc=1
       done
       validate cleanup S cleanup-tmpfs || rc=1
     fi
@@ -799,6 +826,140 @@ campaign_portable() {
   done
   scope_close "$bank" bank-scope-cleanup
   scope_close "$bank_b" bank-b-scope-cleanup
+}
+
+# ---------------------------------------------------------------- autoscale (new instance on fresh hosts)
+AS_MAXLEN=131072  # the H shape of the portable gate; the bank identity covers max_model_len
+AS_BASE='{"startup_profile":true}'
+autoscale_settings() {  # autoscale_settings <seed|arm> <arm scope>: H --instance-engine-settings (large_a, large_b)
+  .venv/bin/python - "$1" "$2" "$AS_SEED" "$AS_SEED-b" "$(basename "$MODEL")" <<'EOF'
+import json, sys
+from hetero.run_scope import scope_checkpoint_dir, scope_roots, scope_xla_dir
+arm, scope, seed, seed_b, model = sys.argv[1:6]
+def roots(s):
+    r = scope_roots(s)
+    return {"weight_snapshot_root": r["weight_snapshot_root"], "exec_bank_dir": r["exec_bank_dir"],
+            "compilation_cache_dir": scope_xla_dir(s)}
+base = {"startup_profile": True}
+raw = {**base, "weight_snapshot": "off"}
+restore = {**base, "weight_snapshot": "read", "weight_snapshot_verify": False, "fast_graph": True, "exec_bank": "read"}
+if arm == "seed":
+    a = {**base, "weight_snapshot": "write", "fast_graph": True, "exec_bank": "write", **roots(seed)}
+    b = {**raw, "compilation_cache_dir": scope_xla_dir(seed_b)}
+else:
+    a, r = {**restore, **roots(seed)}, roots(scope)
+    b = {"raw": {**raw, "compilation_cache_dir": r["compilation_cache_dir"]},
+         "raw-xla": {**raw, "compilation_cache_dir": r["compilation_cache_dir"]},
+         "ckpt-gcs": {**raw, "compilation_cache_dir": r["compilation_cache_dir"],
+                      "model": scope_checkpoint_dir(scope) + "/" + model},
+         "ckpt-gcs-xla": {**raw, "compilation_cache_dir": r["compilation_cache_dir"],
+                          "model": scope_checkpoint_dir(scope) + "/" + model},
+         "bank-ckpt": {**base, "weight_snapshot": "off", "fast_graph": True, "exec_bank": "read",
+                       "exec_bank_dir": r["exec_bank_dir"], "compilation_cache_dir": r["compilation_cache_dir"]},
+         "peer": {**restore, **r}, "gcs": {**restore, **r}, "fuse": {**restore, **r},
+         "peer-ov": {**restore, **r, "state_gate_timeout_s": 900.0},
+         "gcs-ov": {**restore, **r, "state_gate_timeout_s": 900.0}}[arm]
+print(json.dumps({"large_a": a, "large_b": b}, separators=(",", ":")))
+EOF
+}
+autoscale_fetch() {  # autoscale_fetch <arm> <arm scope>: ship the seed's startup state onto large_b's hosts
+  local arm=$1 rid=$2 method parts src=()
+  case $arm in
+    raw|peer-ov|gcs-ov) return 0;;  # -ov: the fetch runs inside the deploy job (autoscale_delivery)
+    ckpt-gcs|ckpt-gcs-xla)
+      mark "ckpt_fetch_start:$rid"
+      run scripts/startup_state.py fetch-checkpoint --inventory "$INVENTORY" --gcs "$AS_CKPT_GCS" \
+        --target H:large_b --target-scope "$rid" --output "$OUT/$rid-ckpt-fetch.json" --timeout 1800 || return 1
+      mark "ckpt_fetch_end:$rid"
+      [[ $arm == ckpt-gcs-xla ]] || return 0
+      method=peer parts=xla;;
+    raw-xla) method=peer parts=xla;;
+    bank-ckpt) method=peer parts=bank,xla;;
+    peer|gcs|fuse) method=$arm parts=snapshot,bank,xla;;
+  esac
+  if [[ $method == peer ]]; then src=(--source H:large_a --source-scope "$AS_SEED"); else src=(--gcs "$AS_GCS"); fi
+  mark "fetch_start:$rid"
+  run scripts/startup_state.py fetch --inventory "$INVENTORY" --method "$method" --parts "$parts" "${src[@]}" \
+    --target H:large_b --target-scope "$rid" --output "$OUT/$rid-fetch.json" --timeout 1800 || return 1
+  mark "fetch_end:$rid"
+}
+autoscale_delivery() {  # autoscale_delivery <arm> <arm scope>: deploy --state-delivery JSON for an -ov arm
+  local method=${1%-ov} argv src=()
+  if [[ $method == peer ]]; then src=(--source H:large_a --source-scope "$AS_SEED"); else src=(--gcs "$AS_GCS"); fi
+  argv=$(.venv/bin/python scripts/startup_state.py fetch --print-remote-argv --inventory "$INVENTORY" \
+    --method "$method" --parts snapshot,bank,xla "${src[@]}" --target H:large_b --target-scope "$2" \
+    --timeout 1800) || return 1
+  printf '{"argv":%s,"timeout_s":1800}' "$argv"
+}
+autoscale_arm() {  # autoscale_arm <arm> <rid>: one fresh-host boot of large_b; nonzero on any failed step
+  local arm=$1 rid=$2 restored_flag=() delivery=() spec
+  case $arm in peer|gcs|fuse|peer-ov|gcs-ov) restored_flag=(--require-restored);; esac
+  scope_open "$rid"
+  validate evict-pagecache H "$rid-fresh" || return 1
+  autoscale_fetch "$arm" "$rid" || return 1
+  if [[ $arm == *-ov ]]; then
+    spec=$(autoscale_delivery "$arm" "$rid") || return 1
+    delivery=(--state-delivery "$spec")
+  fi
+  deploy H "$rid" "$AS_BASE" --max-model-len "$AS_MAXLEN" \
+    --instance-engine-settings "$(autoscale_settings "$arm" "$rid")" ${delivery[@]+"${delivery[@]}"} || return 1
+  validate check H "$rid-check" ${restored_flag[@]+"${restored_flag[@]}"} || return 1
+  validate validate H "$rid-validation" ${restored_flag[@]+"${restored_flag[@]}"} \
+    --reference "$OUT/prep-H-reference.json" || return 1
+  teardown H "$rid" || return 1
+  scope_close "$rid" "$rid-scope-cleanup" || return 1
+}
+campaign_autoscale() {
+  local arm rid n=0 done_ok=0
+  AS_SEED=$RUN_BASE-seed
+  AS_GCS=${AS_GCS:-gs://hongtaozhang-tpu-model-cache-us-west1/omp_autoscale/$RUN_BASE}
+  AS_CKPT_GCS=${AS_CKPT_GCS:-gs://hongtaozhang-tpu-model-cache-us-west1/$(basename "$MODEL")}  # what /models mounts
+  local arms=(${ARMS:-raw peer gcs bank-ckpt raw-xla fuse peer gcs raw})
+  for arm in "${arms[@]}"; do
+    case $arm in raw|raw-xla|ckpt-gcs|ckpt-gcs-xla|bank-ckpt|peer|gcs|fuse|peer-ov|gcs-ov) ;;
+      *) echo "unknown autoscale arm $arm" >&2; return 2;; esac
+  done
+  (( DRY )) || printf '{"arms":"%s","gcs":"%s","checkpoint_gcs":"%s","seed":"%s","max_model_len":%s}\n' \
+    "${arms[*]}" "$AS_GCS" "$AS_CKPT_GCS" "$AS_SEED" "$AS_MAXLEN" > "$OUT/autoscale.json"
+  validate preflight S preflight --reserve-bytes "$RESERVE"
+  started=1
+  # Seed: large_a's cold boot writes the startup state every arm ships; large_b's normal boot only
+  # makes the greedy reference complete (its throwaway XLA scope is removed right after).
+  scope_open "$AS_SEED"; scope_open "$AS_SEED-b"
+  validate memory H prep-H-memory --reserve-bytes "$RESERVE"
+  validate evict-pagecache H seed-fresh
+  deploy H seed "$AS_BASE" --max-model-len "$AS_MAXLEN" --instance-engine-settings "$(autoscale_settings seed -)"
+  validate validate H prep-H-reference
+  validate bank-manifests H seed-bank-manifests --run-scope "$AS_SEED"
+  teardown H seed
+  scope_close "$AS_SEED-b" seed-b-scope-cleanup
+  GCS_PREFIXES+=("$AS_GCS")
+  mark "upload_start"
+  run scripts/startup_state.py upload --inventory "$INVENTORY" --source H:large_a --source-scope "$AS_SEED" \
+    --gcs "$AS_GCS" --parts snapshot,bank,xla --output "$OUT/upload.json" --timeout 1800
+  mark "upload_end"
+  for arm in "${arms[@]}"; do
+    n=$((n + 1))
+    rid=$RUN_BASE-$arm-r$n
+    mark "arm_start:$rid"
+    if autoscale_arm "$arm" "$rid"; then
+      mark "arm_end:$rid"
+      record_run "$n" 1 "$rid" true "$arm"
+      done_ok=$((done_ok + 1))
+    else
+      mark "arm_end:$rid:failed"
+      record_run "$n" 1 "$rid" false "$arm"
+      state "autoscale-arm-failed $rid"
+      failures=$((failures + 1))
+      teardown H "$rid-failed" || true
+      scope_close "$rid" "$rid-failed-scope-cleanup" || true
+      (( failures < MAX_ATTEMPTS )) || { echo "autoscale: $failures failed arms; stopping" >&2; return 1; }
+    fi
+  done
+  run scripts/startup_state.py delete --gcs "$AS_GCS" --output "$OUT/gcs-delete.json" --timeout 900
+  GCS_PREFIXES=()
+  scope_close "$AS_SEED" seed-scope-cleanup
+  (( done_ok > 0 ))
 }
 
 idle

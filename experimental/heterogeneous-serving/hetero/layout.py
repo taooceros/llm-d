@@ -19,10 +19,16 @@ TPU_PROCESS_PORT = "8471"
 JAX_COMPILATION_CACHE_DIR = "/models/jax_cache"
 # Persist every executable, however small or fast to compile: at JAX's default
 # 1.0 s threshold a warm start still backend-compiles ~248 small executables.
+# JAX_PERSISTENT_CACHE_ENABLE_XLA_CACHES=none: by default JAX (0.10.x) sets the GPU
+# autotune-cache dir to <compilation cache dir>/xla_gpu_per_fusion_autotune_cache_dir
+# in every CompileOptions and hashes it into the cache key, so a cache copied to a
+# different directory (another run scope, another host's path) never hits.  TPU uses
+# neither XLA side cache; with none enabled the key is independent of the path.
 # Applied and verified in every worker by hetero.compile_cache.
 PERSISTENT_CACHE_THRESHOLD_ENV = {
     "JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS": "0",
     "JAX_PERSISTENT_CACHE_MIN_ENTRY_SIZE_BYTES": "0",
+    "JAX_PERSISTENT_CACHE_ENABLE_XLA_CACHES": "none",
 }
 
 

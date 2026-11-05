@@ -221,7 +221,8 @@ def cmd_deploy(args: argparse.Namespace) -> Dict[str, Any]:
     """Reconciles owned engines and their gateway as one deployment."""
     inventory, source = _resolve_inventory(args)
     config = _deployment_config(args)
-    report = deploy(inventory, config)
+    state_delivery = json.loads(args.state_delivery) if args.state_delivery else None
+    report = deploy(inventory, config, state_delivery=state_delivery)
     gateway = cmd_gateway_up(args)["gateway"]
     return {"action": "deploy", "inventory_source": source,
             "deployment": report, "gateway": gateway}
@@ -690,6 +691,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--instance-engine-settings",
                         help='JSON {instance_id: {setting: value}} merged over the engine settings')
     parser.add_argument("--model", default="/models/gemma-4-31b")
+    parser.add_argument("--state-delivery",
+                        help='deploy: JSON {"argv": [...], "timeout_s": N}, the startup-state fetch run '
+                             "while the engines boot (hetero/state_delivery.py; startup_state.py "
+                             "fetch --print-remote-argv); pairs with engine setting state_gate_timeout_s")
     parser.add_argument("--max-model-len", type=int)
     parser.add_argument("--max-num-seqs", type=int)
     parser.add_argument("--max-num-batched-tokens", type=int)

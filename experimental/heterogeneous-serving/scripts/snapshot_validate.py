@@ -130,17 +130,57 @@ def host_action(action, reserve_bytes, capture_config=False, run_scope=None):
         row['fingerprints'] = fingerprints
         row['validation_s'] = time.perf_counter() - fingerprint_start
         row['outside_snapshot_and_restore_timer'] = True
-    if action == 'pagecache':
-        row['checkpoint_page_cache'] = checkpoint_residency(
-            Path(os.environ.get('OMP_SNAPSHOT_MODEL', '/models/gemma-4-31b')))
+    if action in ('pagecache', 'evict-pagecache'):
+        model = Path(os.environ.get('OMP_SNAPSHOT_MODEL', '/models/gemma-4-31b'))
+        row['checkpoint_page_cache'] = checkpoint_residency(model)
         row['meminfo_kb'] = {k: int(memory[k].split()[0]) for k in (
             'MemAvailable', 'Cached', 'Shmem', 'Dirty', 'Writeback') if k in memory}
+        if action == 'evict-pagecache':
+            # A fresh host for an autoscale arm: drop the checkpoint's cached pages (fadvise, no
+            # privilege needed) and record which warm pod-local state is (not) present.
+            row['evicted_files'] = evict_page_cache(model)
+            row['checkpoint_page_cache_after'] = checkpoint_residency(model)
+            row['pod_local_state'] = pod_local_state()
     if capture_config:
         config = Path(os.environ.get('OMP_SNAPSHOT_MODEL', '/models/gemma-4-31b')) / 'config.json'
         row['model_config'] = json.loads(config.read_text())
-    if action not in ('cleanup', 'pagecache', 'bank-manifests') and min(available, free) - reserve_bytes < floor:
+    if action not in ('cleanup', 'pagecache', 'evict-pagecache', 'bank-manifests') and min(available, free) - reserve_bytes < floor:
         raise RuntimeError('insufficient snapshot host headroom: ' + json.dumps(row))
     return row
+
+
+def evict_page_cache(model_dir):
+    """posix_fadvise(DONTNEED) every checkpoint file: the next normal-loader read starts cold."""
+    evicted = []
+    for path in sorted(Path(model_dir).iterdir()):
+        if path.is_file() and path.suffix in ('.safetensors', '.json'):
+            fd = os.open(path, os.O_RDONLY)
+            try:
+                os.posix_fadvise(fd, 0, 0, os.POSIX_FADV_DONTNEED)
+            finally:
+                os.close(fd)
+            evicted.append(path.name)
+    return evicted
+
+
+def pod_local_state():
+    """Bytes in every pod-local warm-start root (default and run-scoped snapshot, bank, XLA cache)."""
+    from hetero import run_scope as scopes
+
+    def size(path):
+        path = Path(path)
+        if not path.exists():
+            return None
+        return sum(p.stat().st_size for p in path.rglob('*') if p.is_file() and not p.is_symlink())
+
+    roots = {'snapshot_default': '/dev/shm/omp_weights', 'snapshot_runs': scopes.SNAPSHOT_RUNS_PARENT,
+             'bank_default': '/root/.cache/omp_exec_bank', 'bank_runs': scopes.BANK_RUNS_PARENT,
+             'xla_default': '/root/.cache/vllm/xla_cache', 'xla_runs': scopes.XLA_RUNS_PARENT}
+    state = {name: size(path) for name, path in roots.items()}
+    for parent in (scopes.SNAPSHOT_RUNS_PARENT, scopes.BANK_RUNS_PARENT, scopes.XLA_RUNS_PARENT):
+        if Path(parent).is_dir():
+            state[f'scopes:{parent}'] = sorted(p.name for p in Path(parent).iterdir())
+    return state
 
 
 def checkpoint_residency(model_dir):
@@ -191,7 +231,7 @@ def remote(args):
         if any(row['state'] != 'REMOVED' for row in placement_group_table().values()):
             raise RuntimeError('preflight refuses pre-existing placement groups')
     if args.action in ('preflight', 'memory', 'cleanup', 'files', 'file-fingerprint', 'poison', 'pagecache',
-                       'bank-manifests'):
+                       'evict-pagecache', 'bank-manifests'):
         nodes = [n for n in ray.nodes() if n['Alive'] and n['Resources'].get('TPU', 0) > 0]
         if not nodes:
             raise RuntimeError('no live TPU hosts')
@@ -200,7 +240,7 @@ def remote(args):
             n['NodeID'], soft=False)).remote(args.action, args.reserve_bytes,
                 args.action == 'preflight' and index == 0, args.run_scope)
                 for index, n in enumerate(nodes)], timeout=120)
-        if args.action == 'bank-manifests':
+        if args.action in ('bank-manifests', 'evict-pagecache'):
             for row, node in zip(rows, nodes):
                 row['node_ip'] = node['NodeManagerAddress']
         result = _host_measurements(args.action, args.layout, rows)
@@ -505,7 +545,7 @@ def analyze(args):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=('preflight', 'memory', 'cleanup', 'files', 'file-fingerprint', 'poison', 'pagecache', 'bank-manifests', 'snapshot', 'fingerprint', 'validate', 'check', 'probe', 'analyze'))
+    parser.add_argument('action', choices=('preflight', 'memory', 'cleanup', 'files', 'file-fingerprint', 'poison', 'pagecache', 'evict-pagecache', 'bank-manifests', 'snapshot', 'fingerprint', 'validate', 'check', 'probe', 'analyze'))
     parser.add_argument('--layout', choices=sorted(BUILTIN_LAYOUTS), default='S')
     parser.add_argument('--instances', help='snapshot/fingerprint only these comma-separated instances')
     parser.add_argument('--run-scope', help='cleanup/files/memory/file-fingerprint/bank-manifests only: act on this '

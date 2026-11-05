@@ -365,26 +365,42 @@ def deploy(
     *,
     smoke_tokens: int = 0,
     instance_ids: Optional[Sequence[str]] = None,
+    state_delivery: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
-    """Reconcile all or an explicit maintenance subset of the same static layout."""
+    """Reconcile all or an explicit maintenance subset of the same static layout.
+
+    ``state_delivery`` (hetero/state_delivery.py): the startup-state fetch runs as a child process
+    from the start of the reconcile, while engines come up. Engines with engine setting
+    ``state_gate_timeout_s`` wait for it before their first device touch.
+    """
+    from .state_delivery import Delivery, await_initialized
+
+    started_at = time.time()
     resolved, instances, layout_body, layout_id, digest = _select_instances(inventory, config, instance_ids)
     if True in _prespawn_flags(instances, config):
         raise ValueError("engine setting prespawn=true is deployed only by prespawn_deployment/commit_prespawned")
+    gated = [i.instance_id for i in instances if config.settings_for(i.instance_id)["state_gate_timeout_s"]]
+    if bool(gated) != (state_delivery is not None):
+        raise ValueError(f"state gate on {gated or 'no instance'} but state delivery "
+                         f"{'given' if state_delivery is not None else 'missing'}: they come together")
 
     registry = get_or_create_registry()
     if instance_ids is not None:
         _check_partial_gateway(registry, layout_id, digest, {i.instance_id for i in instances})
     existing_actors = _existing_engine_actors(instances, layout_id, config)
-
-    native_backend, backend_elapsed = _prepare_backend(instances)
-    ray.get(registry.put_inventory.remote(inventory.to_dict()))
-    ray.get(registry.put_layout.remote(layout_body))
-
+    if gated and any(existing_actors.get(iid) is not None for iid in gated):
+        raise RuntimeError(f"state-gated instances must boot fresh engines: {gated}")
     created_pgs: List[str] = []
     created_actors: List[str] = []
-    stage_clocks: Dict[str, float] = {"backend_s": backend_elapsed}
+    stage_clocks: Dict[str, float] = {}
+    # Started first: everything below up to the workers' device touch overlaps the fetch.
+    delivery = Delivery(state_delivery, log=emit_log) if state_delivery is not None else None
 
     try:
+        native_backend, stage_clocks["backend_s"] = _prepare_backend(instances)
+        ray.get(registry.put_inventory.remote(inventory.to_dict()))
+        ray.get(registry.put_layout.remote(layout_body))
+
         handles, placement_records, stage_clocks["placement_s"] = _place(
             instances, layout_id, config, config.tpu_per_host, created_pgs)
         actors, attached, env_reports, stage_clocks["actor_s"] = _spawn_engine_actors(
@@ -392,10 +408,7 @@ def deploy(
 
         t0 = time.time()
         futures = _initialize(actors, instances, layout_id, config)
-        init_reports = {
-            instance_id: ray.get(future, timeout=config.engine_init_timeout_s)
-            for instance_id, future in futures.items()
-        }
+        init_reports = await_initialized(futures, timeout_s=config.engine_init_timeout_s, delivery=delivery)
         stage_clocks["engine_init_s"] = round(time.time() - t0, 2)
         emit_event(
             "ENGINES_INITIALIZED", layout_id=layout_id, seconds=stage_clocks["engine_init_s"]
@@ -405,12 +418,15 @@ def deploy(
                                       placement_records, init_reports, stage_clocks)
     except Exception as exc:
         emit_event("DEPLOY_FAILED", layout_id=layout_id, error=str(exc)[:400])
+        if delivery is not None:
+            delivery.abort()
         _rollback(created_actors, created_pgs)
         raise
 
-    return {
+    report = {
         "layout_id": layout_id,
         "layout_digest": digest,
+        "started_at": started_at,
         "desired_configuration": config.to_dict(),
         "resolved_layout": layout_body,
         "native_backend": native_backend,
@@ -419,6 +435,10 @@ def deploy(
         "instances": records,
         "registry_snapshot": ray.get(registry.snapshot.remote(layout_id), timeout=60),
     }
+    if delivery is not None:
+        # Every gated worker has seen its marker, so the child has published; it exits right after.
+        report["state_delivery"] = delivery.finish()
+    return report
 
 
 # --------------------------------------------------------------------------- pre-spawn / commit

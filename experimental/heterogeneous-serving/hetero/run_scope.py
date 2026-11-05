@@ -6,12 +6,15 @@ into a namespace of its own and removes exactly that namespace afterwards:
 
     snapshot  /dev/shm/omp_weights_runs/<scope>/<layout>/<instance>/rank<k>/
     bank      /root/.cache/omp_exec_bank_runs/<scope>/<identity digest>/rank<k>/
+    xla       /root/.cache/omp_xla_runs/<scope>/   (only when a run sets compilation_cache_dir to it)
+    ckpt      /dev/shm/omp_ckpt_runs/<scope>/<model>/   (only when a run downloads a checkpoint copy)
 
 The default roots (``/dev/shm/omp_weights``, ``/root/.cache/omp_exec_bank``) and the
 persistent compile cache are never inside a scope, so scope cleanup cannot reach them.
 """
 from __future__ import annotations
 
+import os
 import re
 import shutil
 from pathlib import Path
@@ -19,6 +22,8 @@ from typing import Any, Dict
 
 SNAPSHOT_RUNS_PARENT = "/dev/shm/omp_weights_runs"
 BANK_RUNS_PARENT = "/root/.cache/omp_exec_bank_runs"
+XLA_RUNS_PARENT = "/root/.cache/omp_xla_runs"
+CKPT_RUNS_PARENT = "/dev/shm/omp_ckpt_runs"
 _SCOPE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}")
 
 
@@ -34,6 +39,16 @@ def scope_roots(scope: str) -> Dict[str, str]:
     return {"weight_snapshot_root": str(Path(SNAPSHOT_RUNS_PARENT) / scope),
             "exec_bank_dir": str(Path(BANK_RUNS_PARENT) / scope)}
 
+
+def scope_xla_dir(scope: str) -> str:
+    """A run-private persistent XLA compilation cache directory (engine setting compilation_cache_dir)."""
+    return str(Path(XLA_RUNS_PARENT) / check_scope(scope))
+
+
+
+def scope_checkpoint_dir(scope: str) -> str:
+    """A run-private local checkpoint copy root (engine setting model = <this>/<model dir name>)."""
+    return str(Path(CKPT_RUNS_PARENT) / check_scope(scope))
 
 def _tree_bytes(root: Path) -> int:
     return sum(p.stat().st_size for p in root.rglob("*") if p.is_file() and not p.is_symlink())
@@ -69,9 +84,15 @@ def scope_files(scope: str) -> Dict[str, Any]:
 
 
 def remove_scope(scope: str) -> Dict[str, Any]:
-    """Delete this host's two directories of ``scope`` (nothing else); returns bytes removed."""
+    """Delete this host's directories of ``scope`` (nothing else); returns bytes removed.
+
+    The xla and ckpt directories are only reported when present: most runs never create them."""
     removed = {}
-    for name, root in scope_roots(scope).items():
+    roots = dict(scope_roots(scope))
+    for name, root in (("compilation_cache_dir", scope_xla_dir(scope)), ("checkpoint_dir", scope_checkpoint_dir(scope))):
+        if os.path.lexists(root):
+            roots[name] = root
+    for name, root in roots.items():
         path = Path(root)
         if path.is_symlink():
             raise RuntimeError(f"refusing to remove a symlinked scope root: {path}")
