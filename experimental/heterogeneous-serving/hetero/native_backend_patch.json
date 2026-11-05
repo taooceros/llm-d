@@ -4,8 +4,8 @@
     {
       "name": "cache",
       "path": "/workspace/vllm/vllm/config/cache.py",
-      "original_sha256": "c11985dd15e01051959e7dfcbb45435530e38d2991b0766966a7eceaa71df579",
-      "patched_sha256": "0a41c137dc70c8fdc835062e65ca86a094c9c3d515008eb7bdac1163d0dc3cb4",
+      "original_sha256": "c663f671a042a33537b8dc66d0fa24f07b0dd56567fa80b5c615719b79ef49e8",
+      "patched_sha256": "92c0cc40c2362902b44ebcf88ddc3af1f3426dc562106838332f9cb3f8e9ca0b",
       "replacements": [
         {
           "old": "CacheDType = Literal[\n    \"auto\",\n",
@@ -16,12 +16,12 @@
     {
       "name": "gemma4",
       "path": "/workspace/tpu_inference/tpu_inference/models/jax/gemma4.py",
-      "original_sha256": "5b93b3b3dd5d42374c0115a4523661ed584191fb0cb9fc9639ae2248b3896fbd",
-      "patched_sha256": "12cc23c006277164a2c665d818bcf343149dbd77e75298951c48a9b1a9122e7f",
+      "original_sha256": "888ebcec7d72067a0d6a0e79e173939906750b44154e0308990319eda90b975f",
+      "patched_sha256": "449c717b66bb805ce3453bf10b91afc382077c0d725538fe247c4a6faabe7e49",
       "replacements": [
         {
-          "old": "                 quant_config: VllmQuantConfig,\n                 prefix: str = \"\"):\n        text_config: Gemma4TextConfig = config.hf_config.text_config\n",
-          "new": "                 quant_config: VllmQuantConfig,\n                 prefix: str = \"\",\n                 activation_dtype: Optional[jnp.dtype] = None):\n        text_config: Gemma4TextConfig = config.hf_config.text_config\n"
+          "old": "                 enable_return_routed_experts: bool = False,\n                 prefix: str = \"\"):\n        text_config: Gemma4TextConfig = config.hf_config.text_config\n",
+          "new": "                 enable_return_routed_experts: bool = False,\n                 prefix: str = \"\",\n                 activation_dtype: Optional[jnp.dtype] = None):\n        text_config: Gemma4TextConfig = config.hf_config.text_config\n"
         },
         {
           "old": "        self.post_attention_layernorm = JaxRmsNorm(\n            hidden_size,\n            epsilon=rms_norm_eps,\n            dtype=dtype,\n",
@@ -46,18 +46,6 @@
         {
           "old": "        if inputs_embeds is not None:\n            x = inputs_embeds\n        else:\n            x = self.embed_tokens(input_ids)\n            # Gemma4: Apply embedding scaling\n            x = x * self.embedding_scale\n",
           "new": "        if inputs_embeds is not None:\n            x = inputs_embeds\n            if self.activation_dtype is not None:\n                x = x.astype(self.activation_dtype)\n        else:\n            x = self.embed_tokens(input_ids)\n            if self.activation_dtype is not None:\n                x = x.astype(self.activation_dtype)\n            # Gemma4: Apply embedding scaling after promoting gathered rows.\n            x = x * self.embedding_scale\n"
-        }
-      ]
-    },
-    {
-      "name": "rpa_v3_kernel_pristine",
-      "path": "/workspace/tpu_inference/tpu_inference/kernels/ragged_paged_attention/v3/kernel.py",
-      "original_sha256": "b97aa3be868596ca813bd6cbb7423aa77f5ca923f3533c72b98984b7866265f9",
-      "patched_sha256": "bcd21fdaff6b333903a09991d0ad57f3683fef18bf8abef449c0f10d6879609c",
-      "replacements": [
-        {
-          "old": "        assert k.dtype == v.dtype\n        if q_scale is None and k.dtype != q.dtype:\n            # bf16 KV storage with fp32 activations: Mosaic rejects mixed f32 x bf16\n            # matmul operands, so widen the loaded K/V block to the query dtype.\n            k = k.astype(q.dtype)\n            v = v.astype(q.dtype)\n\n        # Follow FlashAttention-2 forward pass.\n",
-          "new": "        assert k.dtype == v.dtype\n\n        # Follow FlashAttention-2 forward pass.\n"
         }
       ]
     }

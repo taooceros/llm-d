@@ -1,7 +1,8 @@
 # Namespace-scoped credentials for unattended hetero_ctl campaigns, so they do not stop when the
 # operator's gcloud session needs re-authentication.  Grants only what hetero_ctl and the
-# campaign scripts use in this namespace: pod exec/cp/port-forward/labels, and applying the
-# gateway/router manifests (deploy/k8s/omp-gateway.yaml, omp-router.yaml).
+# campaign scripts use in this namespace: pod exec/cp/port-forward/labels, applying the
+# gateway/router manifests (deploy/k8s/omp-gateway.yaml, omp-router.yaml), and patching the
+# RayCluster image (upgradeStrategy Recreate makes KubeRay recreate the pods; no pod delete).
 # Revoke: kubectl -n llm-d-optimized-baseline delete secret hetero-agent-token
 apiVersion: v1
 kind: ServiceAccount
@@ -36,6 +37,9 @@ rules:
   - apiGroups: ["inference.networking.k8s.io"]
     resources: ["inferencepools"]
     verbs: ["get", "list", "watch", "create", "update", "patch"]
+  - apiGroups: ["ray.io"]
+    resources: ["rayclusters"]
+    verbs: ["get", "list", "watch", "patch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
