@@ -226,13 +226,13 @@
     },
     {
       "path": "hetero/cli.py",
-      "sha256": "6cee512a647760143829c8bfca194b47fbb791cde98a1f4dfcbe148062bc2fc0",
-      "bytes": 34055
+      "sha256": "2a7bf95a9e6646d15d3b371254c6186a9627c177988fa75a4b250c71e06e539a",
+      "bytes": 34904
     },
     {
       "path": "hetero/deployment.py",
-      "sha256": "e52d6829a8c08a6f15bd7e820cd6ad8a9afa160d6ccab2597d13240a27556a43",
-      "bytes": 40910
+      "sha256": "4c8fb33147f1f51208dc75ce97e8171bd00dbcd3019dbbba5bd573d08288f7b9",
+      "bytes": 44285
     },
     {
       "path": "hetero/evidence.py",
@@ -241,8 +241,8 @@
     },
     {
       "path": "hetero/layout.py",
-      "sha256": "fe5c7ef10de82b1e26f157bee7bb7ac3ef6207e7c96cefa8f168ee3bd8257e91",
-      "bytes": 17683
+      "sha256": "8d8f759457b32e646eff525b760667b493b1e2741a6a35aff9ea9ee1b8eef392",
+      "bytes": 17905
     },
     {
       "path": "hetero/native_backend.py",
@@ -336,8 +336,8 @@
     },
     {
       "path": "omp_rcm/ray_job.py",
-      "sha256": "e3d3015021a433282ffcb54b81d90464975516aa86ed9ee523208ef8e9307a33",
-      "bytes": 26635
+      "sha256": "f850402a1312f65be3686497e4b1482ad2f584a801b5d14a59d990c275a1d863",
+      "bytes": 27072
     },
     {
       "path": "pyproject.toml",
@@ -520,6 +520,16 @@
       "bytes": 13682
     },
     {
+      "path": "scripts/host_watchdog.sh",
+      "sha256": "3b0b7029dc527f61a4f140f5327b6b20d7059e1c2a4f32b8719ce6d57800e84a",
+      "bytes": 3546
+    },
+    {
+      "path": "scripts/matrix_summary.py",
+      "sha256": "2f2c495a5361759ceebe5c4858aa6b6e00cc992ac4a162b5c364ccaf75bbf4d5",
+      "bytes": 18207
+    },
+    {
       "path": "scripts/overlap_check.py",
       "sha256": "1b6d443c94acc884619607834ef7dd81e39288788610861e858accfcb82fdd07",
       "bytes": 10066
@@ -666,8 +676,8 @@
     },
     {
       "path": "scripts/switch_campaign.sh",
-      "sha256": "b4f1a7dff608baabb4e00f0676b724f06706d04c19e422bc0ba8a45f66fce3fa",
-      "bytes": 63781
+      "sha256": "bd98a03efc354be9af066b3a5d39b47ec64a1091cbb0a831472e674ae6d8efa4",
+      "bytes": 74594
     },
     {
       "path": "scripts/switch_dry_run.py",

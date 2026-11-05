@@ -294,6 +294,30 @@ def _initialize(
     }
 
 
+def _await_health(host: str, port: int, *, timeout_s: float = 60.0, poll_s: float = 0.05) -> Dict[str, Any]:
+    """Polls http://host:port/health until it answers 200; raises after timeout_s."""
+    import urllib.error
+    import urllib.request
+
+    started, attempts, last = time.time(), 0, None
+    while True:
+        attempts += 1
+        try:
+            with urllib.request.urlopen(f"http://{host}:{port}/health", timeout=5) as response:
+                if response.status == 200:
+                    body = json.loads(response.read().decode() or "{}")
+                    return {"ok_at": time.time(), "started_at": started, "attempts": attempts,
+                            "status": body.get("status")}
+                last = f"HTTP {response.status}"
+        except urllib.error.HTTPError as exc:
+            last = f"HTTP {exc.code}"
+        except OSError as exc:
+            last = f"{type(exc).__name__}: {str(exc)[:160]}"
+        if time.time() - started > timeout_s:
+            raise RuntimeError(f"GET http://{host}:{port}/health not 200 within {timeout_s:.0f} s: {last}")
+        time.sleep(poll_s)
+
+
 def _serve_and_register(
     registry: Any, instances: Sequence[ResolvedInstance], layout_id: str, digest: str,
     actors: Dict[str, Any], attached: Dict[str, bool], placement_records: Dict[str, Any],
@@ -313,6 +337,11 @@ def _serve_and_register(
         layout_id=layout_id,
         endpoints={k: f"{v['endpoint_host']}:{v['endpoint_port']}" for k, v in serving_reports.items()},
     )
+    # Ready = the endpoint's GET /health answers 200 (the KubeRay readiness probe's contract).
+    t0 = time.time()
+    for instance_id, report in serving_reports.items():
+        report["health"] = _await_health(report["endpoint_host"], report["endpoint_port"])
+    stage_clocks["health_s"] = round(time.time() - t0, 2)
 
     records: List[Dict[str, Any]] = []
     for instance in instances:
@@ -493,6 +522,7 @@ class PreparedDeployment:
     hold: Dict[str, Dict[str, Any]] = dataclasses.field(default_factory=dict)
     committed: bool = False
     aborted: bool = False
+    partition: bool = False  # a partition deploy (``_check_partition``), not a partial restart
 
     def host_keys(self, instance_ids: Optional[Sequence[str]] = None) -> List[str]:
         chosen = [i for i in self.instances if instance_ids is None or i.instance_id in set(instance_ids)]
@@ -513,6 +543,7 @@ def prespawn_deployment(
     instance_ids: Optional[Sequence[str]] = None,
     gate_timeout_s: float = 3600.0,
     device_timeout_s: float = 120.0,
+    partition: bool = False,
 ) -> PreparedDeployment:
     """Start the target engines next to the TPU-owning source, up to the first device touch.
 
@@ -529,10 +560,14 @@ def prespawn_deployment(
     live = [i.instance_id for i in instances if _find_engine_actor(layout_id, i.instance_id) is not None]
     if live:
         raise RuntimeError(f"pre-spawn needs fresh engine actors; live actors exist for {live}: release them first")
+    if partition:
+        if instance_ids is None:
+            raise ValueError("a partition pre-spawn names its instances")
+        _check_partition(get_or_create_registry(), layout_id, digest)
     prepared = PreparedDeployment(
         inventory=inventory, config=config, instance_ids=None if instance_ids is None else list(instance_ids),
         instances=list(instances), layout_id=layout_id, digest=digest, layout_body=layout_body,
-        gate_name=gate_name(layout_id))
+        gate_name=gate_name(layout_id), partition=partition)
     prepared.clocks["prespawn_begin"] = time.time()
     try:
         prepared.native_backend, prepared.stage_clocks["backend_s"] = _prepare_backend(instances)
@@ -630,7 +665,9 @@ def commit_prespawned(prepared: PreparedDeployment) -> Dict[str, Any]:
         if unreleased:
             raise RuntimeError(f"commit before release of {unreleased}")
         registry = get_or_create_registry()
-        if prepared.instance_ids is not None:
+        if prepared.partition:
+            _check_partition(registry, layout_id, prepared.digest)
+        elif prepared.instance_ids is not None:
             _check_partial_gateway(registry, layout_id, prepared.digest,
                                    {i.instance_id for i in prepared.instances})
         ray.get(registry.put_inventory.remote(prepared.inventory.to_dict()))
@@ -675,6 +712,40 @@ def commit_prespawned(prepared: PreparedDeployment) -> Dict[str, Any]:
         "registry_snapshot": snapshot,
         "prespawn": prepared.evidence(),
     }
+
+
+def deploy_prespawned(
+    inventory: SliceInventory,
+    config: DeploymentConfig,
+    *,
+    instance_ids: Optional[Sequence[str]] = None,
+    partition: bool = False,
+    park_timeout_s: float = 900.0,
+    gate_timeout_s: float = 3600.0,
+) -> Dict[str, Any]:
+    """A pre-spawned deploy on hosts whose TPUs are already free (no source engine to drain).
+
+    ``prespawn_deployment`` (CPU-only groups, workers parked before the first device touch) ->
+    every worker parked -> the gate opens at once -> ``commit_prespawned``.  The report is the
+    ``deploy`` shape plus ``prespawn`` (clocks, ``released_at`` per host): T0 = launch is
+    ``started_at``, T0 = gate open is the earliest ``released_at``.
+    """
+    started_at = time.time()
+    prepared = prespawn_deployment(inventory, config, instance_ids=instance_ids,
+                                   gate_timeout_s=gate_timeout_s, partition=partition)
+    try:
+        parked = await_parked(prepared, timeout_s=park_timeout_s)
+        released = release_prepared(prepared)
+    except Exception as exc:
+        emit_event("DEPLOY_FAILED", layout_id=prepared.layout_id, error=str(exc)[:400])
+        abort_prespawned(prepared)
+        raise
+    report = commit_prespawned(prepared)
+    report["started_at"] = started_at
+    report["prespawn"]["parked"] = parked
+    report["prespawn"]["release"] = released
+    report["prespawn"]["gate_open_at"] = min(prepared.released_at.values()) if prepared.released_at else None
+    return report
 
 
 def _kill_gate(prepared: PreparedDeployment) -> None:

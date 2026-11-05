@@ -452,6 +452,9 @@ BUILTIN_LAYOUTS: Dict[str, Tuple[Tuple[str, int], ...]] = {
     "H": (("large_a", 16), ("large_b", 16)),
     # Homogeneous small baseline.
     "S": (("small_a", 8), ("small_b", 8), ("small_c", 8), ("small_d", 8)),
+    # One TP8 instance on a whole 2-host 2x4 slice (fresh-capacity autoscale): S's small_a shape, so
+    # small_a's startup state (snapshot, bank, XLA cache; rank r -> rank r) restores there.
+    "S1": (("small_a", 8),),
 }
 
 

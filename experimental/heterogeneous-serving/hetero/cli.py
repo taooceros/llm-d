@@ -229,9 +229,19 @@ def cmd_deploy(args: argparse.Namespace) -> Dict[str, Any]:
         raise ValueError("--partition deploys name --instances")
     if args.instances and not args.partition:
         raise ValueError("deploy --instances is a partition deploy: add --partition")
-    report = deploy(inventory, config, state_delivery=state_delivery,
-                    instance_ids=args.instances.split(",") if args.partition else None,
-                    partition=args.partition)
+    instance_ids = args.instances.split(",") if args.partition else None
+    prespawn = {bool(config.settings_for(i)["prespawn"])
+                for i in (instance_ids or [r.instance_id for r in config.layout.instances])}
+    if prespawn == {True}:
+        # Pre-spawned boot on free hosts: workers park before the first device touch, the gate opens
+        # as soon as all are parked (hetero/deployment.py deploy_prespawned).
+        if state_delivery is not None:
+            raise ValueError("--state-delivery is for fresh-host boots, not pre-spawned ones")
+        from hetero.deployment import deploy_prespawned
+        report = deploy_prespawned(inventory, config, instance_ids=instance_ids, partition=args.partition)
+    else:
+        report = deploy(inventory, config, state_delivery=state_delivery,
+                        instance_ids=instance_ids, partition=args.partition)
     gateway = None if args.partition else cmd_gateway_up(args)["gateway"]
     return {"action": "deploy", "inventory_source": source,
             "deployment": report, "gateway": gateway}
@@ -300,10 +310,12 @@ def cmd_release(args: argparse.Namespace) -> Dict[str, Any]:
     from hetero.registry import REGISTRY_NAMESPACE
 
     wanted = set(args.instances.split(",")) if args.instances else None
+    # A pre-spawned instance's TPU-hold group (placement.tpu_hold_pg_name) belongs to that instance.
     rows = [
         row
         for row in list_owned_placement_groups(args.layout)
         if wanted is None or row["instance_id"] in wanted
+        or row["instance_id"].removesuffix("-tpuhold") in wanted
     ]
     released = []
     for row in rows:

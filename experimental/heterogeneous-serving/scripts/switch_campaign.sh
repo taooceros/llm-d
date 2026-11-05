@@ -117,9 +117,16 @@ AS_PART=${AS_PART:-}
 LOCK=/tmp/hetero-cluster.lock
 LEASE_DIR=/tmp/hetero-leases
 LEASE_WAIT=${LEASE_WAIT:-21600}
+# AS_PART names one instance of H (large_a|large_b, TP16 on 4 hosts) or of S (small_a..small_d, TP8 on
+# a 2x4 pair of 2 hosts); AS_LAYOUT is that layout, used for every deploy/check/teardown below.
+AS_LAYOUT=H
 if [[ -n $AS_PART ]]; then
   [[ $MODE == autoscale ]] || { echo "AS_PART runs only with mode autoscale" >&2; exit 2; }
-  case $AS_PART in large_a|large_b) ;; *) echo "AS_PART: large_a or large_b, got $AS_PART" >&2; exit 2;; esac
+  case $AS_PART in
+    large_a|large_b) AS_LAYOUT=H;;
+    small_a|small_b|small_c|small_d) AS_LAYOUT=S;;
+    *) echo "AS_PART: large_a|large_b|small_a|small_b|small_c|small_d, got $AS_PART" >&2; exit 2;;
+  esac
 fi
 lock_held_by_ancestor() {  # does a process above this script (flock(1) around it) hold $LOCK?
   local inode pid holders
@@ -158,7 +165,8 @@ if [[ $MODE == preread || $MODE == portable ]]; then REPS=${REPS:-1}; fi
 if [[ $MODE == first-gate ]]; then REPS=0; fi
 RUN_BASE=$MODE-$COMMIT
 (( OVERLAP )) && RUN_BASE+=-ov
-[[ -n $AS_PART ]] && RUN_BASE+=-p${AS_PART#large_}
+[[ -n $AS_PART ]] && RUN_BASE+=-p$(sed -E 's/^large_//; s/^small_/s/' <<<"$AS_PART")
+[[ -z ${AS_TAG:-} ]] || RUN_BASE+=-$AS_TAG  # a second campaign on the same pair and commit
 OUT=${OUT:-results/switch/$RUN_BASE}
 INVENTORY=${INVENTORY:-/tmp/hetero-inventory-only.json}
 PART_HOSTS=
@@ -166,16 +174,16 @@ PART_VALIDATE=()   # snapshot_validate.py: act on / judge only the owned hosts a
 PART_DEPLOY=()     # hetero.cli deploy: partition deploy of the owned instance, no gateway
 PART_INSTANCES=()  # hetero.cli drain/release: only the owned instance
 if [[ -n $AS_PART ]]; then
-  PART_HOSTS=$(.venv/bin/python - "$INVENTORY" "$AS_PART" <<'EOF'
+  PART_HOSTS=$(.venv/bin/python - "$INVENTORY" "$AS_PART" "$AS_LAYOUT" <<'EOF'
 import json, sys
 from hetero.layout import builtin_layout, resolve_layout
 from hetero.slice_inventory import SliceInventory
 data = json.load(open(sys.argv[1]))
 inventory = SliceInventory.from_dict(data.get("measurements", {}).get("inventory", data))
-instance = next(i for i in resolve_layout(inventory, builtin_layout("H")).instances if i.instance_id == sys.argv[2])
+instance = next(i for i in resolve_layout(inventory, builtin_layout(sys.argv[3])).instances if i.instance_id == sys.argv[2])
 print(",".join(instance.host_ips))
 EOF
-  ) || { echo "cannot resolve H:$AS_PART hosts from $INVENTORY" >&2; exit 1; }
+  ) || { echo "cannot resolve $AS_LAYOUT:$AS_PART hosts from $INVENTORY" >&2; exit 1; }
   export OMP_RCM_DIR=/tmp/omp_rcm-$RUN_BASE
   PART_VALIDATE=(--hosts "$PART_HOSTS" --instances "$AS_PART")
   PART_DEPLOY=(--partition --instances "$AS_PART")
@@ -275,10 +283,11 @@ part_lease() {
   [[ -n $AS_PART ]] || return 0
   local ips=() ip chain ready info
   mapfile -t ips < <(tr , '\n' <<<"$PART_HOSTS" | sort -V)
-  if (( DRY )); then echo "# lease: flock -s $LOCK; flock $LEASE_DIR/{$(IFS=,; echo "${ips[*]}")}.lock"; return 0; fi
+  if (( DRY )); then echo "# lease: flock $([[ ${AS_EXCLUSIVE:-0} == 1 ]] || echo -s) $LOCK; flock $LEASE_DIR/{$(IFS=,; echo "${ips[*]}")}.lock"; return 0; fi
   mkdir -p "$LEASE_DIR"
   ready=$(mktemp -u /tmp/hetero-lease.XXXXXX)
-  chain=(flock -o -s -w "$LEASE_WAIT" "$LOCK")
+  # AS_EXCLUSIVE=1: the whole slice to itself (risky boots): the cluster lock exclusive, not shared.
+  if [[ ${AS_EXCLUSIVE:-0} == 1 ]]; then chain=(flock -o -w "$LEASE_WAIT" "$LOCK"); else chain=(flock -o -s -w "$LEASE_WAIT" "$LOCK"); fi
   for ip in "${ips[@]}"; do chain+=(flock -o -w "$LEASE_WAIT" "$LEASE_DIR/$ip.lock"); done
   mark "lease_wait"
   "${chain[@]}" sh -c ': > "$1"; while kill -0 "$2" 2>/dev/null; do sleep 5; done' hetero-lease "$ready" "$$" &
@@ -289,11 +298,11 @@ part_lease() {
   done
   rm -f "$ready"
   PART_LEASE_TAG=$ready
-  info=$(printf '{"run":"%s","instance":"H:%s","hosts":"%s","worktree":"%s","pid":%s,"rcm_dir":"%s","since":"%s"}' \
-    "$RUN_BASE" "$AS_PART" "$PART_HOSTS" "$PWD" "$$" "$OMP_RCM_DIR" "$(date -Is)")
+  info=$(printf '{"run":"%s","instance":"%s:%s","hosts":"%s","worktree":"%s","pid":%s,"rcm_dir":"%s","since":"%s"}' \
+    "$RUN_BASE" "$AS_LAYOUT" "$AS_PART" "$PART_HOSTS" "$PWD" "$$" "$OMP_RCM_DIR" "$(date -Is)")
   for ip in "${ips[@]}"; do printf '%s\n' "$info" > "$LEASE_DIR/$ip.json"; done
   mark "lease_acquired"
-  state "partition-lease H:$AS_PART $PART_HOSTS"
+  state "partition-lease $AS_LAYOUT:$AS_PART $PART_HOSTS"
 }
 part_unlease() {  # end of run: free the hosts now instead of up to 5 s after exit
   [[ -n $PART_LEASE_TAG ]] || return 0
@@ -301,7 +310,7 @@ part_unlease() {  # end of run: free the hosts now instead of up to 5 s after ex
   for ip in $(tr , ' ' <<<"$PART_HOSTS"); do rm -f "$LEASE_DIR/$ip.json"; done
   pkill -f -- "hetero-lease $PART_LEASE_TAG" 2>/dev/null || true
   PART_LEASE_TAG=
-  state "partition-lease-released H:$AS_PART"
+  state "partition-lease-released $AS_LAYOUT:$AS_PART"
 }
 cotenants() {  # cotenants <label>: the other partition leases live now, into the evidence
   [[ -n $AS_PART ]] && (( ! DRY )) || return 0
@@ -314,6 +323,7 @@ cotenants() {  # cotenants <label>: the other partition leases live now, into th
 run() {
   if (( DRY )); then show "${RCM[@]}" run "$@"; return 0; fi
   idle || { echo 'Refusing to touch an active RCM daemon' >&2; return 1; }
+  sleep "${RCM_GAP_S:-3}"  # consecutive `rcm_exec run` calls need a short gap (hetero-autoscale-fresh-host)
   owned_run=1
   local rc=0
   mark "rcm_start:$2"
@@ -379,7 +389,7 @@ scope_settings() {  # scope_settings <scope> <settings json>: the settings plus 
 }
 scope_open() { SCOPES+=("$1"); }  # from here on, the EXIT cleanup removes this scope too
 scope_close() {  # scope_close <scope> <label>: remove exactly this scope's two directories on every host
-  validate cleanup H "$2" --run-scope "$1" || return 1
+  validate cleanup "$AS_LAYOUT" "$2" --run-scope "$1" || return 1
   local keep=() s
   for s in ${SCOPES[@]+"${SCOPES[@]}"}; do [[ "$s" == "$1" ]] || keep+=("$s"); done
   SCOPES=(${keep[@]+"${keep[@]}"})
@@ -417,6 +427,8 @@ cleanup() {
   (( DRY )) && exit "$rc"
   set +e
   if (( owned_run )); then "${RCM[@]}" resume --abort; fi
+  # A peer-consuming partition campaign always tells its source it is done (AS_PEER_DONE, see autoscale).
+  [[ -z ${AS_PEER_DONE:-} ]] || touch "$AS_PEER_DONE"
   if (( started )); then
     if [[ -n "$current" ]]; then
       ctl drain "$current" cleanup-drain 1800 -- --force ${PART_INSTANCES[@]+"${PART_INSTANCES[@]}"}
@@ -424,7 +436,7 @@ cleanup() {
     fi
     if [[ -n $AS_PART ]]; then
       # Only the owned instance: the rest of the slice may be another campaign's.
-      ctl release H cleanup-release-H 600 -- "${PART_INSTANCES[@]}" || rc=1
+      ctl release "$AS_LAYOUT" "cleanup-release-$AS_LAYOUT" 600 -- "${PART_INSTANCES[@]}" || rc=1
     else
       # Adopted kept engines keep their original placement-group names (S--small_*), so every layout is released.
       for layout in H Mb S; do
@@ -433,9 +445,11 @@ cleanup() {
     fi
     if (( ! KEEP_SNAPSHOTS )); then
       for scope in ${SCOPES[@]+"${SCOPES[@]}"}; do
-        validate cleanup H "cleanup-scope-$scope" --run-scope "$scope" || rc=1
+        validate cleanup "$AS_LAYOUT" "cleanup-scope-$scope" --run-scope "$scope" || rc=1
       done
+      # AS_KEEP_GCS=1: the uploaded startup state outlives the campaign (another cell reads it).
       for gcs in ${GCS_PREFIXES[@]+"${GCS_PREFIXES[@]}"}; do
+        [[ ${AS_KEEP_GCS:-0} == 1 ]] && { state "gcs-kept $gcs"; continue; }
         run scripts/startup_state.py delete --gcs "$gcs" --output "$OUT/cleanup-gcs-delete.json" --timeout 900 || rc=1
       done
       # The default snapshot root is shared by every campaign on these hosts; a partition run never uses it.
@@ -941,15 +955,40 @@ campaign_portable() {
 }
 
 # ---------------------------------------------------------------- autoscale (new instance on fresh hosts)
-AS_MAXLEN=131072  # the H shape of the portable gate; the bank identity covers max_model_len
+# Engine shape of every boot (the bank identity covers max_model_len and the batch limits): H (TP16) the
+# portable gate's 131072; S (TP8, partition) the cross-stack matrix contract, 8192 / 512 seqs / 2048 tokens.
+if [[ $AS_LAYOUT == S ]]; then AS_MAXLEN=8192; else AS_MAXLEN=131072; fi
+AS_SHAPE=(--max-num-seqs 512 --max-num-batched-tokens 2048)
 AS_BASE='{"startup_profile":true}'
 # Whole slice: large_a's cold boot seeds, large_b is the new instance.  Partition (AS_PART): the owned
 # instance seeds, its state goes to GCS and is removed from its hosts, then it is the new instance.
 AS_TARGET=${AS_PART:-large_b}
 AS_SEEDER=${AS_PART:-large_a}
-autoscale_settings() {  # autoscale_settings <seed|arm> <arm scope>: H --instance-engine-settings
+# Partition peer arms (peer, peer-ov) fetch from ANOTHER instance of $AS_LAYOUT, AS_PEER_SRC, whose seed
+# scope AS_PEER_SCOPE stays on its hosts: that source campaign runs with AS_SEED_READY (written after its
+# upload) and AS_HOLD_FOR (the consumers' AS_PEER_DONE files; it waits for them before its own arms, so
+# nothing else runs on the source hosts while they are read).  A consumer waits for AS_PEER_READY before
+# its first peer fetch and writes AS_PEER_DONE after its last peer arm (and on exit).
+AS_PEER_SRC=${AS_PEER_SRC:-}
+AS_PEER_SCOPE=${AS_PEER_SCOPE:-}
+AS_PEER_READY=${AS_PEER_READY:-}
+AS_PEER_DONE=${AS_PEER_DONE:-}
+AS_SEED_READY=${AS_SEED_READY:-}
+AS_HOLD_FOR=${AS_HOLD_FOR:-}
+AS_PEER_WAIT=${AS_PEER_WAIT:-10800}
+AS_KEEP_GCS=${AS_KEEP_GCS:-0}
+# Stock XLA cache (JAX's default 1 s persistence threshold), for ckpt-gcs-jax-xla / runai-jax-xla: the first
+# ckpt-gcs-jax boot of this campaign uploads its cache to AS_STOCK_GCS, unless AS_STOCK_GCS names one already.
+AS_STOCK_UP=0
+[[ -z ${AS_STOCK_GCS:-} ]] || AS_STOCK_UP=1
+AS_WANT_STOCK=0
+AS_WANT_WARM=0
+AS_WARM_STOCK_SCOPE=
+AS_RUNAI=unknown  # runai-*: unknown until the first boot; a failed first boot makes the rest na
+autoscale_settings() {  # autoscale_settings <seed|arm> <arm scope>: --instance-engine-settings of the boot
+  AS_WARM_STOCK_SCOPE=$AS_WARM_STOCK_SCOPE AS_CKPT_GCS=$AS_CKPT_GCS \
   .venv/bin/python - "$1" "$2" "$AS_SEED" "$AS_SEED-b" "$(basename "$MODEL")" "$AS_PART" <<'EOF'
-import json, sys
+import json, os, sys
 from hetero.run_scope import scope_checkpoint_dir, scope_roots, scope_xla_dir
 arm, scope, seed, seed_b, model, part = sys.argv[1:7]
 def roots(s):
@@ -961,17 +1000,36 @@ raw = {**base, "weight_snapshot": "off"}
 restore = {**base, "weight_snapshot": "read", "weight_snapshot_verify": False, "fast_graph": True, "exec_bank": "read"}
 snap = {k: v for k, v in restore.items() if k != "exec_bank"}
 jax = {"JAX_PERSISTENT_CACHE_MIN_COMPILE_TIME_SECS": "1.0"}  # jax 0.10.2's default (layout env: "0")
+def ckpt_of(s):  # the normal loader on the checkpoint copy in scope s, with s's XLA cache
+    return {**raw, "compilation_cache_dir": scope_xla_dir(s), "model": scope_checkpoint_dir(s) + "/" + model}
 if arm == "seed":
     a = {**base, "weight_snapshot": "write", "fast_graph": True, "exec_bank": "write", **roots(seed)}
     b = {**raw, "compilation_cache_dir": scope_xla_dir(seed_b)}
+elif arm == "warm-ckpt-jax":  # stock restart: the kept stock boot's checkpoint copy and XLA cache
+    warm = os.environ.get("AS_WARM_STOCK_SCOPE")
+    if not warm:
+        sys.exit("warm-ckpt-jax: no kept ckpt-gcs-jax scope")
+    a, b = None, {**ckpt_of(warm), "worker_env": jax}
+elif arm == "warm-pm":  # TPUFlex restart: the seed's own snapshot + bank + XLA cache, pre-spawned
+    a, b = None, {**restore, **roots(seed), "prespawn": True}
 else:
     a, r = {**restore, **roots(seed)}, roots(scope)
-    ckpt = {**raw, "compilation_cache_dir": r["compilation_cache_dir"], "model": scope_checkpoint_dir(scope) + "/" + model}
+    ckpt = ckpt_of(scope)
+    # Run:ai model streamer straight from the bucket /models mounts (vLLM --load-format runai_streamer).
+    # Deviations from the streamer defaults, after the default boot drove a host into disk-pressure
+    # eviction (autoscale-60271da-psb): the tokenizer comes from the /models FUSE mount (with the
+    # tokenizer at gs://, vLLM pulls every non-weight object under the prefix, ~80 GB of stale
+    # .incomplete files, to local disk), and the streamer buffer is 8 GiB instead of 40 GB.
+    runai = {**raw, "compilation_cache_dir": r["compilation_cache_dir"], "model": os.environ["AS_CKPT_GCS"],
+             "load_format": "runai_streamer", "worker_env": jax, "tokenizer": "/models/" + model,
+             "model_loader_extra_config": {"memory_limit": 8589934592}}
     b = {"raw": {**raw, "compilation_cache_dir": r["compilation_cache_dir"]},
          "raw-pf": {**raw, "compilation_cache_dir": r["compilation_cache_dir"], "safetensors_load_strategy": "prefetch"},
          "raw-xla": {**raw, "compilation_cache_dir": r["compilation_cache_dir"]},
          "ckpt-gcs": ckpt, "ckpt-gcs-xla": ckpt, "ckpt-fuse": ckpt, "ckpt-gcs-jax": {**ckpt, "worker_env": jax},
+         "ckpt-gcs-jax-xla": {**ckpt, "worker_env": jax},
          "raw-jax": {**raw, "compilation_cache_dir": r["compilation_cache_dir"], "worker_env": jax},
+         "runai-jax": runai, "runai-jax-xla": runai,
          "bank-ckpt": {**base, "weight_snapshot": "off", "fast_graph": True, "exec_bank": "read",
                        "exec_bank_dir": r["exec_bank_dir"], "compilation_cache_dir": r["compilation_cache_dir"]},
          "peer": {**restore, **r}, "gcs": {**restore, **r}, "fuse": {**restore, **r},
@@ -984,18 +1042,60 @@ else:
     print(json.dumps({"large_a": a, "large_b": b}, separators=(",", ":")))
 EOF
 }
-autoscale_fetch() {  # autoscale_fetch <arm> <arm scope>: ship the seed's startup state onto the new instance's hosts
+peer_src() {  # --source/--source-scope of a peer fetch: whole slice the seeder, partition AS_PEER_SRC
+  if [[ -n $AS_PART ]]; then echo --source "$AS_LAYOUT:$AS_PEER_SRC" --source-scope "$AS_PEER_SCOPE"
+  else echo --source "H:$AS_SEEDER" --source-scope "$AS_SEED"; fi
+}
+wait_files() {  # wait_files <label> <file...>: every file exists, polled every 10 s up to AS_PEER_WAIT
+  local label=$1 f waited=0; shift
+  if (( DRY )); then echo "# $label: wait for $*"; return 0; fi
+  mark "${label}_wait_start"
+  for f in "$@"; do
+    until [[ -e $f ]]; do
+      (( waited < AS_PEER_WAIT )) || { echo "$label: $f not written within $AS_PEER_WAIT s" >&2; return 1; }
+      sleep 10; waited=$((waited + 10))
+    done
+  done
+  mark "${label}_wait_end"
+}
+gzip_evidence() {  # gzip_evidence <prefix>: gzip this run's JSON evidence over 100 KB; rotate RCM telemetry
+  (( DRY )) && return 0
+  local f
+  for f in "$OUT/$1"*.json; do
+    [[ -f $f ]] && (( $(stat -c %s "$f") > 100000 )) && gzip -f "$f"
+  done
+  f=${OMP_RCM_DIR:-/tmp/omp_rcm}/telemetry.jsonl
+  if [[ -f $f ]] && (( $(stat -c %s "$f") > 200000000 )); then
+    mv "$f" "$f.$(date +%s)" && gzip "$f".* 2>/dev/null || true
+  fi
+}
+stock_cache_publish() {  # stock_cache_publish <rid>: the first stock boot's XLA cache -> AS_STOCK_GCS
+  (( AS_WANT_STOCK && ! AS_STOCK_UP )) || return 0
+  mark "stock_upload_start"
+  run scripts/startup_state.py upload --inventory "$INVENTORY" --source "$AS_LAYOUT:$AS_TARGET" --source-scope "$1" \
+    --gcs "$AS_STOCK_GCS" --parts xla --output "$OUT/stock-xla-upload.json" --timeout 1800 || return 1
+  mark "stock_upload_end"
+  AS_STOCK_UP=1
+  state "stock-xla $AS_STOCK_GCS from $1"
+}
+autoscale_fetch() {  # autoscale_fetch <arm> <arm scope>: ship the arm's startup state onto the new instance's hosts
   local arm=$1 rid=$2 method parts src=()
   case $arm in
-    raw|raw-pf|raw-jax|peer-ov|gcs-ov) return 0;;  # -ov: the fetch runs inside the deploy job (autoscale_delivery)
-    ckpt-gcs|ckpt-gcs-xla|ckpt-fuse|ckpt-gcs-jax)
+    # -ov: the fetch runs inside the deploy job (autoscale_delivery); warm-*: the state is already local.
+    raw|raw-pf|raw-jax|runai-jax|peer-ov|gcs-ov|warm-ckpt-jax|warm-pm) return 0;;
+    runai-jax-xla) method=gcs parts=xla src=(--gcs "$AS_STOCK_GCS");;
+    ckpt-gcs|ckpt-gcs-xla|ckpt-fuse|ckpt-gcs-jax|ckpt-gcs-jax-xla)
       mark "ckpt_fetch_start:$rid"
       run scripts/startup_state.py fetch-checkpoint --inventory "$INVENTORY" --gcs "$AS_CKPT_GCS" \
         --method "$([[ $arm == ckpt-fuse ]] && echo fuse || echo gcs)" \
-        --target "H:$AS_TARGET" --target-scope "$rid" --output "$OUT/$rid-ckpt-fetch.json" --timeout 1800 || return 1
+        --target "$AS_LAYOUT:$AS_TARGET" --target-scope "$rid" --output "$OUT/$rid-ckpt-fetch.json" --timeout 1800 || return 1
       mark "ckpt_fetch_end:$rid"
-      [[ $arm == ckpt-gcs-xla ]] || return 0
-      method=peer parts=xla;;
+      case $arm in
+        # Whole slice: the seed's XLA cache peer-to-peer; partition: the same cache from the seed upload.
+        ckpt-gcs-xla) parts=xla; if [[ -n $AS_PART ]]; then method=gcs; else method=peer; fi;;
+        ckpt-gcs-jax-xla) method=gcs parts=xla src=(--gcs "$AS_STOCK_GCS");;
+        *) return 0;;
+      esac;;
     raw-xla) method=peer parts=xla;;
     bank-ckpt) method=peer parts=bank,xla;;
     peer|gcs|fuse) method=$arm parts=snapshot,bank,xla;;
@@ -1003,95 +1103,181 @@ autoscale_fetch() {  # autoscale_fetch <arm> <arm scope>: ship the seed's startu
     snap-xla) method=gcs parts=snapshot,xla;;
     snap-bank) method=gcs parts=snapshot,bank;;
   esac
-  if [[ $method == peer ]]; then src=(--source "H:$AS_SEEDER" --source-scope "$AS_SEED"); else src=(--gcs "$AS_GCS"); fi
+  if (( ${#src[@]} == 0 )); then
+    if [[ $method == peer ]]; then read -ra src <<<"$(peer_src)"; else src=(--gcs "$AS_GCS"); fi
+  fi
   mark "fetch_start:$rid"
   run scripts/startup_state.py fetch --inventory "$INVENTORY" --method "$method" --parts "$parts" "${src[@]}" \
-    --target "H:$AS_TARGET" --target-scope "$rid" --output "$OUT/$rid-fetch.json" --timeout 1800 || return 1
+    --target "$AS_LAYOUT:$AS_TARGET" --target-scope "$rid" --output "$OUT/$rid-fetch.json" --timeout 1800 || return 1
   mark "fetch_end:$rid"
 }
 autoscale_delivery() {  # autoscale_delivery <arm> <arm scope>: deploy --state-delivery JSON for an -ov arm
   local method=${1%-ov} argv src=()
-  if [[ $method == peer ]]; then src=(--source "H:$AS_SEEDER" --source-scope "$AS_SEED"); else src=(--gcs "$AS_GCS"); fi
+  if [[ $method == peer ]]; then read -ra src <<<"$(peer_src)"; else src=(--gcs "$AS_GCS"); fi
   argv=$(.venv/bin/python scripts/startup_state.py fetch --print-remote-argv --inventory "$INVENTORY" \
-    --method "$method" --parts snapshot,bank,xla "${src[@]}" --target "H:$AS_TARGET" --target-scope "$2" \
+    --method "$method" --parts snapshot,bank,xla "${src[@]}" --target "$AS_LAYOUT:$AS_TARGET" --target-scope "$2" \
     --timeout 1800) || return 1
   printf '{"argv":%s,"timeout_s":1800}' "$argv"
 }
-autoscale_arm() {  # autoscale_arm <arm> <rid>: one fresh-host boot of $AS_TARGET; nonzero on any failed step
+autoscale_arm() {  # autoscale_arm <arm> <rid>: one boot of $AS_TARGET; nonzero on any failed step
   local arm=$1 rid=$2 restored_flag=() delivery=() spec
-  case $arm in peer|gcs|fuse|peer-ov|gcs-ov|snap|snap-xla|snap-bank) restored_flag=(--require-restored);; esac
-  scope_open "$rid"
+  case $arm in peer|gcs|fuse|peer-ov|gcs-ov|snap|snap-xla|snap-bank|warm-pm) restored_flag=(--require-restored);; esac
+  # warm-*: a restart on hosts that keep their state boots from a kept scope, not from a fresh one.
+  [[ $arm == warm-* ]] || scope_open "$rid"
   cotenants "$rid-start"
-  validate evict-pagecache H "$rid-fresh" || return 1
+  validate evict-pagecache "$AS_LAYOUT" "$rid-fresh" || return 1
+  if [[ -n $AS_PART && ( $arm == peer || $arm == peer-ov ) && -n $AS_PEER_READY ]]; then
+    wait_files peer "$AS_PEER_READY" || return 1
+  fi
   autoscale_fetch "$arm" "$rid" || return 1
   if [[ $arm == *-ov ]]; then
     spec=$(autoscale_delivery "$arm" "$rid") || return 1
     delivery=(--state-delivery "$spec")
   fi
-  deploy H "$rid" "$AS_BASE" --max-model-len "$AS_MAXLEN" \
+  deploy "$AS_LAYOUT" "$rid" "$AS_BASE" --max-model-len "$AS_MAXLEN" "${AS_SHAPE[@]}" \
     --instance-engine-settings "$(autoscale_settings "$arm" "$rid")" ${delivery[@]+"${delivery[@]}"} || return 1
-  validate check H "$rid-check" ${restored_flag[@]+"${restored_flag[@]}"} || return 1
-  validate validate H "$rid-validation" ${restored_flag[@]+"${restored_flag[@]}"} \
-    --reference "$OUT/prep-H-reference.json" || return 1
-  teardown H "$rid" || return 1
-  scope_close "$rid" "$rid-scope-cleanup" || return 1
+  validate check "$AS_LAYOUT" "$rid-check" ${restored_flag[@]+"${restored_flag[@]}"} || return 1
+  validate validate "$AS_LAYOUT" "$rid-validation" ${restored_flag[@]+"${restored_flag[@]}"} \
+    --reference "$OUT/prep-$AS_LAYOUT-reference.json" || return 1
+  teardown "$AS_LAYOUT" "$rid" || return 1
+  gzip_evidence "$rid"
+  if [[ $arm == ckpt-gcs-jax ]]; then
+    stock_cache_publish "$rid" || return 1
+    if (( AS_WANT_WARM )) && [[ -z $AS_WARM_STOCK_SCOPE ]]; then
+      # Kept: the warm-ckpt-jax arms restart on this boot's checkpoint copy and XLA cache.
+      AS_WARM_STOCK_SCOPE=$rid
+      state "warm-stock-scope $rid"
+      cotenants "$rid-end"
+      return 0
+    fi
+  fi
+  [[ $arm == warm-* ]] || scope_close "$rid" "$rid-scope-cleanup" || return 1
   cotenants "$rid-end"
 }
 campaign_autoscale() {
-  local arm rid n=0 done_ok=0
+  local arm rid i n=0 done_ok=0 seen_stock=$AS_STOCK_UP seen_kept=0 last_warm_pm=-1 last_warm_stock=-1 last_peer=-1
   local allowed='raw|raw-pf|raw-jax|raw-xla|ckpt-gcs|ckpt-gcs-xla|ckpt-fuse|ckpt-gcs-jax|bank-ckpt|peer|gcs|fuse|snap|snap-xla|snap-bank|peer-ov|gcs-ov'
   AS_SEED=$RUN_BASE-seed
   AS_GCS=${AS_GCS:-gs://hongtaozhang-tpu-model-cache-us-west1/omp_autoscale/$RUN_BASE}
+  AS_STOCK_GCS=${AS_STOCK_GCS:-$AS_GCS/stock-xla}
   AS_CKPT_GCS=${AS_CKPT_GCS:-gs://hongtaozhang-tpu-model-cache-us-west1/$(basename "$MODEL")}  # what /models mounts
   local arms=(${ARMS:-raw peer gcs bank-ckpt raw-xla fuse peer gcs raw})
-  # Partition: the seed's hosts are the new instance's hosts, so nothing can be fetched peer-to-peer
-  # (raw-xla, ckpt-gcs-xla and bank-ckpt ship the XLA cache from the seed's hosts).
-  [[ -z $AS_PART ]] || allowed='raw|raw-pf|raw-jax|ckpt-gcs|ckpt-fuse|ckpt-gcs-jax|gcs|fuse|snap|snap-xla|snap-bank|gcs-ov'
-  for arm in "${arms[@]}"; do
+  # Partition: the seed's hosts are the new instance's hosts, so the seed's own state cannot be fetched
+  # peer-to-peer (raw-xla and bank-ckpt ship it from the seed's hosts); ckpt-gcs-xla takes its XLA cache
+  # from the upload, and peer arms need another instance's kept seed (AS_PEER_SRC).
+  if [[ -n $AS_PART ]]; then
+    allowed='raw|raw-pf|raw-jax|ckpt-gcs|ckpt-gcs-xla|ckpt-fuse|ckpt-gcs-jax|ckpt-gcs-jax-xla|runai-jax|runai-jax-xla|gcs|fuse|snap|snap-xla|snap-bank|gcs-ov|warm-ckpt-jax|warm-pm'
+    if [[ -n $AS_PEER_SRC ]]; then
+      [[ $AS_PEER_SRC != "$AS_PART" && -n $AS_PEER_SCOPE ]] || { echo "AS_PEER_SRC: another instance, with AS_PEER_SCOPE" >&2; return 2; }
+      allowed+='|peer|peer-ov'
+    fi
+  fi
+  [[ -z ${AS_REFERENCE:-} ]] || allowed='raw|raw-jax|raw-pf|ckpt-gcs|ckpt-fuse|ckpt-gcs-jax|ckpt-gcs-jax-xla|runai-jax|runai-jax-xla'
+  for i in "${!arms[@]}"; do
+    arm=${arms[$i]}
     [[ $arm == @($allowed) ]] || { echo "autoscale arm $arm: not one of $allowed" >&2; return 2; }
+    case $arm in
+      ckpt-gcs-jax) seen_stock=1 seen_kept=1;;
+      ckpt-gcs-jax-xla|runai-jax-xla)
+        (( seen_stock )) || { echo "$arm needs an earlier ckpt-gcs-jax (its XLA cache) or AS_STOCK_GCS" >&2; return 2; }
+        AS_WANT_STOCK=1;;
+      warm-ckpt-jax)
+        (( seen_kept )) || { echo "warm-ckpt-jax needs an earlier ckpt-gcs-jax (its kept scope)" >&2; return 2; }
+        AS_WANT_WARM=1 last_warm_stock=$i;;
+      warm-pm) last_warm_pm=$i;;
+      peer|peer-ov) last_peer=$i;;
+    esac
   done
-  (( DRY )) || printf '{"arms":"%s","gcs":"%s","checkpoint_gcs":"%s","seed":"%s","max_model_len":%s,"partition":"%s","hosts":"%s"}\n' \
-    "${arms[*]}" "$AS_GCS" "$AS_CKPT_GCS" "$AS_SEED" "$AS_MAXLEN" "$AS_PART" "$PART_HOSTS" > "$OUT/autoscale.json"
+  if (( ! DRY )); then
+    [[ -z $AS_SEED_READY ]] || rm -f "$AS_SEED_READY"
+    [[ -z $AS_PEER_DONE ]] || rm -f "$AS_PEER_DONE"
+    printf '{"arms":"%s","gcs":"%s","stock_gcs":"%s","checkpoint_gcs":"%s","seed":"%s","layout":"%s","max_model_len":%s,"shape":"%s","partition":"%s","hosts":"%s","peer_source":"%s","peer_scope":"%s","keep_gcs":%s}\n' \
+      "${arms[*]}" "$AS_GCS" "$AS_STOCK_GCS" "$AS_CKPT_GCS" "$AS_SEED" "$AS_LAYOUT" "$AS_MAXLEN" "${AS_SHAPE[*]}" \
+      "$AS_PART" "$PART_HOSTS" "$AS_PEER_SRC" "$AS_PEER_SCOPE" "$AS_KEEP_GCS" > "$OUT/autoscale.json"
+  fi
   validate preflight S preflight --reserve-bytes "$RESERVE"
   started=1
+  # AS_REFERENCE (partition): no seed; the greedy reference is that file (an earlier seed of this pair,
+  # same commit).  Only arms that need no seed state may run.
+  if [[ -n ${AS_REFERENCE:-} ]]; then
+    (( DRY )) || cp "$AS_REFERENCE" "$OUT/prep-$AS_LAYOUT-reference.json"
+    validate memory "$AS_LAYOUT" "prep-$AS_LAYOUT-memory" --reserve-bytes "$RESERVE"
+  else
   # Seed: $AS_SEEDER's cold boot writes the startup state every arm ships.  Whole slice: large_b's normal
   # boot only makes the greedy reference complete (its throwaway XLA scope is removed right after).
   scope_open "$AS_SEED"
   [[ -n $AS_PART ]] || scope_open "$AS_SEED-b"
-  validate memory H prep-H-memory --reserve-bytes "$RESERVE"
-  validate evict-pagecache H seed-fresh
+  validate memory "$AS_LAYOUT" "prep-$AS_LAYOUT-memory" --reserve-bytes "$RESERVE"
+  validate evict-pagecache "$AS_LAYOUT" seed-fresh
   cotenants seed
-  deploy H seed "$AS_BASE" --max-model-len "$AS_MAXLEN" --instance-engine-settings "$(autoscale_settings seed -)"
-  validate validate H prep-H-reference
-  validate bank-manifests H seed-bank-manifests --run-scope "$AS_SEED"
-  teardown H seed
+  deploy "$AS_LAYOUT" seed "$AS_BASE" --max-model-len "$AS_MAXLEN" "${AS_SHAPE[@]}" \
+    --instance-engine-settings "$(autoscale_settings seed -)"
+  validate validate "$AS_LAYOUT" "prep-$AS_LAYOUT-reference"
+  validate bank-manifests "$AS_LAYOUT" seed-bank-manifests --run-scope "$AS_SEED"
+  teardown "$AS_LAYOUT" seed
+  gzip_evidence seed
   [[ -n $AS_PART ]] || scope_close "$AS_SEED-b" seed-b-scope-cleanup
   GCS_PREFIXES+=("$AS_GCS")
   mark "upload_start"
-  run scripts/startup_state.py upload --inventory "$INVENTORY" --source "H:$AS_SEEDER" --source-scope "$AS_SEED" \
+  run scripts/startup_state.py upload --inventory "$INVENTORY" --source "$AS_LAYOUT:$AS_SEEDER" --source-scope "$AS_SEED" \
     --gcs "$AS_GCS" --parts snapshot,bank,xla --output "$OUT/upload.json" --timeout 1800
   mark "upload_end"
-  # Partition: the seed's hosts become the fresh hosts, so its state leaves them (it lives on in GCS).
-  [[ -z $AS_PART ]] || scope_close "$AS_SEED" seed-scope-cleanup
-  for arm in "${arms[@]}"; do
+  if [[ -n $AS_PART ]]; then
+    # Peer source: other instances' peer arms read the seed scope now; this campaign waits for them.
+    if [[ -n $AS_SEED_READY ]]; then
+      (( DRY )) || printf '{"run":"%s","scope":"%s","source":"%s:%s","hosts":"%s","at":"%s"}\n' \
+        "$RUN_BASE" "$AS_SEED" "$AS_LAYOUT" "$AS_PART" "$PART_HOSTS" "$(date -Is)" > "$AS_SEED_READY"
+      # shellcheck disable=SC2086
+      [[ -z $AS_HOLD_FOR ]] || wait_files hold $AS_HOLD_FOR
+    fi
+    # The seed's hosts become the fresh hosts, so its state leaves them (it lives on in GCS), unless a
+    # warm-pm arm restarts on it.
+    (( last_warm_pm >= 0 )) || scope_close "$AS_SEED" seed-scope-cleanup
+  fi
+  fi
+  for i in "${!arms[@]}"; do
+    arm=${arms[$i]}
     n=$((n + 1))
     rid=$RUN_BASE-$arm-r$n
-    mark "arm_start:$rid"
-    if autoscale_arm "$arm" "$rid"; then
-      mark "arm_end:$rid"
-      record_run "$n" 1 "$rid" true "$arm"
-      done_ok=$((done_ok + 1))
+    if [[ $arm == runai-* && $AS_RUNAI == na ]]; then
+      # na: this campaign's first runai boot failed (its evidence is that run's files).
+      (( DRY )) || printf '{"mode":"%s","rep":%s,"attempt":0,"run_id":"%s","ok":false,"kind":"%s","skipped":"runai na"}\n' \
+        "$MODE" "$n" "$rid" "$arm" >> "$OUT/runs.jsonl"
     else
-      mark "arm_end:$rid:failed"
-      record_run "$n" 1 "$rid" false "$arm"
-      state "autoscale-arm-failed $rid"
-      failures=$((failures + 1))
-      teardown H "$rid-failed" || true
-      scope_close "$rid" "$rid-failed-scope-cleanup" || true
-      (( failures < MAX_ATTEMPTS )) || { echo "autoscale: $failures failed arms; stopping" >&2; return 1; }
+      mark "arm_start:$rid"
+      if autoscale_arm "$arm" "$rid"; then
+        mark "arm_end:$rid"
+        record_run "$n" 1 "$rid" true "$arm"
+        done_ok=$((done_ok + 1))
+        [[ $arm != runai-* ]] || AS_RUNAI=ok
+      else
+        mark "arm_end:$rid:failed"
+        record_run "$n" 1 "$rid" false "$arm"
+        state "autoscale-arm-failed $rid"
+        teardown "$AS_LAYOUT" "$rid-failed" || true
+        [[ $arm == warm-* ]] || scope_close "$rid" "$rid-failed-scope-cleanup" || true
+        gzip_evidence "$rid"
+        if [[ $arm == runai-* && $AS_RUNAI == unknown ]]; then
+          AS_RUNAI=na  # not counted as a failed attempt: the arm is unsupported here, recorded as na
+          state "runai-na $rid"
+        else
+          failures=$((failures + 1))
+          (( failures < MAX_ATTEMPTS )) || { echo "autoscale: $failures failed arms; stopping" >&2; return 1; }
+        fi
+      fi
+    fi
+    if (( i == last_peer )) && [[ -n $AS_PEER_DONE ]]; then (( DRY )) || touch "$AS_PEER_DONE"; fi
+    if (( i == last_warm_pm )) && [[ -n $AS_PART ]]; then scope_close "$AS_SEED" seed-scope-cleanup || true; fi
+    if (( i == last_warm_stock )) && [[ -n $AS_WARM_STOCK_SCOPE ]]; then
+      scope_close "$AS_WARM_STOCK_SCOPE" "$AS_WARM_STOCK_SCOPE-scope-cleanup" || true
+      AS_WARM_STOCK_SCOPE=
     fi
   done
-  run scripts/startup_state.py delete --gcs "$AS_GCS" --output "$OUT/gcs-delete.json" --timeout 900
+  if (( AS_KEEP_GCS )) || (( ${#GCS_PREFIXES[@]} == 0 )); then
+    state "gcs-kept-or-unused $AS_GCS"
+  else
+    run scripts/startup_state.py delete --gcs "$AS_GCS" --output "$OUT/gcs-delete.json" --timeout 900
+  fi
   GCS_PREFIXES=()
   [[ -n $AS_PART ]] || scope_close "$AS_SEED" seed-scope-cleanup
   (( done_ok > 0 ))
