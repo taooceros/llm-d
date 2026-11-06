@@ -520,6 +520,21 @@
       "bytes": 2771
     },
     {
+      "path": "scripts/compile_execution_smoke.py",
+      "sha256": "5293d5576296ba64f276dd22594a5577a66d82597d8157f7e0448d74bfb04047",
+      "bytes": 19448
+    },
+    {
+      "path": "scripts/dp_switch_deviceless_probe.py",
+      "sha256": "ab7ce114451f3b4e4dd68bcdd11fba24e6bee1ed97674d409c3f4f7d80545c41",
+      "bytes": 4033
+    },
+    {
+      "path": "scripts/dp_switch_gate.py",
+      "sha256": "1e4388a6c66d3f10fb9d16412e3db08c4512dcd326bedbb96b72d4916637e230",
+      "bytes": 23992
+    },
+    {
       "path": "scripts/epp_router.sh",
       "sha256": "dc6900d2f2ea08251329d72fdbd896a77da0b6066948762c619598acc6f0baf6",
       "bytes": 1556
@@ -545,6 +560,26 @@
       "bytes": 30765
     },
     {
+      "path": "scripts/full_mesh_deviceless_probe.py",
+      "sha256": "c0f7ff66cce07df3deb09d2c953a0c16d383dff25fffd38d0b5c174f88e87d07",
+      "bytes": 13058
+    },
+    {
+      "path": "scripts/full_mesh_generation_sweep.py",
+      "sha256": "1d8b9d2cc84ca077e2f56235ce39b8f1b454951fcac71cc84035a5636d9f507e",
+      "bytes": 4830
+    },
+    {
+      "path": "scripts/full_mesh_size_sweep.py",
+      "sha256": "a32b35034fd71d54c4af25d4d6e92e8adf570ed74597c7d7d762999b8f2d63d9",
+      "bytes": 1983
+    },
+    {
+      "path": "scripts/full_mesh_subset_rule.py",
+      "sha256": "0564e86b33c8e3a6cc9ff38590f326ed0a15f2b7322d2a6cc855d66a0ea003c8",
+      "bytes": 2400
+    },
+    {
       "path": "scripts/goal_audit.py",
       "sha256": "bef0af555538f5df526ab7d54a50bf8a129002fb2e3bb278ed45fc3ad5224093",
       "bytes": 20430
@@ -558,6 +593,21 @@
       "path": "scripts/host_watchdog.sh",
       "sha256": "3b0b7029dc527f61a4f140f5327b6b20d7059e1c2a4f32b8719ce6d57800e84a",
       "bytes": 3546
+    },
+    {
+      "path": "scripts/ici_engine.py",
+      "sha256": "eaba52d8888309ac1cb21456debacb5e0a8dbe8299a6a25e6beb8a88d8c033d6",
+      "bytes": 13548
+    },
+    {
+      "path": "scripts/ici_engine_analyze.py",
+      "sha256": "28acc00892f20727eaf3aa38b0ffd6e96ffaf353d03475e4238c86c375afa2a4",
+      "bytes": 9701
+    },
+    {
+      "path": "scripts/ici_engine_sequence.sh",
+      "sha256": "ed8a4760099d02edc5e917cbb1df6caab65d1aa5f7e89ef16f9d05d23b152365",
+      "bytes": 500
     },
     {
       "path": "scripts/lld.py",
@@ -768,6 +818,31 @@
       "path": "scripts/tpu_e2e_summary.py",
       "sha256": "aec58fdc741f893ce5e5f46d0706482692a036d0365017c3372a943a4be8f698",
       "bytes": 26678
+    },
+    {
+      "path": "scripts/unified_runtime_deviceless_probe.py",
+      "sha256": "ae17ba3cd9a4769393051256f7270b6e28ab45985a60309a865732742c002779",
+      "bytes": 5487
+    },
+    {
+      "path": "scripts/vproc_gate.py",
+      "sha256": "c16b04ea10cab8beb7069e7eef7781f62557076c096b40d4d912a71a9eddb9ae",
+      "bytes": 15289
+    },
+    {
+      "path": "scripts/vproc_host_sets.py",
+      "sha256": "faf0a8c111198e7a970a9cfca6de10fbd80002260dffb89595f744e9d2b5ec0c",
+      "bytes": 2335
+    },
+    {
+      "path": "scripts/vproc_surface_check.py",
+      "sha256": "1bd7b880c94221bb413e7c6c1eaa876431f7b6865f6be9f6e105579b200c4dae",
+      "bytes": 29117
+    },
+    {
+      "path": "scripts/vproc_union_gather_probe.py",
+      "sha256": "24bcfc8e66a0d6a358d0af79e492281187190bfafbe82e0af7c88979a68a6e1d",
+      "bytes": 3513
     },
     {
       "path": "scripts/w3_campaign.sh",
