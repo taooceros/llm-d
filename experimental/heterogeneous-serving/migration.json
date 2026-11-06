@@ -695,6 +695,21 @@
       "bytes": 83618
     },
     {
+      "path": "scripts/snapshot_checksum_probe.py",
+      "sha256": "742d2f2384de8ff49c8e10077270b97834a69f0ba61bcbe9bb910521ba9318e2",
+      "bytes": 13028
+    },
+    {
+      "path": "scripts/snapshot_mmap_probe.py",
+      "sha256": "11ed560f6240b33b0e751c433bedae47e13c65b9de5ec10e16fe3c5ab88abe0a",
+      "bytes": 11056
+    },
+    {
+      "path": "scripts/snapshot_pinned_bandwidth.py",
+      "sha256": "3e34a088516a12abbfe3003fbfea8a1d6b564a4f13e2d28c63c53fc443414a65",
+      "bytes": 12656
+    },
+    {
       "path": "scripts/snapshot_validate.py",
       "sha256": "7442cf5647be2d836952aa2eac901b5ddd4526aa98071ed2cef0924ec0caceb9",
       "bytes": 36321
