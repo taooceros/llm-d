@@ -1,0 +1,46 @@
+# Engine-free GCS FUSE read probe pod (no TPU): studies why vLLM's safetensors prefetch
+# collapses the loader's mmap walk on the same checkpoint file. Same bucket and CSI driver as
+# the TPU workers; /models matches their mount options, /models-trace adds gcsfuse trace logs
+# (request offsets/sizes per handle in the gke-gcsfuse-sidecar container log).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ckpt-io-probe
+  namespace: llm-d-optimized-baseline
+  labels: {app: ckpt-io-probe, owner: hongtao-agent}
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: ckpt-io-probe}
+  template:
+    metadata:
+      labels: {app: ckpt-io-probe}
+      annotations:
+        gke-gcsfuse/volumes: "true"
+    spec:
+      terminationGracePeriodSeconds: 5
+      containers:
+      - name: probe
+        image: vllm/vllm-tpu:v0.26.0
+        command: ["sleep", "infinity"]
+        resources:
+          requests: {cpu: "2", memory: 8Gi}
+          limits: {memory: 24Gi}
+        volumeMounts:
+        - {name: models, mountPath: /models, readOnly: true}
+        - {name: models-trace, mountPath: /models-trace, readOnly: true}
+      volumes:
+      - name: models
+        csi:
+          driver: gcsfuse.csi.storage.gke.io
+          readOnly: true
+          volumeAttributes:
+            bucketName: hongtaozhang-tpu-model-cache-us-west1
+            mountOptions: "implicit-dirs"
+      - name: models-trace
+        csi:
+          driver: gcsfuse.csi.storage.gke.io
+          readOnly: true
+          volumeAttributes:
+            bucketName: hongtaozhang-tpu-model-cache-us-west1
+            mountOptions: "implicit-dirs,log-severity=trace"

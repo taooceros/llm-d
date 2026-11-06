@@ -545,6 +545,21 @@
       "bytes": 30765
     },
     {
+      "path": "scripts/fuse_conflict/conflict_probe.py",
+      "sha256": "0614ebe94525e0cf56919def10261973a028d5e2b7f5e88308572bb141ec7e63",
+      "bytes": 7354
+    },
+    {
+      "path": "scripts/fuse_conflict/probe-deployment.yaml",
+      "sha256": "21e4471d11194f25929a080f5e0777c5f5f51d6eecff8266a625b1cfb796de6b",
+      "bytes": 1628
+    },
+    {
+      "path": "scripts/fuse_conflict/trace_summary.py",
+      "sha256": "93111e510c61969f56f0df87450cc91b80635d1c00cc0ac4e7cc579bfb8368c7",
+      "bytes": 3854
+    },
+    {
       "path": "scripts/goal_audit.py",
       "sha256": "bef0af555538f5df526ab7d54a50bf8a129002fb2e3bb278ed45fc3ad5224093",
       "bytes": 20430
@@ -595,6 +610,11 @@
       "bytes": 2089
     },
     {
+      "path": "scripts/loo_summary.py",
+      "sha256": "7612883e9a8be4521dd29622c25e40e1d30c674243d519f9d30afec493eceda1",
+      "bytes": 12814
+    },
+    {
       "path": "scripts/matrix_summary.py",
       "sha256": "2f2c495a5361759ceebe5c4858aa6b6e00cc992ac4a162b5c364ccaf75bbf4d5",
       "bytes": 18207
@@ -633,6 +653,11 @@
       "path": "scripts/overlap_switch_sequence.sh",
       "sha256": "a30f35a802dfcff0f25b9a9cb71105e909a59c3e30ea80f33d6e2fa5a0cde9bb",
       "bytes": 6915
+    },
+    {
+      "path": "scripts/pair_inventory.py",
+      "sha256": "a18e0f416d5abfc67998d95d0a0974e046fb6442d3fc980f8ce3c7ac76f8fdd5",
+      "bytes": 13173
     },
     {
       "path": "scripts/portable_check.py",
@@ -746,8 +771,8 @@
     },
     {
       "path": "scripts/switch_campaign.sh",
-      "sha256": "bd98a03efc354be9af066b3a5d39b47ec64a1091cbb0a831472e674ae6d8efa4",
-      "bytes": 74594
+      "sha256": "0407f69218febee9e4e12310033ed5b4931291dfae04976d710d15140574b72e",
+      "bytes": 78717
     },
     {
       "path": "scripts/switch_dry_run.py",
