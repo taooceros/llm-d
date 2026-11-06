@@ -25,6 +25,11 @@
       "bytes": 2717
     },
     {
+      "path": "GPU_JAX_GOAL.md",
+      "sha256": "b9eb679c60096f4555823f458a8a3d9da7267f1fb9dde1d6606fefe05d6185d8",
+      "bytes": 9201
+    },
+    {
       "path": "HETEROGENEOUS_LLMD_GATEWAY_GOAL.md",
       "sha256": "5bce3590e6dd1b9f7ec2c3766db9632b36bbf3dbf5115430dd0619815b1e01e4",
       "bytes": 61962
@@ -548,6 +553,21 @@
       "path": "scripts/goal_audit.py",
       "sha256": "bef0af555538f5df526ab7d54a50bf8a129002fb2e3bb278ed45fc3ad5224093",
       "bytes": 20430
+    },
+    {
+      "path": "scripts/gpu_autoscale.py",
+      "sha256": "638bd29d78178fc80a5560dc0f43011dd42ce83755c8672b6dce087423a4f8af",
+      "bytes": 23439
+    },
+    {
+      "path": "scripts/gpu_autoscale_figure.py",
+      "sha256": "d60b88703a100347a212c69cf8cf6a1bc22edcb244d96f7a1916d7e79bd86e5e",
+      "bytes": 13190
+    },
+    {
+      "path": "scripts/gpu_jax_autoscale.py",
+      "sha256": "b7bac380debe2fe207c48342c1f8cd450a9b6b1704f83c516a24c6a757a8c3e9",
+      "bytes": 61923
     },
     {
       "path": "scripts/hetero_ctl.py",
