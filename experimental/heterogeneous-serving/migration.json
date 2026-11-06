@@ -86,8 +86,8 @@
     },
     {
       "path": "deploy/k8s/hetero-agent-rbac.yaml",
-      "sha256": "910bf45b6cb43f2d92baaa0c824cb0fae0f1c2528ea2f0488fdd8c21e56abb79",
-      "bytes": 2023
+      "sha256": "27d8756d06ddf8f2fae97a0a16c708081824ead133804a5b2cc57e9a0c97814f",
+      "bytes": 2232
     },
     {
       "path": "deploy/k8s/omp-epp-router.yaml",
@@ -168,6 +168,11 @@
       "path": "docs/experiments/en/paged_attention_batch_size_study.md",
       "sha256": "d11528e0510ce1445fb19b46cfc32f5756a1705c13849d66241a4f55271732a3",
       "bytes": 17182
+    },
+    {
+      "path": "docs/experiments/jax_0112_image_port.md",
+      "sha256": "69925dc5a7c2cf164ec35667f558e676208a143889a38d74a291be725388f5b9",
+      "bytes": 11282
     },
     {
       "path": "docs/experiments/padding_cost_topology_setup.md",
@@ -256,8 +261,8 @@
     },
     {
       "path": "hetero/native_backend_patch.json",
-      "sha256": "8116446273d15158c39a04ff10869205eb993dd7bb74976a4cf738e279d5fc7c",
-      "bytes": 5519
+      "sha256": "a4ea0d141bafd04ddfe51d5f8d41cfe35a4d924a5fac188e3f0341931b92cb61",
+      "bytes": 4652
     },
     {
       "path": "hetero/placement.py",
