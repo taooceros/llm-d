@@ -635,6 +635,41 @@
       "bytes": 6915
     },
     {
+      "path": "scripts/pjrt_deviceless_probe.py",
+      "sha256": "27883bceca1aa9c62a7e616e6b8a9815f49c770e2b4ca5669c36eb7e380570fa",
+      "bytes": 5526
+    },
+    {
+      "path": "scripts/pm_artifacts.py",
+      "sha256": "0eadb6a613d9e06b99d0c00f9bf4c60aaf3b8caf03acfff9e86ff52426377142",
+      "bytes": 24067
+    },
+    {
+      "path": "scripts/pm_cpu_model_probe.py",
+      "sha256": "d76b5a2343d9cf8920f161d7d1e2b8579237247d83ddbdf9487fa685d4e3f61b",
+      "bytes": 19769
+    },
+    {
+      "path": "scripts/pm_loc.py",
+      "sha256": "c4fd00eadb70936b202b4c105b61cb3edcdea151aa22b5b6836fbfa9476a1fff",
+      "bytes": 7811
+    },
+    {
+      "path": "scripts/pm_rewind_tpu.py",
+      "sha256": "950fd0eee509c381720aeb23cef09c0bfae596d95fbfde82ad160db7a5ffd92d",
+      "bytes": 261099
+    },
+    {
+      "path": "scripts/pm_sample_report.py",
+      "sha256": "e7e769a9635da98945dc08adaf6d15f2f96ca49cb5c957db6184348fe6c69b49",
+      "bytes": 3995
+    },
+    {
+      "path": "scripts/pm_torchtpu_report.py",
+      "sha256": "312c68c7b0ce7fe47fa7a81b06a7e7c6362d4fbd98827703798b9facb03f641d",
+      "bytes": 7365
+    },
+    {
       "path": "scripts/portable_check.py",
       "sha256": "19d8fa5f3c28cce8b25a81f72c297f00c2f0063ed61dd470b4d439fe40508dd8",
       "bytes": 5385
@@ -758,6 +793,41 @@
       "path": "scripts/switch_summary.py",
       "sha256": "9285542b72e76c473bf1de090db0d21468c8140707420ede06972d6cef9eacc1",
       "bytes": 18614
+    },
+    {
+      "path": "scripts/torchtpu_ckpt_copy.py",
+      "sha256": "e6177aa7958465b1e66c2aa7b4ee99afa4b0bb5b3dc914d34d3c34b1a3eb5061",
+      "bytes": 2861
+    },
+    {
+      "path": "scripts/torchtpu_gcs_tools.py",
+      "sha256": "3bf19a5567856399aadfeac3d5aaa98a219f7b688edd9a1d8c545776838bda6b",
+      "bytes": 4925
+    },
+    {
+      "path": "scripts/torchtpu_load_extract.py",
+      "sha256": "93fdb553db5743a1a458950d911ec79778f02801fd543390b092b7bc83b1e948",
+      "bytes": 6422
+    },
+    {
+      "path": "scripts/torchtpu_load_host.sh",
+      "sha256": "5b4ad0493aa3a145778117969602064e54577718c1a94e337bbd11b9b3dc7e75",
+      "bytes": 51395
+    },
+    {
+      "path": "scripts/torchtpu_load_probe.py",
+      "sha256": "6ab789c309f857db7f9b02e89f295107fe5065c7fae88f032274b036123e974a",
+      "bytes": 39389
+    },
+    {
+      "path": "scripts/torchtpu_matrix_report.py",
+      "sha256": "969b60a5405a41c58a473441f8a48dd31a0395b3ffe92f7142864c9fd29724c3",
+      "bytes": 11545
+    },
+    {
+      "path": "scripts/torchtpu_req_probe.py",
+      "sha256": "88ced951b1e476dd2d8c07106d6b85d07f7b40fbb4727e7ec1364efbb517a745",
+      "bytes": 3354
     },
     {
       "path": "scripts/tpu_e2e.py",
