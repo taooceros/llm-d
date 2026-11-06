@@ -257,13 +257,25 @@ entry set; otherwise every rank compiles normally and reports why. Banked
 buckets skip lower/compile in `CompilationManager._run_compilation`. Warm-up
 and serving call the `Compiled` directly. A bucket miss or a `Compiled`
 signature rejection takes the original jit path and is counted. The identity
-covers model/KV/scheduler shape, num_blocks, mesh device order, host order,
-topology, jax/jaxlib/libtpu/vllm/tpu_inference versions, platform version,
-XLA/libtpu flags, jax config, native-patch revisions and the installed runner
-sources. So a read deploy must use the write deploy's settings on the same
-hosts. Evidence: `omp_init_phases()["exec_bank"]` and the worker RPC
-`omp_exec_bank_report()`. `exec_bank_sabotage_rank` (read only) makes one
-process rank refuse its bank, for testing the all-rank fallback.
+covers model/KV/scheduler shape, num_blocks, mesh device order, topology
+(TPU_TOPOLOGY, host bounds, process count, XLA topology fingerprint) and each
+rank's device ids and chip coordinates, jax/jaxlib/libtpu/vllm/tpu_inference
+versions, platform version, XLA/libtpu flags, jax config, native-patch
+revisions and the installed runner sources. It does not name hosts: every
+instance runs its own sub-slice runtime whose device ids and coordinates are
+relative and whose ranks follow the host grid, so a bank written on one
+placement is valid on every congruent one (the writer's `host_order` is
+recorded in the manifest as `placement`, never compared). A read deploy must
+use the write deploy's settings on a congruent placement; the bank must be on
+each reader's host (`scripts/bank_relocate.py` copies one instance's bank,
+rank for rank, onto another placement's hosts and records `relocation.json`).
+`snapshot_validate.py bank-manifests [--run-scope S]` lists every host's banks
+with per-entry sha256 (`scripts/bank_compare.py` compares them across hosts).
+Evidence: `omp_init_phases()["exec_bank"]` (`loaded.written_placement`,
+`loaded.relocation`) and the worker RPC `omp_exec_bank_report()`.
+`exec_bank_sabotage_rank` (read only) makes one process rank refuse its bank,
+for testing the all-rank fallback. `scripts/switch_campaign.sh portable` runs
+the cross-placement gate and the partial S -> Mb switch from a relocated bank.
 
 ### First-switch provisioning (inline snapshot + bank write, run scopes)
 

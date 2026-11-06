@@ -35,5 +35,25 @@
     "merged_by_us": false,
     "default_branches_changed": false,
     "publication_policy": "Uploaded the exact file list, never a wildcard. Evidence is not committed to the forks; the three withheld files are listed under exclusions in the asset index."
+  },
+  "publication_20261105": {
+    "release_tag": "research-evidence-20261105",
+    "release_id": null,
+    "release_url": "https://github.com/taooceros/llm-d/releases/tag/research-evidence-20261105",
+    "published": false,
+    "prerelease": true,
+    "tag_target": "2f67981b74449047939ca1cd81ed22f1a63443c6",
+    "asset_manifest": "research/release-assets-20261105.json",
+    "asset_index": "research/evidence-20261105/asset-index.json",
+    "asset_index_sha256": "3b00b6890074ad1c3cc82b425e1ae7f432dcded447424d8d238d787c7f193468",
+    "staged_assets": 10,
+    "uploaded_assets": 0,
+    "pull_requests_created": 0,
+    "pull_request_targets": "taooceros/<fork> only: pr/hetero-local-20261105 -> pr/hetero-chain-20261012 (llm-d), pr/hetero-chain-20261105 -> pr/hetero-local-20261105 (llm-d) or pr/hetero-chain-20261012 (vllm, tpu-inference, llm-d-async), pr/hetero-<side>-20261105 -> pr/hetero-chain-20261105 (pr/hetero-chain-20261012 in llm-d-router)",
+    "pull_request_record": "docs/experiments/bulk_reconfiguration_plan.md (decision log 2026-11-05)",
+    "merged_by_us": false,
+    "default_branches_changed": false,
+    "anonymity": "The paper name is replaced by the public alias TPUFlex in code, paths, commit messages, branch names, PR text, release notes and assets (research/evidence-20261105/alias-rewrites.json).",
+    "publication_policy": "Staged locally; upload the exact file list in research/release-assets-20261105.json, never a wildcard. Rendered figures are withheld (listed under exclusions in the asset index)."
   }
 }

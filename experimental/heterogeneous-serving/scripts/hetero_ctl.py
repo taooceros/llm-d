@@ -314,7 +314,8 @@ def run_remote(state, timing):
 
 if __name__ == "__main__":
     runner = StageRunner(silence_timeout_s=max(900.0, args.timeout))
-    if args.command in ("deploy", "preflight"):
+    # A partition deploy runs no gateway, so it leaves the shared gateway resources alone.
+    if args.command in ("deploy", "preflight") and "--partition" not in extra:
         runner.register(reconcile_gateway_resources)
     runner.register(run_remote)
     if not runner.run():

@@ -45,7 +45,7 @@ def host_action(action, reserve_bytes, capture_config=False, run_scope=None):
         # A first-switch run scope (hetero/run_scope.py): only its two directories are read or
         # removed; the default snapshot root and every warm cache stay untouched.
         from hetero import run_scope as scopes
-        if action not in ('cleanup', 'files', 'memory', 'file-fingerprint'):
+        if action not in ('cleanup', 'files', 'memory', 'file-fingerprint', 'bank-manifests'):
             raise RuntimeError(f'--run-scope is not supported for {action}')
     if action == 'cleanup' and run_scope is None:
         shutil.rmtree(root, ignore_errors=False) if root.exists() else None
@@ -109,6 +109,14 @@ def host_action(action, reserve_bytes, capture_config=False, run_scope=None):
                         raise RuntimeError(f'missing/wrong-sized snapshot shard: {file}')
             verified.append(str(path))
         row['verified_manifest_and_sizes'] = verified
+    if action == 'bank-manifests':
+        # Read-only: every rank bank under the scope's bank root (or the warm default root) with
+        # the per-entry sha256, so banks of congruent placements can be compared byte for byte.
+        from hetero import exec_bank
+        bank_root = (scopes.scope_roots(run_scope)['exec_bank_dir'] if run_scope is not None
+                     else exec_bank.DEFAULT_DIR)
+        row['bank_root'] = bank_root
+        row['banks'] = exec_bank.bank_inventory(bank_root)
     if action == 'file-fingerprint':
         import time
         from hetero.weight_snapshot import file_fingerprint
@@ -122,17 +130,57 @@ def host_action(action, reserve_bytes, capture_config=False, run_scope=None):
         row['fingerprints'] = fingerprints
         row['validation_s'] = time.perf_counter() - fingerprint_start
         row['outside_snapshot_and_restore_timer'] = True
-    if action == 'pagecache':
-        row['checkpoint_page_cache'] = checkpoint_residency(
-            Path(os.environ.get('OMP_SNAPSHOT_MODEL', '/models/gemma-4-31b')))
+    if action in ('pagecache', 'evict-pagecache'):
+        model = Path(os.environ.get('OMP_SNAPSHOT_MODEL', '/models/gemma-4-31b'))
+        row['checkpoint_page_cache'] = checkpoint_residency(model)
         row['meminfo_kb'] = {k: int(memory[k].split()[0]) for k in (
             'MemAvailable', 'Cached', 'Shmem', 'Dirty', 'Writeback') if k in memory}
+        if action == 'evict-pagecache':
+            # A fresh host for an autoscale arm: drop the checkpoint's cached pages (fadvise, no
+            # privilege needed) and record which warm pod-local state is (not) present.
+            row['evicted_files'] = evict_page_cache(model)
+            row['checkpoint_page_cache_after'] = checkpoint_residency(model)
+            row['pod_local_state'] = pod_local_state()
     if capture_config:
         config = Path(os.environ.get('OMP_SNAPSHOT_MODEL', '/models/gemma-4-31b')) / 'config.json'
         row['model_config'] = json.loads(config.read_text())
-    if action not in ('cleanup', 'pagecache') and min(available, free) - reserve_bytes < floor:
+    if action not in ('cleanup', 'pagecache', 'evict-pagecache', 'bank-manifests') and min(available, free) - reserve_bytes < floor:
         raise RuntimeError('insufficient snapshot host headroom: ' + json.dumps(row))
     return row
+
+
+def evict_page_cache(model_dir):
+    """posix_fadvise(DONTNEED) every checkpoint file: the next normal-loader read starts cold."""
+    evicted = []
+    for path in sorted(Path(model_dir).iterdir()):
+        if path.is_file() and path.suffix in ('.safetensors', '.json'):
+            fd = os.open(path, os.O_RDONLY)
+            try:
+                os.posix_fadvise(fd, 0, 0, os.POSIX_FADV_DONTNEED)
+            finally:
+                os.close(fd)
+            evicted.append(path.name)
+    return evicted
+
+
+def pod_local_state():
+    """Bytes in every pod-local warm-start root (default and run-scoped snapshot, bank, XLA cache)."""
+    from hetero import run_scope as scopes
+
+    def size(path):
+        path = Path(path)
+        if not path.exists():
+            return None
+        return sum(p.stat().st_size for p in path.rglob('*') if p.is_file() and not p.is_symlink())
+
+    roots = {'snapshot_default': '/dev/shm/omp_weights', 'snapshot_runs': scopes.SNAPSHOT_RUNS_PARENT,
+             'bank_default': '/root/.cache/omp_exec_bank', 'bank_runs': scopes.BANK_RUNS_PARENT,
+             'xla_default': '/root/.cache/vllm/xla_cache', 'xla_runs': scopes.XLA_RUNS_PARENT}
+    state = {name: size(path) for name, path in roots.items()}
+    for parent in (scopes.SNAPSHOT_RUNS_PARENT, scopes.BANK_RUNS_PARENT, scopes.XLA_RUNS_PARENT):
+        if Path(parent).is_dir():
+            state[f'scopes:{parent}'] = sorted(p.name for p in Path(parent).iterdir())
+    return state
 
 
 def checkpoint_residency(model_dir):
@@ -174,31 +222,65 @@ def remote(args):
     from ray.util.scheduling_strategies import NodeAffinitySchedulingStrategy
     from hetero.evidence import emit_measurements
     ray.init(address='auto', ignore_reinit_error=True)
+    hosts = set(args.hosts.split(',')) if args.hosts else None
+    selected = sorted(set(args.instances.split(','))) if args.instances else None
+    alive = [n for n in ray.nodes() if n['Alive'] and n['Resources'].get('TPU', 0) > 0]
+    if hosts is not None:
+        # Partition mode: this campaign owns only these hosts; other TPU hosts may carry another
+        # campaign's engines and state, and nothing here may touch or judge them.
+        missing = hosts - {n['NodeManagerAddress'] for n in alive}
+        if missing:
+            raise RuntimeError(f'--hosts not live TPU hosts: {sorted(missing)}')
+        alive = [n for n in alive if n['NodeManagerAddress'] in hosts]
     if args.action == 'preflight':
         from hetero.registry import find_registry
         registry = find_registry()
-        if registry is not None and ray.get(registry.snapshot.remote(), timeout=60):
-            raise RuntimeError('preflight refuses pre-existing registered engines')
+        registered = ray.get(registry.snapshot.remote(), timeout=60) if registry is not None else []
+        if hosts is not None:
+            registered = [r for r in registered if r['instance_id'] in (selected or ())]
+        if registered:
+            raise RuntimeError('preflight refuses pre-existing registered engines: '
+                               + ', '.join(sorted(r['instance_id'] for r in registered)))
         from ray.util import placement_group_table
-        if any(row['state'] != 'REMOVED' for row in placement_group_table().values()):
-            raise RuntimeError('preflight refuses pre-existing placement groups')
-    if args.action in ('preflight', 'memory', 'cleanup', 'files', 'file-fingerprint', 'poison', 'pagecache'):
-        nodes = [n for n in ray.nodes() if n['Alive'] and n['Resources'].get('TPU', 0) > 0]
+        ours = {n['NodeID'] for n in alive}
+        live = [row for row in placement_group_table().values() if row['state'] != 'REMOVED']
+        if hosts is not None:
+            # A placement group still waiting for nodes may yet land on ours.
+            live = [row for row in live if not row.get('bundles_to_node_id')
+                    or set(row['bundles_to_node_id'].values()) & ours]
+        if live:
+            raise RuntimeError('preflight refuses pre-existing placement groups: '
+                               + ', '.join(sorted(row.get('name') or '?' for row in live)))
+    if args.action in ('preflight', 'memory', 'cleanup', 'files', 'file-fingerprint', 'poison', 'pagecache',
+                       'evict-pagecache', 'bank-manifests'):
+        nodes = alive
         if not nodes:
             raise RuntimeError('no live TPU hosts')
+        if hosts is not None and args.action == 'cleanup' and args.run_scope is None:
+            raise RuntimeError('--hosts cleanup needs --run-scope: the default roots are shared')
         task = ray.remote(num_cpus=0)(host_action)
         rows = ray.get([task.options(scheduling_strategy=NodeAffinitySchedulingStrategy(
             n['NodeID'], soft=False)).remote(args.action, args.reserve_bytes,
                 args.action == 'preflight' and index == 0, args.run_scope)
                 for index, n in enumerate(nodes)], timeout=120)
+        if args.action in ('bank-manifests', 'evict-pagecache') or hosts is not None:
+            for row, node in zip(rows, nodes):
+                row['node_ip'] = node['NodeManagerAddress']
         result = _host_measurements(args.action, args.layout, rows)
+        if hosts is not None:
+            result['partition_hosts'] = sorted(hosts)
     else:
         from hetero.registry import find_registry
         registry = find_registry()
         if registry is None:
             raise RuntimeError('no registry')
         rows = ray.get(registry.snapshot.remote(args.layout), timeout=60)
-        expected = len(BUILTIN_LAYOUTS[args.layout])
+        if hosts is not None:
+            # Partition mode: only the selected instances of the layout are deployed (by this campaign).
+            rows = [r for r in rows if r['instance_id'] in selected]
+            expected = len(selected)
+        else:
+            expected = len(BUILTIN_LAYOUTS[args.layout])
         if len(rows) != expected or len({r['instance_id'] for r in rows}) != expected:
             raise RuntimeError(f'incomplete {args.layout} registry: {rows}')
         actors = {r['instance_id']: ray.get_actor(r['engine_actor_name'], namespace=r['ray_namespace']) for r in rows}
@@ -357,6 +439,8 @@ def submit(args):
         argv += ['--instances', args.instances]
     if args.run_scope:
         argv += ['--run-scope', args.run_scope]
+    if args.hosts:
+        argv += ['--hosts', args.hosts]
 
     @stage(name='snapshot_validation', order_idx=1, expected_s=args.timeout)
     def run(state, timing):
@@ -493,11 +577,15 @@ def analyze(args):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=('preflight', 'memory', 'cleanup', 'files', 'file-fingerprint', 'poison', 'pagecache', 'snapshot', 'fingerprint', 'validate', 'check', 'probe', 'analyze'))
+    parser.add_argument('action', choices=('preflight', 'memory', 'cleanup', 'files', 'file-fingerprint', 'poison', 'pagecache', 'evict-pagecache', 'bank-manifests', 'snapshot', 'fingerprint', 'validate', 'check', 'probe', 'analyze'))
     parser.add_argument('--layout', choices=sorted(BUILTIN_LAYOUTS), default='S')
-    parser.add_argument('--instances', help='snapshot/fingerprint only these comma-separated instances')
-    parser.add_argument('--run-scope', help='cleanup/files/memory/file-fingerprint only: act on this first-switch run scope '
-                        '(hetero/run_scope.py) instead of /dev/shm/omp_weights')
+    parser.add_argument('--instances', help='snapshot/fingerprint only these comma-separated instances; with '
+                        '--hosts, the instances of the layout this campaign deployed')
+    parser.add_argument('--hosts', help='partition mode: comma-separated host IPs this campaign owns. Host actions '
+                        'run only there and preflight judges only them; registry actions use only --instances '
+                        '(the rest of the layout may be absent or another campaign\'s)')
+    parser.add_argument('--run-scope', help='cleanup/files/memory/file-fingerprint/bank-manifests only: act on this '
+                        'first-switch run scope (hetero/run_scope.py) instead of the default roots')
     parser.add_argument('--remote', action='store_true')
     parser.add_argument('--output', type=Path)
     parser.add_argument('--reference', type=Path)
@@ -514,6 +602,9 @@ def main():
         raise SystemExit('--probe-points is only valid with probe')
     if args.action == 'probe' and not args.probe_points and not args.remote:
         raise SystemExit('probe requires --probe-points')
+    if args.hosts and args.action in ('preflight', 'snapshot', 'fingerprint', 'validate', 'check', 'probe') \
+            and not args.instances:
+        raise SystemExit(f'--hosts {args.action} needs --instances')
     if not args.remote and args.output is None:
         parser.error('--output is required for supervised submission')
     (analyze if args.action == 'analyze' else remote if args.remote else submit)(args)

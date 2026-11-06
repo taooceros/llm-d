@@ -34,8 +34,9 @@ import time
 import traceback
 import types
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
-# Global default paths for out-of-band communication
-BASE_RCM_DIR = pathlib.Path("/tmp/omp_rcm")
+# Global default paths for out-of-band communication.  OMP_RCM_DIR gives a campaign its own daemon
+# (one daemon per directory), so campaigns on disjoint parts of a cluster can run side by side.
+BASE_RCM_DIR = pathlib.Path(os.environ.get("OMP_RCM_DIR") or "/tmp/omp_rcm")
 CHECKPOINT_FILE = BASE_RCM_DIR / "checkpoint.json"
 TELEMETRY_FILE = BASE_RCM_DIR / "telemetry.jsonl"
 CONTROL_SOCK_FILE = BASE_RCM_DIR / "control.sock"

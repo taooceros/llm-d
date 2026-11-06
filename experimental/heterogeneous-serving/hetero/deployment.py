@@ -161,6 +161,20 @@ def _check_partial_gateway(registry: Any, layout_id: str, digest: str, wanted: s
                 "partial deploy requires matching declared gateway maintenance or joining set")
 
 
+def _check_partition(registry: Any, layout_id: str, digest: str) -> None:
+    """A partition deploy: these instances only, on hosts this campaign owns; no gateway serves them.
+
+    The rest of the layout may be absent or another campaign's partition. Nothing may route to these
+    engines, so no gateway may exist; the layout must be unregistered or registered unchanged."""
+    existing = ray.get(registry.get_layout.remote(layout_id), timeout=60)
+    if existing and existing["layout_digest"] != digest:
+        raise RuntimeError("partition deploy cannot change the registered static layout")
+    from .gateway.lifecycle import find_gateway
+
+    if find_gateway() is not None:
+        raise RuntimeError("partition deploy refuses a live gateway: it serves a whole-slice deployment")
+
+
 def _existing_engine_actors(
     instances: Sequence[ResolvedInstance], layout_id: str, config: DeploymentConfig
 ) -> Dict[str, Any]:
@@ -280,6 +294,30 @@ def _initialize(
     }
 
 
+def _await_health(host: str, port: int, *, timeout_s: float = 60.0, poll_s: float = 0.05) -> Dict[str, Any]:
+    """Polls http://host:port/health until it answers 200; raises after timeout_s."""
+    import urllib.error
+    import urllib.request
+
+    started, attempts, last = time.time(), 0, None
+    while True:
+        attempts += 1
+        try:
+            with urllib.request.urlopen(f"http://{host}:{port}/health", timeout=5) as response:
+                if response.status == 200:
+                    body = json.loads(response.read().decode() or "{}")
+                    return {"ok_at": time.time(), "started_at": started, "attempts": attempts,
+                            "status": body.get("status")}
+                last = f"HTTP {response.status}"
+        except urllib.error.HTTPError as exc:
+            last = f"HTTP {exc.code}"
+        except OSError as exc:
+            last = f"{type(exc).__name__}: {str(exc)[:160]}"
+        if time.time() - started > timeout_s:
+            raise RuntimeError(f"GET http://{host}:{port}/health not 200 within {timeout_s:.0f} s: {last}")
+        time.sleep(poll_s)
+
+
 def _serve_and_register(
     registry: Any, instances: Sequence[ResolvedInstance], layout_id: str, digest: str,
     actors: Dict[str, Any], attached: Dict[str, bool], placement_records: Dict[str, Any],
@@ -299,6 +337,11 @@ def _serve_and_register(
         layout_id=layout_id,
         endpoints={k: f"{v['endpoint_host']}:{v['endpoint_port']}" for k, v in serving_reports.items()},
     )
+    # Ready = the endpoint's GET /health answers 200 (the KubeRay readiness probe's contract).
+    t0 = time.time()
+    for instance_id, report in serving_reports.items():
+        report["health"] = _await_health(report["endpoint_host"], report["endpoint_port"])
+    stage_clocks["health_s"] = round(time.time() - t0, 2)
 
     records: List[Dict[str, Any]] = []
     for instance in instances:
@@ -365,26 +408,49 @@ def deploy(
     *,
     smoke_tokens: int = 0,
     instance_ids: Optional[Sequence[str]] = None,
+    state_delivery: Optional[Dict[str, Any]] = None,
+    partition: bool = False,
 ) -> Dict[str, Any]:
-    """Reconcile all or an explicit maintenance subset of the same static layout."""
+    """Reconcile all or an explicit maintenance subset of the same static layout.
+
+    ``partition``: ``instance_ids`` is a partition deploy (``_check_partition``), not maintenance.
+    ``state_delivery`` (hetero/state_delivery.py): the startup-state fetch runs as a child process
+    from the start of the reconcile, while engines come up. Engines with engine setting
+    ``state_gate_timeout_s`` wait for it before their first device touch.
+    """
+    from .state_delivery import Delivery, await_initialized
+
+    if partition and instance_ids is None:
+        raise ValueError("a partition deploy names its instances")
+
+    started_at = time.time()
     resolved, instances, layout_body, layout_id, digest = _select_instances(inventory, config, instance_ids)
     if True in _prespawn_flags(instances, config):
         raise ValueError("engine setting prespawn=true is deployed only by prespawn_deployment/commit_prespawned")
+    gated = [i.instance_id for i in instances if config.settings_for(i.instance_id)["state_gate_timeout_s"]]
+    if bool(gated) != (state_delivery is not None):
+        raise ValueError(f"state gate on {gated or 'no instance'} but state delivery "
+                         f"{'given' if state_delivery is not None else 'missing'}: they come together")
 
     registry = get_or_create_registry()
-    if instance_ids is not None:
+    if partition:
+        _check_partition(registry, layout_id, digest)
+    elif instance_ids is not None:
         _check_partial_gateway(registry, layout_id, digest, {i.instance_id for i in instances})
     existing_actors = _existing_engine_actors(instances, layout_id, config)
-
-    native_backend, backend_elapsed = _prepare_backend(instances)
-    ray.get(registry.put_inventory.remote(inventory.to_dict()))
-    ray.get(registry.put_layout.remote(layout_body))
-
+    if gated and any(existing_actors.get(iid) is not None for iid in gated):
+        raise RuntimeError(f"state-gated instances must boot fresh engines: {gated}")
     created_pgs: List[str] = []
     created_actors: List[str] = []
-    stage_clocks: Dict[str, float] = {"backend_s": backend_elapsed}
+    stage_clocks: Dict[str, float] = {}
+    # Started first: everything below up to the workers' device touch overlaps the fetch.
+    delivery = Delivery(state_delivery, log=emit_log) if state_delivery is not None else None
 
     try:
+        native_backend, stage_clocks["backend_s"] = _prepare_backend(instances)
+        ray.get(registry.put_inventory.remote(inventory.to_dict()))
+        ray.get(registry.put_layout.remote(layout_body))
+
         handles, placement_records, stage_clocks["placement_s"] = _place(
             instances, layout_id, config, config.tpu_per_host, created_pgs)
         actors, attached, env_reports, stage_clocks["actor_s"] = _spawn_engine_actors(
@@ -392,10 +458,7 @@ def deploy(
 
         t0 = time.time()
         futures = _initialize(actors, instances, layout_id, config)
-        init_reports = {
-            instance_id: ray.get(future, timeout=config.engine_init_timeout_s)
-            for instance_id, future in futures.items()
-        }
+        init_reports = await_initialized(futures, timeout_s=config.engine_init_timeout_s, delivery=delivery)
         stage_clocks["engine_init_s"] = round(time.time() - t0, 2)
         emit_event(
             "ENGINES_INITIALIZED", layout_id=layout_id, seconds=stage_clocks["engine_init_s"]
@@ -405,12 +468,15 @@ def deploy(
                                       placement_records, init_reports, stage_clocks)
     except Exception as exc:
         emit_event("DEPLOY_FAILED", layout_id=layout_id, error=str(exc)[:400])
+        if delivery is not None:
+            delivery.abort()
         _rollback(created_actors, created_pgs)
         raise
 
-    return {
+    report = {
         "layout_id": layout_id,
         "layout_digest": digest,
+        "started_at": started_at,
         "desired_configuration": config.to_dict(),
         "resolved_layout": layout_body,
         "native_backend": native_backend,
@@ -419,6 +485,10 @@ def deploy(
         "instances": records,
         "registry_snapshot": ray.get(registry.snapshot.remote(layout_id), timeout=60),
     }
+    if delivery is not None:
+        # Every gated worker has seen its marker, so the child has published; it exits right after.
+        report["state_delivery"] = delivery.finish()
+    return report
 
 
 # --------------------------------------------------------------------------- pre-spawn / commit
@@ -452,6 +522,7 @@ class PreparedDeployment:
     hold: Dict[str, Dict[str, Any]] = dataclasses.field(default_factory=dict)
     committed: bool = False
     aborted: bool = False
+    partition: bool = False  # a partition deploy (``_check_partition``), not a partial restart
 
     def host_keys(self, instance_ids: Optional[Sequence[str]] = None) -> List[str]:
         chosen = [i for i in self.instances if instance_ids is None or i.instance_id in set(instance_ids)]
@@ -472,6 +543,7 @@ def prespawn_deployment(
     instance_ids: Optional[Sequence[str]] = None,
     gate_timeout_s: float = 3600.0,
     device_timeout_s: float = 120.0,
+    partition: bool = False,
 ) -> PreparedDeployment:
     """Start the target engines next to the TPU-owning source, up to the first device touch.
 
@@ -488,10 +560,14 @@ def prespawn_deployment(
     live = [i.instance_id for i in instances if _find_engine_actor(layout_id, i.instance_id) is not None]
     if live:
         raise RuntimeError(f"pre-spawn needs fresh engine actors; live actors exist for {live}: release them first")
+    if partition:
+        if instance_ids is None:
+            raise ValueError("a partition pre-spawn names its instances")
+        _check_partition(get_or_create_registry(), layout_id, digest)
     prepared = PreparedDeployment(
         inventory=inventory, config=config, instance_ids=None if instance_ids is None else list(instance_ids),
         instances=list(instances), layout_id=layout_id, digest=digest, layout_body=layout_body,
-        gate_name=gate_name(layout_id))
+        gate_name=gate_name(layout_id), partition=partition)
     prepared.clocks["prespawn_begin"] = time.time()
     try:
         prepared.native_backend, prepared.stage_clocks["backend_s"] = _prepare_backend(instances)
@@ -589,7 +665,9 @@ def commit_prespawned(prepared: PreparedDeployment) -> Dict[str, Any]:
         if unreleased:
             raise RuntimeError(f"commit before release of {unreleased}")
         registry = get_or_create_registry()
-        if prepared.instance_ids is not None:
+        if prepared.partition:
+            _check_partition(registry, layout_id, prepared.digest)
+        elif prepared.instance_ids is not None:
             _check_partial_gateway(registry, layout_id, prepared.digest,
                                    {i.instance_id for i in prepared.instances})
         ray.get(registry.put_inventory.remote(prepared.inventory.to_dict()))
@@ -634,6 +712,40 @@ def commit_prespawned(prepared: PreparedDeployment) -> Dict[str, Any]:
         "registry_snapshot": snapshot,
         "prespawn": prepared.evidence(),
     }
+
+
+def deploy_prespawned(
+    inventory: SliceInventory,
+    config: DeploymentConfig,
+    *,
+    instance_ids: Optional[Sequence[str]] = None,
+    partition: bool = False,
+    park_timeout_s: float = 900.0,
+    gate_timeout_s: float = 3600.0,
+) -> Dict[str, Any]:
+    """A pre-spawned deploy on hosts whose TPUs are already free (no source engine to drain).
+
+    ``prespawn_deployment`` (CPU-only groups, workers parked before the first device touch) ->
+    every worker parked -> the gate opens at once -> ``commit_prespawned``.  The report is the
+    ``deploy`` shape plus ``prespawn`` (clocks, ``released_at`` per host): T0 = launch is
+    ``started_at``, T0 = gate open is the earliest ``released_at``.
+    """
+    started_at = time.time()
+    prepared = prespawn_deployment(inventory, config, instance_ids=instance_ids,
+                                   gate_timeout_s=gate_timeout_s, partition=partition)
+    try:
+        parked = await_parked(prepared, timeout_s=park_timeout_s)
+        released = release_prepared(prepared)
+    except Exception as exc:
+        emit_event("DEPLOY_FAILED", layout_id=prepared.layout_id, error=str(exc)[:400])
+        abort_prespawned(prepared)
+        raise
+    report = commit_prespawned(prepared)
+    report["started_at"] = started_at
+    report["prespawn"]["parked"] = parked
+    report["prespawn"]["release"] = released
+    report["prespawn"]["gate_open_at"] = min(prepared.released_at.values()) if prepared.released_at else None
+    return report
 
 
 def _kill_gate(prepared: PreparedDeployment) -> None:

@@ -1,0 +1,126 @@
+{
+ "slice_name": "tpu-0",
+ "chip_dims": [
+  2,
+  4,
+  1
+ ],
+ "host_chip_dims": [
+  2,
+  2,
+  1
+ ],
+ "host_grid_dims": [
+  1,
+  2,
+  1
+ ],
+ "total_chips": 8,
+ "ray_session": "02000000",
+ "ray_node_generation": "5b0e69ccb94df4fb",
+ "observed_at": 1792797435.085977,
+ "hosts": [
+  {
+   "node_ip": "192.168.102.15",
+   "ray_node_id": "19fa975713465f41e27e0265dfec6379fd7b0035d8e8aa5634a3bb5e",
+   "hostname": "gke-tpu-315bc6f5-7fmv",
+   "tpu_worker_id": 0,
+   "tpu_name": "tpu-0",
+   "tpu_count": 4,
+   "chip_coords": [
+    [
+     0,
+     0,
+     0
+    ],
+    [
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     0
+    ]
+   ],
+   "jax_process_index": 0,
+   "jax_global_device_count": 8,
+   "chip_box": [
+    [
+     0,
+     1
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     0,
+     0
+    ]
+   ],
+   "host_grid_position": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "node_ip": "192.168.102.17",
+   "ray_node_id": "469f4b71f37b5f4fe92c671ed6bb028d2bdeba7fcc78e8394a351276",
+   "hostname": "gke-tpu-315bc6f5-wnb3",
+   "tpu_worker_id": 1,
+   "tpu_name": "tpu-0",
+   "tpu_count": 4,
+   "chip_coords": [
+    [
+     0,
+     2,
+     0
+    ],
+    [
+     1,
+     2,
+     0
+    ],
+    [
+     0,
+     3,
+     0
+    ],
+    [
+     1,
+     3,
+     0
+    ]
+   ],
+   "jax_process_index": 1,
+   "jax_global_device_count": 8,
+   "chip_box": [
+    [
+     0,
+     1
+    ],
+    [
+     2,
+     3
+    ],
+    [
+     0,
+     0
+    ]
+   ],
+   "host_grid_position": [
+    0,
+    1,
+    0
+   ]
+  }
+ ]
+}

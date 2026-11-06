@@ -546,6 +546,13 @@ class RayJobSupervisor:
     @staticmethod
     def extract_json_measurements(output_text: str) -> Dict[str, Any]:
         """Extracts EMPIRICAL TPU HARDWARE MEASUREMENTS JSON payload from job logs."""
+        # The payload is one line right after the banner's closing rule.  Ray forwards worker output
+        # into the same stream, so blank or foreign lines may follow it before the next event.
+        for match in re.finditer(r"EMPIRICAL TPU HARDWARE MEASUREMENTS \(JSON OUTPUT\)\n=+\n(\{[^\n]*\})\n", output_text):
+            try:
+                return json.loads(match.group(1))
+            except Exception:
+                pass
         patterns = [
             r"EMPIRICAL TPU HARDWARE MEASUREMENTS \(JSON OUTPUT\)\n=+\n(\{.*?\})\n\n\[OMP_EVENT",
             r"EMPIRICAL TPU HARDWARE MEASUREMENTS \(JSON OUTPUT\)\n=+\n(\{.*?\})\n=+",

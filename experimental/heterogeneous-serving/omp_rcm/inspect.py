@@ -22,7 +22,7 @@ import pathlib
 import re
 from typing import List, Dict, Any, Optional
 
-BASE_RCM_DIR = pathlib.Path("/tmp/omp_rcm")
+BASE_RCM_DIR = pathlib.Path(os.environ.get("OMP_RCM_DIR") or "/tmp/omp_rcm")  # as omp_rcm/core.py
 TELEMETRY_FILE = BASE_RCM_DIR / "telemetry.jsonl"
 LIVE_STATUS_FILE = BASE_RCM_DIR / "live_status.json"
 LIVE_LOGS_FILE = BASE_RCM_DIR / "live_logs.txt"
